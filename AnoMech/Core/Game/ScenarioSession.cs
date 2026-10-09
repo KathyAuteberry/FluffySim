@@ -190,6 +190,13 @@ public sealed class ScenarioSession
     }
 
     // A death reported in this run, godmode or not: the first one's overlay, and the mistake mark.
+    public bool HasMistake => lastMistakeElapsed is not null;
+
+    public void RecordMistake()
+    {
+        lastMistakeElapsed = elapsed;
+    }
+
     public void OnDeathReported(string describedTarget, string cause)
     {
         if (!firstDeathShown)

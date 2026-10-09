@@ -63,6 +63,8 @@ public sealed class ScenarioCatalog
 
     public static ScenarioCatalog Create() => new(
     [
+        new Fru.FruArenaDiagnosticScenario(),
+        new Fru.LightRampant.FruLightRampantScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

@@ -40,7 +40,7 @@ internal static unsafe class TimelineDebug
         if (!ticking) return;
         Plugin.Framework.Update -= OnUpdate;
         ticking = false;
-        if (holdFramesLeft > 0) ZoneControl.Current?.HoldSendFirewall(false);
+        if (holdFramesLeft > 0) Plugin.GameInstance?.World.Map.HoldSendFirewall(false);
         holdFramesLeft = 0;
         DiagnosticLog.ForcePersist = false;
     }
@@ -50,7 +50,7 @@ internal static unsafe class TimelineDebug
         if (holdFramesLeft > 0 && --holdFramesLeft == 0)
         {
             DiagnosticLog.ForcePersist = false;
-            ZoneControl.Current?.HoldSendFirewall(false);
+            Plugin.GameInstance?.World.Map.HoldSendFirewall(false);
         }
         if (playerWatchFrames < 0) return;
         var player = Plugin.ObjectTable.LocalPlayer;
@@ -69,7 +69,7 @@ internal static unsafe class TimelineDebug
     {
         EnsureTicking();
         DiagnosticLog.ForcePersist = true;
-        ZoneControl.Current?.HoldSendFirewall(true);
+        Plugin.GameInstance?.World.Map.HoldSendFirewall(true);
         holdFramesLeft = 400;
     }
 
@@ -99,7 +99,7 @@ internal static unsafe class TimelineDebug
 
     public static void SpawnChaosNearPlayer()
     {
-        var game = Plugin.Game;
+        var game = Plugin.GameInstance;
         var player = Plugin.ObjectTable.LocalPlayer;
         if (game == null || player == null)
         {
@@ -114,7 +114,7 @@ internal static unsafe class TimelineDebug
         var local = world.Coordinates.ToLocal(player.Position + forward * 4f);
         LastSpawn = world.SpawnEnemy(new EnemySpawnConfig(
             BNpcBaseId: ChaosBNpcBase, NameId: HelperNameId, Level: 1,
-            Targetable: false, EnemyList: EnemyListMode.Never, Visibility: SpawnVisibility.HiddenUntilShown,
+            Targetable: false, EnemyList: EnemyListMode.Never, IsVisible: false,
             Placement: new Placement(local, player.Rotation)));
         DiagnosticLog.Info($"[TimelineDebug] spawned Chaos test carrier at {local} (territory {Plugin.ClientState.TerritoryType}): {(LastSpawn == null ? "failed" : LastSpawn.DescribeDrawState())}");
     }
@@ -136,7 +136,7 @@ internal static unsafe class TimelineDebug
     // (caster = animation target, no targets, lock 1.1, zero target position).
     public static void EffectOnLastSpawn(uint actionId)
     {
-        var game = Plugin.Game;
+        var game = Plugin.GameInstance;
         if (game == null || LastSpawn is not { IsActive: true } enemy)
         {
             Plugin.Log.Warning("[TimelineDebug] no live test spawn -- spawn one first");

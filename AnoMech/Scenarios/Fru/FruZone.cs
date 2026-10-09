@@ -1,0 +1,38 @@
+using System.Collections.Generic;
+using System.Numerics;
+using AnoMech.Core.Game;
+using AnoMech.Core.SimObjects;
+
+namespace AnoMech.Scenarios.Fru;
+
+public sealed class FruZone : IZone
+{
+    public static readonly FruZone Instance = new();
+    public static readonly Phase P2 = new(Instance, "P2", 35, 0, init: InitializeP2, clientSetup: HoldP2Layers);
+    public string Name => "Futures Rewritten (Ultimate)";
+    public Core.Map.EntranceBarrier EntranceBarrier => new(0, 0, 0, new(0f, 0f, 16f));
+    public uint TerritoryId => 1238;
+    public Vector3 Origin => new(100f, 0f, 100f);
+    public byte Level => 100;
+    public IReadOnlyList<WaymarkLayout> WaymarkPresets { get; } =
+        [new("Ring", Core.Game.WaymarkPresets.Ring(16f))];
+    public void Run(SimWorld world) => world.EnforceArenaBoundary(20f);
+
+    private static void InitializeP2(SimWorld world)
+        => InitializeP2Arena(world);
+
+    private static void InitializeP2Arena(SimWorld world)
+    {
+        for (byte index = 0; index < 54; index++)
+            world.Map.AddEffect(0x00040004, index);
+        world.Map.AddEffect(0x00020001, 0x17);
+    }
+
+    private static void HoldP2Layers(SimWorld world)
+    {
+        for (ushort key = 0x5F88; key <= 0x5F94; key++)
+            world.Map.HoldLayerActive(key, false);
+        world.Map.HoldLayerActive(0x5F9F, false);
+        world.Map.HoldLayerActive(0x5FC9, true);
+    }
+}

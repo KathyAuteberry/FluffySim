@@ -14,6 +14,7 @@ internal sealed record ScenarioRunOptions
 {
     // Ends the run at this scenario time, as a pass unless something already failed.
     public float? StopAt { get; init; }
+    public bool Solo { get; init; }
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
@@ -119,13 +120,18 @@ internal sealed record ScenarioRun(
                 setOverrides(scenario.SettingsOverrides
                              ?? throw new InvalidOperationException($"{scenarioType.Name} has no settings overrides."));
             game.ZoneIn(scenario.Phase.Zone, SessionMode.Local);
-            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role }, strat, 0, seed));
+            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo }, options.Solo ? null : strat, 0, seed));
             fake.Frame(FrameSeconds, game.Tick);
             if (game.Status < SessionStatus.Running)
                 failure = "did not start";
 
             while (failure is null && game.Status is not (SessionStatus.Succeeded or SessionStatus.Frozen))
             {
+                if (game.HasScenarioMistake && game.World.Events.IsEmpty)
+                {
+                    failure = "mechanic mistake";
+                    break;
+                }
                 if (elapsed >= TimeoutSeconds)
                 {
                     failure = $"not finished after {TimeoutSeconds} s";

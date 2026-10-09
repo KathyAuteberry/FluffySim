@@ -74,6 +74,10 @@ See: https://github.com/anomek/MyDalamudPlugins
 
 
 ## How to help
+
+FRU implementation coverage, verified encounter data and local Linux build/test
+instructions are tracked in [the FRU roadmap](FRU-ROADMAP.md).
+
 1. Please provide feedback and report any issues in scenarios: bad timing, damage, config not working at it supposed
 2. Bot AI currently only covers strategies from my region. Adding strategies for other regions requires little coding.
    Feel free to create pull request or contact me.
