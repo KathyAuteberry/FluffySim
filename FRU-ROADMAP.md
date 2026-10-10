@@ -1,13 +1,15 @@
 # FRU implementation roadmap
 
-Updated 2026-10-09. **P2 Light Rampant (Mana) is provisionally registered and
-headlessly playable for the ring starting formation.** The full supported
-sequence clears in automated tests. Native presentation and the limitations
-below have not been manually validated in FFXIV.
+Updated 2026-10-10. **P2 Light Rampant (Mana) and the P2 arena are manually
+validated in FFXIV**, including traversable collision, both visible orb orders,
+explosions, tethers, Hammer grace period and bot resolution. This validation is
+for the supported Mana formation, not every outstanding native presentation
+question. Startup flicker has not been separately confirmed eliminated.
 
-Paired native snapshots now establish the map bindings, central obstacle collider
-and background activation differences. A bounded P2 preset is implemented and
-awaits the next arena-only in-game validation; see the final section below.
+**Diamond Dust is a registered incomplete practice prefix**, ending after
+Frigid Needle and before Sinbound Holy. It appears above Light Rampant in the
+normal sidebar; native presentation fixes await the next in-game validation. Thin Ice locomotion and persistent Holy hazard state remain blockers
+for the full fragment; see the latest section below.
 
 ## Architecture
 
@@ -29,8 +31,8 @@ and expires the tether. `*State` owns deterministic rolls from `world.Rng`;
 `ScenarioCatalogTests.SunnyDay` runs every registered strategy with a configurable seed count;
 `ScenarioRun` uses fake native services and real pinned game sheets.
 
-No separate simulation engine is needed. FRU arena initialization, native
-telegraphs and actor animations still require investigation and in-game checking.
+No separate simulation engine is needed. The working FRU P2 arena is reused.
+New Diamond Dust native telegraphs and actor animations require in-game checking.
 
 ## Coverage
 
@@ -40,7 +42,7 @@ research does not advance a mechanic to Research complete.
 
 | FRU-Sim selectable scenario | Reference sequence | AnoMech | Status / evidence |
 | --- | --- | --- | --- |
-| P2 Light Rampant | `scenes/p2/sequences/light_ramp_seq.gd`, `p2_lr_main.tscn` | Mana ring formation, provisional | Build/test validated; native presentation and gameplay caveats below |
+| P2 Light Rampant | `scenes/p2/sequences/light_ramp_seq.gd`, `p2_lr_main.tscn` | Mana ring formation | Manually validated in FFXIV for the supported formation |
 | P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd` | Missing | Not researched; casts recorded in pulls 4, 6, 9, 13, 15, 16 |
 | P3 Sextuple Apocalypse | `scenes/p3/sequences/apoc_seq.gd` | Missing | Not researched to completion; Mana rotations and water swaps inspected; casts in 4, 6, 13, 16 |
 | P4 Darklit Dragonsong | `scenes/p4/sequences/darklit_seq.gd` | Missing | Not researched; reference offers NA/EU/JP/Mana/MUR variants |
@@ -992,3 +994,389 @@ remain awaiting the reproducible manual comparison below.
    Banish III=Spread; repeat. Verify both groups disappear and cleanup is safe.
    If orbs remain invisible, retain native spawn/model-slot diagnostic lines;
    a passing headless test does not prove successful native model rendering.
+
+## Diamond Dust development prefix — 2026-10-10
+
+The standalone target is **Mirror Image through Hallowed Ray**, excluding the
+following unrelated tankbuster. This iteration implements Mirror Image through
+Frigid Needle only. `ScenarioCatalog` is unchanged. An explicitly
+labelled experimental launcher, available in Release and Debug, permits native
+testing of this prefix from an inn; it does not
+present it as a full Diamond Dust clear.
+
+### Recording coverage and provenance
+
+All six local log files containing FRU territory transitions were scanned. Five
+contain usable pulls; the October 9 file has no detected FRU pulls. There are
+98 detected pulls, 50 Mirror Image windows, and **38 complete sequences** with
+Hallowed Ray effects. “Complete” describes recording coverage, not a deathless
+execution. The October 7 session contributes 11 complete sequences: pulls
+2, 4, 6, 7, 8, 9, 12, 13, 14, 15, 16.
+
+| Session | Detected FRU pulls | Mirror Image windows | Through Hallowed Ray |
+| --- | ---: | ---: | ---: |
+| September 23 | 23 | 7 | 4 |
+| September 27 | 24 | 10 | 8 |
+| September 30 | 14 | 9 | 8 |
+| October 4 | 21 | 13 | 7 |
+| October 7 | 16 | 11 | 11 |
+| October 9 | 0 | 0 | 0 |
+
+Sources are local `Network_30301_YYYYMMDD.log` files, read-only. The offline tool
+`tools/fru_diamond_dust_evidence.py` takes explicit input paths and `--output`,
+refuses to overwrite an input, counts malformed records, and exports public game
+IDs, NPC positions, job codes and pull ordinals. Actor instance IDs, player names,
+player coordinates and raw actor-control payloads are not exported. Generated
+working evidence remains under `/tmp`; only sanitized normalized action times
+and branch assignments are checked into `RecordedTimelines.json`.
+
+Independent behavioral/strategy references:
+
+- [BossMod Diamond Dust](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Dawntrail/Ultimate/FRU/P2DiamondDust.cs),
+  [enums](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Dawntrail/Ultimate/FRU/FRUEnums.cs)
+  and [states](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Dawntrail/Ultimate/FRU/FRUStates.cs).
+- Local Splatoon `P2 Diamond Dust.cs`: kick signatures, icicle direction tracking
+  and marker/position logic.
+- Tuufless `_mana/fru/02_usurper_of_frost.en.md`: Mana clocks, clockwise adjustment,
+  closest-player baits, knockback groups, four moving-stack paths, gaze and slide
+  sequence. No complete FRU-Sim scenario was sought or copied.
+- Existing pinned datamining sheets: Action, BNpcBase, ModelChara, Omen,
+  Knockback and Status. The existing native replay inspection corroborates the
+  slot-0 Diamond Dust effects; no recorded packets were injected.
+
+### Observed variation matrix
+
+Among the 38 complete recordings: Axe 15 / Scythe 23; Stone on supports 19 /
+DPS 19; first icicle axes N/S 7, NE/SW 12, E/W 6, SE/NW 13; all eight Oracle
+positions; Twin Stillness first 18 / Twin Silence first 20. There are 36 distinct
+observed combinations of these five dimensions. This does not demonstrate every
+combination or independent/uniform server selection probabilities.
+
+The prefix's deterministic overrides support all **128** combinations of four
+axes × two kicks × two Stone groups × eight Oracle destinations. The later Twin
+order is represented in evidence but is not rolled or simulated yet.
+
+### Verified registry and timeline
+
+Actor sheet mapping: Usurper of Frost BNpcBase **17823**, name **12809**;
+Oracle's Reflection BNpcBase **17824 / 0x45A0**, name **13554**, ModelChara
+**4375**. Both use visible native spawning rather than animation-hidden spawning.
+Ground-target helpers use BNpcBase **9020**. No separate icicle NPC identity was
+established: their cast ground targets come from ActorCastExtra **263**, not
+potentially stale source coordinates in the ordinary cast line. Icicle casts use
+the Action's Omen **58**; needle crosses use their sheet omen. Their native
+presentation is awaiting manual validation; no invented model or VFX is used.
+
+Times below are effect **receive timestamps relative to Mirror Image cast
+start**, spanning all 38 complete sequences. They are not exact damage snapshots.
+Scenario time includes a three-second native actor creation lead-in.
+
+| Event | Action ID | Observed first effect range (s) |
+| --- | ---: | ---: |
+| Mirror Image | 40180 | 2.955–2.999 |
+| Diamond Dust raidwide | 40197 | 10.072–10.147 |
+| Axe Kick | 40202 | 18.946–19.062 |
+| Scythe Kick | 40203 | 18.705–18.813 |
+| Closest-four House of Light cones | 40206 | 19.512–19.869, kick-dependent |
+| Frigid Stone | 40199 | 21.255–21.391 |
+| First Icicle Impact pair | 40198 | 21.672–21.792 |
+| Heavenly Strike | 40207 | 25.564–25.746 |
+| Frigid Needle circle/cross | 40200 / 40201 | 28.328–28.477 |
+| First Sinbound Holy stack | 40209, cast 40208 | 29.590–29.789 |
+| Shining/Frost Armor | 40185 / 40184 | 37.999–38.191 |
+| First Twin Stillness / Silence | 40193 / 40194 | 44.512–44.680 |
+| Hallowed Ray hit | 40211, cast 40210 | 57.777–58.107 |
+
+October 7 icicle waves are at approximately 21.69–21.78, 25.70–25.80 and
+29.72–29.81s. First pair lies on a randomly selected opposite axis at radius16;
+second wave occupies the other parity's four clocks; last pair occupies the
+remaining perpendicular axis. The last pair is spawned/cast in the prefix but
+**cancelled at prefix termination**, before its resolution overlaps the first
+Holy stack. This is an intentional incomplete boundary, not a modeled full
+icicle sequence.
+
+Heavenly Strike effect data identifies Knockback row **156** in 87 October 7
+effects. Its pinned sheet distance is **12y**, speed **20y/s**; the existing native
+carry/forced movement facility is reused. Frigid Stone marker is **345**;
+Hallowed Ray marker is **525**. Action-sheet cast bars are retained, including
+both kick casts at5.7s; Axe starts later, rather than using a fabricated longer
+cast. Kick, cone, spread, icicle and needle collisions use existing EnemyAction
+resolution. Avoidable failures are lethal practice penalties; this does not
+claim reproduction of exact damage amounts or every real vulnerability status.
+
+Boss conceal/reveal uses existing native actor APIs and recorded action timelines
+**0x11E5 / 0x1E43**. Diamond Dust slot0 effects **0x00020001 / 0x00080004** are
+scheduled at observed cast-relative~5.1/~9.2s. The P2 environment preset and all
+Light Rampant code remain unchanged.
+
+### Implemented Mana behavior and remaining stages
+
+| Stage | Implementation | Status |
+| --- | --- | --- |
+| Arena / actors / kick / icicles / Stone / cones | P2 reuse, native casts and omens, two kick branches, 2+4+2 icicle cast positions, closest-four cones, selected four Stone targets | Build/test validated; native presentation unverified |
+| Knockback / needles | Two Mana groups, 12y knockback, four circles with overlapping orthogonal/diagonal crosses, early icicle avoidance | Build/test validated; last icicle resolution and moving stacks remain missing |
+| Sinbound Holy stacks/persistent hazards | Four timed hits and four route variants researched | Not implemented; hazard activation/deactivation unknown |
+| Thin Ice / gaze / slides / Twins / Hallowed Ray | IDs, ordering, durations and positioning researched | Not implemented; slide controller unresolved |
+| Full scenario registration | No catalog entry | Blocked on required later gameplay, not on arbitrary cosmetic effects |
+
+Mana initial clocks: MT N, OT S, H1 W, H2 E, D1 SW, D2 SE, D3 NW, D4 NE.
+The whole party rotates clockwise45° when the marked group's parity matches the
+first icicles. Marked players bait Stone farther out; the other group becomes
+the closest four cone targets. After Stone, G1 (MT/H1/D1/D3) takes the first
+icicle axis on the W→NE half, and G2 takes its opposite. Bots move at normal
+speed6, with no invented Sprint or hazard immunity. Tests confirm actual
+positions before knockback and radius18 afterward. Incorrect kick positions,
+overlapping Stone, standing in an icicle, or standing in a Needle circle kill
+through the same effect rules for bots and the player.
+
+### Thin Ice and Holy hazard engineering gap
+
+Thin Ice status **911**, param **0x0140**, is observed around38.2s; the logged
+9999s duration is not its true expiry. In pull4, slot17 changes to
+**0x00200010** at38.256s and back to **0x00400001** at50.232s. BossMod models
+fixed32y slides. This supports presentation and distance research, **not proof
+that a map effect alone supplies local-player sliding**.
+
+AnoMech has knockback/carry movement but no ice-input controller. Its existing
+`Statuses.AddStatusInit` invokes native AddStatus for doppels; for the local
+player that operation is rejected by the client validity guard, so the existing
+fallback writes the status slot and calls OnGainStatus. There is no verified
+proof that this establishes the real locomotion mode/flags. No Thin Ice status,
+new native hook, guessed offset, or experimental physics write was added.
+A normal MoveTo would silently erase the defining mechanic and is not used as
+an ice substitute.
+
+Sinbound Holy EObj **0x1EBC4F** matches the Holy visual family, but October 7
+object removal ages are~14.00–14.04s, unlike Light Rampant's~12.85s. Creation,
+visual expiry and harmful lifetime need separate evidence. Bleeding3077/3078
+and death events exist, but do not alone establish exact activation/deactivation.
+The manually validated Light Rampant grace period is not copied into this
+mechanic without verification.
+
+Smallest next engineering step: use the working replay to capture **read-only
+locomotion/status state and input-to-slide start/end behavior** in Thin Ice,
+including slide duration and whether OnGainStatus alone is sufficient. Match it
+against existing validated client structs before proposing a native abstraction.
+Separately establish Holy hazard active-state transitions from replay/EObj
+updates. The offline evidence is already sufficient to implement later attacks
+once these required movement/hazard contracts are known.
+
+### Validation and reproducible manual prefix test
+
+Tests cover all128 supported branch combinations, 38 real normalized timelines
+(with±0.2s receive/frame sampling tolerance), deterministic rolls, unique icicle
+positions, range validation, deliberate failures, cancellation at several times,
+actor cleanup and same-instance repeated runs. They do not establish native
+rendering or full Diamond Dust playability.
+
+1. Build with `dotnet build -c Release`, manually reload outside simulation,
+   enter an inn, and keep event speed1. Open `/anomech`, select Light Rampant
+   (or another catalog scenario) if none is selected, choose your role under
+   **Setup**, then expand **Experimental / development** below Scenario settings.
+   The entry is labelled **FRU P2 Diamond Dust — Incomplete — ends at Frigid Needle**.
+   Release uses seed0 for this launcher; branch overrides remain available.
+2. Force **Scythe / Supports / N-S / Oracle NW**, choose seed0, then click
+   **Start incomplete Diamond Dust prefix**. Play MT to bait Stone, or a DPS role
+   to bait a closest-player cone. Verify the correct existing P2 arena, visible
+   bosses, cast bars, icicle ground tells, selected markers, kick, cones,
+   knockback and Needle star. Mirror Image begins at scenario3s; Stone~24.34s,
+   knockback~28.63s, Needle~31.1s; actors clean up at31.6s.
+3. Run `/anomech leave`, then force **Axe / DPS / NE-SW / Oracle SE** and repeat.
+   Verify the clockwise adjustment, the other kick and selected roles. Do not
+   expect Sinbound Holy, ice slides or Hallowed Ray; the prefix stops before them.
+4. Run `/anomech reset` during an active prefix and verify fresh actors/markers;
+   leave during casting and re-enter without restarting FFXIV. Report any missing
+   native omen/model, unexpected delayed cast after termination, or unsafe
+   knockback. The development launcher is unavailable in multiplayer.
+
+Final validation: plugin **883/883 passed** (698 baseline +185 Diamond Dust
+cases), relay **41/41 passed**, offline tools **20/20 passed** (17 baseline
++3 evidence-inspector cases). Plugin build: **0 errors /1 warning**; the warning
+is NU1900 because the existing NuGet vulnerability endpoint is unavailable.
+No dependencies were installed and no existing assertion was weakened. The
+final evidence scan reported zero malformed records across all six source files.
+
+Reproducible Linux commands from the repository root:
+
+```sh
+DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev dotnet build -c Release --no-restore -v quiet
+DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev dotnet test tests/AnoMech.Tests -c Release --no-restore -v quiet
+dotnet test tests/AnoMech.Relay.Tests -c Release --no-restore -v quiet
+python3 -m unittest discover -s tools/tests -v
+```
+
+Changed production files: `FruConstants.cs`, `Windows/DebugMenu.cs`, and the five
+new `DiamondDust/` files (`Scenario`, `State`, `Actions`, `Ai`, `SettingsWindow`).
+Test changes: the optional unregistered-scenario factory in `Support/ScenarioRun.cs`,
+Diamond Dust tests and sanitized fixture, fixture copy entry in the test project.
+The offline evidence tool/test and this roadmap complete the changes. No native
+implementation, arena initialization, Light Rampant or reference source was edited.
+
+
+### Release development launcher correction — 2026-10-10
+
+The original launcher and Debug menu were both excluded by `#if DEBUG`. The
+launcher now belongs to `MainWindow.DrawSections` outside conditional compilation,
+under **Experimental / development**, with an explicit incomplete label. Starting
+it selects the development instance without persisting it as a catalog selection.
+`ScenarioCatalog` and Light Rampant are unchanged. Inn-only, solo-only and active
+scenario guards are retained, including a second check on the framework thread.
+The duplicate Debug-only launcher was removed. No automatic reload was added.
+
+Use Release for future validation/manual testing unless explicitly requested
+otherwise. Build command: `DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev dotnet build -c Release --no-restore -v quiet`.
+The user continues to reload the plugin manually.
+
+Release validation succeeded: the exact `dotnet build -c Release` command
+(with DALAMUD_HOME set) completed with **0 errors /2881 warnings**, primarily
+platform-analyzer warnings and dependency metadata warnings from the solution.
+Release plugin tests **883/883 passed**; Release relay tests **41/41 passed**.
+No plugin reload was triggered. Native UI appearance still needs the user's
+manual reload, but the launcher now compiles into the Release MainWindow.
+
+## Diamond Dust sidebar and native presentation audit — 2026-10-10
+
+This section supersedes the experimental-launcher instructions above. The normal
+Release sidebar now lists **P2 Diamond Dust (Incomplete)** before **P2 Light
+Rampant (Mana)** under Futures Rewritten (Ultimate). Arena Diagnostic is no
+longer in `ScenarioCatalog`; its class, arena initialization and snapshot commands
+are retained. The separate development launcher is removed. Diamond Dust uses the
+standard role/strategy/settings/start/reset UI. `IScenario.IsIncomplete` identifies
+its status and produces a warning; it does not bypass the catalog's clear tests.
+`MenuName` allows the Light Rampant label to say Mana without changing its persisted
+`FullName` identity, settings or gameplay.
+
+### Concrete defects and corrections
+
+**Same-callback spawn/cast:** icicle, cone, Stone and Needle helpers were created
+immediately before casting. Native NpcSpawn is asynchronous; an absent proxy
+silently discards ActorCast/ActionEffect delivery. The previous fake instantiated
+actors immediately and did not record received effects. All28 meshless helpers
+are now prepared at scenario0, positioned/rotated at the original event times,
+and reused once for their respective attacks. No additional icicle model was
+invented. Before Mirror Image at3s, the prefix checks actor existence, draw-object
+availability and spawn failure flags. Failed native setup cancels the timeline
+and reports an initialization failure rather than running invisible mechanics.
+
+**Missing effect targets:** native replay headers show Mirror Image targeting the
+caster, Diamond Dust and Heavenly Strike carrying8 effect targets, Stone and
+House of Light carrying1, and icicle/kick/needle effects carrying0. Previously,
+the raidwide and knockback sent0 targets and Mirror Image sent0 instead of1.
+New opt-in CastSpec presentation flags send live CharacterManager-resolved party
+IDs (up to8) or the caster ID. Empty native effect entries retain client-only
+presentation; damage remains in EnemyAction logic. The existing native0/1-target
+path is unchanged for all actions not opting in, including Light Rampant. No raw
+recorded packets, player identifiers or effect payloads were copied or injected.
+
+**Wrong cone animation target:** the recorded cone's animation target is its
+caster, while its effect target is the baited player. The previous implementation
+used the player for both. An opt-in animation-target flag now separates these
+without changing direction, bait selection or damage geometry.
+
+**Uniform0.6s animation lock:** recorded locks are2.1s for Mirror Image, both
+kicks, cones, Stone and icicles;2.6s for Diamond Dust;3.1s for Heavenly Strike;
+1.1s for both Needle effects. These locks are now used by this scenario only.
+The last Needle effects release at31.42s. Mechanical completion/cast cancellation
+still occurs at31.6s; actors remain until32.52s for their1.1s release-animation
+window. This is a visual cleanup tail, not Sinbound Holy or an extended mechanic.
+Tests explicitly assert both boundaries; early leave/reset cancels the tail.
+
+**Missing Oracle transitions / cut conceal:** Oracle timeline0x11D6 appears at
+Mirror-relative6.104–6.128s in all11 October7 sequences. Oracle animation states
+0xF9 and0xFC occur at kick-dependent~13.72–14.06s and~20.08–20.40s. Existing
+PlayActionTimeline/SetAnimationState abstractions now perform these recorded
+transitions at scenario9.12,16.77/17.04 and23.10/23.35s. Boss conceal0x11E5 was
+immediately followed by model hiding, truncating its animation; hiding now waits
+until18.30s. Reveal0x1E43 at26.55s remains. Initial facing is north, matching the
+cast/replay coordinates. Models remain the verified BNpcBase mappings:
+17823→4374,17824→4375,9020→480 (meshless).
+
+**Hidden kick castbar:** Oracle was excluded from AnoMech's EnemyList HUD by
+`EnemyListMode.Never`. It now uses `OnlyWhenVisible`, while remaining
+non-targetable; helper actors remain excluded. This uses the existing practice
+HUD to expose the actual kick cast name/bar. It does not establish that the real
+encounter's enemy-list membership is identical.
+
+### Event-by-event presentation audit
+
+| Event / scenario time | Expected native presentation | Previous gap | Correction / remaining native check |
+| --- | --- | --- | --- |
+| Mirror Image,3–6s | Shiva cast/release; Oracle reflection transition | No effect target; missing reflection timeline; incorrect initial facing | Caster target,2.1s lock,north-facing actors,reflection timeline9.12s; verify initial appearance/release |
+| Diamond Dust,8.1–13.1s | Shiva raidwide animation and arena response | Zero native targets; default lock |8 party targets,2.6s lock; recorded slot0 effects retained at8.1/12.2s; verify raidwide and arena visuals |
+| Icicle cast waves,15.78/19.79/23.80s | Native icy formations/ground tells at8 locations | Same-frame helper creation lost casts |8 precreated9020 helpers, draw enabled, inward facing, ground-target casts40198; exact visible formation still needs in-game confirmation |
+| Icicle resolution,24.78/28.79s | Native circles and explosions | Missing caster initialization / short locks | Native effect40198,2.1s lock; third wave intentionally cancelled at31.6s |
+| Axe/Scythe,16.04/15.78s | Distinct cast names, kick stance and out/in release | Oracle transitions absent; HUD exclusion; default lock | Correct existing action IDs **40202/40203**, F9/FC transitions, visible-caster HUD,2.1s locks; verify stance differences |
+| Stone markers,16.26s; impact24.34s | Marked four players and native spread hits | Lockons already scheduled; instant effect could hit an absent helper | Marker345 retained;4 prepared helper casters, native targeted40199 effect and2.1s lock; verify marker and spread impact |
+| Cone baits,22.58/22.84s | Four directional native effects aimed at closest players | Absent helpers and incorrect animation target |4 prepared center helpers, caster animation target/player effect target,2.1s lock; action has no sheet omen, so no invented pre-cast wedge |
+| Heavenly Strike,28.63s | Shiva animation, party hit effects and12y push | Native packet had zero targets; short animation lock |8 presentation targets,3.1s lock; Knockback156 and movement unchanged; verify local-player native carry |
+| Needle cast26.42s / release31.42s | Four circles and8 overlapping cross effects | Absent cast sources; actors deleted during release |12 prepared helpers, **40200/40201** Needle actions, circle Omen196;1.1s locks and32.52s cleanup; verify star/impact completeness |
+
+Action sheets identify AnimationEnd rows3205 (Mirror),3216 (Diamond Dust),3598
+(icicles),1704 (Stone),3217/3218 (kicks),11296 (cones),3215 (knockback),1222/6490
+(Needles). These are recorded as sheet references, not assumed raw timeline IDs;
+the client resolves them through the native cast/effect path. Icicle Omen58 and
+Needle circle Omen196 are retained. Scythe, Axe, cones and needle crosses have no
+sheet omen; no generic markers or fabricated VFX paths were added.
+
+Replay provenance: the existing format5 October7 FRU recording, pull4 window
+694–728s, aligned with Mirror Image at694.578s. ActorCast opcode0x0162 matches
+FFXIVClientStructs ActorCastPacket: action IDs repeated at+0/+4, type1, omen delay0,
+cast bars2.7/4.7/8.7/5.7s. ActionEffect opcodes0x021C and0x0313 match the typed
+Header: action ID+8, lock+16, spell+28, variation+30, flags+32,target count+33.
+All investigated variations/flags are0; spell IDs match action IDs. Both kicks'
+2.1s lock is checked across all recorded occurrences, not assumed from Scythe.
+Only sanitized counts/IDs/relations are documented. Original files remain read-only.
+
+### Validation limits and next manual test
+
+A visible native result has **not yet been established** for these corrections.
+Ground formation/ice meshes, action impact resources, clone appearance and the
+actual rendered state transitions must be checked in FFXIV. The outgoing native
+presentation uses empty effect entries, unlike real server damage packets; it
+must not be mistaken for a byte-identical replay. No collision/layout changes
+were made. Mana assignments, randomized branches, damage rules, knockback row and
+normalized event times are preserved; all128 prefix branches remain covered.
+
+The fake now records cast/effect/timeline/state delivery and can defer native
+spawning. Tests exercise1/6/18-frame creation, the existing20-frame timeout,
+leaving before packets arrive, cancellation during the final impact tail,
+re-entry, status/label/order/override registration and all38 timeline fixtures.
+A30-frame arrival must fail safely before mechanics; the shared timeout is not
+changed to mask this failure.
+
+1. Run `dotnet build -c Release` with the installed Dalamud SDK and manually reload
+   outside simulation. Enter an inn. Open `/anomech` → **Futures Rewritten
+   (Ultimate)** → **P2 Diamond Dust (Incomplete)**. Arena Diagnostic should be
+   absent and Light Rampant (Mana) should follow Diamond Dust.
+2. Under **Setup**, choose Mana/your role. Under **Scenario settings**, force
+   Scythe, Supports, N/S, Oracle NW. Start normally at event speed1. Verify
+   Shiva/Oracle are visible; Mirror Image and Diamond Dust animate; icicles are
+   visible at the first/opposite/intermediate clocks; read Scythe's cast and
+   animation. Check player lockons, cone and Stone impacts,12y knockback and
+   Needle stars. Mechanical endpoint remains31.6s; visual actors vanish32.52s.
+3. Reset, force Axe, DPS, NE/SW, Oracle SE and repeat. Verify Axe's distinct
+   animation/cast and opposite Stone group. Leave during casting and re-enter;
+   then leave during31.6–32.52s to check cleanup without restarting FFXIV.
+4. Repeat the already validated Light Rampant briefly to confirm its native
+   presentation and arena still behave normally. If DD reports actor setup
+   incomplete, preserve the `[FRU Diamond Dust]` and native spawn diagnostics.
+
+Recommendation: validate this prefix's rendered result before proceeding into
+Sinbound Holy/Thin Ice. Additional headless passes cannot resolve a missing mesh
+or animation. The phase's existing native preset and snapshot commands are intact.
+
+Final Release validation: **892/892 plugin tests passed** (883 baseline plus9
+cases, including the newly catalog-driven prefix clear), **41/41 relay tests
+passed**. `dotnet build -c Release` completed with **0 errors /3023 warnings**,
+principally Windows-platform analyzer warnings and dependency/deprecation warnings.
+No existing clear/failure assertion was weakened; cleanup assertions now check the
+explicit32.52s visual-tail boundary and still require all actors removed.
+
+A final read-only model check used Marshal-reported offsets from the installed
+FFXIVClientStructs SpawnNpcPacket (size656, common offset16). No compatible656-byte
+NpcSpawn records or9020 field candidates were found in the pull4 replay window.
+Therefore no replay-specific model/attribute override was decoded or guessed.
+The model mappings above are verified **sheet mappings**, not claims that a raw
+replay NpcSpawn model override was reconstructed. If formations remain invisible,
+compare the real replay helper's native model/draw/timeline state with the prepared
+AnoMech helper using read-only diagnostics before adding another actor or effect.

@@ -87,9 +87,10 @@ public sealed class SimCast : ISimObject
     }
 
     // Returns the global sequence the targets' EffectResults name; 0 when nothing was sent.
-    public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null)
+    public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null, GameObjectId? actionTargetId = null)
     {
         if (parent.Proxy is not { Exists: true } chara) return 0;
+        targets ??= actionTargetId is { } target ? [new ActionEffectTarget(target)] : null;
 
         var effectRotation = rotation ?? parent.Rotation;
         var sequence = chara.ReceiveActionEffect(new ActionEffectData(

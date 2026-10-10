@@ -17,6 +17,10 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
 
     public bool Exists => Actor != null;
     public int Slot => slot;
+    internal IReadOnlyList<ActionEffectData> ReceivedEffects => Actor?.ActionEffects ?? [];
+    internal IReadOnlyList<ActorCastData> ReceivedCasts => Actor?.ActorCasts ?? [];
+    internal IReadOnlyList<(int State, int Param)> AnimationStates => Actor?.AnimationStates ?? [];
+    internal IReadOnlyList<ushort> Timelines => Actor?.Timelines ?? [];
     public uint EntityId => Actor?.EntityId ?? 0;
     public GameObjectId GameObjectId => Actor?.GameObjectId ?? default;
     public string Name => Actor?.Name ?? "";
@@ -74,6 +78,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
                 ["omen_delay"] = SimTimeline.F(cast.OmenDelay, "F1"),
                 ["ballista"] = Id(cast.Ballista) is var b and not 0 ? b.ToString("X8") : "",
             });
+        a.ActorCasts.Add(cast);
         a.IsCasting = true;
         a.CastActionId = cast.ActionId;
         a.CurrentCastTime = 0f;
@@ -85,6 +90,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
     // The client pushes its own player from a knockback entry the moment it applies it.
     public uint ReceiveActionEffect(ActionEffectData effect)
     {
+        Actor?.ActionEffects.Add(effect);
         var sequence = ++nextSequence;
         var hits = (effect.Targets ?? []).Select(t => owner.Find(Id(t.Id))?.Name ?? Id(t.Id).ToString("X8")).ToList();
         // The replay's ability x/z is the caster's position, not the packet's.

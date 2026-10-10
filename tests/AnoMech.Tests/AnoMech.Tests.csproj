@@ -56,4 +56,7 @@
             CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
+  <ItemGroup>
+    <None Update="Scenarios/Fru/DiamondDust/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

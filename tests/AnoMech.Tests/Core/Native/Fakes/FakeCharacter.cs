@@ -1,4 +1,5 @@
 using System.Numerics;
+using AnoMech.Core.Native.Interfaces;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace AnoMech.Tests;
@@ -11,6 +12,10 @@ internal sealed class FakeCharacter(uint entityId, string name)
     private const float CarryStartDelay = 0.2f;
     private const float CarrySettledSeconds = 0.9f;
 
+    public List<ActionEffectData> ActionEffects { get; } = [];
+    public List<ActorCastData> ActorCasts { get; } = [];
+    public List<(int State, int Param)> AnimationStates { get; } = [];
+    public List<ushort> Timelines { get; } = [];
     public uint EntityId { get; } = entityId;
     public GameObjectId GameObjectId => new() { ObjectId = EntityId, Type = 0 };
     public string Name { get; set; } = name;

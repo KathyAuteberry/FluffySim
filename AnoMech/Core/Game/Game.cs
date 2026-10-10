@@ -115,6 +115,12 @@ public sealed class Game : IDisposable
     private float periodicDumpTimer;
 #endif
 
+    public static string DisplayName(IScenario scenario)
+        => string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.MenuName : $"{scenario.Phase.Name} {scenario.MenuName}";
+
+    public static string FullName(IScenario scenario)
+        => $"{scenario.Phase.Zone.Name} — {(string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.Name : $"{scenario.Phase.Name} {scenario.Name}")}";
+
     public Game()
     {
         World = new SimWorld(Events);

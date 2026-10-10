@@ -10,6 +10,9 @@ public interface IScenario
 {
     string Name { get; }
 
+    string MenuName => Name;
+    bool IsIncomplete => false;
+
     // Its phase — usually `=> TopZone.P5`.
     IPhase Phase { get; }
 

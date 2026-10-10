@@ -12,6 +12,7 @@ using Dalamud.Interface.Windowing;
 using AnoMech.Core.Map;
 using AnoMech.Core;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
 using SessionStatus = AnoMech.Core.Game.SessionStatus;
 using PracticeLoop = AnoMech.Core.Game.PracticeLoop;
@@ -581,6 +582,7 @@ public unsafe class MainWindow : Window, IDisposable
 
     private void DrawSections(IScenario scenario, bool inSession, bool mpGuest)
     {
+        if (scenario.IsIncomplete) ImGui.TextWrapped("Incomplete practice fragment. See Scenario settings for its endpoint and omitted mechanics.");
         // In a session the seat comes from the Party panel, so Setup can be left with nothing.
         var hasSetup = !inSession || HasStratChoice(scenario) || HasWaymarkChoice(scenario);
         if (hasSetup)

@@ -16,6 +16,7 @@ namespace AnoMech.Scenarios.Fru.LightRampant;
 public sealed class FruLightRampantScenario : IScenario
 {
     public string Name => "Light Rampant (provisional)";
+    public string MenuName => "Light Rampant (Mana)";
     public IPhase Phase => FruZone.P2;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruLightRampantAi()];
     public object SettingsOverrides => settings.Overrides;
@@ -98,7 +99,7 @@ public sealed class FruLightRampantScenario : IScenario
     private SimEnemy Spawn(uint baseId, uint nameId, Vector3 position, bool visible) =>
         world.SpawnEnemy(new EnemySpawnConfig(baseId, nameId, Level: 100, Targetable: visible,
             EnemyList: visible ? EnemyListMode.Always : EnemyListMode.Never,
-            Visibility: visible ? SpawnVisibility.Visible : SpawnVisibility.InvisibleHelper, Placement: new(position, MathF.PI)))
+            IsVisible: visible, Placement: new(position, MathF.PI)))
         ?? throw new InvalidOperationException($"Could not spawn FRU actor {baseId}.");
 
     private void Assign()
@@ -170,7 +171,7 @@ public sealed class FruLightRampantScenario : IScenario
             {
                 if (ctx.Hits.Count != required)
                 {
-                    Plugin.Game.RecordMechanicMistake(ActionId.BrightHunger, $"{ctx.Hits.Count}/{required} tower soakers");
+                    Plugin.GameInstance.RecordMechanicMistake(ActionId.BrightHunger, $"{ctx.Hits.Count}/{required} tower soakers");
                     helpers[7].Cast(ActionId.InescapableIllumination);
                 }
                 AddLightsteeped(ctx.Hits);
@@ -205,7 +206,7 @@ public sealed class FruLightRampantScenario : IScenario
         for (var i = 0; i < 6; i++)
             if (IsFirstOrb(i) == first)
                 orbs.Add(i, world.SpawnEnemy(new EnemySpawnConfig(BNpcBaseId.HolyLight, BNpcNameId.HolyLight,
-                    Level: 100, Targetable: false, EnemyList: EnemyListMode.Never, Visibility: SpawnVisibility.Visible,
+                    Level: 100, Targetable: false, EnemyList: EnemyListMode.Never, IsVisible: true,
                     Placement: new(OuterTowers[i], 0f)))
                     ?? throw new InvalidOperationException("Could not spawn Holy Light orb."));
     }
@@ -236,7 +237,7 @@ public sealed class FruLightRampantScenario : IScenario
                 {
                     if (ctx.Hits.Count < 4)
                     {
-                        Plugin.Game.RecordMechanicMistake(ActionId.PowerfulLight, $"{ctx.Hits.Count}/4 players in stack");
+                        Plugin.GameInstance.RecordMechanicMistake(ActionId.PowerfulLight, $"{ctx.Hits.Count}/4 players in stack");
                         foreach (var hit in ctx.Hits) hit.AddStatus(StatusId.MarkOfMortality);
                     }
                     AddLightsteeped(ctx.Hits);
@@ -315,6 +316,6 @@ public sealed class FruLightRampantScenario : IScenario
 
     private sealed class ResolveEffect(Action<EnemyActionContext> resolve) : IEnemyActionEffect
     {
-        public void Apply(EnemyActionContext ctx, System.Collections.Generic.IReadOnlyList<SimCharacter> hits) => resolve(ctx);
+        public void Apply(EnemyActionContext ctx) => resolve(ctx);
     }
 }

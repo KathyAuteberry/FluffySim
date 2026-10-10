@@ -13,6 +13,7 @@ public class FruArenaDiagnosticTests
         var inspected = false;
         var run = ScenarioRun.Execute(typeof(FruArenaDiagnosticScenario), 0, seed, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruArenaDiagnosticScenario(),
             Solo = true,
             StopAt = 4f,
             Probe = p =>
@@ -36,6 +37,7 @@ public class FruArenaDiagnosticTests
         AnoMech.Core.Map.MapController? map = null;
         var run = ScenarioRun.Execute(typeof(FruArenaDiagnosticScenario), 0, 0, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruArenaDiagnosticScenario(),
             Solo = true,
             StopAt = 4f,
             Probe = p =>
