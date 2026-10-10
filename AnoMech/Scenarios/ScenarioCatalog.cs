@@ -26,6 +26,7 @@ public static class ScenarioCatalog
     [
         new Fru.LightRampant.FruLightRampantScenario(),
         new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
+        new Dsr.Strength.DsrStrengthScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

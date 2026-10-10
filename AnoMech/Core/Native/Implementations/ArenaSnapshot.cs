@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using AnoMech.Core.Native.Implementations.Interop;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -15,18 +16,24 @@ namespace AnoMech.Core.Native.Implementations;
 
 internal static unsafe class ArenaSnapshot
 {
-    internal static bool IsAllowedLabel(string label) => label is "replay-p1" or "replay-p2" or "replay-ice" or "replay-p3" or "replay-p3-entry" or "anomech-p2" or "anomech-p3";
+    internal static bool IsAllowedLabel(string label) => label.Length is > 0 and <= 64
+        && label.All(c => char.IsAsciiLetterOrDigit(c) || c is '-' or '_');
+
+    internal static bool IsReady(uint territory, uint layoutTerritory, int initState, uint loadState) =>
+        territory != 0 && territory == layoutTerritory && initState == 7 && loadState == 2;
+
+    internal static string FileName(string label, DateTime utc) => $"{utc:yyyyMMdd-HHmmss-fffffff}-{label}-{Guid.NewGuid():N}.json";
 
     internal static string Save(string label)
     {
-        if (!IsAllowedLabel(label)) throw new ArgumentException("Use replay-p1, replay-p2, replay-ice, replay-p3, replay-p3-entry anomech-p2 or anomech-p3.");
+        if (!IsAllowedLabel(label)) throw new ArgumentException("Use a label of 1–64 ASCII letters, digits, hyphens or underscores.");
         var game = GameMain.Instance();
         var world = LayoutWorld.Instance();
         if (game == null || world == null || world->ActiveLayout == null)
             throw new InvalidOperationException("No active layout.");
         var layout = world->ActiveLayout;
-        if (game->CurrentTerritoryTypeId != 1238 || layout->TerritoryTypeId != 1238 || layout->InitState != 7 || game->TerritoryLoadState != 2)
-            throw new InvalidOperationException("Wait for FRU territory 1238 to finish loading.");
+        if (!IsReady(game->CurrentTerritoryTypeId, layout->TerritoryTypeId, layout->InitState, game->TerritoryLoadState))
+            throw new InvalidOperationException("Wait for the active territory and layout to finish loading.");
 
         var filters = new List<object>();
         foreach (var entry in layout->Filters)
@@ -75,16 +82,17 @@ internal static unsafe class ArenaSnapshot
         var document = new
         {
             SchemaVersion = 1, Label = label, CapturedUtc = DateTime.UtcNow,
+            PluginVersion = typeof(Plugin).Assembly.GetName().Version?.ToString(),
             ClientStructsVersion = typeof(LayoutWorld).Assembly.GetName().Version?.ToString(),
             Game = new { CurrentTerritoryTypeId = game->CurrentTerritoryTypeId, CurrentTerritoryFilterKey = game->CurrentTerritoryFilterKey, TransitionTerritoryFilterKey = game->TransitionTerritoryFilterKey, CurrentContentFinderConditionId = game->CurrentContentFinderConditionId, TerritoryLoadState = game->TerritoryLoadState, ActiveFestivals = Festivals(game->ActiveFestivals), QueuedFestivals = Festivals(game->QueuedFestivals) },
             Layout = new { InitState = layout->InitState, Type = layout->Type, TerritoryTypeId = layout->TerritoryTypeId, CfcId = layout->CfcId, LayerFilterKey = layout->LayerFilterKey, LevelId = layout->LevelId, FestivalStatus = layout->FestivalStatus, InsideFestivalTransitionLayerUpdate = layout->InsideFestivalTransitionLayerUpdate, SkipAddingTerrainCollider = layout->SkipAddingTerrainCollider, ResourcePath = ResourcePath(layout->LvbResourceHandle), ActiveFestivals = Festivals(layout->ActiveFestivals), NewFestivals = Festivals(layout->NewFestivals), Filters = filters, Layers = layers },
             MapDirectorPresent = director != null, MapSlots = slots,
             Environment = env == null ? null : new { ActiveWeather = env->ActiveWeather, TransitionProgress = env->TransitionProgress, ScenePresent = env->EnvScene != null, SpacePresent = env->EnvSpace != null, LocationCount = env->EnvScene != null ? env->EnvScene->LocationCount : 0, WeatherIds = env->EnvScene != null ? env->EnvScene->WeatherIds.ToArray() : Array.Empty<byte>(), EnvironmentResource = env->EnvSpace != null ? ResourcePath((ResourceHandle*)env->EnvSpace->EnvSetResourceHandle) : null, SoundResource = env->EnvSpace != null ? ResourcePath((ResourceHandle*)env->EnvSpace->SoundSetResourceHandle) : null, AmbientResource = env->EnvSpace != null && env->EnvSpace->EnvLocation != null ? ResourcePath((ResourceHandle*)env->EnvSpace->EnvLocation->AmbientSetResource) : null },
             Weather = weather == null ? null : new { WeatherId = weather->WeatherId, WeatherOverride = weather->WeatherOverride, WeatherIndex = weather->WeatherIndex, Slots = weathers },
-            Unavailable = new[] { "Selected environment scene index and forced-scene selector: no validated typed field", "Director update 0x8000001E downstream manager: unresolved", "Physics broadphase membership: not captured; collider getter and prefab flag are separate observations" }
+            Unavailable = new[] { "Selected environment scene index and forced-scene selector: no validated typed field", "Director update downstream managers: not captured", "Physics broadphase membership: not captured; collider getter and prefab flag are separate observations" }
         };
         var directory = Path.Combine(Plugin.PluginInterface.GetPluginConfigDirectory(), "arena-snapshots");
-        var path = Path.Combine(directory, $"{DateTime.UtcNow:yyyyMMdd-HHmmss-fffffff}-{label}.json");
+        var path = Path.Combine(directory, FileName(label, DateTime.UtcNow));
         WriteDocument(path, document);
         return path;
     }

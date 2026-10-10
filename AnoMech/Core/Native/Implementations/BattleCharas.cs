@@ -194,7 +194,16 @@ internal sealed unsafe class BattleCharas : IBattleCharas
             Id = (ushort)appearance.BodyModel, Variant = (byte)(appearance.BodyModel >> 16), Stain = (byte)(appearance.BodyModel >> 24),
         };
         common.MainhandWeaponModel.Value = appearance.MainhandWeaponModel;
+        if (appearance.HeadModel is { } head) common.EquipmentModelIds[0] = LegacyModel(head);
+        if (appearance.LegsModel is { } legs) common.EquipmentModelIds[3] = LegacyModel(legs);
+        if (appearance.OffhandWeaponModel is { } offhand) common.OffhandWeaponModel.Value = offhand;
+        if (appearance.AnimationState is { } animation) common.AnimationState = animation;
     }
+
+    private static LegacyEquipmentModelId LegacyModel(uint model) => new()
+    {
+        Id = (ushort)model, Variant = (byte)(model >> 16), Stain = (byte)(model >> 24),
+    };
 
     private static void WriteCustomize(ref CustomizeData c)
     {

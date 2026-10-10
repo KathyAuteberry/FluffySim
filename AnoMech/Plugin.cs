@@ -115,7 +115,7 @@ public sealed class Plugin : IDalamudPlugin
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave, arena-p3, snapshot <replay-p1|replay-p2|replay-ice|replay-p3|replay-p3-entry|anomech-p2|anomech-p3>"
+                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave, arena-p3, arena-dsr-p2, snapshot <label>"
             });
             CommandManager.AddHandler(CommandAlias, new CommandInfo(OnCommand)
             {
@@ -335,6 +335,9 @@ public sealed class Plugin : IDalamudPlugin
         }
         switch (args.Trim())
         {
+            case "arena-dsr-p2":
+                Game.RunScenario(new RunScenarioParams(new AnoMech.Scenarios.Dsr.DsrArenaDiagnosticScenario(), null, null, 0));
+                break;
             case "arena-p3":
                 Game.RunScenario(new RunScenarioParams(new AnoMech.Scenarios.Fru.FruP3ArenaDiagnosticScenario(), null, null, 0));
                 break;

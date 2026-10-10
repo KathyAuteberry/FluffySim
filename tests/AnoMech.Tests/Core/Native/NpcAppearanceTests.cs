@@ -31,4 +31,21 @@ public class NpcAppearanceTests
         Assert.That(common.EquipmentModelIds[1].Id, Is.EqualTo(7));
         Assert.That(common.MainhandWeaponModel.Value, Is.EqualTo(88));
     }
+
+    [Test]
+    public void DemihumanEquipmentIncludesHeadLegsAndShieldWithoutChangingOtherSlots()
+    {
+        var common = new CommonSpawnData { ModelChara = 3268 };
+        common.EquipmentModelIds[2].Id = 9;
+        BattleCharas.ApplyAppearance(ref common, new NpcAppearance(131073, 17183473865, 131073, 131073, 17181900901, 0));
+        foreach (var slot in new[] { 0, 1, 3 })
+        {
+            Assert.That(common.EquipmentModelIds[slot].Id, Is.EqualTo(1));
+            Assert.That(common.EquipmentModelIds[slot].Variant, Is.EqualTo(2));
+        }
+        Assert.That(common.EquipmentModelIds[2].Id, Is.EqualTo(9));
+        Assert.That(common.OffhandWeaponModel.Value, Is.EqualTo(17181900901));
+        Assert.That(common.MainhandWeaponModel.Value, Is.EqualTo(17183473865));
+        Assert.That(common.ModelChara, Is.EqualTo(3268));
+    }
 }
