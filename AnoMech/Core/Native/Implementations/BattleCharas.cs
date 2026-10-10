@@ -121,6 +121,7 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         common.Battalion = config.IsHostile ? HostileBattalion : FriendlyBattalion;
         common.Level = config.Level;
         common.ModelAttributeFlags = config.InitialModeAttributeFlags ?? 0;
+        ApplyAppearance(ref common, config.Appearance);
         return packet;
     }
 
@@ -182,6 +183,17 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         CharacterManagerHelper.Reserve(idx);
         entityId = id;
         return BattleCharaProxy.ForSlot(idx);
+    }
+
+    // Demihuman bodies and weapons are equipment, not part of ModelChara.
+    internal static void ApplyAppearance(ref CommonSpawnData common, NpcAppearance? appearance)
+    {
+        if (appearance is null) return;
+        common.EquipmentModelIds[(int)DrawDataContainer.EquipmentSlot.Body] = new LegacyEquipmentModelId
+        {
+            Id = (ushort)appearance.BodyModel, Variant = (byte)(appearance.BodyModel >> 16), Stain = (byte)(appearance.BodyModel >> 24),
+        };
+        common.MainhandWeaponModel.Value = appearance.MainhandWeaponModel;
     }
 
     private static void WriteCustomize(ref CustomizeData c)

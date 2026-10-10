@@ -5,6 +5,14 @@ namespace AnoMech.Tests;
 
 public class ArenaSnapshotTests
 {
+    [TestCase("anomech-p3")]
+    [TestCase("replay-p3")]
+    [TestCase("replay-p3-entry")]
+    public void P3LabelsAreAcceptedWithoutNativeAccess(string label)
+    {
+        Assert.That(ArenaSnapshot.IsAllowedLabel(label), Is.True);
+    }
+
     [TestCase("../replay-p2")]
     [TestCase("replay-p2/other")]
     [TestCase("a character name")]

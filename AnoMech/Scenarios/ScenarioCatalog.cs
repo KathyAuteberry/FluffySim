@@ -24,8 +24,8 @@ public static class ScenarioCatalog
 {
     public static IReadOnlyList<IScenario> Create() =>
     [
-        new Fru.DiamondDust.FruDiamondDustScenario(),
         new Fru.LightRampant.FruLightRampantScenario(),
+        new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

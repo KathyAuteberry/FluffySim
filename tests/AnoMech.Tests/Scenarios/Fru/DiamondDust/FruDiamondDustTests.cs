@@ -92,14 +92,14 @@ public class FruDiamondDustTests
     }
 
     [Test]
-    public void RegisteredAsAnIncompleteScenarioAboveLightRampant()
+    public void PausedScenarioRetainsSettingsButIsNotSelectable()
     {
         var catalog = ScenarioCatalog.Create().ToList();
-        var diamondDust = catalog.Single(s => s is FruDiamondDustScenario);
+        var diamondDust = new FruDiamondDustScenario();
         var lightRampant = catalog.Single(s => s is AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario);
         Assert.That(diamondDust.IsIncomplete, Is.True);
         Assert.That(diamondDust.Name, Is.EqualTo("Diamond Dust (Incomplete)"));
-        Assert.That(catalog.IndexOf(diamondDust), Is.LessThan(catalog.IndexOf(lightRampant)));
+        Assert.That(catalog.Any(s => s is FruDiamondDustScenario), Is.False);
         Assert.That(catalog.Any(s => s is FruArenaDiagnosticScenario), Is.False);
         Assert.That(diamondDust.SettingsOverrides, Is.TypeOf<FruDiamondDustStateOverrides>());
         Assert.That(AnoMech.Core.Game.Game.DisplayName(lightRampant), Is.EqualTo("P2 Light Rampant (Mana)"));
@@ -159,6 +159,7 @@ public class FruDiamondDustTests
         FakeGame? native = null;
         var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, 0, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruDiamondDustScenario(),
             ConfigureNative = fake => { native = fake; fake.BattleCharas.PacketSpawnDelayFrames = 6; },
             StopAt = 0.02f,
         });
@@ -177,6 +178,7 @@ public class FruDiamondDustTests
     {
         var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, 0, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruDiamondDustScenario(),
             ConfigureNative = fake => fake.BattleCharas.PacketSpawnDelayFrames = 30,
             WriteArtifactsOnFailure = false,
         });
@@ -194,6 +196,7 @@ public class FruDiamondDustTests
         var captured = false;
         var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, 0, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruDiamondDustScenario(),
             ConfigureNative = fake => fake.BattleCharas.PacketSpawnDelayFrames = delay,
             Probe = p =>
             {
@@ -221,6 +224,7 @@ public class FruDiamondDustTests
         var checks = 0;
         var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, 0, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new FruDiamondDustScenario(),
             Overrides = o => ((FruDiamondDustStateOverrides)o).Axe = axe,
             Probe = p =>
             {

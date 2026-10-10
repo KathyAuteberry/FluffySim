@@ -30,6 +30,7 @@ public sealed class SimWorld : ISimObject, IDisposable
     // default (straight-line movement). Scenarios mutate it over their timeline
     // (Add/Remove/Clear); bots hold this one instance across runs, cleared on Despawn.
     public ObstacleField Obstacles { get; } = new();
+    public SoftMarkers SoftMarkers { get; } = new();
 
     // No members outside a zone stay. Ticked before the children, which reference it.
     public SimParty Party { get; } = new();
@@ -208,12 +209,14 @@ public sealed class SimWorld : ISimObject, IDisposable
         Map.Tick();
         Party.Tick(deltaSeconds);
         children.Update(deltaSeconds);
+        SoftMarkers.RemoveInactive();
         enemyList.Tick(children.OfType<SimEnemy>(), deltaSeconds);
     }
 
     // The run's teardown; the party stays.
     public void Despawn()
     {
+        SoftMarkers.Clear();
         children.Despawn();
         enemyList.Clear();
         Obstacles.Clear();

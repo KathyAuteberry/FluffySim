@@ -23,6 +23,7 @@ namespace AnoMech;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService] internal static IGameGui GameGui { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
@@ -114,7 +115,7 @@ public sealed class Plugin : IDalamudPlugin
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave, snapshot <replay-p1|replay-p2|replay-ice|anomech-p2>"
+                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave, arena-p3, snapshot <replay-p1|replay-p2|replay-ice|replay-p3|replay-p3-entry|anomech-p2|anomech-p3>"
             });
             CommandManager.AddHandler(CommandAlias, new CommandInfo(OnCommand)
             {
@@ -123,6 +124,7 @@ public sealed class Plugin : IDalamudPlugin
             commandsRegistered = true;
 
             PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
+            PluginInterface.UiBuilder.Draw += SoftMarkerRenderer.Draw;
             Framework.Update += OnFrameworkUpdate;
 
             PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
@@ -217,6 +219,7 @@ public sealed class Plugin : IDalamudPlugin
     private void DisposeSubsystems()
     {
         PluginInterface.UiBuilder.Draw -= WindowSystem.Draw;
+        PluginInterface.UiBuilder.Draw -= SoftMarkerRenderer.Draw;
         Framework.Update -= OnFrameworkUpdate;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
@@ -332,6 +335,9 @@ public sealed class Plugin : IDalamudPlugin
         }
         switch (args.Trim())
         {
+            case "arena-p3":
+                Game.RunScenario(new RunScenarioParams(new AnoMech.Scenarios.Fru.FruP3ArenaDiagnosticScenario(), null, null, 0));
+                break;
             case "config":
                 ConfigWindow.Toggle();
                 break;

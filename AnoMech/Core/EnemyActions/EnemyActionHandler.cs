@@ -130,7 +130,9 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
             effects.Add(ActionEffectEntry.ActionMarker(id));
             targets.Add(new ActionEffectTarget(who.GameObjectId, effects));
         }
-        IEnumerable<SimCharacter> presentation = action.Cast.TargetsPartyForPresentation
+        IEnumerable<SimCharacter> presentation = caster is SimEnemy enemy && action.Cast.PresentationTargets is { } selectPresentation
+            ? selectPresentation(enemy, target, world).OfType<SimCharacter>().Where(m => m.IsAlive())
+            : action.Cast.TargetsPartyForPresentation
             ? world.Party.ActiveMembers().OfType<SimCharacter>().Where(m => m.IsAlive())
             : action.Cast.TargetsCasterForPresentation ? [caster] : [];
         foreach (var who in presentation)

@@ -24,6 +24,7 @@ public sealed record CastSpec
 {
     // Presentation targets do not alter mechanic hit selection.
     public bool AnimationTargetsCaster { get; init; }
+    public Func<SimEnemy, SimCharacter?, SimWorld, IReadOnlyList<SimCharacter>>? PresentationTargets { get; init; }
     public bool TargetsPartyForPresentation { get; init; }
     public bool TargetsCasterForPresentation { get; init; }
     // Delay from cast bar end to action effect. The in-game bar is this much shorter than the

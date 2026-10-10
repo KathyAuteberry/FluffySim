@@ -15,11 +15,11 @@ namespace AnoMech.Core.Native.Implementations;
 
 internal static unsafe class ArenaSnapshot
 {
-    internal static bool IsAllowedLabel(string label) => label is "replay-p1" or "replay-p2" or "replay-ice" or "anomech-p2";
+    internal static bool IsAllowedLabel(string label) => label is "replay-p1" or "replay-p2" or "replay-ice" or "replay-p3" or "replay-p3-entry" or "anomech-p2" or "anomech-p3";
 
     internal static string Save(string label)
     {
-        if (!IsAllowedLabel(label)) throw new ArgumentException("Use replay-p1, replay-p2, replay-ice or anomech-p2.");
+        if (!IsAllowedLabel(label)) throw new ArgumentException("Use replay-p1, replay-p2, replay-ice, replay-p3, replay-p3-entry anomech-p2 or anomech-p3.");
         var game = GameMain.Instance();
         var world = LayoutWorld.Instance();
         if (game == null || world == null || world->ActiveLayout == null)

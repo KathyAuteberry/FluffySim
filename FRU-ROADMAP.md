@@ -6,10 +6,12 @@ explosions, tethers, Hammer grace period and bot resolution. This validation is
 for the supported Mana formation, not every outstanding native presentation
 question. Startup flicker has not been separately confirmed eliminated.
 
-**Diamond Dust is a registered incomplete practice prefix**, ending after
-Frigid Needle and before Sinbound Holy. It appears above Light Rampant in the
-normal sidebar; native presentation fixes await the next in-game validation. Thin Ice locomotion and persistent Holy hazard state remain blockers
-for the full fragment; see the latest section below.
+**Diamond Dust: Paused — incomplete and currently failing at startup.**
+Removed from the normal catalog; source, overrides and tests remain intact.
+Light Rampant remains selectable and unchanged. **P3 Ultimate Relativity (Mana)
+is implemented through Shell Crusher, registered and Release build/test
+validated; native mechanic presentation awaits FFXIV validation.** The P3
+arena appearance was manually confirmed; its working preset is preserved.
 
 ## Architecture
 
@@ -43,7 +45,7 @@ research does not advance a mechanic to Research complete.
 | FRU-Sim selectable scenario | Reference sequence | AnoMech | Status / evidence |
 | --- | --- | --- | --- |
 | P2 Light Rampant | `scenes/p2/sequences/light_ramp_seq.gd`, `p2_lr_main.tscn` | Mana ring formation | Manually validated in FFXIV for the supported formation |
-| P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd` | Missing | Not researched; casts recorded in pulls 4, 6, 9, 13, 15, 16 |
+| P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd`, `p3_ur_main.tscn` | Full Mana sequence through Shell Crusher | Build/test validated; 607 focused tests, native mechanic presentation pending |
 | P3 Sextuple Apocalypse | `scenes/p3/sequences/apoc_seq.gd` | Missing | Not researched to completion; Mana rotations and water swaps inspected; casts in 4, 6, 13, 16 |
 | P4 Darklit Dragonsong | `scenes/p4/sequences/darklit_seq.gd` | Missing | Not researched; reference offers NA/EU/JP/Mana/MUR variants |
 | P4 Crystallize Time | `scenes/p4/sequences/crystal_time_seq.gd` | Missing | Not researched; reference offers NA/MUR variants |
@@ -1380,3 +1382,476 @@ The model mappings above are verified **sheet mappings**, not claims that a raw
 replay NpcSpawn model override was reconstructed. If formations remain invisible,
 compare the real replay helper's native model/draw/timeline state with the prepared
 AnoMech helper using read-only diagnostics before adding another actor or effect.
+
+
+## P3 priority change and native-state evidence gate (2026-10-10)
+
+Diamond Dust is shelved, not deleted. The reported `Mirror Image: Native actor
+setup incomplete; leave and retry` originates in its scenario-local guard at
+3 seconds. It requires every actor, including meshless helpers, to have
+`HasDrawObject`. A permanently meshless helper may violate this requirement;
+the exact failed actor is not yet known. Fake rendering readiness does not prove
+native readiness. Light Rampant has no equivalent guard and does not opt into
+the new Diamond Dust presentation flags. No shared regression has been
+established; no actor/native changes were made in this iteration.
+
+### Recorded P3 transition and missing state
+
+Re-inspected the original October 7 native replay read-only. Pull 4 yields:
+
+| Replay time (s) | Recorded input |
+| --- | --- |
+| 950.097 | MapEffect slot `0x17`: state 4, timeline 8 (`0x00080004`) |
+| 950.097 | Slots `0x28`, `0x29`: state 1, timeline 2 (`0x00020001`) |
+| 950.097 | Director `0x8000001E`, argument 790; weather 105, flags 1, fade 0 |
+| 958.374 | Slot `0x28`: state 16, timeline 32 (`0x00200010`); weather 106 |
+| 958.474 | Ultimate Relativity cast 40266, recorded cast duration 9.7 s |
+| 968.449 | Ultimate Relativity action effect |
+| 969.329 | Slots `0x1A`–`0x21`: state 1, timeline 2 |
+| 972.595 | Speed cast 40293, recorded duration 5.2 s |
+| 980.359 | First Dark Fire (40276) and Unholy Darkness (40277) effects |
+
+The first meaningful resolution is 21.885 s after cast start in this replay.
+This is a received-effect time, not an exact damage snapshot. A proposed opening
+slice ends after that resolution, before the first Sinbound Meltdown casts at
+981.432 s. Additional pulls must normalize and validate the production timeline.
+The simulator's executable `p3_ur_main.tscn` track calls cast at 1.0, assignments
+at 11.8, tethers at 15.0, and first fire/stack at 22.9; these offsets agree
+approximately after shifting to cast-relative time. Method comments are not the
+executable timeline.
+
+The existing P2 preset explicitly holds some background layers disabled and
+one enabled. Applying it unchanged to P3 is unsupported. Recorded map/weather
+commands alone do not establish P3 layer/filter/festival, prefab and collider
+state. No P3 preset, actors, gameplay slice or catalog entry was added. This is
+the requested native-state evidence gate, not a claim that P3 rendering works.
+
+### Opening mechanic and presentation checklist
+
+Independent reference: BossMod `P3UltimateRelativity.cs`, `FRUEnums.cs` and
+`FRUStates.cs`; Splatoon `The Futures Rewritten/P3 Ultimate Relativity.cs`;
+FRU-Sim `ult_relativity_seq.gd`, `p3_ur_main.tscn`; Mana guide
+`_mana/fru/03_oracle_of_darkness.en.md`.
+
+- BossMod identifies P3 Oracle `0x45A7`, Delight's Hourglass `0x45A8`.
+  NPC name/model mapping and visible spawn/animation configuration still need
+  game-sheet/native confirmation before spawning them.
+- Opening: Ultimate Relativity raidwide, delayed statuses, eight hourglasses,
+  Speed with yellow/purple tethers, first fire spreads and central stack.
+- Status references: Unholy Darkness 2454, Dark Fire 2455, Shadoweye 2456,
+  Dark Eruption 2460, Dark Water 2461, Dark Blizzard 2462, delayed Return 2464;
+  rotation 2970 (`0x10D` counterclockwise / `0x15C` clockwise).
+- Tethers 133 slow/purple and 134 quick/yellow. Verify native animation/VFX
+  presentation against replay; no paths or animation identities invented.
+- Assignments: two short DPS, one short support; one medium of each group;
+  two long supports, one long DPS. Short support or long DPS is replaced by ice.
+  Unholy Darkness targets must exclude concurrent fires; simulator lists eligible
+  groups separately for each of the three resolutions.
+- Remaining full sequence: rotating hourglass lasers, medium fire/ice and stack,
+  long fire/stack, Return snapshots, stun/rewind, delayed eruption/water/gaze.
+  These are beyond the requested first-resolution slice.
+
+### Mana markers and choreography
+
+The Mana guide explicitly warns its tether orientation is upside down relative
+to Y-Runytivity. Mana uses short DPS NW/NE, long supports SW/SE, short support
+south, long DPS north, medium support west and medium DPS east (tether-relative).
+FRU-Sim uses short DPS SW/SE and long supports NW/NE; its assignments cannot be
+ported unchanged. Number-to-side tie-breaking still needs verification before
+implementing deterministic overrides.
+
+Required local markers: Attack 1/2 for short DPS; Bind 1/2 for long supports.
+Both pairs remain eligible in either ice branch. Human role participates in the
+same authoritative assignment state as bots; no human privilege or separately
+randomized visual state. The guide uses player self-mark macros, so marker
+number allocation should not silently inherit simulator role priority.
+
+Read-only Lemegeton source inspected: MIT license; `Plugin.DrawSoftmarkerOn`
+resolves actor position every draw, projects it to screen, and uses ImGui
+`AddImage`. `Core/UserInterface.cs` uses game icons 61201/61202 (Attack 1/2),
+61211/61212 (Bind 1/2). This local draw route is separate from its real marking
+command paths. A future AnoMech implementation can draw these game textures from
+simulated character positions, owning markers under the scenario/world lifetime;
+it must not call Lemegeton's marker command/server paths or require the plugin.
+No code/assets copied and no softmarkers implemented before the arena gate.
+Acceptance remains actual FFXIV visibility, human eligibility and bot choreography.
+
+### Required read-only P3 capture
+
+Release commands now accept `replay-p3` and `replay-p3-entry`, retaining all P2
+labels. Existing snapshot code captures typed layout identity/filter/festivals,
+layers and object flags/collider observations, map slots and their bindings,
+weather and environment resources. Scene selector, director downstream manager
+and physics broadphase membership remain explicitly unavailable.
+
+1. Build `dotnet build -c Release`; manually reload AnoMech. Do not start a
+   simulation while collecting replay state.
+2. Load the FRU Duty Recorder replay, use pull 4 or any pull reaching P3.
+3. Optional: pause just after P3 appears, before Ultimate Relativity starts;
+   run `/anomech snapshot replay-p3-entry` and wait for saved-file confirmation.
+4. Pause when the P3 arena is fully established and Ultimate Relativity's cast
+   begins (pull 4 native replay around 958.474 s, not encounter-relative time).
+   Run `/anomech snapshot replay-p3` and wait for confirmation.
+5. Supply the generated JSON under the plugin configuration's `arena-snapshots`
+   directory. Original recordings stay local. No live progression required.
+
+Compare with the existing manually validated P2 snapshots to identify layers,
+collision and native bindings before implementing a P3-specific preset. No
+unsafe native probing or speculative state writes are authorized by this step.
+
+### Validation of shelving and capture preparation
+
+`DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev dotnet build -c Release`:
+0 errors, 3011 warnings. Release plugin suite: **893 passed**, 0 failed;
+Release relay suite: **41 passed**, 0 failed. Count change from 892: one catalog
+scenario case removed and two P3 snapshot-label cases added. Diamond Dust's
+128 combinations and Light Rampant regressions remain covered. Shelved native
+presentation tests now explicitly construct the unregistered scenario. No
+assertion of actor rendering or P3 collision correctness follows from these tests.
+Manual P3 state capture is the next required step; no automatic reload performed.
+
+
+## P3 replay snapshots received: provisional arena preset (2026-10-10)
+
+Compared `20261010-055028-5389143-replay-p3-entry.json` (P3 arrival) and
+`20261010-055151-1604910-replay-p3.json` (Ultimate Relativity with hourglasses)
+against the prior real P2 snapshot. Files were read-only, not copied into the
+repository. Both have territory 1238, layout InitState 7, filter key 0 and zero
+festivals. Entry weather is 105; established P3 weather is 106. No scene-selector
+field or physics broadphase membership can be inferred from this schema.
+
+- The same unwanted background/light layers `0x5F88`–`0x5F94`, `0x5F9F`
+  remain inactive. P2 backdrop `0x5FC9` is now entirely inactive.
+- Slot `0x17` binds the P2 shared group in layer `0x6053`, now inactive.
+  Slot `0x18` remains state 4; central ice CollisionBox has ColliderActive false.
+  CollisionBox IsActive can remain true: object activation and collider activation
+  are different observations, not proof of broadphase state.
+- Slot `0x28` binds layer `0x606E`: arrival state 1, established state 16.
+  Its objects have mixed activation states and change across the snapshots.
+  A whole-layer activation hold would destroy that distinction.
+- Slot `0x29` binds layer `0x5FD8`, state 1 in both captures; its content
+  becomes active in established P3. Native timelines must control these groups.
+- Established snapshot additionally has slots `0x1A`–`0x21` at state 1.
+  Replay puts these after Ultimate Relativity's raidwide; excluded from the
+  arena-only preset until the opening mechanic implements their lifecycle.
+
+`FruZone.P3` uses weather 106, initializes all 54 resting slots, then applies
+recorded `0x17=0x00080004`, `0x28=0x00020001`, `0x29=0x00020001`,
+`0x28=0x00200010` in order. Only the observed inactive background layers are
+held inactive using existing guarded layout interfaces. No invasive native
+hooks, scene/festival writes or director packet replay added. P2 code unchanged.
+The preset is a supported reconstruction candidate, not manually validated.
+
+Added unregistered, solo `FruP3ArenaDiagnosticScenario`, accessible explicitly by
+`/anomech arena-p3` in Release. It uses normal Game/Map lifecycle, spawns no
+bosses, bots, casts or tethers, and does not add sidebar entries. Snapshot label
+`anomech-p3` is accepted. Diamond Dust stays shelved; Light Rampant stays in the
+catalog. Ultimate Relativity gameplay and Mana softmarkers remain pending while
+we validate this first native milestone; it is not presented as playable.
+
+Manual procedure: build `dotnet build -c Release`, manually reload, exit Duty
+Recorder and enter the inn. Run `/anomech arena-p3`; inspect the established
+P3 background, no ice/mixed phases, walk through center and around arena. Run
+`/anomech snapshot anomech-p3` and supply the saved JSON. Use `/anomech leave`,
+then repeat entry without restarting the client. This establishes whether the
+recorded map timelines are sufficient without the real director context. Once
+confirmed, implement the visible boss/hourglass/markers and first fire-stack
+slice against this phase; do not treat the actor-free test as that slice.
+
+Validation: final `dotnet build -c Release` succeeded with 0 errors and 3032
+warnings. Release plugin suite: **896 passed**, 0 failed; relay suite: **41
+passed**, 0 failed. Added two P3 preset/actor-free/unload cases and one snapshot
+label case. Initial cleanup test incorrectly assumed Game.Dispose performs
+Map.Unload; corrected the test to call explicit unload, as the P2 test does,
+without changing lifecycle implementation or weakening the cleanup assertion.
+Native rendering, traversability and re-entry still require the manual check.
+
+
+## P3 arena visual confirmation (2026-10-10)
+
+User reports the arena looks good and supplied
+`20261010-062154-6043701-anomech-p3.json`. Compared it read-only with the real
+Ultimate Relativity P3 snapshot: weather 106, layout filters and festivals match;
+all recorded layout instance identities are present. Both CollisionBoxes in
+layers `0x5EEF` and `0x6215` have ColliderActive false, matching the replay.
+This confirms appearance and those collider observations, not full physical
+traversability or repeated entry; neither was explicitly reported here.
+
+The snapshot is not identical to the replay's mechanic-active state. Slots
+`0x1A`–`0x21` remain at resting state 4 instead of 1, as intended for the
+actor-free diagnostic. Several VFX are inactive and some SharedGroup collider
+getters differ (the simulation's existing spawn-barrier suppression applies).
+Layer `0x5FD8` still has 16 BgParts, 32 Lights and 8 VFX inactive where the replay
+has them active, despite slot `0x29` having the same resting P3 command state.
+Do not claim those differences are all explained by the absent mechanic: native
+timeline/context behavior remains to be checked during the opening presentation
+work. No changes to the visually successful preset were made from this comparison.
+
+P3 arena appearance is now manually validated. This clears the visual arena
+milestone for opening Ultimate Relativity development, while exact VFX activation,
+movement/collision testing and re-entry remain explicit validation items. The
+opening slice and client-side Mana markers have not yet been implemented.
+Documentation-only update; no build/test rerun required and no native writes made.
+
+
+## Full Ultimate Relativity implementation (2026-10-10)
+
+This supersedes the opening-slice plan above. P3 arena investigation was not
+reopened. The complete supported FRU-Sim sequence is implemented, ending after
+Shell Crusher rather than continuing into unrelated P3 tankbusters. The normal
+catalog places Ultimate Relativity (Mana) after Light Rampant. Diamond Dust
+remains paused and unregistered; its source and tests are preserved.
+
+### Sources and recording coverage
+
+Read the complete `ult_relativity_seq.gd`, `p3_ur_main.tscn` animation tracks,
+`ult_relativity_pc_pos.gd`, and the common hourglass script/scene. Mechanic
+behavior is independently implemented; no substantial licensed code or assets
+were copied. FRU-Sim is GPL-3.0; Lemegeton is MIT and is a reference only, not a
+runtime dependency.
+
+Cross-checks: Tuufless `_mana/fru/03_oracle_of_darkness.en.md` and its assignment
+diagram; BossMod `P3UltimateRelativity.cs`, `FRUEnums.cs` and `FRUStates.cs`;
+Splatoon's `P3 Ultimate Relativity.cs`; pinned game sheets; native replay
+segments from the October 7 recording. `tools/fru_ultimate_relativity_evidence.py`
+is a read-only extractor exporting numeric mechanic events and relative times,
+without player identities. Original logs and replay files remain unchanged.
+
+Surveyed the available `Network_30301_*.log` recordings: eight sequences, five
+complete through Shell Crusher. October 7 contains six sequences in pulls
+4/6/9/13/15/16; pull 9 ends before final resolution, the other five complete.
+September 30 and October 4 each contribute one incomplete sequence. The
+sanitized `RecordedTimelines.json` fixture tests all five complete timelines.
+It contains no character names or entity IDs. Receive-time comparison tolerance
+is 0.25 seconds; damage snapshots are not asserted equal to receive timestamps.
+
+### Sequence and native presentation
+
+Times below are seconds from scenario start; the initial Ultimate Relativity
+cast begins at 3 seconds, giving native actors time to materialize.
+
+| Scenario time | Implemented behavior |
+| --- | --- |
+| 0 / 3 | Visible Oracle, meshless effect helpers / Ultimate Relativity cast and raidwide |
+| 13.83 / 14.38 | Fire/ice/stack/final/Return assignments and local markers / eight visible hourglasses and map slots `0x1A`–`0x21` |
+| 17.05 / 17.13 / 22.63 | Native slow/fast tethers / Speed / speed effects and tether removal |
+| 24.90 / 34.90 / 44.90 | Three fire/stack resolutions; ice resolves with the middle wave |
+| 25.88 / 35.94 / 46.93 | Hourglass rotation statuses, followed by their native casts |
+| 29.80 / 39.83 | Record first five / remaining three Return positions |
+| 30.03 / 40.07 / 51.06 | Three waves of nearest-player laser baits; each glass fires ten shots |
+| 53.84 / 55.30 | Stun and movement lock / physical Return to stored positions, preserving facing |
+| 56.90 | Four eruptions, four-player water stack and three gazes; markers removed |
+| 57.83 / 61.10 | Shell Crusher cast / eight-player stack |
+| 65 | End after native animation lock; remove actors, statuses, markers and restore hourglass map slots |
+
+Subsequent laser shots begin 2.04 seconds after the bait and repeat every 1.07
+seconds, rotating 15 degrees. Timings are supported by multiple receive timelines
+and executable simulator tracks. No speculative native addresses, animation
+states, VFX paths or packet replay were introduced.
+
+Oracle uses BNpcBase 17831 (`0x45A7`), name 9832, model 3057. Hourglasses use
+17832 (`0x45A8`), name 9825, model 476, explicitly visible spawns. ACT confirms
+40291 is cast by hourglasses, while 40235/40292 are emitted by base-9020
+helpers. Separate helpers own simultaneous fire, ice and stack effects to avoid
+cancelling one another's native animations. Existing actor lifecycle and native
+proxy facilities supply all spawning and cleanup.
+
+Actions: 40266 Ultimate Relativity; 40293 Speed; 40294/40295 speed effects;
+40291 hourglass wind-up; 40235 initial laser; 40292 repeating laser; 40276
+fire; 40277 stack; 40279 ice; 40274 eruption; 40271 water; 40278 gaze;
+40286/40287 Shell Crusher cast/effect. Cast times and geometry use the Action
+sheet. Native replay action-effect headers support the implemented animation
+locks and target lists, including zero-target ice/repeating lasers, five or six
+stack targets, seven gaze targets and eight raidwide/Shell targets. An optional
+presentation-target selector is the only shared action change; default behavior
+for existing scenarios is unchanged.
+
+Statuses: 2454 stack, 2455 fire, 2456 gaze, 2460 eruption, 2461 water, 2462 ice,
+2464 delayed Return, 2452 Return, 4163 stun. Fire durations are 11/21/31 seconds;
+ice is 21, final debuffs 43. Return records at the two observed timings.
+Hourglass rotation status 2970 uses parameters `0x15C` clockwise and `0x10D`
+counterclockwise, with sheet ParamEffect 28 and four-second duration. Native
+status/cast/action facilities render these without invented resource paths.
+
+### Mana assignments, markers and bots
+
+Relative north is the single yellow tether; other yellow tethers are SW/SE,
+purple E/W. This is Mana's 大 formation, not FRU-Sim's inverted Y convention.
+
+| Assignment | Relative position | Local marker |
+| --- | --- | --- |
+| Two short DPS | NW / NE | Attack 1 / Attack 2 |
+| Medium DPS / long DPS | E / N | None |
+| Short support / medium support | S / W | None |
+| Two long supports | SW / SE | Bind 1 / Bind 2 |
+
+DPS receive short/short/medium/long; supports short/medium/long/long. Either the
+short support or long DPS receives ice instead of fire. Stack targets are unique
+and exclude concurrent fire targets. All eight roles are shuffled with scenario
+RNG; the human has no privileged assignment. Marker identities, bot positions,
+Return positions and validations derive from the same state. Overrides support
+eight reference-north directions, either ice branch, any eight-bit spin mask and
+any role's eligible assignment. Bots use normal movement speed, adjust bait
+positions for each glass's spin, record appropriate eruption/water/gaze positions,
+face outward before rewind, then restack for Shell Crusher.
+
+`Core/Game/SoftMarkers.cs` is a per-world marker model; the UI projects actual
+game icons 61201/61202/61211/61212 above moving actors. It never calls native
+marking Set or sends party-mark commands. Rendering does not require Lemegeton.
+Dead/despawned actors are filtered, failure clears markers, and world/scenario
+teardown clears ownership. Human movement and facing remain under user control.
+
+### Validation and remaining limits
+
+Final `dotnet build -c Release`: **zero errors, 3,294 warnings** (primarily
+Windows platform analyzers in Linux-built tests and existing compiler warnings).
+Release plugin tests: **1,509 passed, zero failed** (previous 896 preserved).
+Relay: **41 passed, zero failed**. Existing Python tools: **20 passed**.
+Ultimate Relativity contributes 607 focused cases, including all 256 independent
+spin masks with both ice branches, all eight reference directions, eligible
+human-role/assignment overrides, deterministic state, native identities and
+visible-spawn flags, status/effect presentation, timeline comparisons, Return,
+full bot survival, cancellation during pending native spawning and repeated runs.
+Five reusable softmarker tests cover authentic icon identities, actor attachment,
+cleanup and absence of native marking Set calls. The catalog survival test now
+includes the full scenario. Deliberate human and bot failures test fire overlap,
+rotating lasers, ice donut, inward gaze, bad recorded eruption/water positions
+and insufficient Shell stacking. No bot immunity or weakened old assertions.
+
+Headless tests do not verify native model loading, cue readability or authentic
+animation rendering. Specifically still require FFXIV checks: visible hourglass
+rotation arrows; tether colors/direction; laser/fire/ice/gaze animations; status
+icons; four projected softmarkers including the human; Return movement and facing;
+cleanup/re-entry. The exact native ground Return trace has no verified VFX path
+and is not claimed reproduced. The ice donut inner radius **3 is UNVERIFIED**:
+BossMod likewise marks it provisional; outer radius 12 comes from the sheet.
+Failures use AnoMech's practice severity model, not exact HP/mitigation simulation.
+The known `0x5FD8` inactive background differences remain a presentation caveat;
+the working arena preset was preserved. No additional snapshot is required to
+begin this playtest.
+
+### Release manual test
+
+1. Run `dotnet build -c Release` (Linux SDK environment:
+   `DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev`). Manually reload the plugin;
+   no automatic reload is configured.
+2. In an inn, select Futures Rewritten (Ultimate) → P3 → Ultimate Relativity
+   (Mana), after P2 Light Rampant. Choose `Mana 大 / local markers`, scale 1.
+3. First use single yellow tether N, all clockwise and long-DPS ice. Force your
+   current DPS role to ShortDps1, or support role to LongSupport1, to check your
+   Attack 1 or Bind 1 icon. Repeat with ShortDps2/LongSupport2 for the other icon.
+4. At debuff assignment, read your icon/durations. Resolve fire at your clock,
+   bait your assigned glass from its spin-safe side, record your final-debuff
+   position, and face outward before stun/Return. Verify physical rewind and
+   final water/eruption/gaze, then stack center for Shell Crusher.
+5. Repeat with short-support ice, all counterclockwise, other reference norths,
+   then random overrides. Check all four unmarked assignment categories as well.
+6. Let completion remove all actors/icons/statuses; restart without restarting
+   FFXIV. Leave once during hourglass casts and once during Return, re-enter,
+   and verify no retained markers, lasers or hourglasses. Confirm Light Rampant
+   still loads and behaves as before.
+
+Remaining work is manual validation and any resulting focused visual/geometry
+corrections, especially the provisional ice radius and Return trace. The entire
+supported mechanic executes headlessly; it is not merely an opening prefix.
+
+
+## Ultimate Relativity playtest polish: Oracle and eight markers (2026-10-10)
+
+The user manually playtested the entire sequence and reports that it works well.
+Hourglasses, four original local markers and gameplay are confirmed usable.
+The Oracle was invisible; this update targets that appearance and extends the
+marker scheme. Timings, RNG, bots, lasers, Return, arena presets, Light Rampant
+and paused Diamond Dust remain unchanged.
+
+### Oracle appearance correction
+
+The existing actor is already created once, base 17831 (`0x45A7`), name 9832,
+model 3057, center position, facing north, with visible spawn flags. It is not
+intermission Gaia (17830 / `0x45A6`, model 4436, name 9326). The generic native
+packet builder selected ModelChara but left equipment empty. Model 3057 is a
+Type-2 demihuman: its body comes from equipment rather than the base model alone.
+The missing body equipment is the identified configuration cause of invisibility;
+the corrected native rendering still needs in-game confirmation.
+
+Inspected every matching native NPC-spawn segment (opcode `0x020C`, length 656)
+in the original replay, read-only. All seven Oracle spawns agree: body equipment
+word 65537 (`0x00010001`: model 1, variant 1, stain 0), main-hand weapon word
+4295237459, model 3057, name 9832, zero animation state and model-attribute flags.
+Equipment/customize offsets were obtained from the installed typed
+FFXIVClientStructs CommonSpawnData structure, not guessed. No raw packet,
+character identity or recording content was copied into source.
+
+Added opt-in `NpcAppearance` to EnemySpawnConfig. BattleCharas applies only its
+body and main-hand fields through typed CommonSpawnData/LegacyEquipmentModelId
+members. Ultimate Relativity supplies the verified Oracle values; absent
+appearance preserves every existing encounter's spawn fields. The real spawn's
+`0x6000B` display flags include hidden-until-revealed; practice retains existing
+visible flags `0x4000B` so no guessed reveal animation is necessary. The same
+boss continues casting Ultimate Relativity, Speed and Shell Crusher, with the
+existing enemy-list cast bars and action animations. No duplicate boss, readiness
+change, unknown native write or arena change was introduced.
+
+### Complete local marker scheme
+
+Validated against the full optional macro block in
+[Tuufless's Mana guide](https://ffxiv.tuufless.com/mana/fru/03_oracle_of_darkness/)
+and Lemegeton's icon table (read-only). The original four markers retain their
+assignment/RNG meaning. Every player now receives one of eight distinct markers:
+
+| Marker | Eligible strategy slot | Existing tether-relative hourglass | Game icon |
+| --- | --- | --- | --- |
+| Attack 1 | First short DPS | NW | 61201 |
+| Attack 2 | Second short DPS | NE | 61202 |
+| Attack 3 | Short support, including Ice replacement | S | 61203 |
+| Ignore 1 | Medium support | W | 61221 |
+| Ignore 2 | Medium DPS | E | 61222 |
+| Bind 1 | First long support | SW | 61211 |
+| Bind 2 | Second long support | SE | 61212 |
+| Bind 3 | Long DPS, including Ice replacement | Single yellow tether (reference N) | 61213 |
+
+The optional DPS-long macro literally says South, as did the requested table.
+That text conflicts with the single-yellow reference-north 大 formation and the
+successfully playtested existing long-DPS bait at that yellow hourglass. Assigning
+that player to reference S would instead select an empty-tether short-fire glass.
+This iteration adds Bind 3 to the established long-DPS slot and does not change
+bot movement or invert the working formation. All positions rotate with reference
+north. Pair numbering retains seeded shuffle order, without human preference or
+new role-priority rules. Ice changes the debuff, not the slot or marker.
+
+Markers still appear at 13.83 seconds, follow their actors, disappear at final
+resolution (56.90), and clear on completion/failure/cancellation/restart/actor
+teardown. The existing projected-icon renderer is unchanged. No native marking
+Set, server marker command, shared party-marker write or Lemegeton dependency
+was added.
+
+### Validation and manual check
+
+Release plugin suite: **1,532 passed**, zero failed (23 new cases above the
+1,509 baseline). Relay: **41 passed**. Python tooling: **20 passed**.
+Tests cover the verified body/weapon fields, opt-in isolation, boss identity and
+visible-spawn configuration, all eight markers across both Ice branches and eight
+reference directions, all eligible human overrides, actor attachment/destruction,
+no native marking Set calls and the full existing 512 spin/Ice survival matrix.
+Original four-marker Fire eligibility assertions remain in place.
+
+`dotnet build -c Release`: **zero errors, 3,395 warnings** versus the previous
+3,294 reported warnings. Expanded test coverage adds Windows-platform CA1416
+warnings; no new production warning category is caused by the appearance or
+marker changes. Existing obsolete API, analyzer and package-audit warnings are
+not cleaned up in this focused iteration. Build warning totals include repeated
+diagnostics and vary with which projects recompile.
+
+Manual procedure: build Release, manually reload, select Futures Rewritten
+(Ultimate) → P3 → Ultimate Relativity (Mana), Mana strategy, scale 1. With reference
+N fixed, confirm one visible Oracle at center facing north, with body and weapon,
+Ultimate Relativity/Speed/Shell casts, animations and enemy-list cast bars. At
+13.83 seconds confirm eight recognizable markers attached to all eight players.
+Use Force role assignment to cycle your role through its four eligible slots:
+DPS gets Attack 1/2, Ignore 2, Bind 3; supports get Attack 3, Ignore 1, Bind 1/2.
+Repeat both Ice branches, confirming Ice retains Attack 3 or Bind 3. Change
+reference north to E and confirm marker assignments and choreography rotate
+together. Complete, restart, then leave during casts and re-enter; verify no boss
+or marker duplicates. The correction is ready for this in-game check, not yet
+claimed manually visible. Previously documented provisional ice inner radius and
+Return ground-trace limitations are unchanged.
