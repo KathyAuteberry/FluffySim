@@ -33,10 +33,10 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        var suppressBgm = configuration.SuppressBgm;
-        if (ImGui.Checkbox("Suppress scenario BGM", ref suppressBgm))
+        var enableBgm = !configuration.SuppressBgm;
+        if (ImGui.Checkbox("Enable Scenario BGM", ref enableBgm))
         {
-            configuration.SuppressBgm = suppressBgm;
+            configuration.SuppressBgm = !enableBgm;
             configuration.Save();
         }
 

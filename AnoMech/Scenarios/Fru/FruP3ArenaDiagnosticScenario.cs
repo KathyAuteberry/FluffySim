@@ -9,6 +9,7 @@ public sealed class FruP3ArenaDiagnosticScenario : IScenario
     public string Name => "P3 arena inspection";
     public IPhase Phase => FruZone.P3;
     public bool SupportsSolo => true;
+    public bool EnablePhaseBgm => false;
     public IReadOnlyList<IScenarioAi> AiStrats => [];
     public void Run(SimWorld world, int? selectedAi) { }
 }

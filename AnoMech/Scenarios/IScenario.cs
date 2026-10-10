@@ -12,6 +12,7 @@ public interface IScenario
 
     string MenuName => Name;
     bool IsIncomplete => false;
+    bool EnablePhaseBgm => !IsIncomplete;
 
     // Its phase — usually `=> TopZone.P5`.
     IPhase Phase { get; }

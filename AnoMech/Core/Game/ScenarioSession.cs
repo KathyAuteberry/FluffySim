@@ -182,6 +182,7 @@ public sealed class ScenarioSession
         finishedElapsed = (finishedElapsed ?? 0f) + deltaSeconds;
         if (finishedElapsed < MechanicResultSettleSeconds) return;
         resultReported = true;
+        Natives.Bgm.Reset();
         if (deathOccurred) return;
         var clean = lastMistakeElapsed is null;
         if (clean && Plugin.Config.EnableMechanicResultMarks)
@@ -216,6 +217,7 @@ public sealed class ScenarioSession
     public void OnKilled()
     {
         deathOccurred = true;
+        Natives.Bgm.Reset();
         if (freezeScheduled) return;
         freezeScheduled = true;
 #if DEBUG
@@ -237,8 +239,8 @@ public sealed class ScenarioSession
     {
         var phase = Scenario.Phase;
         DiagnosticLog.Info($"[Bgm] Suppress scenario BGM: {(Plugin.Config.SuppressBgm ? "on" : "off")}.");
-        if (!Plugin.Config.SuppressBgm && phase.Bgm != 0)
-            world.PlayBgm(phase.Bgm, Scenario.BgmSecondsAtStart);
+        if (!Plugin.Config.SuppressBgm && PhaseMusic.TrackFor(Scenario) != 0)
+            world.PlayBgm(PhaseMusic.TrackFor(Scenario), Scenario.BgmSecondsAtStart);
     }
 
     // The selected preset, or [0] as the default.

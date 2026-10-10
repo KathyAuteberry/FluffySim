@@ -11,6 +11,7 @@ public sealed class FruArenaDiagnosticScenario : IScenario
     public string Name => "Arena diagnostic (P2 initialization unresolved)";
     public IPhase Phase => FruZone.P2;
     public bool SupportsSolo => true;
+    public bool EnablePhaseBgm => false;
     public IReadOnlyList<IScenarioAi> AiStrats => [];
 
     public void Run(SimWorld world, int? selectedAi)

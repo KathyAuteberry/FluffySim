@@ -1855,3 +1855,18 @@ together. Complete, restart, then leave during casts and re-enter; verify no bos
 or marker duplicates. The correction is ready for this in-game check, not yet
 claimed manually visible. Previously documented provisional ice inner radius and
 Return ground-trace limitations are unchanged.
+
+
+## Phase music QoL (2026-10-11)
+
+The owner reports the four FRU/DSR practice scenarios work in-game. This pass preserves Light Rampant, Ultimate Relativity, paused Diamond Dust, all assignments and the P2/P3 arena presets.
+
+Playable FRU P2 maps to **Footsteps in the Snow — BGM 230**, `music/ffxiv/BGM_Ban_Shiva1.scd`; playable P3 maps to **The Extreme (Shadowbringers) — BGM 802**, `music/ex3/BGM_EX3_Raid_12.scd`. These are installed BGM sheet entries (client `2026.09.15.0000.0000`), cross-checked against [Orchestrion track metadata](https://github.com/perchbirdd/OrchestrionPlugin/blob/main/Orchestrion/Data/xiv_bgm_en.csv). Installed Orchestrion row 420 independently identifies the Shadowbringers arrangement; orchestration roll paths are different assets from encounter BGM paths. P2 does not use Return to Oblivion. No music files are extracted or bundled.
+
+PhaseMusic uses the existing phase BGM interface; paused/incomplete Diamond Dust and all FRU/DSR arena-only diagnostics remain silent. Existing native BGM playback now has scene/territory ownership checks. Completion, death, reset/leave, failure and disposal release AnoMech's own Content scene override; the engine selects current underlying music instead of restoring a stale song. A changed external selection is not reset or reasserted. Other higher-priority audio controllers can still mask playback and are not forcibly disabled. Same-ID external ownership is inherently indistinguishable through the available read-only state.
+
+The cog checkbox is now **Enable Scenario BGM**. New configs default on; existing serialized SuppressBgm preferences are preserved, so explicitly enable it if previously suppressed. Native playback should obey the game's BGM slider/mute and looping. **Native audibility/restoration require manual verification.** The existing offset playback facility used by unrelated scenarios is preserved.
+
+Release validation: **2,806 plugin / 41 relay / 26 tooling tests passed**, build zero errors. Added tests verify both FRU music starts and full-scenario cleanup, alongside unchanged Light Rampant/Relativity regression coverage. Release setup also exposes **Advanced / RNG Seed**; existing FRU assignment controls remain unchanged. See DSR-ROADMAP's QoL section for ownership limitations and the full manual procedure.
+
+Manual check: build `dotnet build -c Release`, manually reload, enable music in the cog settings, then start Light Rampant and Ultimate Relativity. Confirm Footsteps and The Extreme respectively, game volume/mute, clean restarts, release on completion/death/cancellation, and normal inn music after Leave. Check a plugin reload during a run releases its override. Do not treat headless results as proof the tracks are audible in FFXIV.

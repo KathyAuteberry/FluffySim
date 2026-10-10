@@ -71,12 +71,9 @@ public unsafe class MainWindow : Window, IDisposable
     private readonly Dictionary<IZone, int> _waymarkMemory = new();
 
     // Seed for the next Start: empty rolls a fresh one each time, a number replays it every time.
-#if DEBUG
-    private int? SelectedSeed => int.TryParse(_seedText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seed) ? seed : null;
+    internal int? SelectedSeed => int.TryParse(_seedText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seed) ? seed : null;
     private string _seedText = "";
-#else
-    private int? SelectedSeed => null;
-#endif
+
 
     // The region/group label currently selected in the strat picker, for scenarios that
     // declare StratGroups. Null until a grouped scenario is drawn (then it snaps to the
@@ -498,7 +495,6 @@ public unsafe class MainWindow : Window, IDisposable
         ReconcileStrat();
     }
 
-#if DEBUG
     private void DrawSeedControl()
     {
         ImGui.SetNextItemWidth(120f * ImGuiHelpers.GlobalScale);
@@ -519,6 +515,7 @@ public unsafe class MainWindow : Window, IDisposable
         ImGui.Separator();
     }
 
+#if DEBUG
     // In a session MultiplayerManager owns DebugBotControl.Enabled per run, so route through its
     // sticky toggle (as the Party panel does); solo nothing else writes the flag.
     private void DrawBotControlsPlayer(bool inSession)
@@ -615,12 +612,16 @@ public unsafe class MainWindow : Window, IDisposable
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNodeEx("Advanced / RNG Seed###seed-v3", ImGuiTreeNodeFlags.FramePadding))
+        {
+            DrawSeedControl();
+            ImGui.TreePop();
+        }
 #if DEBUG
         ImGui.Spacing();
         if (ImGui.TreeNodeEx("Debug###debug-v3",
                 ImGuiTreeNodeFlags.FramePadding))
         {
-            DrawSeedControl();
             DrawBotControlsPlayer(inSession);
             ImGui.BeginDisabled(inSession);
             ImGui.BeginGroup();

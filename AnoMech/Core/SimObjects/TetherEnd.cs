@@ -39,7 +39,8 @@ public interface ITetherEnd
 
 // What dynamic ends need to look up: the party (proximity queries) and the
 // channeling id (to skip members already holding a parallel tether of the same id).
-public readonly record struct TetherContext(CharacterFind<SimCharacter> Party, ushort TetherId, Rng Rng);
+public readonly record struct TetherContext(CharacterFind<SimCharacter> Party, ushort TetherId, Rng Rng,
+    Func<SimCharacter, bool>? HoldsParallelTether = null);
 
 // Internal — scenarios express a fixed end by passing the SimCharacter directly
 // (see the SimWorld.Tether overloads); this is just the ITetherEnd wrapper.
@@ -78,11 +79,13 @@ public sealed class PassableEnd : DynamicEnd
 
     private readonly SimCharacter? initial;
     private readonly float halfWidth;
+    private readonly bool exclusive;
 
-    internal PassableEnd(SimCharacter? initial, float halfWidth)
+    internal PassableEnd(SimCharacter? initial, float halfWidth, bool exclusive)
     {
         this.initial = initial;
         this.halfWidth = halfWidth;
+        this.exclusive = exclusive;
     }
 
     public override SimCharacter? Resolve(SimCharacter? self, SimCharacter? other, TetherContext ctx)
@@ -110,7 +113,7 @@ public sealed class PassableEnd : DynamicEnd
         foreach (var c in ctx.Party.InsideRect(placement, halfWidth, len))
         {
             if (ReferenceEquals(c, holder)) continue;
-            if (c.HasTetherInSlot0(ctx.TetherId)) continue;
+            if (c.HasTetherInSlot0(ctx.TetherId) || exclusive && ctx.HoldsParallelTether?.Invoke(c) == true) continue;
             var ddx = c.Position.X - holderPos.X;
             var ddz = c.Position.Z - holderPos.Z;
             if (ddx * fwdX + ddz * fwdZ < MinInterceptForward) continue;  // stacked on holder → not intercepting
@@ -138,6 +141,6 @@ public static class End
 {
     internal static FixedEnd Fixed(SimCharacter? character) => new(character);
     // initial = null → a random alive party member is chosen on the first resolve.
-    public static PassableEnd Passable(SimCharacter? initial = null, float halfWidth = 0.5f) => new(initial, halfWidth);
+    public static PassableEnd Passable(SimCharacter? initial = null, float halfWidth = 0.5f, bool exclusive = false) => new(initial, halfWidth, exclusive);
     public static FarthestPlayerEnd FarthestPlayer() => new();
 }

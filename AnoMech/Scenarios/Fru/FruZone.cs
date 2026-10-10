@@ -8,8 +8,8 @@ namespace AnoMech.Scenarios.Fru;
 public sealed class FruZone : IZone
 {
     public static readonly FruZone Instance = new();
-    public static readonly Phase P2 = new(Instance, "P2", 35, 0, init: InitializeP2, clientSetup: HoldP2Layers);
-    public static readonly Phase P3 = new(Instance, "P3", 106, 0, init: InitializeP3, clientSetup: HoldP3Layers);
+    public static readonly Phase P2 = new(Instance, "P2", 35, PhaseMusic.FootstepsInTheSnow, init: InitializeP2, clientSetup: HoldP2Layers);
+    public static readonly Phase P3 = new(Instance, "P3", 106, PhaseMusic.TheExtreme, init: InitializeP3, clientSetup: HoldP3Layers);
     public string Name => "Futures Rewritten (Ultimate)";
     public uint TerritoryId => 1238;
     public Vector3 Origin => new(100f, 0f, 100f);

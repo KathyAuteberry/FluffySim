@@ -21,9 +21,9 @@ internal sealed unsafe class Bgm : IBgm
     private const uint ContentSceneId = 3;
     private const ushort SilentBgmId = 1;
 
-    // The bgm id currently forced into the content scene, or 0 when the slot has
-    // been handed back to the territory/director. Lets Play() skip a redundant
-    // restart when switching between scenarios that share a track.
+    private readonly BgmOverride playback = new(ReadContentScene,
+        track => BGMSystem.SetBGM(track, ContentSceneId),
+        () => { var system = BGMSystem.Instance(); if (system != null) system->ResetBGM(ContentSceneId); });
     private ushort current;
     private MusicPlayer? player;
     private float trackVolume = 1f;
@@ -32,10 +32,17 @@ internal sealed unsafe class Bgm : IBgm
     {
         if (bgmId == 0) return; // 0 = use Reset
         if (BGMSystem.Instance() == null) return;
-        if (secondsIn <= 0f && bgmId == current && player == null) return; // same id = keep playing
+        if (secondsIn <= 0f && bgmId == current && player == null && playback.Poll()) return;
+        if (!playback.Play(secondsIn > 0f ? SilentBgmId : bgmId))
+        {
+            StopPlayer();
+            current = 0;
+            DiagnosticLog.Info("[Bgm] Playback unavailable or owned by another controller; leaving its selection unchanged.");
+            return;
+        }
         StopPlayer();
         var started = secondsIn > 0f && StartPlayer(bgmId, secondsIn);
-        BGMSystem.SetBGM(started ? SilentBgmId : bgmId, ContentSceneId);
+        if (!started && secondsIn > 0f) playback.Play(bgmId);
         current = bgmId;
     }
 
@@ -48,19 +55,32 @@ internal sealed unsafe class Bgm : IBgm
     public void Reset()
     {
         StopPlayer();
-        if (current == 0) return;
-        var system = BGMSystem.Instance();
-        if (system != null) system->ResetBGM(ContentSceneId);
+        playback.Reset();
         current = 0;
     }
 
     public void Tick(float deltaSeconds)
     {
+        if (current != 0 && !playback.Poll())
+        {
+            StopPlayer();
+            current = 0;
+        }
         if (player != null) player.Volume = trackVolume * MusicVolume();
     }
 
     public void LogPosition(string label)
         => DiagnosticLog.Info($"[Bgm] {label}: track {current} {(player != null ? $"on our output at {player.PositionSeconds:F2}s, volume {player.Volume:F2}" : "on the game's own output")}.");
+
+    private static BgmSceneState? ReadContentScene()
+    {
+        var system = BGMSystem.Instance();
+        if (system == null) return null;
+        foreach (ref var scene in system->Scenes)
+            if (scene.SceneId == ContentSceneId)
+                return new(scene.BgmId, Plugin.ClientState.TerritoryType);
+        return null;
+    }
 
     private bool StartPlayer(ushort bgmId, float secondsIn)
     {

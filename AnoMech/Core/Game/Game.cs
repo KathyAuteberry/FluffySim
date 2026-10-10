@@ -115,12 +115,6 @@ public sealed class Game : IDisposable
     private float periodicDumpTimer;
 #endif
 
-    public static string DisplayName(IScenario scenario)
-        => string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.MenuName : $"{scenario.Phase.Name} {scenario.MenuName}";
-
-    public static string FullName(IScenario scenario)
-        => $"{scenario.Phase.Zone.Name} — {(string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.Name : $"{scenario.Phase.Name} {scenario.Name}")}";
-
     public Game()
     {
         World = new SimWorld(Events);
@@ -172,7 +166,11 @@ public sealed class Game : IDisposable
         waitingStart = null;
         StartWaitingOn = null;
         lastRun = p;
-        Plugin.Framework.Run(() => { RunScenarioInternal(p, null, null, isPeer: false); });
+        Plugin.Framework.Run(() =>
+        {
+            try { RunScenarioInternal(p, null, null, isPeer: false); }
+            catch { Natives.Bgm.Reset(); throw; }
+        });
     }
 
     private void RetryWaitingStart()
@@ -223,6 +221,7 @@ public sealed class Game : IDisposable
             }
             catch (Exception e)
             {
+                Natives.Bgm.Reset();
                 resolved($"the scenario threw {e.GetType().Name} while loading");
                 throw;
             }
@@ -333,6 +332,7 @@ public sealed class Game : IDisposable
             catch (Exception e)
             {
                 AnoMech.Core.DiagnosticLog.Warn($"[Game.RunScenarioInternal] zone/phase/scenario.Run threw -- scenario load aborted here: {e}");
+                Natives.Bgm.Reset();
                 throw;
             }
         }
@@ -357,10 +357,10 @@ public sealed class Game : IDisposable
         // between same-track scenarios (e.g. the P5 phases) keeps playing without
         // restarting the song; a different track swaps; suppressed/no-track reverts.
         AnoMech.Core.DiagnosticLog.Info($"[Bgm] Suppress scenario BGM: {(Plugin.Config.SuppressBgm ? "on" : "off")}.");
-        if (Plugin.Config.SuppressBgm || phase.Bgm == 0)
+        if (Plugin.Config.SuppressBgm || PhaseMusic.TrackFor(scenario) == 0)
             Natives.Bgm.Reset();
         else
-            Natives.Bgm.Play(phase.Bgm, scenario.BgmSecondsAtStart);
+            Natives.Bgm.Play(PhaseMusic.TrackFor(scenario), scenario.BgmSecondsAtStart);
 
         // networkRoles null, not solo: a peer passes selectedAi null too.
         Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] Starting: {FullName(scenario)}{(networkRoles is null ? " (Solo)" : "")}" });
@@ -369,6 +369,7 @@ public sealed class Game : IDisposable
 
     public void Tick(float deltaSeconds)
     {
+        if (Plugin.Config.SuppressBgm) Natives.Bgm.Reset();
         Natives.Bgm.Tick(deltaSeconds);
         RetryWaitingStart();
         if (Paused) return;
@@ -412,6 +413,7 @@ public sealed class Game : IDisposable
         scenarioFinishedElapsed = (scenarioFinishedElapsed ?? 0f) + deltaSeconds;
         if (scenarioFinishedElapsed < MechanicResultSettleSeconds) return;
         mechanicResultReported = true;
+        Natives.Bgm.Reset();
         if (deathOccurredThisRun) return;
         if (lastMistakeElapsed is null)
         {
@@ -480,6 +482,7 @@ public sealed class Game : IDisposable
         PartyMemberKilled?.Invoke(target.Role, cause, actionId);
         MechanicStreak = 0;
         deathOccurredThisRun = true;
+        Natives.Bgm.Reset();
         AutoRestart = false;
         if (!firstFreezeScheduled)
         {
@@ -536,11 +539,11 @@ public sealed class Game : IDisposable
     public static string DisplayName(IScenario scenario)
     {
         var phase = scenario.Phase;
-        return string.IsNullOrEmpty(phase.Name) ? scenario.Name : $"{phase.Name} {scenario.Name}";
+        return string.IsNullOrEmpty(phase.Name) ? scenario.MenuName : $"{phase.Name} {scenario.MenuName}";
     }
 
     public static string FullName(IScenario scenario)
-        => $"{scenario.Phase.Zone.Name} — {DisplayName(scenario)}";
+        => $"{scenario.Phase.Zone.Name} — {(string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.Name : $"{scenario.Phase.Name} {scenario.Name}")}";
 
     // Leave returns to the inn. Only meaningful when IsInInstance is true.
     // Resets the encounter first, then reverts the zone — Reset stays in-zone.
@@ -590,6 +593,7 @@ public sealed class Game : IDisposable
         activeScenario = null;
         Events.Clear();
         Natives.UserActions.OnSessionEnd();   // restore the gauge if the plugin unloads mid-session (no-op otherwise)
+        Natives.Bgm.Reset();
         World.Dispose();
     }
 }
