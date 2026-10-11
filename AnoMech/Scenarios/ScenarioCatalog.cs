@@ -26,6 +26,7 @@ public static class ScenarioCatalog
     [
         new Fru.LightRampant.FruLightRampantScenario(),
         new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
+        new Fru.Apocalypse.FruApocalypseScenario(),
         new Dsr.Strength.DsrStrengthScenario(),
         new Dsr.Strength2.DsrStrength2Scenario(),
         new Dsr.Sanctity1.DsrSanctity1Scenario(),

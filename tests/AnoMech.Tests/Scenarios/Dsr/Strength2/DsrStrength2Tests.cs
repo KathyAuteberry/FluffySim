@@ -169,10 +169,10 @@ public class DsrStrength2Tests
     public void CatalogKeepsIndependentPartTwoImmediatelyAfterPartOne()
     {
         var catalog=ScenarioCatalog.Create();
-        Assert.That(catalog[2],Is.TypeOf<AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario>());
-        Assert.That(catalog[3],Is.TypeOf<DsrStrength2Scenario>());
-        Assert.That(catalog[3].SettingsOverrides,Is.TypeOf<DsrStrength2StateOverrides>());
-        Assert.That(catalog[3].Phase,Is.SameAs(catalog[2].Phase));
+        Assert.That(catalog[3],Is.TypeOf<AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario>());
+        Assert.That(catalog[4],Is.TypeOf<DsrStrength2Scenario>());
+        Assert.That(catalog[4].SettingsOverrides,Is.TypeOf<DsrStrength2StateOverrides>());
+        Assert.That(catalog[4].Phase,Is.SameAs(catalog[3].Phase));
     }
 
     [Test]

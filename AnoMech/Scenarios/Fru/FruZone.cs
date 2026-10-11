@@ -15,7 +15,16 @@ public sealed class FruZone : IZone
     public Vector3 Origin => new(100f, 0f, 100f);
     public byte Level => 100;
     public IReadOnlyList<WaymarkLayout> WaymarkPresets { get; } =
-        [new("Ring", Core.Game.WaymarkPresets.Ring(16f))];
+        [new("FRU (JP)", [
+            new(WaymarkSlot.A, new(0f, 0f, -10f)),
+            new(WaymarkSlot.B, new(10f, 0f, 0f)),
+            new(WaymarkSlot.C, new(0f, 0f, 10f)),
+            new(WaymarkSlot.D, new(-10f, 0f, 0f)),
+            new(WaymarkSlot.One, new(7.071f, 0f, -7.071f)),
+            new(WaymarkSlot.Two, new(7.071f, 0f, 7.071f)),
+            new(WaymarkSlot.Three, new(-7.071f, 0f, 7.071f)),
+            new(WaymarkSlot.Four, new(-7.071f, 0f, -7.071f)),
+        ])];
     public void Run(SimWorld world) => world.EnforceArenaBoundary(20f);
 
     private static void InitializeP2(SimWorld world)

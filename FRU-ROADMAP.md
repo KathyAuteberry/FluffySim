@@ -10,7 +10,7 @@ compiles Release when ready to playtest. Earlier Release validation results belo
 are historical; older manual-build instructions are user-only, not agent actions.
 
 
-Updated 2026-10-10. **P2 Light Rampant (Mana) and the P2 arena are manually
+Updated 2026-10-11. **P2 Light Rampant (Mana) and the P2 arena are manually
 validated in FFXIV**, including traversable collision, both visible orb orders,
 explosions, tethers, Hammer grace period and bot resolution. This validation is
 for the supported Mana formation, not every outstanding native presentation
@@ -19,8 +19,8 @@ question. Startup flicker has not been separately confirmed eliminated.
 **Diamond Dust: Paused — incomplete and currently failing at startup.**
 Removed from the normal catalog; source, overrides and tests remain intact.
 Light Rampant remains selectable and unchanged. **P3 Ultimate Relativity (Mana)
-is implemented through Shell Crusher, registered and Release build/test
-validated; native mechanic presentation awaits FFXIV validation.** The P3
+is implemented through Shell Crusher and manually validated by the user,
+including the visible Oracle and complete eight-marker scheme.** The P3
 arena appearance was manually confirmed; its working preset is preserved.
 
 ## Architecture
@@ -55,8 +55,8 @@ research does not advance a mechanic to Research complete.
 | FRU-Sim selectable scenario | Reference sequence | AnoMech | Status / evidence |
 | --- | --- | --- | --- |
 | P2 Light Rampant | `scenes/p2/sequences/light_ramp_seq.gd`, `p2_lr_main.tscn` | Mana ring formation | Manually validated in FFXIV for the supported formation |
-| P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd`, `p3_ur_main.tscn` | Full Mana sequence through Shell Crusher | Build/test validated; 607 focused tests, native mechanic presentation pending |
-| P3 Sextuple Apocalypse | `scenes/p3/sequences/apoc_seq.gd` | Missing | Not researched to completion; Mana rotations and water swaps inspected; casts in 4, 6, 13, 16 |
+| P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd`, `p3_ur_main.tscn` | Full Mana sequence through Shell Crusher | Manually validated by user; full sequence and eight markers preserved |
+| P3 Sextuple Apocalypse | `scenes/p3/sequences/apoc_seq.gd` | Full Mana fragment implemented; provisional presentation | All 2,520 Water distributions and eight light configurations; see 2026-10-11 notes |
 | P4 Darklit Dragonsong | `scenes/p4/sequences/darklit_seq.gd` | Missing | Not researched; reference offers NA/EU/JP/Mana/MUR variants |
 | P4 Crystallize Time | `scenes/p4/sequences/crystal_time_seq.gd` | Missing | Not researched; reference offers NA/MUR variants |
 | P5 Fulgent Blade | `scenes/p5/sequences/p5_fb_seq.gd` | Missing | Not researched |
@@ -1880,3 +1880,188 @@ The cog checkbox is now **Enable Scenario BGM**. New configs default on; existin
 Release validation: **2,806 plugin / 41 relay / 26 tooling tests passed**, build zero errors. Added tests verify both FRU music starts and full-scenario cleanup, alongside unchanged Light Rampant/Relativity regression coverage. Release setup also exposes **Advanced / RNG Seed**; existing FRU assignment controls remain unchanged. See DSR-ROADMAP's QoL section for ownership limitations and the full manual procedure.
 
 Manual check: build `dotnet build -c Release`, manually reload, enable music in the cog settings, then start Light Rampant and Ultimate Relativity. Confirm Footsteps and The Extreme respectively, game volume/mute, clean restarts, release on completion/death/cancellation, and normal inn music after Leave. Check a plugin reload during a run releases its override. Do not treat headless results as proof the tracks are audible in FFXIV.
+
+## P3 Apocalypse (Mana) — 2026-10-11
+
+**Implemented full fragment; Debug/headless validated, native presentation pending playtest.**
+Registered immediately after Ultimate Relativity as `P3 Apocalypse (Mana)` with
+provisional/incomplete validation metadata. No later P3 or P4 mechanics are included.
+The validated P3 preset, Oracle appearance and The Extreme phase BGM are reused unchanged.
+
+### Evidence and coverage
+
+The October 7 network log contains 16 pulls. Six (4, 6, 9, 13, 15, 16) reach
+P3 / Ultimate Relativity. Four (4, 6, 13, 16) reach Spell-in-Waiting Refrain and
+Apocalypse; all four contain the first Water, Spirit Taker, all six explosion
+waves, Darkest Dance, knockback, final Water and Shockwave Pulsar. These are
+complete **practice fragments**, not claims of encounter clears. Effects within one wave can arrive in separate packets a few milliseconds apart;
+six-wave coverage is based on clustered events, not the number of distinct receive
+timestamps. The sanitized
+local inspection tool is `tools/fru_apocalypse_evidence.py`; raw records and
+player identities are never included in its output.
+
+The preserved native replay was found in the local `replay/deleted` archive:
+October 7 FRU recording, format 5, game build 14006063, 32 chapters and 531,944
+segments. Its header/bounds were revalidated read-only. This iteration does not
+claim that its animation controls have been decoded for native light spawning.
+
+Primary strategy: [Tuufless Mana, complete Apocalypse section and eight diagrams](https://ffxiv.tuufless.com/mana/fru/03_oracle_of_darkness/#apocalypse).
+Mechanic references: FRU-Sim `scenes/p3/sequences/apoc_seq.gd`,
+`position_coords/apoc_pc_pos.gd`, `apoc_lights.gd`, `arena/apoc_light.gd` and
+`p3_apoc_main.tscn` executable animation tracks;
+[BossMod P3Apocalypse](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Dawntrail/Ultimate/FRU/P3Apocalypse.cs),
+FRU enums/state machine, and Splatoon's local `P3 Apocalypse.cs`.
+FRU-Sim's **MANA + PERMA** branch corresponds to the requested strategy;
+NAUR/MUR/STATIC are not used. Behavior was independently implemented; GPL
+reference code/assets were not copied. Native action/Lockon data was checked
+against the installed game sheets.
+
+| Property | Evidence / implementation |
+|---|---|
+| Two each: none, short, medium, long Water | Local statuses and effects; 2,520 valid distributions |
+| Higher duplicate adjusts once | Tuufless: MT > ST > H1 > H2; D1 > D2 > D3 > D4 |
+| Permanent groups, Z-order | D1, D2, MT, ST, D3, H1, D4, H2 filtered to each resulting group |
+| Eight light configurations | Four opposite exterior axes × CW/CCW; all eight diagrams checked |
+| Support reference light | W / NW / N / NE; DPS opposite; spread derived 45° against travel |
+| Explosion geometry | BossMod/Splatoon: radius 9, exterior radius 14, six travelling waves |
+| Explosion sources | 4, 6, 6, 6, 6, 6 casts; duplicate center sources in first two waves retained |
+| Spirit Taker | Random party target, radius 5; others in radius receive 40-yalm knockback |
+| Darkest Dance | Furthest-player radius 8; PLD > ST bait, isolated tank invulnerability required |
+| Closing knockback | BossMod distance 21; boss-relative two-group positions |
+| Water | Radius 6, exactly four participants; overlapping stacks fail |
+
+No / one / two swap-pair distribution counts are 576 / 1,728 / 216 (8/35,
+24/35, 3/35), independently checked across every Water distribution.
+H2/D4 cannot be the higher-priority adjusting member. Practice filters reject
+that impossible request rather than inventing an assignment.
+
+### Timeline and identifiers
+
+Times below are scenario-relative. Refrain starts at 2.1s; the source receive
+observations are normalized to Refrain. Tests allow 0.2s for the four receive
+traces, not a claim that packet arrival is a damage snapshot.
+
+| Event | Time (s) | Action / status |
+|---|---:|---|
+| Spell-in-Waiting Refrain | 2.1 | 40269 |
+| Dark Water cast | 7.2 | 40270 |
+| Water visuals / status assignment | 12.2 / 12.8 | 40272 / status 2461 (10, 29, 38s) |
+| Apocalypse cast | 15.36 | 40296 |
+| First visible light sequence | 22 | practice light/trail visualization |
+| First Water | 22.87 | 40271 |
+| Spirit Taker cast / impact | 21.5 / 24.95 | 40288 / 40289 |
+| Dark Eruption cast / spreads | 31.03 / 36.03 | 40273 / 40274 |
+| Six Apocalypse waves | 33.28, 35.29, 37.30, 39.31, 41.32, 43.33 | 40297 |
+| Medium Water | 41.86 | 40271 |
+| Darkest Dance cast / impact | 38.65 / 44.10 | 40181 / 40182 |
+| Knockback | 46.90 | 40183 |
+| Final Water | 50.86 | 40271 |
+| Shockwave Pulsar / completion | 51.2 / 58 | 40282 |
+
+All four recordings contain MapEffect index 0x29 flags 0x00200010 near
+Refrain+18s and 0x00080001 near +43.1s. These specific commands are queued through
+the existing MapController at 20.11 / 45.23s. No new native hook or packet replay
+was introduced. Recorded light objects are **EObj 0x1EB0FF**, ten static objects
+(eight exterior / two center), created during the Apocalypse cast; object
+creation does not establish when their animation becomes visible.
+
+Lockon sheets: 62 `com_share0c` during Water cast, 184 `m0581trg_dice0h`
+before each Water expiry, 139 `target_ae_s5f` before spreads. Local records
+confirm these IDs and staggered timings. Verified Oracle base 17831 (0x45A7),
+name row 9832, demihuman/equipment appearance uses the same working UR setup.
+
+### Presentation and remaining uncertainty
+
+Native boss casts/Action-sheet impact animations, Water/debuffs, lockons,
+explosions, Spirit Taker, Dance, knockback and Pulsar are scheduled. Effect helper
+actors are created at scenario initialization, giving draw/actor setup time
+before instant actions; they are not created and immediately cast on the same tick.
+There is no strict actor-readiness guard of the kind that broke Diamond Dust.
+
+**Initial white lights and moving streaks use an explicit local world-projected
+practice overlay**, with no safe-spot hints. Native EObj animation activation is
+not verified; no guessed native animation state is applied. The optional overlay
+uses the same positions/rotation model as explosion geometry, and draws short
+purple outlines during native impacts. Disable it only to inspect native effects;
+the mechanic is intentionally provisional until the native and fallback cues are
+manually readable. Overlays stop when the scenario is left.
+
+Movement coordinates are independently scaled from the executable Mana branch
+and checked against all eight guide diagrams; exact small offsets remain practice
+placements, not measured native positions. Spirit/knockback displacement speeds
+(40 / 35) and the Dance landing offset 6.35 are provisional presentation/physics
+parameters; distances and hit radii are independently confirmed. Boss translation
+at jump resolution and its native action animation require visual validation.
+Damage is existing AnoMech practice damage, not exact retail HP amounts. Dance
+requires invulnerability for the supported Mana bait; mitigated alternatives are
+outside this configuration. Bots use their job invulnerability, and the human
+must press theirs with simulated combat actions enabled. No bot damage exemption
+is used. The bait route uses Sprint and ordinary continuous movement; other
+moves use normal speed. Player knockback remains the existing native movement
+path and needs manual testing (a frozen human takeover in headless tests cannot
+stand in for client movement prediction).
+
+Self-completing lockon effects retain the existing fire-and-forget safety path;
+removing a native self-freed AVFX pointer is unsafe. A short natural animation
+tail after cancellation is possible and must be checked manually. Actor ownership,
+status removal and overlay teardown are independently tested on cancellation and
+re-entry; no speculative native cleanup was added.
+
+### Manual playtest
+
+User builds Release personally and reloads; development must remain Debug-only.
+Select **Futures Rewritten (Ultimate) → P3 Apocalypse (Mana)** immediately after
+Ultimate Relativity. Leave the local light/trail overlay enabled for the first run.
+Keep event speed normal. Select your seat and Practice Water Assignment; try
+short, medium and long, and both rotation choices. Observe status countdowns,
+the permanent group swap, first exterior lights and spread slots; follow the
+Mana diagrams, not merely the final apparent safe point.
+
+For reproducible eight-pattern coverage, enable Advanced and select exterior
+axis 0–3, each CW then CCW. Water permutation 0 exercises a double-pair swap;
+37 provides another deterministic distribution. Exact overrides remain separate
+from Simple filters. Spirit target is optionally forced; Dance bait override
+must follow the current party's PLD > ST priority. If you are the bait tank,
+enable simulated combat actions, Sprint outward and press your job invulnerability
+before the Dance hit. Check boss visibility/jump, all six native explosions,
+Water/spread markers, center routes, boss-relative knockback and last stacks.
+Leave mid-sequence, restart, then re-run Light Rampant and Ultimate Relativity to
+check arena/BGM and object cleanup. No Meteors or existing encounter logic was changed.
+
+### Final validation
+
+- Debug plugin build: **0 errors**, 1 incremental-build warning (NU1900: offline
+  NuGet vulnerability-feed lookup). Existing platform/analyzer warnings remain
+  in test compilation; this task did not undertake warning cleanup.
+- Full plugin suite: **6,861 passed, 0 failed** (6m32s).
+- Relay suite: **41 passed, 0 failed**.
+- Python tooling suite: **38 passed, 0 failed**.
+- All 2,520 Water distributions execute the complete Mana fragment. Dedicated
+  tests cover all eight light configurations, every seat's Water practice
+  categories, every Spirit Taker target, deterministic exact overrides, status
+  and native-effect requests, real 21-yalm displacement, knockback edge failure,
+  missing human invulnerability, incorrect stack/spread positions and four
+  cancellation/re-entry points. Four normalized receive traces validate waves.
+- Regression sidebar assertions were updated only for the new FRU entry shifting
+  DSR's absolute indices; their adjacency, phase and settings checks remain.
+- A failure test caught integer overload selection for knockback; explicit
+  floating-point distances now select actual displacement rather than a sheet
+  row with a delayed effect. Full runs were repeated after the correction.
+- Release was **not built or modified**, no automatic reload was triggered, and
+  no reference/log/replay or version-control history was changed.
+
+Headless/native mocks establish requests and lifecycle behavior, not actual
+FFXIV rendering or human-input physics. The next gate is the manual playtest
+above, especially visible lights/native impacts and the final knockback route.
+
+### Shared Mana waymarks — 2026-10-11
+
+The shared FruZone default layout is now **FRU (JP)**, replacing the generic
+16-yalm ring. All FRU scenarios using P2/P3 inherit it: cardinals are 10 yalms
+from (100, 0, 100), and numbered marks use ±7.071 offsets with 1 NE, 2 SE,
+3 SW, 4 NW. Coordinates follow the user-supplied Tuufless Mana preset. Marks
+are mapped by their named keys (A–D / One–Four), not the inconsistent numeric
+ID fields in the supplied JSON. No mechanic positions or assignments changed.
+
+Validation: Debug build succeeded (0 errors); all 5 existing FRU P2/P3 arena
+regression tests passed. Release output was not modified.
