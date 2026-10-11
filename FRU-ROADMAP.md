@@ -1,5 +1,15 @@
 # FRU implementation roadmap
 
+## Development build workflow (current)
+
+Use `dotnet build -c Debug` and run automated tests with `-c Debug`. Debug output
+must remain in Debug-specific `bin` / `obj` trees (including `bin/x64/Debug`). **Never build Release during development,
+or copy/publish/modify installed Release output.** Dalamud watches that output and
+hot-reloads on changes, freezing the running FFXIV client. The user personally
+compiles Release when ready to playtest. Earlier Release validation results below
+are historical; older manual-build instructions are user-only, not agent actions.
+
+
 Updated 2026-10-10. **P2 Light Rampant (Mana) and the P2 arena are manually
 validated in FFXIV**, including traversable collision, both visible orb orders,
 explosions, tethers, Hammer grace period and bot resolution. This validation is
@@ -281,9 +291,9 @@ system package installation was needed. Run from the AnoMech repository:
 
 ```sh
 export DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev
-dotnet build AnoMech/AnoMech.csproj
-dotnet test tests/AnoMech.Relay.Tests
-dotnet test tests/AnoMech.Tests
+dotnet build AnoMech/AnoMech.csproj -c Debug
+dotnet test tests/AnoMech.Relay.Tests -c Debug
+dotnet test tests/AnoMech.Tests -c Debug
 ```
 
 The bare solution build failed without useful errors in the initial sandboxed

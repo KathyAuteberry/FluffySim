@@ -28,6 +28,7 @@ public static class ScenarioCatalog
         new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
         new Dsr.Strength.DsrStrengthScenario(),
         new Dsr.Strength2.DsrStrength2Scenario(),
+        new Dsr.Sanctity1.DsrSanctity1Scenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

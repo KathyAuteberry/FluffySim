@@ -11,8 +11,14 @@ inn, drives their casts and movement, and renders the real VFX, cast bars, tethe
 
 ## Build / run
 
-- Build: `dotnet build` from the repo root. The Dalamud SDK resolves from
+- Development build: `dotnet build -c Debug` from the repo root. The Dalamud SDK resolves from
   `%AppData%/XIVLauncher/addon/Hooks/dev/`.
+- Never build Release during development or copy/publish into `bin/Release`. The installed
+  Release output is watched by Dalamud; changing it hot-reloads the plugin and freezes the
+  running FFXIV client. The user alone builds Release when ready to playtest.
+- Keep development output and intermediates in Debug-specific `bin`/`obj` trees, separate
+  from Release (the solution plugin output is `AnoMech/bin/x64/Debug`; direct project builds
+  use `AnoMech/bin/Debug`). Run tests with `-c Debug`; do not introduce automatic reloads.
 - The plugin can't run standalone: it only runs inside the game, loaded by Dalamud.
 
 ## Tests

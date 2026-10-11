@@ -1,12 +1,24 @@
 # DSR implementation roadmap
 
+## Development build workflow (current)
+
+Use `dotnet build -c Debug` and run automated tests with `-c Debug`. Debug output
+must remain in Debug-specific `bin` / `obj` trees (including `bin/x64/Debug`). **Never build Release during development,
+or copy/publish/modify installed Release output.** Dalamud watches that output and
+hot-reloads on changes, freezing the running FFXIV client. The user personally
+compiles Release when ready to playtest. Earlier Release validation results below
+are historical; older manual-build instructions are user-only, not agent actions.
+
+
 ## Coverage and validation
 
 | Fragment | Status | Scope |
 |---|---|---|
 | P2 arena | Manually validated in FFXIV | Territory 968 loads correctly and is traversable without an additional layout preset. |
 | Strength of the Ward Part 1, Elemental | Manually validated in FFXIV | Complete steps 1–5, including the game's fifth Heavy Impact hit. Registered in the normal Release sidebar. |
-| Strength of the Ward Part 2, Elemental | Build/test validated; native presentation awaits manual validation | Independent full steps 1–4, including crossed tethers, body-language tower communication, six towers and six Bladedance pulses. |
+| Strength of the Ward Part 2, Elemental | Manually validated in FFXIV | Independent full steps 1–4, including crossed tethers, body-language tower communication, six towers and six Bladedance pulses. |
+| Sanctity Part 1: Sacred Severs, Elemental | Build/test validated; native presentation awaits manual validation | Full four-jump fragment, both rotations, role-partner swaps, double gaze and eighteen Bright Flares. Provisional jump damage model. |
+| Sanctity Part 2: Meteors | Not researched | Not implemented. |
 | Other DSR fragments | Not researched | Outside this iteration. |
 
 FRU Light Rampant and Ultimate Relativity remain registered and unchanged. Diamond Dust remains paused.
@@ -210,3 +222,113 @@ Compatibility: other controllers using higher-priority scenes, inn orchestrions 
 4. Enable Advanced and reopen exact overrides; verify previously stored numbers are intact, active, and no longer affected by Practice Assignment. Return to Quick without losing them. Test a fixed seed via the Release seed panel.
 5. Start both DSR parts and listen for Heroes. Restart while active; there should be one continuous native track, without simultaneous copies. Verify music releases on completion, a death, Leave and early cancellation, and normal inn music returns after leaving.
 6. Repeat FRU P2/P3 for Footsteps/The Extreme; toggle BGM off during a run, and test plugin unload outside/inside a simulation. If another BGM controller is active, verify AnoMech leaves its changed selection alone. No manual reload is triggered by the build.
+
+## Sanctity of the Ward Part 1 — Sacred Severs
+
+### Scope and evidence
+
+Independent 26-second practice fragment, beginning at Sanctity's cast and ending after **four alternating Sacred Severs, six Shining Blade dashes and eighteen Bright Flares**. No Meteors, ice, meteor towers, Faith Unmoving or subsequent mechanics. Existing scenarios, arena presets, waymarks, BGM mapping and bot communication are unchanged. Registered after Strength Part 2 in the standard Release sidebar.
+
+The October 10 log contains **four Sanctity attempts**, identified by their preceding Strength sequence ordinal:
+
+| Sequence | Swords | Double gaze | Jumps | Orb explosions | Coverage |
+|---|---:|---|---:|---:|---|
+| 41 | 2 | Both | 4 | 18 | Complete; clockwise, Zephirin SE |
+| 46 | 2 | Both | 4 | 18 | Complete; clockwise, Zephirin NE |
+| 49 | 0 | No | 0 | 0 | Interrupted during Sanctity cast |
+| 50 | 2 | Both | 3 | 12 | Partial; clockwise, Zephirin NE |
+
+All recorded charge paths are clockwise. Counterclockwise paths are established by independent encounter implementations and mirrored strategy diagrams, not claimed as observed locally. Missing events in interrupted sequences are not mechanic omissions. `tools/dsr_sanctity_evidence.py` produces sanitized receive timelines and public NPC geometry; the test fixture retains only game IDs, relative times and sequence ordinals. Raw logs, replay payloads and player identifiers remain outside generated repository data.
+
+Sources:
+
+- [Tuufless Elemental Sanctity steps 1–4](https://ffxiv.tuufless.com/elemental/dsr/02_thordan/#sanctity-of-the-ward): DRK-relative groups, corresponding role-partner adjustments, double gaze, clockwise/counterclockwise movement and waiting for the third/fifth orb before moving. The six rotation diagrams were inspected for starting and stopping geometry.
+- [BossMod Sanctity implementation](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Endwalker/Ultimate/DSW2/P2SanctityOfTheWard1.cs): 6y four-player Severs, 9y Bright Flares, 6y-wide charge paths, three segments per knight and nine orbs per knight; independent timing and mirrored rotation geometry.
+- [Cactbot DSR](https://github.com/quisquous/cactbot/blob/main/ui/raidboss/data/06-ew/ultimate/dragonsongs_reprise_ultimate.ts): sword marker identities and knight-position rotation detection.
+- Native DSR replay: build **14006063**, format 5. Typed SpawnNpc packet fields establish Zephirin's name/model/equipment and Brightsphere model; typed action-effect headers establish animation locks. Installed game sheets validate Action and Lockon rows. No binary offsets, signatures or visual paths were invented.
+- BossMod BSD-3-Clause and Cactbot Apache-2.0 licenses inspected. Behavior was implemented using AnoMech abstractions; no reference code or assets were copied.
+
+### Verified registry and presentation
+
+| Kind | ID / row | Use |
+|---|---|---|
+| NPC base / name / model | 12592 / 3633 / 3268 | Ser Zephirin; body/head/legs 65537, mainhand 12887197149, native spawn flags/animation 0 |
+| NPC base / name / model | 13070 / 4385 / 3501 | Brightsphere; visible native spawn, no demihuman equipment |
+| NPC base | 12601 / 12632 | Adelphel / Janlenoux; established equipped DSR PLD spawning |
+| NPC base | 12604 | King Thordan; established visible DSR spawn/appearance |
+| Action | 25569 | Sanctity; 4s sheet cast, 3.7s displayed bar |
+| Action | 25552 | Dragon's Gaze cast |
+| Actions | 25553 / 25554 | Thordan / Dragon Eye gaze effects |
+| Action | 25570 | Shining Blade; 6y-wide finite charge segment |
+| Action | 25571 | Sacred Sever; alternating sword targets, radius 6y |
+| Action | 25295 | Bright Flare; 1s sheet cast, 0.7s bar, radius 9y, sheet omen |
+| Lockon | 50 / 51 | One/two swords; installed names `m0244trg_a1t` / `m0244trg_a2t`; same IDs observed in local log |
+| MapEffect | Eye direction slot 0–7, flags 0x00020001 / 0x00100001 / 0x00400020 | Authentic Dragon Eye appearance, gaze and clearing; direction clockwise from N |
+
+The Eye is a native map object, not a guessed NPC model. Its effect source is an invisible helper at the verified 40y directional position. Thordan performs its own gaze effect; Zephirin performs native Sacred Sever actions, and the knights perform Shining Blade with existing native carry movement. Orbs use their real models and Bright Flare cast/omen/action animations. Orb actors survive through the verified 2.1-second post-release animation lock before disposal.
+
+Sword effects use the existing **fire-and-forget actor-attached Lockon** facility, not party-marker commands. Their AVFX self-completes; unsafe destruction of potentially self-freed native VFX is deliberately avoided. Immediate cancellation fade and native attachment duration require manual verification. The passed lifecycle tests establish actor disposal and model consistency, not the game's native VFX lifetime.
+
+### Assignments and choreography
+
+All **56 ordered distinct sword-target pairs**, all four Zephirin intercardinals and both rotations are supported. Group 1 starts opposite Zephirin (MT/H1/D1/D3); group 2 starts on his side (ST/H2/D2/D4). Sword 1 belongs to group 1; Sword 2 belongs to group 2. An incorrect base-group sword assignment swaps that player with MT↔ST, H1↔H2, D1↔D2 or D3↔D4. Both swords on one role pair are handled consistently. Groups remain four players, with corresponding role partners separated. The human is subject to the same rolls and adjustments as bots.
+
+Thordan supports eight compass positions at radius 25; Eye offsets are ±90°, ±135° and 180° at radius 40. Zephirin's recorded spawn radius is 15. Initial groups use radius 20, offset 15° for early movement or 11.7° for late movement. Final groups stop 33.3° from their reference diagonal, approximately three notches before the next cardinal shuriken. Bots move at 6y/s, maintain four-person groups, and face away from both actual gaze origins. Actual character facing is used for both human and bot gaze failures.
+
+Clockwise SE/NW and counterclockwise NE/SW use the early route: wait for the third orb pair and move at 20.8s. The other patterns wait for the fifth pair and move at 22.05s. Movement is continuous, without party teleports, bot immunity or adaptation to human mistakes.
+
+Simple practice options: **Random, Sword 1, Sword 2, Unmarked — stay, Unmarked — role-partner swap**. Each filters the existing valid sword pairs for the selected seat. Rotation can be Random/CW/CCW. Explicit Advanced mode enables exact Zephirin, Thordan, Eye and sword overrides; inactive settings remain stored. The standard scenario RNG seed setting remains available.
+
+### Timing and failure model
+
+Times are relative to Sanctity cast start:
+
+| Event | Scenario | Complete recording receive range |
+|---|---|---|
+| Swords | 9.45 | 9.433–9.463 |
+| Gaze cast | 12.62 | 12.599–12.634 |
+| Both gaze effects | 17.74 | 17.720–17.777 |
+| Four Severs | 17.55 / 19.33 / 21.11 / 22.90 | 17.542–17.554 / 19.320–19.338 / 21.102–21.122 / 22.883–22.909 |
+| Three paired charges | 17.67 / 19.235 / 20.795 | 17.631–17.688 / 19.187–19.250 / 20.746–20.810 |
+| First/final paired Flare release | 20.04 / 23.875 | 19.988–20.051 / 23.818–23.896 |
+| Cleanup/outro | 26.0 | Allows final native animation lock to finish |
+
+Tests compare native effect releases against both complete recordings with **0.18s receive-time tolerance**. Damage uses existing cast-bar snapshot semantics and is explicitly not equated with network receipt. The difference also preserves the wait-until-the-visible-explosion movement cue.
+
+Gazes, charges and orb explosions are lethal practice failures under the same rules for humans and bots. Severs require at least four nearby soakers and use travel distance. **Exact Sever damage scaling is unresolved:** the displayed falloff `40 / distance` and 30y inadequate-distance cutoff are provisional practice approximations, not a reconstructed game damage formula. The implementation exposes this calculation separately and labels it in settings. Wrong grouping or a missed partner swap leaves a three-player jump and fails the group; bots never compensate by changing assignments.
+
+A small world-owned cleanup callback clears this scenario's Eye slot on reset, cancellation and leave. It captures the map and slot only, never an actor pointer, and is consumed once. This prevents stale Eye state when restarting within the already loaded territory. Existing scenarios register no callbacks and retain their behavior.
+
+### Validation and first manual test
+
+Final Release/test results are appended below. Native visuals, jump animation/carry interaction, sword lifetime and Eye presentation remain **unverified in FFXIV**.
+
+1. Run `dotnet build -c Release`; manually reload AnoMech. No automatic reload is enabled.
+2. In an inn, select **Dragonsong's Reprise (Ultimate) → P2 King Thordan → Sanctity of the Ward — Part 1: Sacred Severs (Elemental)**, immediately below Strength Part 2. Choose the Elemental AI and Tuufless P2 onwards waymarks. Heroes uses the existing phase mapping.
+3. First test: Advanced mode, Zephirin **SE**, **Clockwise**, Thordan **NW**, Eye **+90°**, Sword 1 **MT**, Sword 2 **ST**. With MT, read one sword, start opposite Zephirin, face away from both gaze sources, wait for the third orb pair, then rotate to the second safe position. Watch all four jumps and the final explosions before the clear.
+4. Repeat SE **Counterclockwise**: mirrored route and fifth-pair waiting. Test NE with both directions to cover the opposite early/late timings.
+5. For adjustments, seat H1 and choose Simple **Unmarked — role-partner swap**. Read the swords and move to the other group while bots hold their correct assignments. Also test Sword 1, Sword 2 and Unmarked — stay.
+6. Deliberately face each gaze, stay with the wrong group, or move into an unexploded orb. Confirm failures; no bot should yield or become immune.
+7. Leave during swords/gaze, restart with another Eye direction, then switch to Strength or FRU. Confirm no lingering Eye, duplicate actors, sword effects or music override. Native one-shot sword effects may finish naturally rather than synchronously disappearing; report their observed lifetime.
+
+Do not proceed to Meteors as part of this scenario. After this playtest, resolve any native presentation gaps and refine jump damage only with additional evidence.
+
+Final validation (Release, 2026-10-11):
+
+- `dotnet build -c Release` with the established local `DALAMUD_HOME`: **0 errors, 3,957 warnings**, unchanged warning count from the prior build; no new scenario-source warnings. Existing platform/obsolete-member warnings and offline NuGet vulnerability-check warnings remain.
+- Full plugin NUnit suite: **3,360 passed, 0 failed, 0 skipped** (previous 2,806 plus 553 focused Sanctity cases and its catalog regression case).
+- Relay NUnit suite: **41 passed, 0 failed**.
+- Python tooling: **30 passed** (previous 26 plus four sanitized Sanctity-inspector tests).
+- Focused coverage includes 448 full sword/Zephirin/rotation combinations, 320 full gaze configurations within 40 cases, all eight seats and five practice categories, actual-facing failures for both gazes, human/bot charge and orb failures, wrong groups and unmarked partner adjustments, early-movement failure, normal-speed frame-by-frame movement, all native release counts/times against both complete recordings, cancellation and same-instance re-entry.
+- `git diff --check` passed. No packages installed, reference files modified, automatic reloads triggered or version-control history changed.
+
+### Display-name cleanup and development workflow
+
+The sidebar and selected-scenario header now read **P2 Strength of the Ward (Part 1)**,
+**P2 Strength of the Ward (Part 2)** and **P2 Sanctity of the Ward (Part 1)**.
+Scenario names used for persistent identity, configuration keys, settings and catalog
+ordering are unchanged. Development now uses Debug exclusively; Release is user-built.
+Debug validation: build **0 errors / 3,961 warnings**, plugin **3,361 passed**,
+relay **41 passed**, no skipped tests. The solution plugin output resolves to
+`AnoMech/bin/x64/Debug`, separate from installed Release output. Only Debug build/test
+commands were executed; no copying, publishing or Release build was performed.

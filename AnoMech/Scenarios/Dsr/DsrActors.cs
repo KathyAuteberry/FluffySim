@@ -8,6 +8,8 @@ public static class DsrActors
 {
     public static EnemySpawnConfig Config(uint baseId, Placement placement) => baseId switch
     {
+        12592 => Create(baseId, 3633, 3268, new(65537, 12887197149, 65537, 65537), placement),
+        13070 => Create(baseId, 4385, 3501, new(0, 0), placement),
         12604 => Create(baseId, 3632, 3269, new(65537, 4297590237, AnimationState: 1), placement, 16),
         12633 => Create(baseId, 3636, 3268, new(65539, 17181180405, 65539, 458753), placement),
         12634 => Create(baseId, 3637, 3268, new(131075, 34360066549, 131075, 524289), placement),

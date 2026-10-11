@@ -73,6 +73,13 @@ See: https://github.com/anomek/MyDalamudPlugins
   Some scanarios also have solo mode where you can practice without disctractions.
 
 
+## Development builds
+
+Use `dotnet build -c Debug` and `dotnet test -c Debug` for development. Keep output
+in Debug-specific `bin` and `obj` trees (the solution plugin uses `bin/x64/Debug`). Do not build, copy, or publish into Release output:
+Dalamud watches the installed Release files and hot-reloads them, freezing the
+running client. The user builds Release personally when ready to playtest.
+
 ## How to help
 
 FRU implementation coverage, verified encounter data and local Linux build/test

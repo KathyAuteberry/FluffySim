@@ -11,6 +11,8 @@ public interface IScenario
     string Name { get; }
 
     string MenuName => Name;
+    // Full UI label only; FullName remains the saved-selection identity.
+    string? DisplayNameOverride => null;
     bool IsIncomplete => false;
     bool EnablePhaseBgm => !IsIncomplete;
 

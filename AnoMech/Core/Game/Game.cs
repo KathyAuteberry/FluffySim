@@ -538,6 +538,7 @@ public sealed class Game : IDisposable
     // Menu label, e.g. "P5 Delta".
     public static string DisplayName(IScenario scenario)
     {
+        if (scenario.DisplayNameOverride is { } displayName) return displayName;
         var phase = scenario.Phase;
         return string.IsNullOrEmpty(phase.Name) ? scenario.MenuName : $"{phase.Name} {scenario.MenuName}";
     }

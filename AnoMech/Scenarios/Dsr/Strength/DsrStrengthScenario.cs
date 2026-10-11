@@ -13,6 +13,7 @@ namespace AnoMech.Scenarios.Dsr.Strength;
 public sealed class DsrStrengthScenario : IScenario
 {
     public string Name => "Strength of the Ward — Part 1 (Elemental)";
+    public string DisplayNameOverride => "P2 Strength of the Ward (Part 1)";
     public IPhase Phase => DsrZone.P2;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DsrStrengthAi()];
     public DsrStrengthStateOverrides Overrides { get; } = new();

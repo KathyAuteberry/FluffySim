@@ -57,6 +57,7 @@
     </ItemGroup>
   </Target>
   <ItemGroup>
+    <None Update="Scenarios/Dsr/Sanctity1/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Scenarios/Dsr/Strength2/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Scenarios/Dsr/Strength/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
     <None Update="Scenarios/Fru/UltimateRelativity/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />

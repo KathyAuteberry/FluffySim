@@ -22,6 +22,8 @@ public sealed class SimWorld : ISimObject, IDisposable
     // Ownership
     private readonly SimChildren children = new();
     private readonly EnemyList enemyList = new();
+    private readonly List<Action> cleanup = new();
+    public void OnDespawn(Action action) => cleanup.Add(action);
 
     // Zone loading and map effects entry point.
     public MapController Map { get; } = new();
@@ -217,6 +219,13 @@ public sealed class SimWorld : ISimObject, IDisposable
     // The run's teardown; the party stays.
     public void Despawn()
     {
+        var actions = cleanup.ToArray();
+        cleanup.Clear();
+        foreach (var action in actions)
+        {
+            try { action(); }
+            catch (Exception) { DiagnosticLog.Warn("[SimWorld] Scenario cleanup callback failed."); }
+        }
         SoftMarkers.Clear();
         children.Despawn();
         enemyList.Clear();
