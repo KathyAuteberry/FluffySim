@@ -17,8 +17,8 @@ are historical; older manual-build instructions are user-only, not agent actions
 | P2 arena | Manually validated in FFXIV | Territory 968 loads correctly and is traversable without an additional layout preset. |
 | Strength of the Ward Part 1, Elemental | Manually validated in FFXIV | Complete steps 1–5, including the game's fifth Heavy Impact hit. Registered in the normal Release sidebar. |
 | Strength of the Ward Part 2, Elemental | Manually validated in FFXIV | Independent full steps 1–4, including crossed tethers, body-language tower communication, six towers and six Bladedance pulses. |
-| Sanctity Part 1: Sacred Severs, Elemental | Build/test validated; native presentation awaits manual validation | Full four-jump fragment, both rotations, role-partner swaps, double gaze and eighteen Bright Flares. Provisional jump damage model. |
-| Sanctity Part 2: Meteors | Not researched | Not implemented. |
+| Sanctity Part 1: Sacred Severs, Elemental | Manually validated in FFXIV (user report) | Full four-jump fragment, both rotations, role-partner swaps, double gaze and eighteen Bright Flares. Provisional jump damage model. |
+| Sanctity Part 2: Meteors, Elemental | Experimental; full headless sequence implemented, native playtest pending | Standalone cardinal swaps, ice pairs, 810 outer configurations, both tower sets, seven clockwise drops per target and Faith Unmoving. Reference-derived timing and damage simplifications. |
 | Other DSR fragments | Not researched | Outside this iteration. |
 
 FRU Light Rampant and Ultimate Relativity remain registered and unchanged. Diamond Dust remains paused.
@@ -332,3 +332,242 @@ Debug validation: build **0 errors / 3,961 warnings**, plugin **3,361 passed**,
 relay **41 passed**, no skipped tests. The solution plugin output resolves to
 `AnoMech/bin/x64/Debug`, separate from installed Release output. Only Debug build/test
 commands were executed; no copying, publishing or Release build was performed.
+
+
+## Sanctity Part 2 — experimental Meteors implementation (October 11)
+
+Standalone **P2 Sanctity of the Ward (Part 2)** is directly below Sacred Severs in
+normal scenario selection. It is explicitly provisional (`IsIncomplete`), but
+runs the complete requested fragment through the second towers; it does not run
+Meteors as a continuation of Part 1. Heroes, the arena and waymarks reuse P2.
+No Ultimate End, Broad Swings or later mechanics are scheduled.
+
+### Evidence and limits
+
+- Local October 10 log: **four Sanctity starts, zero Meteor casts/markers or
+  second-tower resolutions**. October 11 log: no Sanctity starts. Earlier two
+  complete Sacred Severs sequences do not establish Meteor coverage. The new
+  `tools/dsr_meteors_evidence.py` performs a sanitized, read-only inventory.
+  No missing event is interpreted as a nonexistent mechanic.
+- [Tuufless Elemental guide](https://ffxiv.tuufless.com/elemental/dsr/02_thordan/#sanctity-of-the-ward),
+  including examples/FAQ, supplies strategy, swaps, priority, communication,
+  cursed patterns and clockwise movement. The **current Elemental macro** uses
+  N MT/D3, E H2/D2, S ST/D4, W H1/D1. All fifteen Meteor diagrams were
+  inspected; different later role placements are the documented swaps, not
+  alternate initial pairings. The cursed N/S tower adjustment matches the
+  illustrated example.
+- [BossMod P2SanctityOfTheWard2](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Endwalker/Ultimate/DSW2/P2SanctityOfTheWard2.cs)
+  independently establishes same-category Prey targets, 7-yalm ice/fire,
+  15–30 donut, 3-yalm towers, 16-yalm knockback, approximate 5-yalm comet link
+  threshold and cardinal/intercardinal final responsibilities. Its state machine
+  supplies Storm → first towers 4.2s, first towers → knockback 10.4s,
+  knockback → second towers 3s. Cactbot independently identifies Prey `0x011D`.
+- [ffxiv-raid-sim](https://github.com/susy-bakaa/ffxiv-raid-sim) **actual source,
+  `meteors.unity` scene, action assets and hazard prefabs were accessible**.
+  Scene events execute then wait, rather than interpreting each `time` as an
+  absolute timestamp. The executable repeat mechanic drops seven comets at
+  **1.43s** intervals. Puddle prefabs activate at +3s and expire at +14s;
+  tower generation specifies 8 total, 2–3 middle, at most one middle per sector.
+  It uses LPDU choreography and GPL-3.0 with a Unity linking exception. No source
+  code, prefabs or assets were copied into AnoMech; behavior was implemented
+  independently in C# and Elemental assignments are separate.
+- Installed game sheets validate the action casts/shapes, Lockon 285
+  `r1fz_holymeteo_s12x`, NPC models/equipment and utility statuses. The local
+  native replay (format 5, build 14006063) independently confirms Charibert,
+  Haumeric and Noudenet name/model/mainhand/head/body and visible flags/state 0.
+  Recorded spawn positions are used for those actors and Hermenost. Holy Comet's
+  model is sheet-confirmed, **not observed in this replay**; it is unnamed in the
+  simulation (name row 0), avoiding an invented NPC name mapping.
+
+### IDs / presentation registry
+
+| Purpose | Verified identifier | Evidence |
+|---|---|---|
+| Charibert | BNpcBase 12603, name 3642, model 3268; body/head 65540, legs 655361, mainhand 17180787689 | Installed BNpcBase/NpcEquip, replay |
+| Haumeric | BNpcBase 12638, name 3643, model 3268; body/head 131076, legs 720897, mainhand 12887261985 | Sheets/replay |
+| Noudenet | BNpcBase 12639, name 3644, model 3268; body/head 196612, legs 786433, mainhand 17181311777 | Sheets/replay |
+| Holy Comet | BNpcBase 12591 (`0x312F`), model 629 | BossMod / installed sheets; visible rendering untested |
+| Hiemal Storm | 25574 visual, 25575 radius-7 pair damage | BossMod / Action sheet |
+| Heavens' Stake | 28590 visual, 28591 circles, 28592 donut | BossMod / Action sheet |
+| First Conviction | 29563 visual 9.2s, 29564 tower 12s / radius 3 | BossMod / Action sheet |
+| Holy Comet / failed link | 25576 visual 12s, 25577 drop, 25578 Holy Impact | BossMod / Action sheet |
+| Faith Unmoving | 25308 / 4s, knockback 16 | BossMod / Action sheet |
+| Second Conviction | 28650 visual 8.2s, 28651 tower 11s / radius 3 | BossMod / Action sheet |
+| Ice / fire event objects | `0x1EB682` / `0x1EB686` | BossMod; default native timeline state unverified |
+| Meteor Prey | status 562; Lockon 285 (`0x011D`) | BossMod / Cactbot / installed Lockon sheet |
+| Anti-knockback | Arm's Length action 7548/status 1209; Surecast action 7559/status 160 | Installed sheets, established six-second buffs |
+
+Native casts use actual actions/animations and the established meshless helper
+path for towers, circle/donut telegraphs and impacts. Equipment is explicit;
+there is no new readiness gate or guessed VFX. Event objects use the existing
+spawn abstraction and default state; **their actual visibility is unverified**.
+Lockon uses local native VFX, never party marking. One-shot native VFX are allowed
+to complete through the existing safe path; early-cancellation visual tails need
+manual inspection, not speculative native destruction.
+
+### Assignments, geometry and choreography
+
+- Twelve distinct same-category target pairs (six support, six DPS). Only the
+  Meteor-role swaps; targets end N/S. For two E/W targets, W swaps N and E swaps S.
+  All eight seats can choose Random, Meteor or No Meteor. Simple and Advanced
+  overrides are independent; Advanced exposes target pair, outer pattern and
+  inner bitmask. Cursed filtering is explicit, and contradictory settings block
+  launch. RNG seed uses the existing scenario seed setting.
+- All **810 outer patterns**: 324 with five outside, 486 with six; each quadrant
+  has one or two of three positions. **54 forced N/S cursed patterns** are
+  supported, not discarded. Center > CCW > CW is retained unless the N/S choice
+  can avoid a cursed 120° pairing.
+- Two/three distinct inner towers complete eight total. Supported inner masks
+  cover the four intercardinals. Exact real correlations/weighting between
+  inner and outer patterns remain unknown; default uniform outer sampling and
+  compatible inner masks are a **training distribution, not measured game RNG**.
+- Non-Meteor players reserve the second outer tower or the immediately-clockwise
+  inner tower, then choose any remaining inner towers deterministically. Bots
+  visibly indicate fixed choices at 3.7–5.9s and return for ice. They never read
+  human movement or yield. Tower validation checks physical occupancy, not a
+  hidden requirement that the human match a predetermined assignment.
+- Outer radius 17.5, inner positions `(±3.6, ±3.6)` and fire positions
+  `(±7.3, ±7.3)` are simulator geometry, not locally observed Meteor coordinates.
+  Storm baits use BossMod's radius 10. Inside soakers use the inner edge of
+  their tower (radius 2.4) to avoid surrounding voidzones.
+- Meteor routes are an **Elemental practice construction**: clockwise at radius
+  19.3, ending the last drop 18° before the opposite cardinal, then entering
+  the final tower. Legitimate ten-second Sprint (7.8 y/s), started at 15.8s, supports the path; no teleport or
+  immunity. Every planned comet remains >=5 apart, including cursed starts.
+  Unmarked outside bots travel an outer arc instead of cutting through ice.
+- Final towers are four cardinals **and** four intercardinals: marked players
+  finish opposite, other Meteor-role players take E/W, non-Meteor role takes
+  clockwise intercardinals. Inside players align at radius 1.5 for knockback 16;
+  outside players must use anti-knockback after drop five. This corrects a
+  literal reading of “eight intercardinal towers” inconsistent with the guide's
+  actual responsibilities and BossMod.
+- Anti-knockback utility buttons now grant their statuses even when optional
+  combat-action simulation is disabled, like Sprint. Their recasts reset on
+  scenario start via the same validated ActionManager interface already used
+  for Sprint. Only the new scenario interprets those statuses for knockback;
+  other encounters' mechanics are unchanged.
+
+### Provisional timeline and failure model
+
+Times below are scenario-relative **native action-effect releases**, not measured
+receive times or asserted damage snapshots. Cast snapshots use the established
+sheet cast time minus 0.3s. Absolute alignment, first-comet delay and actor
+presentation need future recordings.
+
+| Release | Seconds |
+|---|---:|
+| Hiemal Storm | 8.5 |
+| Heavens' Stake | 9.0 |
+| First towers | 12.7 |
+| Comet drops | 16.10, 17.53, 18.96, 20.39, 21.82, 23.25, 24.68 |
+| Faith Unmoving | 23.1 |
+| Second towers | 26.1 |
+| Successful outro / cleanup | 29.0 |
+
+Failed pair stacks, missed/overfilled towers, active puddles, linked comets and
+knockback beyond the arena all fail. Comet link threshold 5 is approximate in
+BossMod (the Unity collider uses 4); needs real failure evidence. Puddle entry
+is lethal for practice, rather than modeling unverified DoT/freeze amounts.
+Comet impact uses normal damage in its sheet radius 20: **exact falloff/HP damage
+is not implemented or claimed**. Ice/fire +3s activation and +14s expiration
+are reference-simulator values, not locally observed timings. Native comet
+spawn/snapshot lead is simplified to the scheduled drop; BossMod notes a possible
+~0.5s actor-spawn lead/lag. These uncertainties are isolated in the new files.
+
+### Validation and first playtest
+
+Final Debug build: **0 errors, 3,960 warnings** (no warnings in new files).
+Plugin: **4,236 passed**, including **874 Meteor tests**; relay: **41 passed**;
+Python tooling: **34 passed**. The plugin suite includes the five existing Ultimate
+scenarios and catalog regression coverage. Every outer pattern (including all 54
+forced cursed cases) completes the full two-tower/fourteen-comet fragment with
+all eight seats on AI. Geometry/assignment invariants also cover every compatible
+inner mask and all twelve target pairs. Focused tests cover all seats/practice
+categories, fixed body-language claims, native release scheduling, deliberate
+human failures, utility buttons, no party marking, cancellation and repeated
+use of the same scenario instance with delayed native spawns.
+
+Native rendering, cooldown reset behavior, cancellation VFX tails, and provisional
+movement/timing still need the first in-game playtest. These tests do not establish
+rendering or exact encounter fidelity. Debug outputs were isolated from Release;
+no Release build, copying, publishing, package installation or history changes
+were performed.
+
+1. **User only:** compile `dotnet build -c Release`, then manually reload. Agents
+   must continue using Debug; no Release build/output writes were performed.
+2. Select **Dragonsong's Reprise (Ultimate) → P2 King Thordan → P2 Sanctity of
+   the Ward (Part 2)**; choose Elemental cardinal pairs and your normal seat.
+3. First try Simple **No Meteor**, difficulty **Not forced cursed**. Read both
+   markers, the role swap and bots' 3.7–5.9s tower body language. Stack at your
+   cardinal for ice, then take the unclaimed tower. Inside players hug its inner
+   rim and align for knockback; outside players press their actual anti-knockback
+   button after drop five. Bots do not accommodate a contested tower.
+4. Try **Meteor**, same difficulty. Take your N/S outside tower near the true N/S
+   line, start Sprint shortly before the first drop (~15.8s), and pace clockwise
+   movement along the wall (roughly 20–26° per drop, tighter on the short cursed
+   side). Continuous full-speed Sprint is not the constructed practice route. Use
+   anti-knockback after the fifth drop; finish in the opposite cardinal tower
+   after drop seven. No automatic movement/anti-knockback is granted to humans.
+5. Try **Meteor → Forced cursed**, then both support and DPS seats. Check that
+   all seven drops are readable and leave enough space; record if the provisional
+   timing or constructed route differs from actual footage.
+6. Leave during ice or Meteor drops, re-enter, and finish twice. Inspect markers,
+   visible/equipped knights, towers, puddle activation/expiration, comet models
+   and impacts, knockback, actor cleanup and restoration of normal BGM.
+7. In the next real DSR session collect through both tower resolutions: marker
+   times/targets (anonymized), helper cast/effect coordinates, inner/outer pattern
+   correlations, ice/fire event-object states/despawns, every comet spawn and
+   drop, successful/colliding comet separation, Faith Unmoving and anti-knockback
+   statuses. Keep recordings local. Prefer a native Duty Recorder capture too.
+
+### Meteor tower visibility repair
+
+The first manual playtest found both tower waves invisible. The simulation casts
+29564/28651 from hidden generic 9020/3632 helpers; this supplies cast/effect packets
+but has not established the native tower pillar/ground-effect spawn state.
+Installed sheets previously verified radius 3 and animation-end timeline 4470;
+these values alone are insufficient to reproduce the persistent tower display.
+No speculative actor flags or VFX paths were added.
+
+BossMod's `P2SanctityOfTheWard2Towers1/2` inherit `CastTowers`: action 29564
+(first wave) / 28651 (second), radius 3, activation at cast finish. Position is
+caster position for self-target casts, otherwise target position or cast location.
+Its radar draws computed circles and removes them on cast finish, not native VFX.
+Splatoon's `P2 Sanctity Of The Ward Second.cs` discovers BattleNpc DataId 9020 /
+NameId 3640, groups their positions into inner/cardinal sectors, transitions after
+25575 and 29564, and checks nearby actors casting 29564 within three yalms.
+Its registered elements are overlays, not a native tower spawning recipe.
+Neither implementation supplies an event-object ID or native tower VFX resource.
+A read-only installed-sheet query confirms both actions reference Omen row 90,
+`d1025_sp012_bunsan01s`, with no alternate omen. Existing ActorCast dispatch
+already requests these actions, so merely adding the same action/omen again
+does not establish the missing native pillar. VFXEditor asset editing/injection
+was not used; a verified persistent native spawn recipe remains unknown.
+The Unity action assets establish mechanical towers, not FFXIV-native assets.
+
+Both waves now have an explicit **local projected ground overlay**: radius-three
+yellow rings with vertical edge lines, sourced exclusively from authoritative
+scenario positions. No assignment hints or occupancy colors are added. This is
+an intentional practice visualization, not an authentic native tower claim.
+Native casts/impact effects remain unchanged; the overlay is the sole persistent
+render path. Visibility windows are .7–12.4 and 15.1–25.8 seconds (existing cast
+snapshot deadlines); teardown clears requests. Framework rendering uses the
+existing softmarker UI callback, active-scenario guard and scenario origin.
+Optional settings checkbox opens diagnostics with active count, world positions,
+radii, windows and rendering path. Projection is screen-space and cannot provide
+native depth occlusion; out-of-screen edges are omitted.
+
+Manual validation: user builds Release personally, reloads, selects Meteor Part 2,
+tests No Meteor and Meteor plus forced cursed patterns. Confirm eight first-wave
+rings including inner towers, removal at first resolution, eight second-wave
+rings, accurate waymark-relative positions, and no lingering rings after leaving,
+cancellation or re-entry. Authentic tower spawning remains a future presentation
+investigation; the fallback should make human practice possible now.
+
+Repair validation: Debug plugin build succeeds (0 errors; incremental build has
+one existing NU1900 offline vulnerability-query warning). Full plugin suite:
+4,236 passed; Meteor suite: 874 passed with additional render-position/window
+assertions across all 810 patterns; cancellation/reuse: 3 passed with explicit
+empty-render-request assertions. Relay: 41 passed. Python tooling: 34 passed.
+`git diff --check` clean. No Release output was built or copied. In-game fallback
+visibility is pending the user's manual test.

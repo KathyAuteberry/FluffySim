@@ -12,6 +12,8 @@ internal sealed class FakeEventObjects(SimTimeline timeline) : IEventObjects
 
     private readonly FakeEventObject?[] slots = new FakeEventObject?[SlotCount];
 
+    public int OccupiedSlots => slots.Count(o => o is { Exists: true });
+
     public IEventObjectProxy? Spawn(EventObjectSpawnConfig config, Placement placement)
     {
         var slot = Array.FindIndex(slots, o => o is not { Exists: true });

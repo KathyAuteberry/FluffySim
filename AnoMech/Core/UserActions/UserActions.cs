@@ -98,6 +98,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     public void OnScenarioStart()
     {
         sprint.OnScenarioStart();
+        AntiKnockbackHandler.OnScenarioStart();
         if (!Enabled) return;
         castTime.OnScenarioStart();
         foreach (var handler in effectHandlers) handler.OnScenarioStart();
@@ -155,6 +156,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
         processedSeq = seq;
 
         sprint.OnAction(actionType, actionId);
+        if (actionType == ActionType.Action) AntiKnockbackHandler.Apply(Plugin.GameInstance?.Player,actionId);
         if (!Enabled) return;
 
         // Enabler bookkeeping happens as the cast begins.
