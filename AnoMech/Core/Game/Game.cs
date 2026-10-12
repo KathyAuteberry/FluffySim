@@ -482,6 +482,7 @@ public sealed class Game : IDisposable
         PartyMemberKilled?.Invoke(target.Role, cause, actionId);
         MechanicStreak = 0;
         deathOccurredThisRun = true;
+        World.PracticeInvulnerability.Clear();
         Natives.Bgm.Reset();
         AutoRestart = false;
         if (!firstFreezeScheduled)

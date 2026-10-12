@@ -13,6 +13,7 @@ internal sealed class FakeCharacter(uint entityId, string name)
     private const float CarrySettledSeconds = 0.9f;
 
     public List<ActionEffectData> ActionEffects { get; } = [];
+    public List<(ActionEffectData Effect, Vector3 Position, float Rotation)> EffectSourceSnapshots { get; } = [];
     public List<ActorCastData> ActorCasts { get; } = [];
     public List<(int State, int Param)> AnimationStates { get; } = [];
     public List<ushort> Timelines { get; } = [];

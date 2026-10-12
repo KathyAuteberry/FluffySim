@@ -17,6 +17,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
 
     public bool Exists => Actor != null;
     public int Slot => slot;
+    internal IReadOnlyList<(ActionEffectData Effect, Vector3 Position, float Rotation)> EffectSourceSnapshots => Actor?.EffectSourceSnapshots ?? [];
     internal IReadOnlyList<ActionEffectData> ReceivedEffects => Actor?.ActionEffects ?? [];
     internal IReadOnlyList<ActorCastData> ReceivedCasts => Actor?.ActorCasts ?? [];
     internal IReadOnlyList<(int State, int Param)> AnimationStates => Actor?.AnimationStates ?? [];
@@ -90,6 +91,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
     // The client pushes its own player from a knockback entry the moment it applies it.
     public uint ReceiveActionEffect(ActionEffectData effect)
     {
+        if (Actor is { } actor) actor.EffectSourceSnapshots.Add((effect, actor.Position, actor.Rotation));
         Actor?.ActionEffects.Add(effect);
         var sequence = ++nextSequence;
         var hits = (effect.Targets ?? []).Select(t => owner.Find(Id(t.Id))?.Name ?? Id(t.Id).ToString("X8")).ToList();

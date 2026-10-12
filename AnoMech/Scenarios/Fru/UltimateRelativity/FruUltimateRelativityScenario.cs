@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Fru.UltimateRelativity;
 public sealed class FruUltimateRelativityScenario : IScenario
 {
     public string Name => "Ultimate Relativity (Mana)";
+    public string DisplayNameOverride => "P3 Ultimate Relativity";
     public IPhase Phase => FruZone.P3;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruUltimateRelativityAi()];
     private readonly FruUltimateRelativitySettingsWindow settings = new();

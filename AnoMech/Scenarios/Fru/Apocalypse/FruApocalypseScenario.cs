@@ -15,7 +15,7 @@ namespace AnoMech.Scenarios.Fru.Apocalypse;
 public sealed class FruApocalypseScenario : IScenario
 {
     public string Name=>"Apocalypse (Mana)";
-    public string DisplayNameOverride=>"P3 Apocalypse (Mana)";
+    public string DisplayNameOverride=>"P3 Apocalypse";
     public bool IsIncomplete=>true;
     public bool EnablePhaseBgm=>true;
     public IPhase Phase=>FruZone.P3;
@@ -64,7 +64,7 @@ public sealed class FruApocalypseScenario : IScenario
     private float lastExplosion=-1;
     public void DrawSettings()
     {
-        ImGui.TextWrapped("Mana Permaswap / Coloured Apocalypse — full sequence, native presentation pending playtest. Read the initial exterior lights; swaps remain permanent. Lights/trails use a local practice overlay. Enable simulated combat actions and press your invulnerability if baiting Darkest Dance.");
+        ImGui.TextWrapped("Mana Permaswap / Coloured Apocalypse — full sequence, native presentation pending playtest. Read the initial exterior lights; swaps remain permanent. Lights/trails use a local practice overlay. Use the local-only practice invulnerability button if baiting Darkest Dance.");
         if(ImGui.Checkbox("Local Apocalypse light/trail overlay",ref practiceLightOverlay))UsePracticeLightOverlay=practiceLightOverlay;
         ImGui.Checkbox("Advanced / Exact Pattern Overrides",ref advanced);Overrides.Advanced=advanced;
         if(!advanced)
@@ -89,7 +89,7 @@ public sealed class FruApocalypseScenario : IScenario
     public IReadOnlyList<string> SettingsConflicts=>!Overrides.Advanced && Overrides.SwapPractice==ApocalypseSwapPractice.Swap && (Plugin.MainWindow?.SelectedRoleOverride ?? Plugin.Game.World.Party.PlayerRole) is PartyRole.ShieldHealer or PartyRole.CasterDps ? ["H2 and D4 are lowest priority and never swap."] : [];
     public void Run(SimWorld worldParam,int? selectedAi)
     {
-        world=worldParam;Completed=false;ResolvedWaters=0;ResolvedWaves=0;DanceTarget=null;actors.Clear();resolutions.Clear();CurrentPulse=[];CurrentExplosion=[];LightElapsed=-1;
+        world=worldParam;world.PracticeInvulnerability.Start();Completed=false;ResolvedWaters=0;ResolvedWaves=0;DanceTarget=null;actors.Clear();resolutions.Clear();CurrentPulse=[];CurrentExplosion=[];LightElapsed=-1;
         var paladin=world.Party.ActiveMembers().FirstOrDefault(m=>m.Proxy?.ClassJob==19);
         state=LastState=new(world.Rng,Overrides,world.Party.PlayerRole,paladin is ISimPartyMember pm?pm.Role:PartyRole.OffTank);
         helperIndex=0;
@@ -207,7 +207,7 @@ public sealed class FruApocalypseScenario : IScenario
         DanceTarget=((ISimPartyMember)target).Role;
         var position=target.Position;
         foreach(var hit in world.Party.Find.InsideCircle(position,8))
-            if(hit!=target || !((ISimPartyMember)target).Role.IsTank() || !new ushort[]{82,409,810,1836}.Any(target.HasStatus))hit.Die(40182,"Darkest Dance requires an isolated invulnerable tank");
+            if(hit!=target || !((ISimPartyMember)target).Role.IsTank() || !(target == world.Party.Player && world.PracticeInvulnerability.Active) && !new ushort[]{82,409,810,1836}.Any(target.HasStatus))hit.Die(40182,"Darkest Dance requires an isolated invulnerable tank");
         var direction=Vector3.Normalize(position);boss.SetPosition(direction*MathF.Max(0,position.Length()-UnverifiedDanceLandingOffset));boss.Face(target);
         boss.Cast(FruApocalypseActions.Dance,target);
         resolutions.Add((world.Events.Elapsed,40182));
@@ -227,6 +227,7 @@ public sealed class FruApocalypseScenario : IScenario
     { public void Apply(EnemyActionContext context, System.Collections.Generic.IReadOnlyList<SimCharacter> hits)=>effect(context); }
     private void Cleanup()
     {
+        world.PracticeInvulnerability.Clear();
         foreach(var actor in actors)actor.Despawn();actors.Clear();
         foreach(var member in world.Party.ActiveMembers())member.RemoveStatus(2461);
         CurrentPulse=[];CurrentExplosion=[];LightElapsed=-1;

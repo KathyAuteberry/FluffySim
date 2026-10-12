@@ -10,6 +10,9 @@ public static class FruConstants
         public const uint Helper = 9020;
         public const uint OracleOfDarkness = 17831;
         public const uint DelightsHourglass = 17832;
+        public const uint UsurperOfFrostP4 = 17833;
+        public const uint OracleOfDarknessP4 = 17835;
+        public const uint FragmentOfFate = 17841;
     }
 
     public static class BNpcNameId
@@ -19,6 +22,7 @@ public static class FruConstants
         public const uint HolyLight = 9318;
         public const uint OracleOfDarkness = 9832;
         public const uint DelightsHourglass = 9825;
+        public const uint FragmentOfFate = 13559;
     }
 
     public static class ActionId

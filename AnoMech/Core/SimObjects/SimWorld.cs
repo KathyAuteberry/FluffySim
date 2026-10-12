@@ -33,6 +33,7 @@ public sealed class SimWorld : ISimObject, IDisposable
     // (Add/Remove/Clear); bots hold this one instance across runs, cleared on Despawn.
     public ObstacleField Obstacles { get; } = new();
     public SoftMarkers SoftMarkers { get; } = new();
+    public PracticeInvulnerability PracticeInvulnerability { get; } = new();
 
     // No members outside a zone stay. Ticked before the children, which reference it.
     public SimParty Party { get; } = new();
@@ -209,6 +210,7 @@ public sealed class SimWorld : ISimObject, IDisposable
 
     public void Tick(float deltaSeconds)
     {
+        PracticeInvulnerability.Tick(deltaSeconds);
         Map.Tick();
         Party.Tick(deltaSeconds);
         children.Update(deltaSeconds);
@@ -226,6 +228,7 @@ public sealed class SimWorld : ISimObject, IDisposable
             try { action(); }
             catch (Exception) { DiagnosticLog.Warn("[SimWorld] Scenario cleanup callback failed."); }
         }
+        PracticeInvulnerability.Clear();
         SoftMarkers.Clear();
         children.Despawn();
         enemyList.Clear();

@@ -9,6 +9,7 @@ public sealed class DsrZone : IZone
 {
     public static readonly DsrZone Instance = new();
     public static readonly Phase P2 = new(Instance, "P2 King Thordan", 45, PhaseMusic.Heroes);
+    public string DisplayName => "Dragonsong's Reprise";
     public string Name => "Dragonsong's Reprise (Ultimate)";
     public Core.Map.EntranceBarrier EntranceBarrier => new(0, 0, 0, new(0f, 0f, 16f));
     public uint TerritoryId => 968;

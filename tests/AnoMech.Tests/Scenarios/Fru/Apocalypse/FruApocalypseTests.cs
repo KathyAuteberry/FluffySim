@@ -190,7 +190,7 @@ public class FruApocalypseTests
         Assert.That(catalog[2].EnablePhaseBgm,Is.True);
         Assert.That(catalog[2].Phase,Is.SameAs(catalog[1].Phase));
         Assert.That(catalog[2].SettingsOverrides,Is.TypeOf<FruApocalypseStateOverrides>());
-        Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[2]),Is.EqualTo("P3 Apocalypse (Mana)"));
+        Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[2]),Is.EqualTo("P3 Apocalypse"));
     }
 
     [Test]

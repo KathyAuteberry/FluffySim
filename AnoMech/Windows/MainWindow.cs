@@ -156,6 +156,7 @@ public unsafe class MainWindow : Window, IDisposable
 #endif
     }
 
+    private bool _wasPracticeVisible;
     private bool _wasInInstance;
     private bool _wasScenarioActive;
     private SessionStatus _lastStatus;
@@ -208,11 +209,14 @@ public unsafe class MainWindow : Window, IDisposable
             _clearCollapsedRequest = false;
         }
 
+        var practiceControls = CurrentPracticeControls();
+        if (practiceControls.Visible && !_wasPracticeVisible) RequestCollapsed(false);
+        _wasPracticeVisible = practiceControls.Visible;
         var scenarioActive = RunActive;
         var status = Plugin.Game.Status;
         if (scenarioActive && !_wasScenarioActive)
         {
-            if (Plugin.Config.AutoCollapseWhileRunning)
+            if (Plugin.Config.AutoCollapseWhileRunning && !practiceControls.PreventAutoCollapse)
                 RequestCollapsed(true);
         }
         if (status > SessionStatus.Running && status != _lastStatus)
@@ -230,7 +234,7 @@ public unsafe class MainWindow : Window, IDisposable
             IsOpen = true;
             ShowCloseButton = false;
             RespectCloseHotkey = false;
-            if (scenarioActive)
+            if (scenarioActive && !practiceControls.PreventAutoCollapse)
                 Flags &= ~ImGuiWindowFlags.NoCollapse;
             else
                 Flags |= ImGuiWindowFlags.NoCollapse;
@@ -307,7 +311,7 @@ public unsafe class MainWindow : Window, IDisposable
         var widest = 0f;
         foreach (var zone in Plugin.Game.Catalog.Zones)
         {
-            widest = Math.Max(widest, ImGui.CalcTextSize(zone.Name).X + style.IndentSpacing);
+            widest = Math.Max(widest, ImGui.CalcTextSize(zone.DisplayName).X + style.IndentSpacing);
             foreach (var phase in Plugin.Game.Catalog.PhasesOf(zone))
                 foreach (var scenario in Plugin.Game.Catalog.ScenariosOf(phase))
                     widest = Math.Max(widest, ImGui.CalcTextSize(scenario.DisplayName()).X + style.IndentSpacing);
@@ -348,7 +352,7 @@ public unsafe class MainWindow : Window, IDisposable
                 containsSelection ? BlendColor(headerColor, SelectionColor, 0.58f) : headerColor);
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, containsSelection ? SelectionHoveredColor : HoverColor);
             ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectionActiveColor);
-            var open = ImGui.CollapsingHeader($"{zone.Name}###scenario-zone-{zone.GetType().FullName}");
+            var open = ImGui.CollapsingHeader($"{zone.DisplayName}###scenario-zone-{zone.GetType().FullName}");
             ImGui.PopStyleColor(3);
             if (containsSelection) DrawSelectionAccent();
             var sectionRight = ImGui.GetItemRectMax().X;
@@ -474,6 +478,7 @@ public unsafe class MainWindow : Window, IDisposable
         if (inSession) DrawSession();
         DrawPrimaryActions(game, inSession);
         if (!inSession) DrawSoloOption(game);
+        ImGui.TextDisabled($"Build {Assembly.GetExecutingAssembly().ManifestModule.ModuleVersionId.ToString("N")[..8]} — Darklit presentation 2");
         DrawLocationHint();
         DrawRunOptions(game, Plugin.Practice, inSession);
 
@@ -648,7 +653,7 @@ public unsafe class MainWindow : Window, IDisposable
 
         DrawScenarioPanelToggle();
         ImGui.SameLine();
-        ImGui.TextDisabled($"{scenario.Phase.Zone.Name} —");
+        ImGui.TextDisabled($"{scenario.Phase.Zone.DisplayName} —");
         ImGui.SameLine(0f, 4f * uiScale);
         ImGui.TextUnformatted(scenario.DisplayName());
 
@@ -723,8 +728,23 @@ public unsafe class MainWindow : Window, IDisposable
         return clicked;
     }
 
+    private PracticeInvulnerabilityControls CurrentPracticeControls()
+        => PracticeInvulnerabilityControls.Evaluate(Plugin.Game.ActiveScenario, Plugin.Game.World.Party.PlayerRole,
+            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeInvulnerability);
+
     private void DrawPrimaryActions(AnoMech.Core.Game.Game game, bool inSession)
     {
+        var practice = game.World.PracticeInvulnerability;
+        var party = game.World.Party;
+        var controls = CurrentPracticeControls();
+        if (controls.Visible)
+        {
+            ImGui.TextUnformatted($"Practice Invulnerability: {controls.State}");
+            ImGui.BeginDisabled(!controls.CanActivate);
+            if (ImGui.Button("Practice Invulnerability (Local Only)"))
+                PracticeInvulnerabilityControls.Press(game.ActiveScenario, party.PlayerRole, party.Player?.IsAlive() == true, practice);
+            ImGui.EndDisabled();
+        }
         var uiScale = ImGuiHelpers.GlobalScale;
         var actionSize = new Vector2(140f * uiScale, 32f * uiScale);
         if (RunActive)

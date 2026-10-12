@@ -311,7 +311,7 @@ public class FruUltimateRelativityTests
         Assert.That(catalog[0], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
         Assert.That(catalog[1], Is.TypeOf<FruUltimateRelativityScenario>());
         Assert.That(catalog.Any(s => s is AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario), Is.False);
-        Assert.That(Game.DisplayName(catalog[1]), Is.EqualTo("P3 Ultimate Relativity (Mana)"));
+        Assert.That(Game.DisplayName(catalog[1]), Is.EqualTo("P3 Ultimate Relativity"));
         Assert.That(catalog[1].SettingsOverrides, Is.TypeOf<FruUltimateRelativityStateOverrides>());
     }
 

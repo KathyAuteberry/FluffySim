@@ -57,7 +57,7 @@ research does not advance a mechanic to Research complete.
 | P2 Light Rampant | `scenes/p2/sequences/light_ramp_seq.gd`, `p2_lr_main.tscn` | Mana ring formation | Manually validated in FFXIV for the supported formation |
 | P3 Ultimate Relativity | `scenes/p3/sequences/ult_relativity_seq.gd`, `p3_ur_main.tscn` | Full Mana sequence through Shell Crusher | Manually validated by user; full sequence and eight markers preserved |
 | P3 Sextuple Apocalypse | `scenes/p3/sequences/apoc_seq.gd` | Full Mana fragment implemented; provisional presentation | All 2,520 Water distributions and eight light configurations; see 2026-10-11 notes |
-| P4 Darklit Dragonsong | `scenes/p4/sequences/darklit_seq.gd` | Missing | Not researched; reference offers NA/EU/JP/Mana/MUR variants |
+| P4 Darklit Dragonsong | `scenes/p4/sequences/darklit_seq.gd` | Full Mana fragment; provisional native validation | One partial P4 pull; both snapshots; see 2026-10-12 notes |
 | P4 Crystallize Time | `scenes/p4/sequences/crystal_time_seq.gd` | Missing | Not researched; reference offers NA/MUR variants |
 | P5 Fulgent Blade | `scenes/p5/sequences/p5_fb_seq.gd` | Missing | Not researched |
 | P5 Paradise Regained | `scenes/p5/sequences/p5_pr_seq.gd` | Missing | Not researched; rotation, tower orientation and light/dark order rolls identified |
@@ -2065,3 +2065,447 @@ ID fields in the supplied JSON. No mechanic positions or assignments changed.
 
 Validation: Debug build succeeded (0 errors); all 5 existing FRU P2/P3 arena
 regression tests passed. Release output was not modified.
+
+## P4 Darklit Dragonsong (Mana) — 2026-10-12
+
+**Full standalone fragment implemented through both Somber Dance hits.** Registered
+immediately after P3 Apocalypse as `P4 Darklit Dragonsong (Mana)`, with provisional
+native-validation metadata. Materialization/Akh Rhai preparation is represented by
+its established starting state; Akh Morn, Morn Afah and Crystallize Time are excluded.
+Existing P2/P3 scenarios, phase presets, FRU (JP) waymarks and BGM mappings are preserved.
+
+### Recording coverage
+
+The actual newer files were inspected: `Network_30301_20261011.log` has 16 FRU
+pulls; `Network_30301_20261012.log` has no FRU pulls. October 11 pull 13 is the
+only P4 Materialization / Darklit attempt. It contains Darklit, assignment/status
+application, Chain → Fate conversion, towers, Path of Light, Spirit Taker's cast,
+Hallowed Wings' cast and Somber Dance's cast. It does **not** contain Spirit Taker's
+landing effect, Water resolution, Wings resolution or either Somber hit. Complete
+Darklit fragments in the local recordings: **zero**. Missing effects are consistent
+with an early wipe, not evidence of absent mechanics.
+
+| Coverage | Count |
+|---|---:|
+| P4 / Materialization | 1 |
+| Darklit and assignments | 1 |
+| Towers and cones | 1 |
+| Spirit Taker cast / impact | 1 / 0 |
+| Wings cast / impact | 1 / 0 |
+| Water stacks resolved | 0 |
+| Somber cast / first hit / second hit | 1 / 0 / 0 |
+| Complete requested fragment | 0 |
+
+The observed tether graph has one tank, one healer and two DPS. Exactly one Water
+carrier is tethered: tethered caster and untethered healer. The healer's neighbors
+are the tank and the melee DPS; with Mana's melee-west / caster-east order, this
+is a **box**, with an inferred pre-cone Water adjustment. MT/ST identification is
+not claimed from class jobs alone. Five Lightsteeped stacks precede the recorded
+Lightsteep/failure effect; Refulgent Fate follows deaths. This pull therefore does
+not establish exact minimum/maximum tether distances.
+
+`tools/fru_darklit_evidence.py` exports sanitized timings, numeric action/status/
+tether/marker IDs and map effects. It does not export player names, actor identities
+or target references. Raw logs, snapshots and replay data remain local/read-only.
+
+### Reference interpretation
+
+Strategy: [Tuufless Mana Gaia and Shiva, complete Darklit section and diagrams](https://ffxiv.tuufless.com/mana/fru/04_gaia_and_shiva/).
+Executable reference: FRU-Sim `scenes/p4/sequences/darklit_seq.gd`, `dd_positions.gd`,
+`p4_dd_main.tscn`, referenced scene shapes and animation/movement method tracks.
+**Strat.MANA** is used for interpretation, not NAUR, JP's different lineup or MUR.
+The source's 25.2/28.2 movement tracks (bowtie then pre-cone Water swap) and separate
+animation tracks were inspected; unused comments were not treated as execution.
+The simulated Fragment collision area and circle-hit failure callback were also read.
+
+Independent mechanics: [BossMod P4DarklitDragonsong](https://github.com/awgil/ffxiv_bossmod/blob/master/BossMod.Ultimate/Dawntrail/Ultimate/FRU/P4DarklitDragonsong.cs),
+FRUEnums/FRUStates, Splatoon's local `P4 Darklit.cs`, and installed game sheets.
+BossMod supplies 4-yalm/two-person towers at ±8, 60°/60-yalm closest-four cones,
+5-yalm Spirit Taker, 6-yalm/four-person Water, and 8-yalm Somber circles with
+farthest then closest selection, separated by 3.2 seconds. No GPL source/assets
+were copied; behavior and coordinate facts were independently implemented.
+
+### Both P4 snapshots and native arena
+
+Compared **entry (before Fragment)** against **Darklit (Fragment + towers)** by
+label/user description, not capture-time ordering. Both have territory 1238,
+CFC 1006, layout InitState 7 / territory load state 2, filter 0, festival 0 and
+weather 105. Environment scene-present/transition-complete fields agree. Selected
+scene index, environment/sound resources and physics broadphase membership remain
+unavailable; no claim is made to have reconstructed those unknown fields.
+
+Entry map states: slots 0–53 are 4 except 0x28 and 0x29 are 1. During Darklit:
+0x2A becomes 16, 0x2B becomes 64, and 0x2E becomes 1. The P4 entry also agrees with
+the earlier P3-entry snapshot on captured map slots and BgPart/CollisionBox
+activation getters. The **existing simulation's P3 preset** differs: weather 106
+and an additional 0x28 state-16 command. P4 therefore has its own minimal preset:
+reset the 54 slots, select 0x28/0x29 state 1, weather 105, and hold only the known
+inactive geometry layers 0x5F88–0x5F94, 0x5F9F and 0x5FC9 inactive. No whole-layer
+activation, guessed scene/festival state or raw memory write is introduced.
+P2/P3 initialization methods are unchanged.
+
+The only observed IsActive changes between the P4 captures are **eleven VFX
+children in layer 0x608B**. Six belong to the two towers; one belongs to the
+Fragment-associated group, with the other changes not assumed to be tower-related.
+Changing opaque flags / tiny float differences are not replayed as state.
+
+Native towers are **layout SharedGroups, not new BattleNpc tower actors**:
+
+| Map slot | Layer / instance | World position | Native resource |
+|---|---|---|---|
+| 0x2A | 0x608B / 10870688 | (100,0,92) | `bgcommon/world/lvd/shared/for_vfx/sgvf_w_lvd_b1845.sgb` |
+| 0x2B | 0x608B / 10870689 | (100,0,108) | same |
+| 0x2E | 0x608B / 10885836 | (100,0,84) | `bg/ex3/01_nvt_n4/shared/for_vfx/sgvf_n4gw_b3557.sgb` |
+
+Installed tower SGB strings identify `bgcommon/world/common/vfx_for_bg/eff/`
+`b1846src01_o.avfx`, `b1846src02_o.avfx`, `b1846src03_o.avfx`. These are evidence
+for the native binding, **not manually spawned replacement effects**.
+The recorded commands activate slots 0x2A/0x2B with 0x00020001 / 0x00200010;
+0x00800040 represents the recorded occupied presentation, and 0x00080004 removes
+it at resolution. The simulator sends those known states, updating occupancy only
+when it changes. Companion slots 0x2C/0x2D receive the recorded 0x00010004 command.
+The Fragment-associated 0x2E activation is recorded just before its actual spawn.
+
+Default rendering is this **native MapEffect path**. An explicit **Local practice
+towers** option draws the same ±8 positions with Action-sheet radius 4 and vertical
+outlines; native tower activation is disabled in that mode to avoid double drawing.
+The proven DSR projected-ring code was factored into a small shared drawing helper;
+its positions, colors, segment count and lifetimes are unchanged. Optional tower
+diagnostics report rendering mode, count, positions, radii, window and Fragment HP.
+Native P4 layout, collision and effects still need FFXIV validation.
+
+### Assignments and Mana AI
+
+There are **1,152** graph/Water combinations: two tank choices × two healer choices
+× six DPS pairs × three undirected graph shapes × four tethered Water choices ×
+four untethered Water choices. Direction reversal of the same cycle is equivalent
+for this mechanic; it is not counted as another strategy variant. Both wings and
+all eight Spirit targets are supported, with deterministic scenario RNG.
+
+The healer anchors NW/North. Bowtie keeps the initial corner mapping; box swaps
+tank/east DPS; hourglass swaps tank/west DPS. If both tethered DPS begin on the
+same side, **D2 and D3 physically exchange lineup positions**. Roles themselves
+are never rewritten. The initial curved lineup is independently scaled from the
+executable Mana positions and checked against Tuufless's diagrams.
+
+All four untethered players bait cones. If Waters initially share North/South,
+the **untethered Water and its same-E/W partner** exchange sides before cones.
+Displayed statuses, tether graph, bot destinations and validation derive from the
+same state. Bots commit to their assignments; they never react to human mistakes.
+Tethered players soak two-person towers, then all spread south of the Fragment.
+Both Water groups stack on the safe-side intercardinal marks. MT normally baits
+both Somber hits; if MT is PLD, ST is chosen, with an explicit MT/ST override.
+Bots use normal movement and their actual job invulnerability presentation/status;
+the human must press their simulated invulnerability. No bot damage exemption,
+teleport or speed boost is used. NPC boss jumps use the existing actor abstraction.
+
+### Timeline / provenance
+
+Scenario Darklit cast starts at 2.1s. Local observations are normalized to that
+cast, and receive timestamps are **not asserted to be exact damage snapshots**.
+
+| Event | Scenario seconds | Source |
+|---|---:|---|
+| Darklit, both bosses | 2.1 | local Shiva cast + independent Oracle cast / sheets |
+| Water (19s) | 7.083 | local |
+| Chain / Lightsteeped 3 | 7.928 | local (Chain 7s, Lightsteeped 12s) |
+| Towers visible / Path cast | 10.144 / 10.233 | local map effects / cast |
+| Fate conversion | 14.916 | local, 14s duration |
+| Two towers | 18.249 | local effect |
+| Four cones | 19.095 | local effect; distinct from tower timestamp |
+| Spirit cast | 18.249 | local |
+| Countdown marker / Spirit snapshot | 21.097 / 21.25 | local marker / provisional model of cast-end snapshot |
+| Wings cast | 21.319 | local cast |
+| Spirit landing | 21.85 | independent state-machine timing; not locally observed |
+| Somber cast | 24.392 | local cast |
+| Water / Wings | 26.1 / 26.319 | status duration + independent timing / cast + sheet |
+| Fate expiry | 28.916 | local duration |
+| Somber first / second | 29.792 / 32.992 | cast + independent 0.4s / 3.2s offsets |
+| Cleanup / completion | 36 | practice outro |
+
+### Verified presentation identifiers
+
+- P4 Usurper: base **17833 / 0x45A9**, name **12809**, installed model **4375**
+  (monster 640, base 2, variant 1). Great Wyrm base 17834 is a meshless type-5 part;
+  it is not spawned as a duplicate visible boss.
+- P4 Oracle: base **17835 / 0x45AB**, name **9832**, model **3057**, equipment row
+  **2106**: body **65537**, mainhand **4295237459**, as independently verified for
+  the successful P3 Oracle. Facing starts south at the recorded (100,0,105).
+- Fragment: base **17841 / 0x45B1**, name **13559**, model **476**, position
+  **(100,0,84)**; BossMod hitbox radius **3.5**.
+- Casts/actions: Darklit **40239 / 40301**, Path **40187 / 40190**, Bright Hunger
+  **40213**, Spirit **40288 / 40289**, Water **40271**, Wings **40227 / 40228**,
+  Somber **40283 / 40284 / 40285**, Fate penalty **40215**, Lightsteep **40216**.
+- P4 statuses are **2253 Refulgent Chain**, **2255 Refulgent Fate**, **2257
+  Lightsteeped**, **2461 Spell-in-Waiting Dark Water**; they are not P2's
+  4157/4158 chain statuses. Tethers **110 → 111** are observed locally.
+- Native lockons **62** just before Darklit and **184** near Spirit cast-end are
+  observed. Self-completing lockons use the safe fire-and-forget lifetime path.
+- Installed Action rows supply cast lengths/shapes and animations: Wing start
+  **13**, finishes **3222 / 3223**, VFX rows **151 / 152**; Spirit finish **3216**,
+  Somber impacts **3201**. No invented AVFX path or animation state is used.
+- **Promises to Keep: BGM 801**, installed `music/ex3/BGM_EX3_Raid_11.scd`, title
+  cross-checked with [Orchestrion's track metadata](https://github.com/perchbirdd/OrchestrionPlugin/blob/main/Orchestrion/Data/xiv_bgm_en.csv).
+  Row 804 is the mount variant and is not selected. Existing phase-BGM ownership,
+  volume and restoration machinery is reused; no music asset is bundled.
+
+### Fragment and failure policy
+
+Spirit Taker freezes the target position at its modeled snapshot, checks the
+landing circle against **players and the Fragment**, and renders the boss action
+from its verified native source. Moving after the snapshot cannot drag its damage
+onto the Fragment. The Fragment overlap test includes its 3.5-yalm hitbox; the
+5-yalm splash comes from the Action sheet. Bot and human targets use identical
+checks. Water and Somber circles also protect the Fragment; Hallowed Wings and
+mandatory Darklit damage are not treated as avoidable Fragment hits.
+
+Fragment HP is a **normalized practice budget: 100 max, 25 lost per avoidable hit**.
+Those amounts are explicitly provisional, not retail HP or mandatory phase
+attrition. Any avoidable hit flags the Fragment compromised and calls the existing
+mechanic-mistake failure path. Players may finish practicing, but the run cannot
+clear even if all eight survive. The final failed-bot-bait test verifies this
+framework failure and cleanup, rather than treating it as only a visual warning.
+
+Refulgent Fate uses a clearly labelled **provisional 8–26 yalm interval**. The
+offline simulator's scaled interval is roughly 9.33–25.87; BossMod explicitly
+leaves exact break distance TODO, and the local failure follows deaths. The exact
+retail boundary remains unresolved. Death, too-close and too-far checks apply to
+human and bots. A broken tether fails practice immediately instead of modeling
+retail damage-down recovery; penalty action visuals are requested once.
+
+Five Lightsteeped stacks, wrong tower occupancy, overlapping/missing Water stacks,
+wrong Wing half, and incorrect/non-invulnerable Somber bait cause real practice
+failures. Somber's physical-vulnerability responsibility is represented as logical
+hit state; its exact native status ID is **unverified and not guessed/applied**.
+The supported bait uses invulnerability for both hits; arbitrary mitigation-only
+plans and exact retail HP calculations are not claimed.
+
+Jump translation buffer **6.35**, displacement speed **40**, exact later snapshot
+frames, small movement offsets, native boss root-motion appearance and immediate
+practice failure timing remain provisional. Actors are spawned with visible
+configuration and precreated effect helpers, without Diamond Dust's strict native
+readiness guard. Native pixels, collision, wing glow and tower visibility cannot
+be established by headless tests.
+
+### First manual test
+
+The user alone builds Release and manually reloads. Development remains Debug-only.
+From an inn select **Futures Rewritten → P4 Darklit Dragonsong (Mana)**, immediately
+after Apocalypse. Keep normal event speed and `FRU (JP)` waymarks. Try preset
+**pattern 0** (bowtie), **16** (box), **32** (hourglass), then their water variants;
+select each Wing direction. Simple mode can force Tethered/Untethered, each with
+Water, plus required/not-required Water adjustment without inactive exact controls.
+
+1. Confirm clean P4 floor, traversable center, no intermission ice, visible dragon
+   Usurper, equipped Oracle and Fragment north. Confirm Promises to Keep.
+2. Observe the support/DPS lineup, real D2/D3 adjustment where required, the four
+   Chain tethers, Water carriers and conversion to Fate.
+3. At ~10–18s confirm two native towers north/south, occupancy feedback and their
+   disappearance. If native towers are invisible, select **Local practice towers**
+   and restart; this cleanly selects the working projected renderer. Tower
+   diagnostics show exact mode/positions/radii/window, not strategy hints.
+4. Confirm four cone impacts and all players at four Lightsteeped stacks. Spread
+   before the Spirit jump and protect the Fragment. Verify the target does not
+   move the landing AoE by moving after its snapshot.
+5. Read native wing glow, stack on the safe half at the two intercardinals, then
+   resolve both Somber hits. If you are bait tank, enable simulated combat actions
+   and press your job invulnerability; everyone else must move clear of Gaia.
+6. Deliberately bait Spirit onto the Fragment with an untethered target override;
+   HP must fall and the run must fail even if the party otherwise survives.
+7. Leave during towers, restart, complete, leave, and re-enter. Optionally capture
+   `/anomech snapshot fru-p4-sim` during towers for a field comparison if presentation
+   differs. No new snapshot is an implementation prerequisite.
+
+### Final validation
+
+- Final full plugin suite: **9,207 passed, 0 failed** (7m37s).
+- Relay suite: **41 passed, 0 failed**.
+- Python tooling suite: **43 passed, 0 failed**.
+- Debug plugin build: **0 errors**; final incremental build has one NU1900
+  vulnerability-feed warning. Existing full-compile obsolete API warnings are
+  unchanged; no warning cleanup was attempted.
+- Darklit includes **2,304 complete runs** (all 1,152 assignment patterns × both
+  wings), cycling every Spirit target; graph/Water eligibility invariants cover
+  all seats and Simple filters. Additional tests cover both tank choices,
+  deliberate tower/tether/cone/Water/Wing mistakes, missing invulnerability,
+  visible actor configuration, real opening receive timings, native/fallback
+  tower requests, human and bot Fragment damage, late movement after the Spirit
+  snapshot, five cancellation stages, restart and post-cleanup tick guards.
+- The final full run includes existing FRU and DSR regression coverage. DSR menu
+  tests shift their absolute indices for the preceding P4 entry while preserving
+  their adjacency/phase/settings checks.
+- A transient packaging file lock came from overlapping Debug build/test
+  compilation. Validation was repeated sequentially and passed; no Release
+  output was involved. Future build/test compilation should run sequentially.
+- No Release build, reload, history rewrite, package installation or modification
+  of references/raw recordings/snapshots occurred.
+
+This establishes headless completion and native request/lifetime configuration,
+not FFXIV visibility, collision or exact retail physics. Manual validation remains
+required using the procedure above.
+
+### Darklit playtest polish — 2026-10-12
+
+Manual feedback confirms the P4 arena, both bosses and authentic tower rendering.
+The native tower path is now automatic in ordinary play; the old serialized
+TowerRendering value remains readable but no longer selects presentation. The
+local fallback is retained only as an explicit diagnostic property.
+
+Tower soakers move to local (±2.2, ±10.5), relative to unchanged towers (0, ±8),
+radius 4. Their center is 3.33 yalms from the tower center, leaving 0.67 yalms
+margin. This is a comfortable practice placement derived from Tuufless step 8,
+not a newly measured retail coordinate. The four baiters retain their positions.
+Every assignment graph preserves the provisional 8–26 yalm tether interval.
+
+Path of Light now orders live players by XZ hitbox distance from **Shiva's current
+position**, rather than assuming arena center. Each cone snapshots its direction
+at the existing 19.095s resolution and uses the existing 60-degree cone/range.
+No hardcoded untethered filtering: wrong positioning genuinely redirects cones.
+Towers at 18.249s and cones at 19.095s independently add Lightsteeped, allowing
+3→4→5 and the existing five-stack explosion. Tuufless step 8 and BossMod's
+P4DarklitDragonsongPathOfLight both identify the four closest players to Shiva.
+This fixes a concrete source-position assumption and increases bait/soaker
+separation; the precise cause of every observed native cone presentation remains
+subject to the next playtest.
+
+**Practice action safety audit:** LocalPlayerInputHooks forwards ordinary action
+presses to the original ActionManager.UseAction / UseActionLocation. UserActions
+then models effects after successful execution; it also includes native gauge
+writes and Sprint/anti-knockback recast handling. ZoneSession's existing outbound
+firewall holds non-heartbeat traffic in simulation, but this does not make the
+normal button independent of native cooldown enforcement. No existing hooks,
+firewall, recast handling or packets were changed for this request.
+
+A separate managed PracticeInvulnerability timer provides an explicit local-only
+UI button for living tank players in Darklit and Apocalypse. Its ten-second
+practice window matches existing tank status durations, without claiming to model
+all Living Dead/HP edge cases. One activation per run; fresh readiness on restart.
+It calls no native action, status, recast or network API. The modeled tankbuster
+accepts the managed protection only for the human character; bots retain their
+existing status-based mitigation. Expiration, completion, teardown and reported
+run death clear protection. No real cooldown reset or automatic human activation.
+
+UI duty labels omit Ultimate and FRU scenario labels omit Mana. Canonical Names,
+FullName identities, settings keys and order remain unchanged.
+
+Fragment appearance remains unchanged: installed
+`sgvf_n4gw_b3557.sgb` references `b3557crst1_y1.avfx` and `b3557crst2_y1.avfx`.
+Further local log inspection found separate Vision of Ryne (17844/name9829) and
+Vision of Gaia (17845/name9830) spawns at world (100.71,0,84) and (99.29,0,84),
+rotations -0.84 and 1.22, alongside Fragment (17841) at (100,0,84). This establishes
+separate memory actors rather than assuming they are embedded in the crystal.
+Installed data: Ryne model2720/type1, equipment1834/body74696; Gaia model4436/type2,
+equipment2129/body65537/main4296352585. The existing NPC appearance abstraction
+supplies demihuman body/weapon equipment but not the human NPC customization
+required by Ryne; their correct animation/pose state is also not established.
+The authentic pair therefore remains deferred rather than spawning an incorrectly
+customized Ryne or only half the paired memory presentation. No actors were added.
+
+Manual check: user builds Release themselves, reloads manually, selects
+Futures Rewritten → P4 Darklit Dragonsong. Check Bowtie/Box/Hourglass with and
+without Water adjustment, tower corner positions, four baiters closer to Shiva,
+and Lightsteeped remaining 4 after successful tower/cone resolution. Deliberately
+move a tower player close to Shiva or aim a cone through a tower to check five-stack
+failure. As the configured tank bait, use the local-only practice button around
+29s (before the 29.792s first hit), then move close for the 32.992s second hit.
+Repeat immediately without pressing a real invulnerability ability; also try no
+activation and an activation more than ten seconds early. Check normal scenario
+leave/restart and Apocalypse's equivalent practice button. Native presentation
+still requires this manual regression check.
+
+Validation for this polish pass:
+- Full plugin suite: **9,214 passed**, zero failures (7m40s), preserving the
+  previous 9,207 baseline and adding seven focused tests.
+- Focused Darklit / practice-action / paused Diamond Dust checks: **2,545 passed**.
+- Relay: **41 passed**. Python tooling: **43 passed**.
+- Solution Debug build succeeds with `DALAMUD_HOME=/home/kath/.xlcore/dalamud/Hooks/dev
+  dotnet build -c Debug --no-restore -m:1`: zero errors, 3,940 warnings, predominantly
+  existing Windows-platform/obsolete API diagnostics and NuGet vulnerability-feed
+  availability. No new warning category; new headless timer tests use the same
+  platform-warning suppression as the Darklit tests.
+- Without DALAMUD_HOME, the solution's test project fails to resolve native client
+  types; the plugin itself builds. Set the local SDK path for solution validation.
+- Release output was never built, published or copied. Native presentation awaits
+  the user's own Release build and manual reload.
+- Focused tests verify all tower-corner graphs, moved-Shiva selection, exact saved
+  identities despite shorter labels, legacy rendering compatibility, native effect
+  and status lists unchanged by virtual activation, full human-tank protection,
+  expiry/readiness reset and existing failure/cancellation/regression cases.
+
+### Darklit native/UI integration regression — 2026-10-12
+
+Manual feedback: cones still visibly face north, and the practice button was not
+found. These are not dismissed as a stale build. Read-only inspection confirms
+that `bin/x64/Release/AnoMech.dll` contains the old practice-button label and
+Darklit diagnostic strings. The alternate direct-project `bin/Release` does not;
+this does not establish which binary is loaded. No Release files were modified.
+Both local configuration files have AutoCollapseWhileRunning=false, so the
+missing control cannot be specifically attributed to that option from this
+capture. The loaded module's short MVID, feature tag "Darklit presentation 2"
+and assembly path now identify the loaded binary in the UI/diagnostics.
+
+Cone pipeline: helpers are initially spawned facing pi (north). EnemyActionHandler
+Release calls Movement.Face → SimCharacter.TurnTo. For SimEnemy, TurnTo updates
+**logical** Rotation immediately but turns the **native/model** rotation gradually.
+ReceiveActionEffect passes both a rotation header and the native source actor to
+the client's action-effect handler. Earlier tests only checked logical geometry,
+not that source actor's transform at the native-effect request. Darklit now calls
+the existing SetRotation(snapshot.Rotation) on each individual helper before
+Cast, synchronizing its native transform and clearing a pending smooth turn.
+No new hook or unverified native field is used. One immutable PathCones snapshot
+supplies hit detection, helper orientation and diagnostic outlines; target IDs
+remain the actual selected players. Four cones are not hardcoded north or south.
+BossMod uses Shiva-relative nearest-four and 60-degree cones; FRU-Sim's towers_hit
+also selects four nearest to Shiva before spawning individually aimed cones.
+Splatoon's P4 script observes action40190 rather than providing a native VFX
+spawning mechanism. Action IDs, geometry and timings remain unchanged.
+
+The optional "Path of Light runtime diagnostics" checkbox records all eight
+simulation/native positions and distances at resolution, selected roles, cone
+angles/source positions, Shiva simulation/native position and facing, rendering
+path and loaded-binary information. Live readings are separately labeled.
+Yellow diagnostic cone outlines last one second after resolution and are clearly
+identified as diagnostic-only, alongside the authentic native effect. Native
+cone visibility/direction still requires the user's manual verification.
+
+Practice control now uses a shared UI eligibility model: actual active Darklit
+or Apocalypse scenario + actual tank seat. It is rendered directly above Stop /
+Leave, independent of Advanced or simulated combat-action settings. It remains
+visible when the timer is spent/cleared, explaining a ended/failed run instead
+of disappearing; KO disables activation. Ready / Active (seconds) / Used (restart)
+are explicit. Supported tank runs expand the main window and inhibit collapse,
+so saved collapsed state or auto-collapse cannot hide the required action. Other
+scenarios retain their existing collapse behavior. The button invokes only the
+same managed ten-second, once-per-run timer. No real ability, status, recast,
+action packet or outgoing-request hook is invoked or altered.
+
+Integration regression validation:
+- Full plugin suite: **9,219 passed**, zero failures (7m44s).
+- Final native-source/UI integration checks: **5 passed**, including correct and
+  deliberately wrong tower baiting, native actor transform at effect reception,
+  matching packet rotation/target, teardown of diagnostic references, both actual
+  active scenario types, Ready/Active/Used/reset UI state, rejected duplicate /
+  non-tank / inactive / KO presses, no native effects or statuses on UI activation.
+- Relay **41 passed**, tooling **43 passed**.
+- Debug solution build with the local DALAMUD_HOME: **zero errors**, 3,961 warnings
+  (existing platform/obsolete/vulnerability-feed categories; additional test-fake
+  telemetry references also produce Windows-platform diagnostics). No unrelated
+  warning cleanup performed. Release output untouched.
+
+First manual check: user builds Release personally and reloads. Confirm the main
+panel's "Darklit presentation 2" build tag; enable "Path of Light runtime
+ diagnostics" in ordinary scenario settings for loaded assembly path/hash and
+live/snapshot telemetry. Use a tank seat and set Somber bait to that seat. The
+Practice Invulnerability (Local Only) button is above Stop/Leave, with Ready shown
+before activation. Press around 29s, verify Active countdown, both Somber hits,
+Used afterward, then immediate restart restores Ready independently of the real
+hotbar ability. Also check an Apocalypse tank run and a non-tank run.
+
+For cones, first execute normal Mana positions and compare the four native cone
+ directions to the frozen diagnostic outlines/target roles at 19.095s. Then use
+H1 + exact pattern0 (or another north-tower healer configuration), deliberately
+move close to Shiva before resolution and verify H1 selection, north-pointing
+cone for that actual target, and tower/cone Lightsteeped failure. Preserve a
+screenshot/video of the diagnostic panel if graphics still differ: it now exposes
+both the packet's intended direction and live native helper facing. These native
+presentation corrections are **not yet manually validated**.

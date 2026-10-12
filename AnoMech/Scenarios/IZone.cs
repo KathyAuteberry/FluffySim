@@ -12,6 +12,7 @@ namespace AnoMech.Scenarios;
 // zone -> phase -> scenario view for the menu.
 public interface IZone
 {
+    string DisplayName => Name;
     string Name { get; }                                    // canonical duty name
     uint TerritoryId { get; }
     Vector3 Origin { get; }
