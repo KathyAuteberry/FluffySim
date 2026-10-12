@@ -35,7 +35,7 @@ public static class DsrSanctity2Actions
     };
     public static readonly EnemyAction Knockback = new(25308)
     {
-        Effects = [EnemyActionEffects.Knockback((_,target) => target.HasStatus(160) || target.HasStatus(1209) ? null : 16f, 25f)],
+        Effects = [EnemyActionEffects.Push((ctx,target) => target == ctx.Party.Player && Plugin.Game.World.PracticeAntiKnockback.Active || target.HasStatus(160) || target.HasStatus(1209) ? null : 16f, 25f)],
         Timing = new() { DamageDelay = .3f },
     };
     private static EnemyAction Tower(uint id) => new(id)
@@ -48,6 +48,8 @@ public static class DsrSanctity2Actions
 // and the comet cadence and puddle lifecycle come from the executable reference simulator.
 public static class DsrSanctity2Timing
 {
+    // UNVERIFIED visual lead; hazard and resolution times are unchanged.
+    public const float FirePresentation = 5.5f;
     public const float Storm = 8.5f;
     public const float FirstTowers = 12.7f;
     public const float FirstMeteor = 16.1f;

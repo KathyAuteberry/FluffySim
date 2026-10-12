@@ -571,3 +571,111 @@ assertions across all 810 patterns; cancellation/reuse: 3 passed with explicit
 empty-render-request assertions. Relay: 41 passed. Python tooling: 34 passed.
 `git diff --check` clean. No Release output was built or copied. In-game fallback
 visibility is pending the user's manual test.
+
+### Shared practice features and Meteor presentation — 2026-10-12
+
+The common main scenario controls now persist Easy/Hard bot difficulty, simulated
+party visibility and God Mode. See FRU-ROADMAP.md for the shared lifecycle and
+visibility policy. Defaults preserve the previous Easy choreography and visuals.
+
+Hard DSR windows: Strength1 triangle spreads finish before Lightning/Spiral;
+Strength2 initial positioning finishes before tether pickup (late leap spreads
+otherwise intercepted tank tethers in tests), towers use Conviction's actual
+15.52s snapshot, not the 17.93s delayed failure effect; Sacred Severs positions
+finish before the first jump/gazes, while the cleared-orb rotation remains
+unchanged; Meteors delays pair/tower positioning but preserves fixed communication
+and meteor-drop paths. Ice exits have a latest-departure constraint derived from
+7-yalm hazard egress at original speed and the existing 11.5s activation. Body
+language never reacts to human contests or changes assignment to accommodate them.
+
+#### Ability/recast audit
+
+Concrete source path: LocalPlayerInputHooks.UseActionDetour/UseActionLocationDetour
+call the original native ActionManager method; after success, ActionExecuted
+reaches UserActions.OnActionExecuted. Its SimActive gate applies local modeled
+Arm's Length/Surecast statuses through AntiKnockbackHandler.Apply. This is not a
+pure managed ability input path: the original game action system has run.
+
+Former start reset: Game.RunScenarioInternal → Natives.UserActions.OnScenarioStart
+→ AntiKnockbackHandler.OnScenarioStart → ActionManager.GetRecastGroup / detail,
+writing IsActive=false and Elapsed=0 for 7548/7559. Those are real native **client**
+recast records, not AnoMech cooldowns. They do not directly reset server-authoritative
+cooldowns. No corresponding anti-knockback recast snapshot/restore exists on leave,
+so the changed client availability could survive outside the filtered session.
+
+ZoneSession.Enter arms the filters **before** territory loading and checks
+FirewallArmed; failed enable is refused, despite EnableFirewall's own catches.
+ZoneSession.Guard checks hook state, territory/login/teleport drift, and holds
+filters through a verified inn revert; disabled hooks during a stay trip the guard.
+SendPacketDetour permits only its signature-derived heartbeat opcode and holds
+other packets through that hooked function, including its exception path.
+These are real safeguards, not a fail-open territory-entry claim. They still do
+not prove all native action transports/callers traverse this signature target or
+eliminate a hook-loss race between checks; a firewall alone is not proof.
+
+**Decision:** remove Arm's Length/Surecast native start resets. Keep ordinary
+ability use unchanged; add no packet manipulation or native recast bypass.
+Do not add tank recast resetting. The existing Sprint reset is a separate legacy
+facility and was not expanded/changed by this scoped anti-knockback audit; this
+report is not a zero-risk certification of the entire plugin/native action system.
+
+#### Local practice anti-knockback
+
+Sanctity Meteors explicitly enables the same managed PracticeAction timer used
+by practice invulnerability. Button: **Practice Anti-Knockback (Local Only)**,
+above Stop/Leave for every active Meteor player, regardless of job or level.
+Ready / Active countdown / Used; one activation per run, fresh on restart, cleared
+on completion/cancel/leave/death. It neither calls native actions nor applies a
+native status/recast. Faith Unmoving accepts this private protection only for the
+human; bots keep their existing legitimate simulated six-second statuses. Wrong
+or missing timing still produces the ordinary knockback/failure outside God Mode.
+Installed ActionTransient tooltips for Arm's Length7548 and Surecast7559 both
+explicitly specify **6 seconds**; this supplies the practice duration.
+
+#### Fire/ice visual ordering
+
+Current code previously began both cast bars at 1.5s. Hiemal Storm25574 casts7s,
+resolving ice at8.5s. Heavens' Stake28591 casts7.5s when started at1.5s, releasing
+fire at9s, with persistent ice objects requested8.5s and fire9s. Thus early fire
+omens existed but the persistent/native impact ordering could look reversed, with
+only a half-second gap. No usable local Meteor impact recordings establish a
+replacement appearance timestamp.
+
+Fire event objects (the already used 0x1EB686) are now requested at **5.5s**;
+ice (0x1EB682) remains8.5s. This is a clearly **UNVERIFIED visual lead**, providing
+three seconds between object requests; actual asynchronous native attachment time
+needs playtest. Fire's cast/effect resolution, damage, radius, activation12s and
+expiration23s remain unchanged. Ice impact, stack drops, activation11.5s and
+expiration22.5s remain unchanged. Towers, meteor cadence, movement assignments and
+knockback timing are unchanged. Earlier fire visuals are a preview, not an earlier
+hazard; they expire at the same23s. Tower fallback rendering was untouched.
+
+Validation: full Debug regressions **9,248 passed**, exhaustive added Hard/invisible
+patterns **1,962 passed**, final shared controls/ability/God Mode checks **30 passed**;
+relay **41**, tooling **43**. Debug build zero errors, Release files untouched.
+The exhaustive tests include all810 outer Meteor patterns; neither damage rules
+nor assignment assertions were weakened to accommodate lateness. All eight player
+seats clear each scenario in the shared Hard/invisible matrix. God Mode feedback
+for persistent hazards is rate-limited while assessments and timelines continue.
+
+Manual: personally build Release/reload. Start Meteors with visible bots and
+observe fire ground preview before ice impact/puddles; verify the visual gap and
+same later activation/expiration. Treat the lead as provisional pending recordings.
+Choose a Meteor assignment, click Practice Anti-Knockback (Local Only) shortly after
+the fifth drop (21.82s, before Faith Unmoving23.1s), and continue clockwise normally.
+Its six-second timer should protect without an unlocked/ready real ability; no
+real buff icon is applied by this control. Repeat without clicking or click before
+17.1s so it expires: normal knockback/failure should occur. Inner tower players
+still intentionally take knockback; using the virtual action there can cause their
+legitimate tower failure. Restart must show Ready. The real Arm's Length/Surecast
+cooldown should no longer be reset by AnoMech. Try Easy/Hard and visible/invisible
+independently, keeping bodies visible when learning tower communication. God Mode
+allows blind/error practice while still explaining failed mechanics.
+
+## FluffySim 1.0 final Hard coverage audit (2026-10-12)
+
+All four DSR scenario AI files were traced. Strength 1 triangles, Strength 2 opening/towers, Sacred Severs initial groups, and Meteor pair/ice-return/tower preparation use the shared distance/speed/deadline scheduler. Tether crossing, committed tower body-language communication, Heavy Impact/Mercy dodges, Sacred Severs orb rotation and Meteor arcs retain their safe/communicative timing. Direct bypasses and guarded prompt requests are listed in HARD-DIFFICULTY-AUDIT.md. No DSR strategy, assignment, damage, geometry, presentation or audio changes were needed.
+
+New per-scenario comparisons run identical Easy/Hard seed/seat assignments through completion and observe actual actor positions before delayed departures. Existing exhaustive Darklit/Meteor Hard checks and invisibility/God Mode/local practice actions remain regression coverage. See INSTALLATION.md and RELEASING.md for FluffySim DLL/config migration and owner-operated packaging. Debug-only development remains mandatory; original source/project identities stay AnoMech internally.
+
+Release audit validation: 11,221 full Debug plugin tests passed; final 14 focused tests passed, including expanded all-seat Easy/Hard comparisons (overlapping counts, not additive). Across all eight FRU/DSR scenarios the comparison executes 256 matched pairs with identical seed/seat and verifies unchanged assignment state and real later movement with successful full resolution. Relay 41 and tooling 50 passed. Final Debug solution build has 0 errors / 3,965 warnings, matching the prior warning baseline. Packaging verified with Debug input and temporary output; no Release files or running plugin registration were modified.

@@ -1,0 +1,6 @@
+<Project>
+  <Target Name="FluffySimManifest" AfterTargets="Build">
+    <DalamudPackager ProjectDir="$(ProjectDir)" OutputPath="$(OutputPath)"
+                    AssemblyName="$(AssemblyName)" MakeZip="false" />
+  </Target>
+</Project>

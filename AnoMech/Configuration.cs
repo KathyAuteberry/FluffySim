@@ -15,6 +15,9 @@ public class Configuration : IPluginConfiguration
     public bool EnableEventLogging { get; set; } = false;
     public bool SuppressBgm { get; set; }
     public bool EnableMechanicResultMarks { get; set; } = false;
+    public Core.Game.Ai.BotDifficulty BotDifficulty { get; set; }
+    public bool ShowSimulatedParty { get; set; } = true;
+    public bool PracticeGodMode { get; set; }
     public bool AutoCollapseWhileRunning { get; set; } = false;
     public string LastSelectedScenario { get; set; } = "";
 

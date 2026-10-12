@@ -25,7 +25,7 @@ public sealed class DsrStrengthAi : IScenarioAi<DsrStrengthState>
     }
     public void Run(DsrStrengthState state, SimWorld world)
     {
-        world.Events.Add(11.5f, () => Each(role => Move(role, Triangle(state, role))));
+        world.Events.Add(11.5f, () => Each(role => Move(role, Triangle(state, role), 19.2f)));
         world.Events.Add(19.9f, () => Each(role =>
         {
             var initial = Triangle(state, role);
@@ -34,7 +34,7 @@ public sealed class DsrStrengthAi : IScenarioAi<DsrStrengthState>
         }));
         world.Events.Add(21.65f, () => Each(role => Move(role, Bait(state, role))));
         world.Events.Add(25f, () => Each(role => Move(role, Bait(state, role, true))));
-        void Move(PartyRole role, Vector3 point) => world.Party.Get(role)?.MoveTo(point, 6f);
+        void Move(PartyRole role, Vector3 point, float? deadline = null) => world.BotMovement.Move(world.Party.Get(role), point, deadline);
     }
     private static void Each(Action<PartyRole> action)
     {

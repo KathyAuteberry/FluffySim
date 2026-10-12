@@ -69,7 +69,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     {
         ImGui.Checkbox("Tower rendering diagnostics (local ground overlay)", ref showTowerDiagnostics);
         ShowTowerDiagnostics = showTowerDiagnostics;
-        ImGui.TextWrapped("EXPERIMENTAL — full Meteor sequence; timings, inner-pattern distribution and native visuals await recording/in-game validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use anti-knockback after meteor five. Hug the inner rim of inside towers.");
+        ImGui.TextWrapped("EXPERIMENTAL — full Meteor sequence; timings, inner-pattern distribution and native visuals await recording/in-game validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides",ref advanced)) Overrides.AdvancedMode = advanced;
         ImGui.BeginDisabled(advanced);
@@ -94,9 +94,9 @@ public sealed class DsrSanctity2Scenario : IScenario
     private static int? Slider(string label,int? value,int max) { var n=value ?? -1; ImGui.SliderInt(label+" (-1 random)",ref n,-1,max); return n < 0 ? null : n; }
     public void Run(SimWorld worldParam,int? selectedAi)
     {
-        world=worldParam; state=LastState=new(world.Rng,Overrides,world.Party.PlayerRole);
+        world=worldParam; world.PracticeAntiKnockback.Start(); state=LastState=new(world.Rng,Overrides,world.Party.PlayerRole);
         Completed=false; ResolvedTowers=0; ResolvedMeteors=0; FailedTowers=0;
-        actors.Clear(); visuals.Clear(); comets.Clear(); puddles.Clear();
+        actors.Clear(); visuals.Clear(); comets.Clear(); puddles.Clear(); puddlePresentation.Clear();
         world.OnDespawn(Cleanup);
         world.Events.Add(0f,SpawnOpening);
         world.Events.Add(.7f,() => StartTowers(false));
@@ -109,10 +109,14 @@ public sealed class DsrSanctity2Scenario : IScenario
         });
         world.Events.Add(3.5f,() => hermenost.Cast(DsrSanctity2Actions.FirstTowerCast));
         world.Events.Add(4.1f,() => noudenet.Cast(DsrSanctity2Actions.CometCast));
+        world.Events.Add(DsrSanctity2Timing.FirePresentation, () =>
+        {
+            foreach (var q in Enumerable.Range(0,4)) ShowPuddle(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2)), 0x1EB686, 9f+DsrSanctity2Timing.PuddleLifetime-DsrSanctity2Timing.FirePresentation);
+        });
         world.Events.Add(DsrSanctity2Timing.Storm,ResolveStorms);
         world.Events.Add(9f,() =>
         {
-            foreach (var q in Enumerable.Range(0,4)) AddPuddle(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2)),0x1EB686,28591);
+            foreach (var q in Enumerable.Range(0,4)) AddPuddle(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2)),0x1EB686,28591, false);
         });
         world.Events.Add(15.1f,() => StartTowers(true));
         world.Events.Add(17.9f,() => hermenost.Cast(DsrSanctity2Actions.SecondTowerCast));
@@ -164,10 +168,17 @@ public sealed class DsrSanctity2Scenario : IScenario
             AddPuddle(target.Position,0x1EB682,25575);
         }
     }
-    private void AddPuddle(Vector3 position,uint id,uint action)
+    private void AddPuddle(Vector3 position,uint id,uint action, bool show = true)
     {
         puddles.Add((position,world.Events.Elapsed+DsrSanctity2Timing.PuddleActivation,world.Events.Elapsed+DsrSanctity2Timing.PuddleLifetime,action));
-        var visual=world.SpawnEventObject(new EventObjectSpawnConfig { EObjId=id,Placement=new(position,0),Lifetime=DsrSanctity2Timing.PuddleLifetime });
+        if (show) ShowPuddle(position, id, DsrSanctity2Timing.PuddleLifetime);
+    }
+    public IReadOnlyList<(float Time, uint Object)> PuddlePresentation => puddlePresentation;
+    private readonly List<(float, uint)> puddlePresentation = [];
+    private void ShowPuddle(Vector3 position, uint id, float lifetime)
+    {
+        puddlePresentation.Add((world.Events.Elapsed, id));
+        var visual=world.SpawnEventObject(new EventObjectSpawnConfig { EObjId=id,Placement=new(position,0),Lifetime=lifetime });
         if(visual is not null) visuals.Add(visual);
     }
     private void ResolveComets()
@@ -190,6 +201,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     }
     private void Cleanup()
     {
+        world.PracticeAntiKnockback.Clear();
         foreach(var actor in actors) actor.Despawn(); foreach(var visual in visuals) visual.Despawn();
         actors.Clear();visuals.Clear();puddles.Clear();comets.Clear();towerVisuals.Clear();
         foreach(var role in DsrSanctity2State.Roles) { world.Party.Get(role)?.RemoveStatus(562); }

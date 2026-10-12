@@ -157,6 +157,30 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         }
     }
 
+    public IActorVfxProxy? AttachVfx(string path)
+    {
+        var obj = Ptr;
+        if (string.IsNullOrEmpty(path) || obj == null) return null;
+        var bytes = System.Text.Encoding.UTF8.GetBytes(path + "\0");
+        VfxData* vfx;
+        fixed (byte* p = bytes)
+            vfx = VfxDataPointers.ActorVfxCreate(p, (GameObject*)obj, (GameObject*)obj, -1f, 0, 0, 0);
+        return vfx == null ? null : new ActorVfxProxy(vfx);
+    }
+
+    // Through the native setter: it allocates and releases the VFX at Tether+0x08, and a bare
+    // struct write leaves that VFX dangling, so the line keeps drawing.
+
+    public void SetModelHidden(bool hidden)
+    {
+        var obj = Ptr;
+        if (obj == null) return;
+        const VisibilityFlags bits = VisibilityFlags.Model | VisibilityFlags.Nameplate;
+        var go = (GameObject*)obj;
+        if (hidden) go->RenderFlags |= bits;
+        else go->RenderFlags &= ~bits;
+    }
+
     public bool IsDrawObjectVisible
     {
         get

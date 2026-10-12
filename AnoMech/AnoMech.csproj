@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Dalamud.NET.Sdk/15.0.0">
 
+  <Import Project="../FluffySim.Version.props" />
   <PropertyGroup>
-    <Authors>Anomek</Authors>
-    <Version>0.4.2.0</Version>
-    <Description>Simulate ultimate raid mechanics solo client-side</Description>
+    <Authors>FluffySim contributors; Anomek and AnoMech contributors</Authors>
+    <AssemblyName>FluffySim</AssemblyName>
+    <Product>FluffySim</Product>
+    <Description>FluffySim — an FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters.</Description>
     <RootNamespace>AnoMech</RootNamespace>
     <PackageProjectUrl>https://github.com/anomek/AnoMech</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>

@@ -16,7 +16,7 @@ public sealed class DsrSanctity1Ai : IScenarioAi<DsrSanctity1State>
             foreach (var role in DsrSanctity1State.Roles)
             {
                 var position = state.InitialPosition(role);
-                world.Party.Get(role)?.MoveTo(position,6f,AvoidBothGazes(position,state));
+                world.BotMovement.Move(world.Party.Get(role),position,17.1f,6f,AvoidBothGazes(position,state));
             }
         });
         world.Events.Add(state.MoveEarly ? 20.8f : 22.05f, () =>

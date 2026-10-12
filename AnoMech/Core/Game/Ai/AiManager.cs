@@ -34,7 +34,7 @@ public sealed class AiManager
     /// <summary>Schedule bots movement</summary> 
     /// <param name="arrivalTime">If not empty, this is expected arrival time for bots. They will sprint if there is not enough time to walk, and they will leave as late as possible otherwise</param>
     /// <param name="sprint">Ignored if arrivalTime is set. Sprint towards target instead of walking</param>
-    public void Move(float time, Func<IAiMove> positions, float jitter = DefaultJitter, float? arrivalTime = null, bool sprint = false,
+    public void Move(float time, Func<IAiMove> positions, float jitter = DefaultJitter, float? arrivalTime = null, bool sprint = false, float? hardArrivalTime = null,
         [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
     {
         world.Events.Add(time, () =>
@@ -54,6 +54,11 @@ public sealed class AiManager
                     : (sprint, 0f);
                 var speed = sprinting ? SprintSpeed : RunSpeed;
 
+                if (world.BotDifficulty == BotDifficulty.Hard && hardArrivalTime is { } hardDeadline && arrivalTime is null && !sprinting)
+                {
+                    world.BotMovement.Move(member, target, hardDeadline, speed);
+                    continue;
+                }
                 if (sprinting) partyMember?.UseSprint(dist / SprintSpeed + 1f);
                 AnoMech.Core.DiagnosticLog.Info($"[AiManager] Move@{time:F1}: {role} ({member.Position.X:F1},{member.Position.Z:F1}) -> ({target.X:F1},{target.Z:F1}) {dist:F1}y{(sprinting ? " sprinting" : "")}{(delay > 0f ? $", leaving in {delay:F2}s" : "")}.");
                 if (delay > 0f) world.Events.Add(delay, () => member.MoveTo(target, speed: speed), file, line);

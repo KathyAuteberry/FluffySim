@@ -80,12 +80,12 @@ public sealed class FruDarklitAi : IScenarioAi<FruDarklitState>
     public void Run(FruDarklitState state, SimWorld world)
     {
         var assignment = new DarklitManaAssignments(state.Pattern);
-        void Move(Func<PartyRole, Vector3> target)
-        { foreach (var role in FruDarklitState.Roles) world.Party.Get(role)?.MoveTo(target(role)); }
-        world.Events.Add(.1f, () => Move(assignment.Lineup));
+        void Move(Func<PartyRole, Vector3> target, float? deadline=null)
+        { foreach (var role in FruDarklitState.Roles) world.BotMovement.Move(world.Party.Get(role),target(role),deadline); }
+        world.Events.Add(.1f, () => Move(assignment.Lineup,7f));
         world.Events.Add(9.5f, () => Move(assignment.SideAdjustedLineup));
         world.Events.Add(10.6f, () => Move(r => assignment.Formation(r, true)));
-        world.Events.Add(12f, () => Move(r => assignment.Formation(r)));
+        world.Events.Add(12f, () => Move(r => assignment.Formation(r),14.4f));
         world.Events.Add(19.2f, () => Move(assignment.SpiritSpread));
         world.Events.Add(21.9f, () => Move(r => assignment.WaterStack(r, state.EastWing)));
         world.Events.Add(26.5f, () =>

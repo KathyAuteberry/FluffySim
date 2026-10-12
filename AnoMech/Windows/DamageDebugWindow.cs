@@ -205,7 +205,7 @@ internal sealed class DamageDebugWindow : Window, IDisposable
         try
         {
             var sb = new StringBuilder();
-            sb.AppendLine($"AnoMech damage debug dump -- {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
+            sb.AppendLine($"FluffySim damage debug dump -- {DateTime.Now:yyyy-MM-dd HH:mm:ss}");
             sb.AppendLine();
 
             CharacterFind<SimCharacter>? hitFind = null;

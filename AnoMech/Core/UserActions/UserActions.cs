@@ -98,7 +98,6 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     public void OnScenarioStart()
     {
         sprint.OnScenarioStart();
-        AntiKnockbackHandler.OnScenarioStart();
         if (!Enabled) return;
         castTime.OnScenarioStart();
         foreach (var handler in effectHandlers) handler.OnScenarioStart();

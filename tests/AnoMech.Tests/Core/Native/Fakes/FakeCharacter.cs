@@ -24,6 +24,7 @@ internal sealed class FakeCharacter(uint entityId, string name)
 
     public Vector3 Position { get; set; }
     public float Rotation { get; set; }
+    public bool ModelHidden { get; set; }
     public float HitboxRadius { get; set; }
 
     public uint Health { get; set; }

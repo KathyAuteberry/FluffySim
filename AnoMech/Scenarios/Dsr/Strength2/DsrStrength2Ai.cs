@@ -12,10 +12,10 @@ public sealed class DsrStrength2Ai : IScenarioAi<DsrStrength2State>
     {
         world.Events.Add(3.1f, () =>
         {
-            foreach(var role in state.Leaps) Move(role,state.LeapPosition(role));
-            foreach(var role in state.TowerCommunicators) Move(role,state.StackPosition);
-            Move(PartyRole.MainTank,state.Rotate(new(-2,0,-13)));
-            Move(PartyRole.OffTank,state.Rotate(new(2,0,-13)));
+            foreach(var role in state.Leaps) Move(role,state.LeapPosition(role),6.6f);
+            foreach(var role in state.TowerCommunicators) Move(role,state.StackPosition,6.5f);
+            Move(PartyRole.MainTank,state.Rotate(new(-2,0,-13)),6.8f);
+            Move(PartyRole.OffTank,state.Rotate(new(2,0,-13)),6.8f);
         });
         world.Events.Add(7.35f, () =>
         {
@@ -29,7 +29,7 @@ public sealed class DsrStrength2Ai : IScenarioAi<DsrStrength2State>
         });
         world.Events.Add(8.5f, () => {foreach(var role in state.TowerCommunicators) Move(role,state.CommunicationPosition(role));});
         world.Events.Add(10.7f, () => {foreach(var role in state.TowerCommunicators) Move(role,state.StackPosition);});
-        world.Events.Add(12.65f, () => {foreach(var role in DsrStrength2State.NonTanks) Move(role,state.TowerPosition(role));});
-        void Move(PartyRole role,System.Numerics.Vector3 position)=>world.Party.Get(role)?.MoveTo(position,6f);
+        world.Events.Add(12.65f, () => {foreach(var role in DsrStrength2State.NonTanks) Move(role,state.TowerPosition(role),15.3f);});
+        void Move(PartyRole role,System.Numerics.Vector3 position,float? deadline=null)=>world.BotMovement.Move(world.Party.Get(role),position,deadline);
     }
 }

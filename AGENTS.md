@@ -139,3 +139,16 @@ Being rewritten. Existing code doesn't follow it yet.
   them itself and reports the result through its poses.
 - **Cleanup.** Multiplayer tracks what it spawned on each peer and clears it on run end,
   disconnect or host leave.
+
+## FluffySim release identity
+
+The public plugin is FluffySim; source namespaces, solution/project paths, scenario IDs and relay
+protocol headers remain AnoMech for compatibility. `FluffySim.Version.props` is the only plugin
+release-version source. Debug builds produce `FluffySim.dll`, with separate Debug intermediates.
+Follow `RELEASING.md` for packaging an already built directory; never execute a Release build or
+write into installed output during development. Legacy `AnoMech.json` is imported only when no
+FluffySim configuration exists, without mutating the original. Never load both plugin registrations.
+
+## Integration safety tests
+
+`tests/SafetyTests` exercises the production zone/filter lifecycle against a simulated client and server. Run its Debug configuration with the plugin Debug binary; never run mutation tooling against installed files.

@@ -2509,3 +2509,92 @@ cone for that actual target, and tower/cone Lightsteeped failure. Preserve a
 screenshot/video of the diagnostic panel if graphics still differ: it now exposes
 both the packet's intended direction and live native helper facing. These native
 presentation corrections are **not yet manually validated**.
+
+### Shared practice settings — 2026-10-12
+
+P4 Darklit is now manually validated, including native cone directions and the
+local practice invulnerability UI. Arena, towers, bosses and gameplay are preserved.
+
+Common main-window controls now persist **Bot Difficulty (Easy/Hard)**,
+**Show Simulated Party**, and **God Mode**. Defaults are Easy, visible, God Mode off.
+Bot difficulty/visibility apply on the next start; God Mode can be toggled during
+solo practice. Existing multiplayer God Mode restrictions are retained without
+clearing the saved preference. Existing scenario overrides and RNG streams are
+unchanged. The ten-second Practice Invulnerability button remains independently
+scoped to Darklit/Apocalypse and is never activated automatically for the human.
+
+`Core/Game/Ai/BotMovement` supplies explicit arrival-deadline scheduling shared by
+all eight current AIs and future scenarios. Hard departs at deadline minus actual
+XZ travel duration at the original speed minus 0.45s safety margin. A departure
+limit additionally protects ice-puddle exits. Newer requests supersede pending
+ones, teardown invalidates them, and no speeds/teleports/immunities are added.
+Moves already in progress, rooted actors, active obstacle fields and movements
+without an authored safe deadline retain the original choreography. AiManager
+also accepts a hardArrivalTime for new timeline-based scenarios. Authors must
+supply mechanic-derived deadlines rather than guessing from an arbitrary delay.
+
+FRU safe late opportunities: LR initial lineup before assignments and initial
+puddle/tower destinations before the first Hammer; UR first/second Fire positioning;
+Apocalypse initial box, permanent swaps and spread positions; Darklit initial
+lineup and final Water-adjusted formation. Laser escapes, chain arcs, orb routes,
+knockback choreography and other constrained movements remain prompt. Hard testing
+initially found UR's third Fire crossing active second-wave lasers when delayed;
+that escape is deliberately kept immediate. Assignment generation is unchanged.
+
+Invisible mode calls the existing Model|Nameplate render-flag abstraction only
+on SimPartyNpc actors. They still load models, move, target, soak, take damage and
+retain identities/hitboxes. Human, bosses, event objects and network-controlled
+players are not hidden. Bot-only local automarker icons are omitted; the human's
+icon remains. Native tethers, ground mechanics and actor-attached native cues are
+not removed. Whether individual attached effects honor parent hiding differently
+needs a native playtest. Body-language communication is unavailable when models
+are hidden: use visible mode for communication practice or God Mode for blind
+practice. Visibility is restored through normal next-run actor creation.
+
+God Mode remains a shared Game.Kill decision: all simulated party deaths are
+reported as mistakes but not applied, preserving established whole-party wipe
+practice semantics. It does not alter assignments, AI or teleport anyone. The
+old deliberate native human HP-bar drop/restore preview was removed. HP-bar
+cleanup now restores only a bar actually changed by simulation KO/network HP,
+so a God Mode run cannot heal an otherwise untouched native HP bar on teardown.
+Towers, fate failures, five-stack explosions and arena-edge errors still evaluate
+and report; Fragment damage still records a compromised Fragment and the timeline
+continues. No invincibility status, real ability or recast modification implements
+God Mode. Normal damage/death rules remain unchanged.
+
+The Arm's Length/Surecast audit and six-second local Meteor anti-knockback are
+recorded in DSR-ROADMAP.md. Native tank invulnerability reset remains unsupported;
+the independently local ten-second practice button is preserved.
+
+Validation: Debug solution build succeeds with local DALAMUD_HOME, zero errors
+(3,965 existing platform/obsolete/vulnerability-feed-category warnings). Full
+regression run: **9,248 passed**; separately added exhaustive Hard/invisible cases:
+**1,962 passed** (all1,152 Darklit graphs and all810 Meteor outer patterns). Final
+shared-feature checks: **30 passed**, including actual Easy movement vs stationary
+Hard waiting, all eight seats in each of eight scenarios, speed/deadline invariants,
+complete God Mode timelines, invisible/visible reentry, human-marker retention,
+local-action source boundary, HP preservation and repeated-hazard feedback.
+The final repeated-hazard test is additional to the full run: feedback is limited
+to once per second per role/action/cause without applying death or skipping damage
+assessment. Relay **41 passed**, Python tooling **43 passed**. Release untouched.
+
+Manual: user builds Release personally and reloads. Before Start select Bot
+Difficulty and Show Simulated Party in the common controls. Compare Easy/visible
+against Hard/visible, then Hard/invisible. Hard waits should be apparent during
+initial lineup/spreads, without altered speed. Check the human remains visible,
+bosses/towers stay visible and native tether/attack cues survive bot hiding.
+Enable God Mode before Start, deliberately miss a tower/stack, face a gaze or
+enter a hazard; feedback should report failure while the normal timeline continues
+without KO/freeze/native HP-bar preview. Disable God Mode and repeat to confirm
+ordinary failure. Check Darklit and Apocalypse's local invulnerability button
+remains independent, Ready on restart and timed protection only after clicking.
+
+## FluffySim 1.0 release and final Hard audit (2026-10-12)
+
+- Inherited authoritative plugin version 0.4.2.0 becomes FluffySim 1.0.0.0 / SemVer 1.0.0, derived from FluffySim.Version.props. User-facing manifest, main/settings titles, chat/status/error prefixes and command help are rebranded; `/fluffysim` is added alongside `/anomech` and `/ano`.
+- Assembly/InternalName/DLL become FluffySim. Explicitly typed first-launch import reads legacy AnoMech.json only if current settings are absent; namespaces, configuration keys, scenario IDs, relay headers and window IDs stay stable. Original settings/snapshots are not modified. The startup guard rejects another loaded AnoMech/FluffySim instance. Manual developer-registration migration is required; see INSTALLATION.md.
+- All four FRU AI movement paths were audited; see HARD-DIFFICULTY-AUDIT.md for per-step eligibility, deadlines and deliberate exemptions. Light Rampant's final House of Light clock spread now additionally uses a 45.4 arrival deadline in Hard; Easy retains its original request. Shared telemetry records actual actor/from/to for deterministic position comparisons, not merely a Hard setting flag.
+- Packaging uses dependency metadata, excludes old plugin DLLs/logs/snapshots, carries licensing/installation notes, and never writes to its input or installed Release directories. The custom packager generates manifests only; release ZIP creation is owner-operated. No tags, commits, publication or installed-plugin changes were performed.
+- Debug regression/build and native migration verification results are recorded below after completion. Existing scene mechanics/presets/music/practice controls are preserved. Native Hard cue readability and the renamed DLL installation still require user verification.
+
+Validation: full Debug plugin suite 11,221 passed; final focused suite 14 passed (overlaps the full run and includes four new final-clock tests). The final comparison covers 256 matched Easy/Hard seed/seat pairs across eight scenarios, checking unchanged authoritative assignments, actual later departure and death-free completion. Relay 41 passed; tooling 50 passed. Final solution Debug build: 0 errors, 3,965 warnings (unchanged from the preceding Debug baseline). Actual generated FluffySim manifest/assembly/file/informational metadata and dependency-aware ZIP creation were checked using isolated Debug artifacts. No Release build or installed files were touched. Installation/native playtest remains manual.

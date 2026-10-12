@@ -17,6 +17,9 @@ internal sealed record ScenarioRunOptions
     public Func<IScenario>? ScenarioFactory { get; init; }
     public Action<FakeGame>? ConfigureNative { get; init; }
     public bool Solo { get; init; }
+    public AnoMech.Core.Game.Ai.BotDifficulty BotDifficulty { get; init; }
+    public bool ShowSimulatedParty { get; init; } = true;
+    public bool GodMode { get; init; }
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
@@ -94,7 +97,7 @@ internal sealed record ScenarioRun(
         }
 
         DalamudServices.Install(nameof(Plugin.Log), log);
-        DalamudServices.Install(nameof(Plugin.Config), new Configuration());
+        DalamudServices.Install(nameof(Plugin.Config), new Configuration { BotDifficulty = options.BotDifficulty, ShowSimulatedParty = options.ShowSimulatedParty, PracticeGodMode = options.GodMode });
         DebugBotControl.Enabled = true;
         PerRole.ForceSeats = true;
         AoeQuery.Evaluated += OnAoeEvaluated;

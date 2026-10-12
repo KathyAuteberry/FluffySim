@@ -54,6 +54,7 @@ public sealed class Game : IDisposable
     // When true, Game.Kill still posts the chat line for learning but skips every
     // gameplay side effect (HP=0, KO timeline, stun hooks, freeze timer).
     public bool GodMode { get; set; }
+    private readonly Dictionary<(PartyRole Role, uint? Action, string Cause), float> godMistakeTimes = [];
 
     // When true, a successful run (see UpdateMechanicResult) immediately starts the same
     // scenario again with the same parameters, for hands-free repetition. A real death
@@ -314,6 +315,9 @@ public sealed class Game : IDisposable
         var seed = requestedSeed ?? Random.Shared.Next();
         World.Reseed(seed);
         Plugin.Log.Info($"Game: {scenario.Name} seed {seed}");
+        World.BotDifficulty = Plugin.Config.BotDifficulty;
+        World.ShowSimulatedParty = Plugin.Config.ShowSimulatedParty;
+        GodMode = Plugin.Config.PracticeGodMode;
         World.CreateParty(player.ClassJob, roleOverride, solo, networkRoles, networkSeats);
         // Client-asset setup a peer needs too (see IZone.RunClientSetup).
         zone.RunClientSetup(World);
@@ -363,7 +367,7 @@ public sealed class Game : IDisposable
             Natives.Bgm.Play(PhaseMusic.TrackFor(scenario), scenario.BgmSecondsAtStart);
 
         // networkRoles null, not solo: a peer passes selectedAi null too.
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] Starting: {FullName(scenario)}{(networkRoles is null ? " (Solo)" : "")}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {FullName(scenario)}{(networkRoles is null ? " (Solo)" : "")}" });
         return null;
     }
 
@@ -425,20 +429,19 @@ public sealed class Game : IDisposable
             RunScenario(p);
     }
 
-    // Godmode preview: how long a swallowed-death HP-bar drop stays down before healing back.
-    private const float GodmodeHealSeconds = 1.2f;
 
     public void RecordMechanicMistake(uint actionId, string explanation)
     {
         lastMistakeElapsed = scenarioElapsed;
         MechanicStreak = 0;
-        Plugin.ChatGui.Print($"[AnoMech] {ActionLookup.Name(actionId)}: {explanation}");
+        Plugin.ChatGui.Print($"[FluffySim] {ActionLookup.Name(actionId)}: {explanation}");
     }
 
-    // Single entry point for "this character died". Always posts the cause
+    // Single entry point for "this character died". Posts the cause
     // to chat and, on the first call of a run, fires the on-screen overlay
     // — both happen even in godmode so the user can learn what would have
-    // killed them. Gameplay side effects (OnKilled, which flips Dead, plus
+    // killed them. Repeated God Mode hazards are rate-limited to avoid per-frame chat.
+    // Gameplay side effects (OnKilled, which flips Dead, plus
     // the 5s freeze) only run outside godmode; the freeze fires once per run
     // on the first non-godmode death.
     //
@@ -450,6 +453,12 @@ public sealed class Game : IDisposable
     {
         if (target == null) return false;
         if (target.Dead) return false;
+        if (GodMode)
+        {
+            var key = (target.Role, actionId, cause);
+            if (godMistakeTimes.TryGetValue(key, out var previous) && scenarioElapsed - previous < 1f) return false;
+            godMistakeTimes[key] = scenarioElapsed;
+        }
 
         AnoMech.Core.DiagnosticLog.Warn(
             $"[Game] Kill: {target.Role} died at ({(target as IPositioned)?.Position.X:F1},{(target as IPositioned)?.Position.Z:F1}) -- {cause}");
@@ -468,21 +477,13 @@ public sealed class Game : IDisposable
                 World.Party.Player?.AddVfx(MechanicFailureVfx, persistent: false);
         }
 
-        if (GodMode)
-        {
-            // Godmode still previews the death: drop the player's bar and heal it back a beat later.
-            if (target is SimPlayer player)
-            {
-                player.DropHpBar();
-                Events.Add(GodmodeHealSeconds, player.RestoreHpBar);
-            }
-            return false;
-        }
+        if (GodMode) return false;
         target.OnKilled();
         PartyMemberKilled?.Invoke(target.Role, cause, actionId);
         MechanicStreak = 0;
         deathOccurredThisRun = true;
         World.PracticeInvulnerability.Clear();
+        World.PracticeAntiKnockback.Clear();
         Natives.Bgm.Reset();
         AutoRestart = false;
         if (!firstFreezeScheduled)
@@ -497,7 +498,7 @@ public sealed class Game : IDisposable
     }
 
     private static void PrintDeath(ISimPartyMember target, string cause)
-        => Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] {DescribeName(target)} died: {cause}" });
+        => Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] {DescribeName(target)} died: {cause}" });
 
     private static string DescribeName(ISimPartyMember target) => target switch
     {
@@ -577,6 +578,7 @@ public sealed class Game : IDisposable
 
         Paused = false;
         firstDeathScheduled = false;
+        godMistakeTimes.Clear();
         firstFreezeScheduled = false;
         scenarioFinishedElapsed = null;
         mechanicResultReported = false;

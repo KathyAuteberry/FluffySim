@@ -47,7 +47,7 @@ public sealed class FruUltimateRelativityAi : IScenarioAi<FruUltimateRelativityS
     private void Fire(int order, bool intermediate = false)
     {
         foreach (var role in state.Roles)
-            Move(role, state.Direction(state.Clock(role)) * (state.FireOrder(role) == order ? intermediate ? 9f : 14.5f : 1f));
+            Move(role, state.Direction(state.Clock(role)) * (state.FireOrder(role) == order ? intermediate ? 9f : 14.5f : 1f), intermediate || order == 3 ? null : order == 1 ? 24.6f : 34.6f);
     }
     private void BaitAndRecord(int wave)
     {
@@ -65,5 +65,5 @@ public sealed class FruUltimateRelativityAi : IScenarioAi<FruUltimateRelativityS
             member?.SetRotation(MathF.Atan2(d.X, d.Z));
         }
     }
-    private void Move(PartyRole role, Vector3 position) => world.Party.Get(role)?.MoveTo(position);
+    private void Move(PartyRole role, Vector3 position, float? deadline=null) => world.BotMovement.Move(world.Party.Get(role),position,deadline);
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Dalamud.Game.Command;
 using Dalamud.Game.DutyState;
 using Dalamud.IoC;
@@ -45,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IJobGauges JobGauges { get; private set; } = null!;
 
     private const string CommandName = "/anomech";
+    private const string FluffyCommand = "/fluffysim";
     private const string CommandAlias = "/ano";
     private bool commandsRegistered;
     private volatile bool disposing;
@@ -81,11 +83,13 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        if (PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && (p.InternalName is "AnoMech" or "FluffySim")))
+            throw new InvalidOperationException("Disable the existing AnoMech/FluffySim plugin before loading FluffySim.");
         // First, so every subsequent construction step's own logging is captured from the start.
         Core.DiagnosticLog.Initialize();
         try
         {
-            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            Configuration = ConfigurationMigration.Load(PluginInterface.ConfigFile, () => PluginInterface.GetPluginConfig() as Configuration);
             Config = Configuration;
 
             LogManager = new LogManager();
@@ -115,12 +119,13 @@ public sealed class Plugin : IDalamudPlugin
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave, arena-p3, arena-dsr-p2, snapshot <label>"
+                HelpMessage = "Open FluffySim. Subcommands: config, mp, start, reset, leave, arena-p3, arena-dsr-p2, snapshot <label>"
             });
             CommandManager.AddHandler(CommandAlias, new CommandInfo(OnCommand)
             {
                 HelpMessage = "Alias for /anomech"
             });
+            CommandManager.AddHandler(FluffyCommand, new CommandInfo(OnCommand) { HelpMessage = "Open FluffySim; /anomech and /ano remain supported." });
             commandsRegistered = true;
 
             PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
@@ -256,6 +261,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             CommandManager.RemoveHandler(CommandName);
             CommandManager.RemoveHandler(CommandAlias);
+            CommandManager.RemoveHandler(FluffyCommand);
         }
     }
 
@@ -328,8 +334,8 @@ public sealed class Plugin : IDalamudPlugin
             Framework.RunOnFrameworkThread(() =>
             {
                 if (disposing) return;
-                try { ChatGui.Print($"AnoMech arena snapshot saved: {ArenaSnapshot.Save(label)}"); }
-                catch (Exception e) { ChatGui.Print($"AnoMech arena snapshot failed: {e.Message}"); }
+                try { ChatGui.Print($"FluffySim arena snapshot saved: {ArenaSnapshot.Save(label)}"); }
+                catch (Exception e) { ChatGui.Print($"FluffySim arena snapshot failed: {e.Message}"); }
             });
             return;
         }

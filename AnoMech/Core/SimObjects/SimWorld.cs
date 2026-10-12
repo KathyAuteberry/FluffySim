@@ -5,6 +5,7 @@ using Dalamud.Game.Text;
 using System.Numerics;
 using AnoMech.Core;
 using AnoMech.Core.Game;
+using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Map;
@@ -33,6 +34,10 @@ public sealed class SimWorld : ISimObject, IDisposable
     // (Add/Remove/Clear); bots hold this one instance across runs, cleared on Despawn.
     public ObstacleField Obstacles { get; } = new();
     public SoftMarkers SoftMarkers { get; } = new();
+    public BotDifficulty BotDifficulty { get; set; }
+    public bool ShowSimulatedParty { get; set; } = true;
+    public BotMovement BotMovement => field ??= new(this);
+    public PracticeAction PracticeAntiKnockback { get; } = new(6);
     public PracticeInvulnerability PracticeInvulnerability { get; } = new();
 
     // No members outside a zone stay. Ticked before the children, which reference it.
@@ -172,7 +177,7 @@ public sealed class SimWorld : ISimObject, IDisposable
 
     public void Announce(string text)
     {
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] {text}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] {text}" });
         Announced?.Invoke(text);
     }
     
@@ -211,9 +216,11 @@ public sealed class SimWorld : ISimObject, IDisposable
     public void Tick(float deltaSeconds)
     {
         PracticeInvulnerability.Tick(deltaSeconds);
+        PracticeAntiKnockback.Tick(deltaSeconds);
         Map.Tick();
         Party.Tick(deltaSeconds);
         children.Update(deltaSeconds);
+        foreach (var member in Party.ActiveMembers().OfType<SimPartyNpc>()) member.SetPresentationVisible(ShowSimulatedParty);
         SoftMarkers.RemoveInactive();
         enemyList.Tick(children.OfType<SimEnemy>(), deltaSeconds);
     }
@@ -229,6 +236,8 @@ public sealed class SimWorld : ISimObject, IDisposable
             catch (Exception) { DiagnosticLog.Warn("[SimWorld] Scenario cleanup callback failed."); }
         }
         PracticeInvulnerability.Clear();
+        PracticeAntiKnockback.Clear();
+        BotMovement.Clear();
         SoftMarkers.Clear();
         children.Despawn();
         enemyList.Clear();

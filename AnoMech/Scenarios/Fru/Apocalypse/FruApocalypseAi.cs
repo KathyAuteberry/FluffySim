@@ -60,13 +60,13 @@ public sealed class FruApocalypseAi : IScenarioAi<FruApocalypseState>
     public void Run(FruApocalypseState state,SimWorld world)
     {
         var assignments=new ApocalypseManaAssignments(state);
-        void Move(Func<PartyRole,Vector3> position)
-        { foreach(var role in FruApocalypseState.Roles) world.Party.Get(role)?.MoveTo(position(role)); }
-        world.Events.Add(.5f,()=>Move(r=>assignments.Box(r,true)));
-        world.Events.Add(14f,()=>Move(r=>assignments.Box(r)));
+        void Move(Func<PartyRole,Vector3> position,float? deadline=null)
+        { foreach(var role in FruApocalypseState.Roles) world.BotMovement.Move(world.Party.Get(role),position(role),deadline); }
+        world.Events.Add(.5f,()=>Move(r=>assignments.Box(r,true),12f));
+        world.Events.Add(14f,()=>Move(r=>assignments.Box(r),19f));
         world.Events.Add(19.6f,()=>Move(assignments.FirstStack));
         world.Events.Add(22.96f,()=>Move(r=>assignments.Box(r)));
-        world.Events.Add(26f,()=>Move(assignments.Spread));
+        world.Events.Add(26f,()=>Move(assignments.Spread,30.1f));
         world.Events.Add(36.12f,()=>Move(assignments.Corridor));
         world.Events.Add(37f,()=>Move(assignments.SecondStack));
         world.Events.Add(42.04f,()=>

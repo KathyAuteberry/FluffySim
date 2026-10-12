@@ -23,8 +23,8 @@ public sealed class SoftMarkers
     {
         foreach (var sign in markers.Where(m => !m.Value.IsActive || !m.Value.IsAlive()).Select(m => m.Key).ToArray()) markers.Remove(sign);
     }
-    public IReadOnlyList<SoftMarkerView> Snapshot(Vector3 origin) => markers
-        .Where(m => m.Value.IsActive && m.Value.IsAlive())
+    public IReadOnlyList<SoftMarkerView> Snapshot(Vector3 origin, bool showBots = true) => markers
+        .Where(m => m.Value.IsActive && m.Value.IsAlive() && (showBots || m.Value is not SimPartyNpc))
         .Select(m => new SoftMarkerView(m.Key, IconId(m.Key), origin + m.Value.Position + new Vector3(0f, 2.8f, 0f))).ToArray();
     public static uint IconId(Sign sign) => sign switch
     {

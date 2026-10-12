@@ -93,13 +93,13 @@ public unsafe class MainWindow : Window, IDisposable
     private readonly DebugMenu debugMenu;
 #endif
 
-    // <Version> from AnoMech.csproj flows into the assembly version; surface it in the
+    // Build metadata supplies the release version; surface it in the
     // title bar. Use a ### id so the window identity stays "MainWindow" across versions.
     private static string TitleWithVersion()
     {
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         var version = v is null ? "" : $" v{v.Major}.{v.Minor}.{v.Build}.{v.Revision}";
-        return $"AnoMech{version}###MainWindow";
+        return $"FluffySim{version}###MainWindow";
     }
 
     public MainWindow(Plugin plugin)
@@ -210,13 +210,16 @@ public unsafe class MainWindow : Window, IDisposable
         }
 
         var practiceControls = CurrentPracticeControls();
-        if (practiceControls.Visible && !_wasPracticeVisible) RequestCollapsed(false);
-        _wasPracticeVisible = practiceControls.Visible;
+        var antiKnockback = PracticeAntiKnockbackControls.Evaluate(plugin.Game.ActiveScenario,
+            plugin.Game.World.Party.Player?.IsAlive() == true, plugin.Game.World.PracticeAntiKnockback);
+        var practiceVisible = practiceControls.Visible || antiKnockback.Visible;
+        if (practiceVisible && !_wasPracticeVisible) RequestCollapsed(false);
+        _wasPracticeVisible = practiceVisible;
         var scenarioActive = RunActive;
         var status = Plugin.Game.Status;
         if (scenarioActive && !_wasScenarioActive)
         {
-            if (Plugin.Config.AutoCollapseWhileRunning && !practiceControls.PreventAutoCollapse)
+            if (Plugin.Config.AutoCollapseWhileRunning && !practiceVisible)
                 RequestCollapsed(true);
         }
         if (status > SessionStatus.Running && status != _lastStatus)
@@ -234,7 +237,7 @@ public unsafe class MainWindow : Window, IDisposable
             IsOpen = true;
             ShowCloseButton = false;
             RespectCloseHotkey = false;
-            if (scenarioActive && !practiceControls.PreventAutoCollapse)
+            if (scenarioActive && !practiceVisible)
                 Flags &= ~ImGuiWindowFlags.NoCollapse;
             else
                 Flags |= ImGuiWindowFlags.NoCollapse;
@@ -478,7 +481,8 @@ public unsafe class MainWindow : Window, IDisposable
         if (inSession) DrawSession();
         DrawPrimaryActions(game, inSession);
         if (!inSession) DrawSoloOption(game);
-        ImGui.TextDisabled($"Build {Assembly.GetExecutingAssembly().ManifestModule.ModuleVersionId.ToString("N")[..8]} — Darklit presentation 2");
+        ImGui.TextDisabled("FluffySim extends AnoMech by Anomek and contributors.");
+        ImGui.TextDisabled($"Build {Assembly.GetExecutingAssembly().ManifestModule.ModuleVersionId.ToString("N")[..8]} — FluffySim");
         DrawLocationHint();
         DrawRunOptions(game, Plugin.Practice, inSession);
 
@@ -729,8 +733,8 @@ public unsafe class MainWindow : Window, IDisposable
     }
 
     private PracticeInvulnerabilityControls CurrentPracticeControls()
-        => PracticeInvulnerabilityControls.Evaluate(Plugin.Game.ActiveScenario, Plugin.Game.World.Party.PlayerRole,
-            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeInvulnerability);
+        => PracticeInvulnerabilityControls.Evaluate(plugin.Game.ActiveScenario, plugin.Game.World.Party.PlayerRole,
+            plugin.Game.World.Party.Player?.IsAlive() == true, plugin.Game.World.PracticeInvulnerability);
 
     private void DrawPrimaryActions(AnoMech.Core.Game.Game game, bool inSession)
     {
@@ -743,6 +747,16 @@ public unsafe class MainWindow : Window, IDisposable
             ImGui.BeginDisabled(!controls.CanActivate);
             if (ImGui.Button("Practice Invulnerability (Local Only)"))
                 PracticeInvulnerabilityControls.Press(game.ActiveScenario, party.PlayerRole, party.Player?.IsAlive() == true, practice);
+            ImGui.EndDisabled();
+        }
+        var anti = game.World.PracticeAntiKnockback;
+        var antiControls = PracticeAntiKnockbackControls.Evaluate(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
+        if (antiControls.Visible)
+        {
+            ImGui.TextUnformatted($"Practice Anti-Knockback: {antiControls.State}");
+            ImGui.BeginDisabled(!antiControls.CanActivate);
+            if (ImGui.Button("Practice Anti-Knockback (Local Only)"))
+                PracticeAntiKnockbackControls.Press(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
             ImGui.EndDisabled();
         }
         var uiScale = ImGuiHelpers.GlobalScale;
@@ -921,10 +935,20 @@ public unsafe class MainWindow : Window, IDisposable
     private static void DrawRunOptions(AnoMech.Core.Game.Game game, PracticeLoop practice, bool mpActive)
     {
         ImGui.Spacing();
+        var difficulty = (int)Plugin.Config.BotDifficulty;
+        ImGui.BeginDisabled(game.IsScenarioActive);
+        if (ImGui.Combo("Bot Difficulty", ref difficulty, "Easy\0Hard\0"))
+        { Plugin.Config.BotDifficulty = (BotDifficulty)difficulty; Plugin.Config.Save(); }
+        var showParty = Plugin.Config.ShowSimulatedParty;
+        if (ImGui.Checkbox("Show Simulated Party", ref showParty))
+        { Plugin.Config.ShowSimulatedParty = showParty; Plugin.Config.Save(); }
+        ImGui.EndDisabled();
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) ImGui.SetTooltip("Bot settings apply on the next start. Invisible bots remove body-language cues and bot-only local markers; tethers and encounter effects remain. Hard preserves required communication and hazard escape windows.");
         if (mpActive) game.GodMode = false;
         ImGui.BeginDisabled(mpActive);
-        var god = game.GodMode;
-        if (ImGui.Checkbox("God mode", ref god)) game.GodMode = god;
+        var god = mpActive ? false : Plugin.Config.PracticeGodMode;
+        if (ImGui.Checkbox("God Mode", ref god))
+        { game.GodMode = god; Plugin.Config.PracticeGodMode = god; Plugin.Config.Save(); }
         ImGui.EndDisabled();
         if (mpActive && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGui.SetTooltip(MpDisabledReason);

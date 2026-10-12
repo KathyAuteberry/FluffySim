@@ -103,7 +103,7 @@ public sealed class FruLightRampantAi : IScenarioAi<FruLightRampantState>
 
     private void MovePuddles(int drop)
     {
-        float[] angles = [-135f, -135f, -90f, -55f, -23f];
+        float[] angles = [-135f, -135f, -90f, -55f, -25f];
         float[] radii = [4f, 10.5f, 12f, 12f, 10f];
         var angle = angles[drop] * MathF.PI / 180f;
         var radius = radii[drop];
@@ -177,5 +177,10 @@ public sealed class FruLightRampantAi : IScenarioAi<FruLightRampantState>
         for (var i = 0; i < 8; i++) Move((PartyRole)i, ClockPosition((PartyRole)i));
     }
 
-    private void Move(PartyRole role, Vector3 position, float speed = 6f) => world.Party.Get(role)?.MoveTo(position, speed);
+    private void Move(PartyRole role, Vector3 position, float speed = 6f)
+    {
+        var elapsed = world.Events.Elapsed;
+        float? deadline = elapsed < .1f ? 8f : elapsed is >= 9 and < 9.3f ? 14.6f : elapsed is >= 37.2f and < 37.5f ? 45.4f : null;
+        world.BotMovement.Move(world.Party.Get(role), position, deadline, speed);
+    }
 }
