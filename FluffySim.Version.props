@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <FluffySimVersion>1.0.0</FluffySimVersion>
+    <FluffySimVersion>1.1.0</FluffySimVersion>
     <Version>$(FluffySimVersion)</Version>
     <AssemblyVersion>$(FluffySimVersion).0</AssemblyVersion>
     <FileVersion>$(AssemblyVersion)</FileVersion>

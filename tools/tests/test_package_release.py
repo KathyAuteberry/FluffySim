@@ -30,6 +30,7 @@ class ReleasePackageTests(unittest.TestCase):
         self.assertIn('FluffySim.dll', names)
         self.assertIn('Dependency.dll', names)
         self.assertIn('LICENSE.md', names)
+        self.assertIn('PAUSE-INVESTIGATION.md', names)
         self.assertNotIn('AnoMech.dll', names)
         self.assertNotIn('Dalamud.dll', names)
         self.assertNotIn('private.log', names)

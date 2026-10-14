@@ -2698,3 +2698,32 @@ At the normal West hitbox position Fatebreaker should remain centered throughout
 with the East group retaining uptime. Deliberately bait tether 1 farther West and confirm travel still
 occurs, then verify clones and all four cone directions, Fetters expiration and swaps. No full Pause
 button should be expected from this investigation.
+
+Validation for this refinement: **26,880 full Fall of Faith executions passed** (1,680 separately
+reported exhaustive cases × 16 masks); **107 targeted plugin tests passed**, including 34 Fall of
+Faith checks, nine shared internal freeze/resume scenario checks, the native-cast/input-lock boundary
+check, existing shared practice controls and the scenario catalog. Those counts overlap; they are
+not added into a full-suite total. Relay **41 passed**, tooling **53 passed**. Final Debug build:
+**0 errors, 3,944 warnings** (incremental; initial build reported 3,965 existing warnings). No new
+source warning was introduced. `git diff --check` passes. No Release or installed files were changed.
+The headless native-clock boundary test uses fakes and does not certify real input interception or
+native animation suspension. No full Pause/Resume feature was implemented or advertised.
+
+## Shared Pause / Resume (2026-10-15)
+
+Local practice now has common Pause/Resume controls beside Stop, a frozen timestamp and an explicit
+PAUSED indicator. All nine FRU/DSR scenarios share the same suspended runtime and reused local input
+hooks. Pause applies no fake-death/HP/status change, makes no action/cooldown/packet operation and
+bypasses the existing auto-attack cancellation branch. Existing death/Fetters restrictions survive
+Resume. Virtual actions and simulation statuses remain frozen; all party slots and encounter actors
+are captured with exact duration/elapsed/stacks/source/instance metadata. Resume retains the same
+status objects, avoiding refresh/cleansing. Native animation/status displays may continue; pose drift
+is corrected through the existing per-actor transform interface without cancelling movement plans.
+Multiplayer Pause is disabled until peer synchronization is implemented. See
+[PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
+and the native keyboard/mouse/controller playtest checklist. Existing mechanic assignments/timings
+and BGM are unchanged; Debug development only.
+
+### Pause release validation — 1.1.0.0
+
+Owner reports successful native Pause playtesting. Debug regression: 11,291 plugin tests passed; final focused checks after cleanup refinements: 97 passed. Relay: 41 passed; tooling: 58 passed. Debug build: zero errors, 3,965 warnings. The 26,880 Fall of Faith assignment/element combinations passed the prior exhaustive sweep. These counts are separate runs, not additive coverage totals. Native cosmetic timers may continue while authoritative statuses remain frozen.

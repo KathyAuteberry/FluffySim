@@ -11,6 +11,8 @@ internal sealed class FakeUserActions : IUserActions
     public void OnSessionStart() { }
     public void OnScenarioStart() { }
     public void OnSessionEnd() { }
+    public int Pauses { get; private set; }
+    public void OnPause() => Pauses++;
     public void Tick(float deltaSeconds) { }
 
     public void Dispose() { }

@@ -41,7 +41,7 @@ def package(source, destination):
     with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:
         for name in sorted(files):
             archive.write(source / name, name)
-        for name in ('LICENSE.md', 'README.md', 'INSTALLATION.md', 'RELEASING.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.md', 'HARD-DIFFICULTY-AUDIT.md', 'FRU-ROADMAP.md', 'DSR-ROADMAP.md', 'images/icon.png'):
+        for name in ('LICENSE.md', 'README.md', 'INSTALLATION.md', 'RELEASING.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.md', 'HARD-DIFFICULTY-AUDIT.md', 'PAUSE-INVESTIGATION.md', 'FRU-ROADMAP.md', 'DSR-ROADMAP.md', 'images/icon.png'):
             archive.write(ROOT / name, name)
     return output
 

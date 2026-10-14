@@ -10,6 +10,9 @@ public interface ILocalPlayerInput : IDisposable
     // Raised after the player successfully executes an action: type, action id, target id.
     event Action<ActionType, uint, ulong>? ActionExecuted;
 
+    bool PauseInput { get; set; }
+    event Action? CastCancelRequested;
+
     bool MovementInputActive { get; }
     bool IsJumping { get; }
     bool IsAutoAttacking { get; }

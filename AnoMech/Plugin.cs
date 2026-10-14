@@ -212,6 +212,7 @@ public sealed class Plugin : IDalamudPlugin
         }
         finally
         {
+            if (Game is { } game) game.CancelPause();
             // Dalamud disposes this plugin's hooks once Dispose returns or throws, so a sim must be
             // reverted by then even when a step above threw. A no-op after a clean Game.Dispose.
             ZoneSession.Current?.Dispose();
@@ -280,7 +281,7 @@ public sealed class Plugin : IDalamudPlugin
         try { Game.Tick(fw->FrameDeltaTime); }
         catch (Exception e) { Core.DiagnosticLog.Warn($"[Plugin] Game.Tick threw: {e}"); }
         try { UserActions.Tick(fw->FrameDeltaTime); }
-        catch (Exception e) { Core.DiagnosticLog.Warn($"[Plugin] UserActions.Tick threw: {e}"); }
+        catch (Exception e) { Game.CancelPause(); Core.DiagnosticLog.Warn($"[Plugin] UserActions.Tick threw: {e}"); }
         try
         {
             // Every frame, not just while the settings are drawn: peers read what the host has

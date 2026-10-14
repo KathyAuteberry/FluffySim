@@ -1,97 +1,142 @@
-# Shared Pause / Resume investigation
+# Shared Pause / Resume
 
-Status: **not a complete user-facing Pause feature**. No new input hooks, real action calls,
-recast/status writes, packet manipulation or global client-clock modifications were added.
-The existing internal `Game.Paused` remains an internal/debug freeze, not a guarantee that the
-human or native presentation is frozen. This finding applies to all nine FRU/DSR scenarios.
+## Current upstream integration — 2026-10-15
 
-## What the existing runtime freezes
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
 
-`Core/Game/Game.cs: Tick` returns before the event scheduler, world and scenario ticks when
-`Paused` is true. `EventClockNow` stops extrapolating between framework ticks. As a result:
 
-- Scheduled assignments, impacts and damage callbacks do not fire.
-- Bot movement destinations remain stored; `Movement.Tick` does not advance position, turning,
-  eased pushes or the simulator's carry fallback.
-- `SimStatus` elapsed time, `SimCast`'s simulated animation lock, simulated VFX lifetimes,
-  practice invulnerability and practice anti-knockback durations do not advance.
-- Scenario elapsed time, result detection and movement scheduler departures remain frozen.
-- No scheduled RNG draws take place. Stop/reset clears events and the existing paused flag.
+Implemented for **local practice across all nine FRU/DSR scenarios**. Main scenario controls show
+Pause beside Stop, then Resume plus **PAUSED** and the frozen event timestamp. Stop/Leave remain
+available. Multiplayer Pause is disabled: its peer clocks/poses are not synchronized by this change.
+Native animation, cast bars, tether/VFX animation and native status displays may continue. That
+cosmetic limitation is explicit in the UI; the authoritative mechanic clock remains frozen.
 
-This is a useful simulation-only foundation. It is not a single clock governing the whole plugin.
+## Simulated death: actual call path
 
-## Paths outside that freeze
+`Core/Game/Game.Kill` calls `SimPlayer.OnKilled`. The player gets a private `Dead` flag, stopped
+scripted movement, a locally presented one-HP bar, status 896 (Down for the Count), and the KO
+animation. This is not a server death or a server-applied incapacitation status. Simulated NPC party
+members separately use local `ApplyDeadState` (HP/mana/mode presentation).
 
-`Plugin.cs: OnFrameworkUpdate` always calls `UserActions.Tick` after `Game.Tick`, including while
-paused. `Core/UserActions/UserActions.cs: Tick` advances sprint, cast-time, effect-handler and
-job-handler state and resolves pending actions on that separate path. `ActionExecuted` callbacks
-can also enter action resolution independently of the scenario clock.
+`SimPlayer.SyncInputLock` derives `ZeroMovement` and `DisableAllActions` from private death,
+scripted movement and simulation-owned status rows. Displaying status 896 is not the input lock.
+The actual enforcement is `Core/Native/Implementations/LocalPlayerInputHooks`:
 
-The framework continues draining queued work. Native NPC spawn completion and pending framework
-callbacks can finish. `Game.Tick` deliberately still services BGM and waiting-start readiness;
-`ZoneSession.TickGuard` deliberately runs even if the scenario is paused or throws. Session safety,
-real territory changes, connection liveness and teardown must never be stopped to implement Pause.
-`EventClockNow` also extrapolates from the last unpaused framework timestamp: a raw flag change to resume can expose the entire pause interval until the first unpaused Tick resets that timestamp. A real pause-state transition must reset that display/peer-clock anchor. Multiplayer transport and received poses are another independent path; a host-only clock freeze
-would not provide a synchronized peer pause.
+- RMIWalk movement sums are zeroed after native input sampling.
+- Strafe keybinds and keyboard/controller jump identifiers are rejected.
+- UseAction and UseActionLocation can return false before their original functions.
 
-## Native presentation
+The ordinary mechanic lock also has an auto-attack cancellation branch: its ActionManager Update
+hook calls the real `UseAction(GeneralAction, 1)` when autos are engaged. The existing session
+firewall contains outgoing simulation traffic, but that call is not needed or used for Pause.
+Fake-death cleanup remains the existing SimPlayer.Despawn path: clear simulation statuses,
+restore HP presentation, end KO presentation, and rederive normal input locks.
 
-`Core/SimObjects/SimCast.cs` reads cast progress from `IBattleCharaProxy.CurrentCastTime`; the
-client advances that clock independently. The proxy exposes cast injection/clear operations but
-no supported per-object pause-and-restore interface. Simulated timers can stay frozen while the
-native cast bar completes and its action animation continues.
+## Reused hooks, separately owned Pause restriction
 
-`Core/SimObjects/SimStatus.cs` owns simulated expiration but refreshes the native status display
-only during its Tick. A stopped simulator does not imply that native countdown presentation or
-Floating Fetters' animation/lift stops. Likewise, run-loop animations, action timelines, tethers,
-VFX and ground effects already handed to the client have their own native updates.
-`IStaticVfxProxy` supports Remove, not freezing/restarting at a preserved animation frame.
-There is no verified per-object time-freeze abstraction here. Reissuing casts/VFX after resume
-would restart presentation, potentially duplicate effects and alter visibility; that has not been
-validated as an exact restore mechanism. We must not freeze the global FFXIV engine.
+`ILocalPlayerInput.PauseInput` is a managed, per-hook-instance flag owned by Game. The extracted
+`LocalInputLock` combines it with the existing mechanic flags; this reuses the existing hooks,
+not a second global input-hook system.
 
-## Human input safety
+While PauseInput is set:
 
-`Core/Native/Implementations/LocalPlayerInputHooks.cs` already implements mechanic lockouts:
+- Normal left/forward movement sums, turning sums, strafe and jump inputs are suppressed.
+- Both action detours return false before the original call; direct actions also return before
+  activity/action bookkeeping. The stop-auto exception is **not** permitted.
+- CancelCast returns before its native original and before latching a cancellation request.
+- The auto-cancel branch is bypassed (`DisableAllActions && !PauseInput`). Native ActionManager
+  Update itself still runs: no real cooldown/recast clock is paused, reset or overwritten.
 
-- `RMIWalkDetour` samples normal movement intent, then zeroes left/forward movement sums.
-- `CheckStrafeKeybindDetour` rejects strafing while `ZeroMovement` is set.
-- `IsInputIdPressedDetour` rejects keyboard/controller jump identifiers.
-- `UseActionDetour` and `UseActionLocationDetour` return false for blocked actions before calling
-  their original functions, except the stop-auto-attack general action.
+Pause applies **no** HP, death-mode or incapacitation status. It makes no real action call,
+sends no marking/status/action/movement packet and changes no firewall rule. Normal death/stun
+behavior outside Pause remains unchanged. Resume clears only the pause-owned flag, so a dead
+player or a player still held by Floating Fetters remains correctly restricted.
 
-These are existing input-path hooks, not a complete audited Pause input scope. A real player or native carry can still change native position while the simulator is not sampling it; the next unpaused character Tick reads that changed position back into the simulation. Keyboard/controller
-rotation, mouse/camera-driven facing, auto-run, an already-started jump/carry, queued casts,
-auto-attacks and all possible action entry paths require explicit verification. Facing matters
-for gaze scenarios, even when the player position does not change.
+The common walk/action entry paths are the same ones used by the existing fake-death lockout.
+Keyboard/mouse/controller behavior and interactions with the live client still require manual
+validation. This is not a claim of zero account risk or control over arbitrary third-party plugins.
 
-Crucially, `UpdateDetour` calls the real ActionManager Update first. With `DisableAllActions`, it
-then invokes `UseAction(GeneralAction, 1)` to stop auto-attacks; `IsStopAutosAction` permits that
-through to the original function. Reusing this flag for Pause would therefore not meet the requested
-no-real-action guarantee. Pausing `Game.Tick` also stops `SimPlayer.SyncInputLock`, which normally
-re-derives the flags from death, forced movement and statuses each frame. `Game.Paused` alone does
-not set or release either flag.
+## Authoritative freeze
 
-`ZoneSession.cs: SendPacketDetour` forwards only the configured heartbeat and holds other packets
-while its hook is armed. Enter checks both firewall hooks and the guard monitors their health.
-That session firewall is relevant containment, but it is **not** a local input suppression API;
-using it to make Pause safe would fail the requirement not to manipulate server-bound messages.
-No firewall changes are proposed or made here.
+`Game.Paused` stops the event scheduler, World and scenario ticks. EventScheduler also respects a
+suspended flag, including pausing between callbacks, so another due event cannot resolve after a
+callback pauses the run. Resume resets the between-frame clock anchor: real pause time is never
+added to the simulation timeline. Bot destinations, speed, assignments, turn targets and RNG state
+remain stored. Status countdowns, scripted carry/push interpolation, hazards, damage, failure checks,
+result detection and virtual practice defenses do not advance.
 
-## Required work before a full Pause button
+UserActions.Tick and action callbacks are separately gated by the same pause flag. Already-started
+player casts retain a simulation-owned remaining-time clock when paused; their local effect/Dualcast
+completion is deferred through that remaining time after Resume even if the native bar has finished.
+Scenario reset/session end or an explicit post-resume cast cancellation clears that deferred state.
+SimCast's busy/animation lock uses its own ticking cast lifetime, rather than allowing a native bar
+that finished during Pause to release a following boss's movement early.
 
-1. Introduce an owned, scoped pause state that is valid only for an active run, and release it
-   synchronously on Resume, Stop, Leave, reset, completion, disposal and exception recovery.
-2. Route every simulator-owned ticking/callback path (including user-action handlers and peer
-   poses) through the pause state without stopping the native session guard, UI or network liveness.
-3. Verify a strictly local input gate for movement **and facing**, keyboard/mouse/controller,
-   jump, queued actions and auto-attacks. It must make no real action call and have a tested
-   fail-open teardown. The existing stun flags are insufficient evidence.
-4. Define and verify per-object native presentation suspension/restoration, or explicitly adopt
-   a limited cosmetic contract with local frozen cast/status displays. Exact native animation-frame
-   restoration is currently unsupported by the available interfaces.
-5. Add full-clock native/manual validation: pause a running cast, lift, charge, knockback, moving bot,
-   gaze and virtual defensive action; test multiple cycles, Stop/restart, unload and exceptions.
+Native carries/root motion can drift visually. Resume resynchronizes captured character poses through
+the existing local per-actor transform interface only when needed. Logical movement destinations and
+pending turn targets are not cancelled. A visible correction on Resume is possible; animations/VFX
+are not rewound or reissued, and duplicate actors/effects are not created.
 
-Until those gates are closed, no normal Pause/Resume control is exposed. The player is not trapped
-behind a new input restriction, and the working scenarios and cleanup behavior remain unchanged.
+BGM, UI, framework callback draining, session guard and connection liveness remain serviced. The
+native client/global clock is never frozen. Multiplayer transport continues normally; manual Pause
+is unavailable in multiplayer rather than pretending a local host freeze pauses every participant.
+
+## Complete simulation-owned status preservation
+
+On entering Pause, Game captures every filled party slot (including dead members) and every
+simulation-character encounter actor, including helpers. Each immutable status snapshot includes:
+ID, stack/param count, source GameObjectId, instance identity, original duration, elapsed simulation
+time, remaining duration, active state and native-presentation classification. Character ownership
+is retained directly. Poses are captured alongside those records. These are in-memory diagnostics,
+not exported private actor data.
+
+The live SimStatus objects are retained unchanged throughout Pause and Resume. There is nothing to
+remove/reapply or refresh: a 12-second status with seven seconds left still has seven seconds left
+immediately after Resume, with the same stacks, source and instance. Pause adds no status and cannot
+replace another immobilization. Repeated cycles do not refresh duration or duplicate status instances.
+Virtual defensive actions also reject activation while suspended and retain their remaining duration.
+
+No native status snapshot is imported as authoritative. Real/server-origin statuses that FluffySim
+does not own are not cloned, frozen or modified by Pause. Native timers/icons may disappear during
+a long pause; the existing ordinary SimStatus Tick resumes their local presentation where supported.
+No new status packets, OnGain calls or special native status-restoration writes are issued on Resume.
+Native transformation/loop-VFX visuals need not return at precisely the old animation frame; the
+simulation-owned damage/vulnerability/immobilization state remains correct regardless of that display.
+
+## Cleanup and recovery
+
+Resume releases only Pause ownership after pose resynchronization. Stop/Leave/restart, completion,
+Game disposal and plugin-unload finally paths release the pause gate and discard snapshots. Exceptions
+in Game.Tick, simulation user-action ticking or scheduled callbacks also release it; a callback that
+pauses and then throws cannot leave the player locked. Recovery never removes mechanic-owned statuses.
+Hook disposal clears its managed flags before unhooking.
+
+No new persistent native incapacitation/control flag is set. A catastrophic process/host failure may
+prevent normal cleanup; no plugin can guarantee executing finally after process termination. Normal
+unload removes the hooks. If UI is closed while paused, use `/fluffysim` (or `/anomech`) to reopen it and
+Resume/Stop. If the plugin UI fails, unload FluffySim via Dalamud's mouse-accessible plugin UI. A client
+restart clears runtime hooks/state if the host itself cannot recover. Do not reload/build installed
+Release output automatically during development.
+
+## Validation and manual checklist
+
+Focused tests cover all nine complete scenarios with five repeated pauses, Hard/invisible/God Mode,
+UI control eligibility/toggling, death/Fetters ownership, native cast continuation with frozen virtual
+defenses, stop/leave/restart/dispose, callback/runtime exceptions, exact multi-owner status equivalence
+on party/enemies, overlapping expiry, once-only events, native carry drift and input-lock policy.
+Source-contract tooling checks both real action detours, the auto-cancel exclusion, cancellation gate,
+no status/recast/packet operations in the pause transition and actual common UI wiring. Headless tests
+cannot certify native input interception or rendering.
+
+Owner builds/reloads Release personally. In Fall of Faith, pause before the first reveal, while bots
+move, during a tether/Fetters and just before impact. Confirm the timestamp stays fixed, movement,
+jump and ability/hotbar/macro inputs are blocked, and the mouse can click Resume/Stop. Test controller
+movement/actions separately. Wait longer than a vulnerability/defensive duration, Resume, and confirm
+that the remaining simulated protection/debuff still resolves normally. Repeat on each scenario,
+with Hard/invisible/God Mode, while already dead, and with an active virtual defense. Stop/Leave and
+re-enter while paused; readiness and controls must reset. Native bars/lift/VFX may continue or correct
+visually on Resume; capture any discrepancy that changes actual mechanic resolution.
+
+### Pause release validation — 1.1.0.0
+
+Owner reports successful native Pause playtesting. Debug regression: 11,291 plugin tests passed; final focused checks after cleanup refinements: 97 passed. Relay: 41 passed; tooling: 58 passed. Debug build: zero errors, 3,965 warnings. The 26,880 Fall of Faith assignment/element combinations passed the prior exhaustive sweep. These counts are separate runs, not additive coverage totals. Native cosmetic timers may continue while authoritative statuses remain frozen.

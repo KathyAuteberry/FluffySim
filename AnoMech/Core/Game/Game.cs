@@ -41,9 +41,58 @@ public sealed class Game : IDisposable
     // run at real time — only the timeline of scheduled events stretches/compresses.
     public float EventTimeScale { get; set; } = 1f;
 
-    // Set by Game.Kill once the post-first-death freeze timer fires. While true,
-    // Tick is a no-op so scenario events, scheduler, and world all stop.
-    public bool Paused { get; set; }
+    private bool paused;
+    private ILocalPlayerInput? pauseInputOwner;
+    public IReadOnlyList<PausedCharacterStatuses> PauseStatuses { get; private set; } = [];
+    public bool CanPause => activeScenario is not null && !mechanicResultReported
+        && World.Map.IsInInstance && World.Map.IsZoneLoaded;
+    public bool Paused
+    {
+        get => paused;
+        set
+        {
+            if (value == paused || (value && !CanPause)) return;
+            if (!value) { ReleasePause(restorePoses: true); return; }
+            try
+            {
+                Natives.UserActions.OnPause();
+                PauseStatuses = World.Party.AllMembers().Concat(World.Children.OfType<SimCharacter>())
+                    .Distinct().Select(c => new PausedCharacterStatuses(c, new(c.Position, c.Rotation),
+                        c.Proxy?.Rotation ?? c.Rotation,
+                        Array.AsReadOnly(c.ActiveStatuses.Select(s => s.Snapshot).ToArray()))).ToArray();
+                pauseInputOwner = Natives.PlayerInput;
+                pauseInputOwner.PauseInput = true;
+                World.PracticeInvulnerability.Suspended = true;
+                World.PracticeAntiKnockback.Suspended = true;
+                Events.Suspended = true;
+                paused = true;
+            }
+            catch { ReleasePause(); throw; }
+        }
+    }
+
+    public void CancelPause() => ReleasePause();
+
+    private void ReleasePause(bool restorePoses = false)
+    {
+        paused = false;
+        try
+        {
+            if (restorePoses && World.Map.IsZoneLoaded)
+                foreach (var snapshot in PauseStatuses)
+                    snapshot.Character.RestorePausePose(snapshot.Pose, snapshot.NativeRotation);
+        }
+        finally
+        {
+            if (pauseInputOwner is { } input) input.PauseInput = false;
+            pauseInputOwner = null;
+            PauseStatuses = [];
+            World.PracticeInvulnerability.Suspended = false;
+            World.PracticeAntiKnockback.Suspended = false;
+            Events.Suspended = false;
+            lastEventTick = activeScenario is null ? 0 : Stopwatch.GetTimestamp();
+        }
+    }
     public bool IsScenarioActive => activeScenario is not null;
     public bool HasScenarioMistake => lastMistakeElapsed is not null;
     public bool HasScenarioFailed => deathOccurredThisRun;
@@ -118,6 +167,7 @@ public sealed class Game : IDisposable
 
     public Game()
     {
+        Events.ActionFailed += OnScheduledActionFailed;
         World = new SimWorld(Events);
         Scenarios = ScenarioCatalog.Create();
 
@@ -373,12 +423,29 @@ public sealed class Game : IDisposable
 
     public void Tick(float deltaSeconds)
     {
+        try { TickCore(deltaSeconds); }
+        catch
+        {
+            CancelPause();
+            throw;
+        }
+    }
+
+    private void TickCore(float deltaSeconds)
+    {
+        if (activeScenario is not null && !World.Map.IsZoneLoaded)
+        {
+            CancelPause();
+            Natives.Bgm.Reset();
+            return;
+        }
         if (Plugin.Config.SuppressBgm) Natives.Bgm.Reset();
         Natives.Bgm.Tick(deltaSeconds);
         RetryWaitingStart();
         if (Paused) return;
         lastEventTick = Stopwatch.GetTimestamp();
         Events.Tick(deltaSeconds * EventTimeScale);
+        if (Paused) return;
         World.Tick(deltaSeconds);
         if (activeScenario != null)
         {
@@ -417,6 +484,7 @@ public sealed class Game : IDisposable
         scenarioFinishedElapsed = (scenarioFinishedElapsed ?? 0f) + deltaSeconds;
         if (scenarioFinishedElapsed < MechanicResultSettleSeconds) return;
         mechanicResultReported = true;
+        Paused = false;
         Natives.Bgm.Reset();
         if (deathOccurredThisRun) return;
         if (lastMistakeElapsed is null)
@@ -566,6 +634,7 @@ public sealed class Game : IDisposable
 
     private void ResetInternal()
     {
+        CancelPause();
         activeScenario = null;
         scenarioElapsed = 0f;
         Events.Clear();
@@ -594,12 +663,16 @@ public sealed class Game : IDisposable
     // Framework.Run wrapper would never fire.
     public void Dispose()
     {
+        CancelPause();
+        Events.ActionFailed -= OnScheduledActionFailed;
         activeScenario = null;
         Events.Clear();
         Natives.UserActions.OnSessionEnd();   // restore the gauge if the plugin unloads mid-session (no-op otherwise)
         Natives.Bgm.Reset();
         World.Dispose();
     }
+
+    private void OnScheduledActionFailed() => CancelPause();
 }
 
 // A single RunScenario call's arguments, bundled so Game can replay the exact same run (see

@@ -679,3 +679,22 @@ All four DSR scenario AI files were traced. Strength 1 triangles, Strength 2 ope
 New per-scenario comparisons run identical Easy/Hard seed/seat assignments through completion and observe actual actor positions before delayed departures. Existing exhaustive Darklit/Meteor Hard checks and invisibility/God Mode/local practice actions remain regression coverage. See INSTALLATION.md and RELEASING.md for FluffySim DLL/config migration and owner-operated packaging. Debug-only development remains mandatory; original source/project identities stay AnoMech internally.
 
 Release audit validation: 11,221 full Debug plugin tests passed; final 14 focused tests passed, including expanded all-seat Easy/Hard comparisons (overlapping counts, not additive). Across all eight FRU/DSR scenarios the comparison executes 256 matched pairs with identical seed/seat and verifies unchanged assignment state and real later movement with successful full resolution. Relay 41 and tooling 50 passed. Final Debug solution build has 0 errors / 3,965 warnings, matching the prior warning baseline. Packaging verified with Debug input and temporary output; no Release files or running plugin registration were modified.
+
+## Shared Pause / Resume (2026-10-15)
+
+Local practice now has common Pause/Resume controls beside Stop, a frozen timestamp and an explicit
+PAUSED indicator. All nine FRU/DSR scenarios share the same suspended runtime and reused local input
+hooks. Pause applies no fake-death/HP/status change, makes no action/cooldown/packet operation and
+bypasses the existing auto-attack cancellation branch. Existing death/Fetters restrictions survive
+Resume. Virtual actions and simulation statuses remain frozen; all party slots and encounter actors
+are captured with exact duration/elapsed/stacks/source/instance metadata. Resume retains the same
+status objects, avoiding refresh/cleansing. Native animation/status displays may continue; pose drift
+is corrected through the existing per-actor transform interface without cancelling movement plans.
+Multiplayer Pause is disabled until peer synchronization is implemented. See
+[PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
+and the native keyboard/mouse/controller playtest checklist. Existing mechanic assignments/timings
+and BGM are unchanged; Debug development only.
+
+### Pause release validation — 1.1.0.0
+
+Owner reports successful native Pause playtesting. Debug regression: 11,291 plugin tests passed; final focused checks after cleanup refinements: 97 passed. Relay: 41 passed; tooling: 58 passed. Debug build: zero errors, 3,965 warnings. The 26,880 Fall of Faith assignment/element combinations passed the prior exhaustive sweep. These counts are separate runs, not additive coverage totals. Native cosmetic timers may continue while authoritative statuses remain frozen.

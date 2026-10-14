@@ -744,7 +744,7 @@ public unsafe class MainWindow : Window, IDisposable
         if (controls.Visible)
         {
             ImGui.TextUnformatted($"Practice Invulnerability: {controls.State}");
-            ImGui.BeginDisabled(!controls.CanActivate);
+            ImGui.BeginDisabled(game.Paused || !controls.CanActivate);
             if (ImGui.Button("Practice Invulnerability (Local Only)"))
                 PracticeInvulnerabilityControls.Press(game.ActiveScenario, party.PlayerRole, party.Player?.IsAlive() == true, practice);
             ImGui.EndDisabled();
@@ -754,17 +754,34 @@ public unsafe class MainWindow : Window, IDisposable
         if (antiControls.Visible)
         {
             ImGui.TextUnformatted($"Practice Anti-Knockback: {antiControls.State}");
-            ImGui.BeginDisabled(!antiControls.CanActivate);
+            ImGui.BeginDisabled(game.Paused || !antiControls.CanActivate);
             if (ImGui.Button("Practice Anti-Knockback (Local Only)"))
                 PracticeAntiKnockbackControls.Press(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
             ImGui.EndDisabled();
         }
         var uiScale = ImGuiHelpers.GlobalScale;
         var actionSize = new Vector2(140f * uiScale, 32f * uiScale);
+        var actionsRight = ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X;
+        void ContinueActionRow()
+        {
+            if (ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemSpacing.X + actionSize.X <= actionsRight)
+                ImGui.SameLine();
+        }
         if (RunActive)
         {
             if (DrawSemanticButton("Stop", actionSize, StopColor))
                 plugin.Runs.Reset();
+            var pause = ScenarioPauseControls.Evaluate(game, inSession);
+            if (pause.Visible)
+            {
+                ContinueActionRow();
+                ImGui.BeginDisabled(!pause.Enabled);
+                if (DrawSemanticButton(pause.Label, actionSize, SelectionColor))
+                    ScenarioPauseControls.Press(game, inSession);
+                ImGui.EndDisabled();
+                if (inSession && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Pause is available for local practice; multiplayer pause is not synchronized.");
+            }
         }
         else if (inSession)
             multiplayerUi.DrawStartButton(actionSize, Selection);
@@ -773,7 +790,7 @@ public unsafe class MainWindow : Window, IDisposable
 
         if (game.World.Map.IsInInstance)
         {
-            ImGui.SameLine();
+            ContinueActionRow();
             if (DrawSemanticButton(inSession ? "Return to inn###leave-instance" : "Leave###leave-instance", actionSize, StopColor))
                 plugin.Runs.Leave();
             if (inSession && ImGui.IsItemHovered())
@@ -782,6 +799,13 @@ public unsafe class MainWindow : Window, IDisposable
         else if (!inSession && !RunActive)
         {
             DrawMultiplayerButton(actionSize);
+        }
+        if (game.Paused)
+        {
+            ImGui.TextColored(PausedColor, $"PAUSED — {game.Events.Elapsed:F2}s");
+            ImGui.PushStyleColor(ImGuiCol.Text, StyleColor(ImGuiCol.TextDisabled));
+            ImGui.TextWrapped("Native animations/status displays may continue; simulation statuses stay frozen.");
+            ImGui.PopStyleColor();
         }
     }
 
@@ -817,7 +841,7 @@ public unsafe class MainWindow : Window, IDisposable
     }
 
     private static (string Label, Vector4 Color) Status(bool paused, bool active) =>
-        paused ? ("Paused", PausedColor)
+        paused ? ("PAUSED", PausedColor)
         : active ? ("Running", RunningColor)
         : ("Idle", StyleColor(ImGuiCol.TextDisabled));
 

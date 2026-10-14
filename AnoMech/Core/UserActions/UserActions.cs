@@ -19,7 +19,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
 
     // Cast-time enablers. Runs when the cast BEGINS: enabler bookkeeping (Swiftcast/Dualcast/…) is
     // tied to starting the cast, and it does its own cast-completion tracking for the Dualcast grant.
-    private readonly IUserActionHandler castTime = new CastTimeHandler();
+    private readonly CastTimeHandler castTime = new();
 
     // Runs after every other handler's OnScenarioStart so a handler's own reset can't undo the seed.
     private readonly IUserActionHandler startingResources = new StartingResourcesHandler();
@@ -59,6 +59,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     private uint pendingAction;
     private ulong pendingTarget;
     private float pendingTotal, pendingMax;
+    private readonly ResumedCastClock pausedCast = new();
 
     // Dedup gate: LastUsedActionSequence advances only at an action's actual execution,
     // so this skips both a queued (spammed) press carrying the PRIOR action's sequence
@@ -83,12 +84,13 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     // The module only acts while the sim zone is loaded — never in a real duty / open
     // world, where the client is server-connected and our synthetic packets/writes
     // would be harmful.
-    private static bool SimActive => Plugin.GameInstance?.World.Map.IsInInstance ?? false;
+    private static bool SimActive => Plugin.GameInstance?.World.Map.IsInInstance == true && Natives.Zone.IsActive;
 
     public UserActions(LocalPlayerInputHooks hooks)
     {
         this.hooks = hooks;
         hooks.ActionExecuted += OnActionExecuted;
+        hooks.CastCancelRequested += OnCastCanceled;
     }
 
     public void Enable() => Enabled = true;
@@ -98,8 +100,10 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     public void OnScenarioStart()
     {
         sprint.OnScenarioStart();
-        if (!Enabled) return;
+        pendingResolve = false;
+        pausedCast.Clear();
         castTime.OnScenarioStart();
+        if (!Enabled) return;
         foreach (var handler in effectHandlers) handler.OnScenarioStart();
         foreach (var handler in tickHandlers) handler.OnScenarioStart();
         startingResources.OnScenarioStart();
@@ -125,6 +129,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     // player changed jobs mid-session — the snapshot bytes would decode as a different gauge.
     public void OnSessionEnd()
     {
+        OnCastCanceled();
         if (!hasGaugeSnapshot) return;
         hasGaugeSnapshot = false;
         var jgm = JobGaugeManager.Instance();
@@ -136,18 +141,26 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     // Called each frame by Plugin.OnFrameworkUpdate.
     public void Tick(float deltaSeconds)
     {
-        if (!SimActive) return;
+        if (!SimActive || hooks.PauseInput) return;
         sprint.OnTick(deltaSeconds);
         if (!Enabled) return;
         castTime.OnTick(deltaSeconds);
         foreach (var handler in effectHandlers) handler.OnTick(deltaSeconds);
         foreach (var handler in tickHandlers) handler.OnTick(deltaSeconds);
-        ResolvePendingCast();
+        ResolvePendingCast(deltaSeconds);
+    }
+
+    public void OnPause()
+    {
+        var player = Natives.BattleCharas.LocalPlayer;
+        if (pendingResolve && player.IsCasting && player.CastActionId == pendingAction)
+            pausedCast.Preserve(pendingTotal, player.CurrentCastTime);
+        castTime.OnPause(player);
     }
 
     private void OnActionExecuted(ActionType actionType, uint actionId, ulong targetId)
     {
-        if (!SimActive) return;
+        if (!SimActive || hooks.PauseInput) return;
         var am = ActionManager.Instance();
         if (am == null) return;
         var seq = am->LastUsedActionSequence;
@@ -169,6 +182,7 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
                         && bc->CastInfo.ActionId == actionId;
         if (hardCast)
         {
+            pausedCast.Clear();
             pendingResolve = true;
             pendingType = actionType;
             pendingAction = actionId;
@@ -183,9 +197,18 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
     }
 
     // Fires the deferred hard-cast effects once the cast completes; drops them if it was interrupted.
-    private void ResolvePendingCast()
+    private void ResolvePendingCast(float deltaSeconds)
     {
         if (!pendingResolve) return;
+        if (pausedCast.Remaining is not null)
+        {
+            if (!pausedCast.Tick(deltaSeconds)) return;
+            pendingResolve = false;
+            pendingMax = 0;
+            pausedCast.Clear();
+            foreach (var handler in effectHandlers) handler.OnAction(pendingType, pendingAction, pendingTarget);
+            return;
+        }
         var bc = (BattleChara*)(Plugin.ObjectTable.LocalPlayer?.Address ?? 0);
         if (bc == null) { pendingResolve = false; return; }
 
@@ -206,5 +229,17 @@ public sealed unsafe class UserActions : IUserActions, IDisposable
         pendingMax = 0;
     }
 
-    public void Dispose() => hooks.ActionExecuted -= OnActionExecuted;
+    private void OnCastCanceled()
+    {
+        pendingResolve = false;
+        pendingMax = 0;
+        pausedCast.Clear();
+        castTime.OnScenarioStart();
+    }
+
+    public void Dispose()
+    {
+        hooks.ActionExecuted -= OnActionExecuted;
+        hooks.CastCancelRequested -= OnCastCanceled;
+    }
 }

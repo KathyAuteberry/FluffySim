@@ -16,9 +16,11 @@ public sealed class EventScheduler
     private float elapsed;
 
     public float Elapsed => elapsed;
+    public bool Suspended { get; set; }
+    public event Action? ActionFailed;
 
     // Moves the clock without firing; whatever falls due fires on the next Tick.
-    public void Advance(float seconds) => elapsed += MathF.Max(0f, seconds);
+    public void Advance(float seconds) { if (!Suspended) elapsed += MathF.Max(0f, seconds); }
 
     // Add offsets inside `schedule` count from t=0, not now: an Ai started late still means its
     // times as run times. Entries already past fire on the next Tick.
@@ -54,8 +56,9 @@ public sealed class EventScheduler
 
     public void Tick(float deltaSeconds)
     {
+        if (Suspended) return;
         elapsed += deltaSeconds;
-        while (entries.Count > 0 && entries[0].Time <= elapsed)
+        while (!Suspended && entries.Count > 0 && entries[0].Time <= elapsed)
         {
             var due = entries[0];
             entries.RemoveAt(0);
@@ -76,6 +79,7 @@ public sealed class EventScheduler
             catch (Exception e)
             {
                 DiagnosticLog.Warn($"[EventScheduler] Scheduled action at t={due.Time:F2} ({due.Source}) threw and was skipped: {e}");
+                ActionFailed?.Invoke();
             }
         }
     }
@@ -84,6 +88,7 @@ public sealed class EventScheduler
     {
         entries.Clear();
         elapsed = 0f;
+        Suspended = false;
     }
 
     private readonly record struct Entry(float Time, Action Action, string Source);

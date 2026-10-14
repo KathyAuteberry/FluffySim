@@ -37,10 +37,11 @@ Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in D
 - DSR: P2 Strength of the Ward Parts 1 and 2, Sanctity of the Ward Parts 1 and 2 — Elemental.
 - Sanctity Meteors remains experimental; some timings and presentation need further recording validation.
 - Shared Easy/Hard bots, invisible simulated party, God Mode, and local-only practice defensive actions.
+- Solo Pause/Resume freezes the ongoing run and status durations while restricting player movement/actions. Native animations may continue; see [Pause details](PAUSE-INVESTIGATION.md).
 
 FluffySim extends [AnoMech by Anomek and contributors](https://github.com/anomek/AnoMech). Original native simulation infrastructure and the scenarios listed below retain their upstream attribution. The existing icon is inherited from AnoMech; no new logo is implied.
 
-See [Hard movement audit](HARD-DIFFICULTY-AUDIT.md), [release/versioning instructions](RELEASING.md), and [initial release notes](CHANGELOG.md).
+See [Hard movement audit](HARD-DIFFICULTY-AUDIT.md), [release/versioning instructions](RELEASING.md), and [release notes](CHANGELOG.md).
 
 ## Inherited AnoMech scenarios:
 - Dancing Mad (Ultimate)

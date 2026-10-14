@@ -31,14 +31,14 @@ dotnet build -c Release
 python tools/package_release.py --input AnoMech/bin/x64/Release --output dist
 ```
 
-The script **does not build, publish, mutate the input, register plugins, bump versions, commit, tag or upload**. It outputs `dist/FluffySim-1.0.0.0.zip` at the current version, refuses overwriting an existing ZIP, and refuses ZIP destinations inside Release/build input directories. It packages runtime assets from the dependency manifest, excluding stale AnoMech plugin DLLs, test hosts, Dalamud-shipped libraries, logs and private snapshots. Missing dependencies or mismatched manifest/dependency versions abort packaging. The custom DalamudPackager target generates a manifest only, including on owner-operated Release builds; it avoids the upstream packager’s unfiltered latest.zip. Use a clean input build when adding runtime resources; update the script/tests for assets not represented by dependency metadata.
+The script **does not build, publish, mutate the input, register plugins, bump versions, commit, tag or upload**. It outputs `dist/FluffySim-1.1.0.0.zip` at the current version, refuses overwriting an existing ZIP, and refuses ZIP destinations inside Release/build input directories. It packages runtime assets from the dependency manifest, excluding stale AnoMech plugin DLLs, test hosts, Dalamud-shipped libraries, logs and private snapshots. Missing dependencies or mismatched manifest/dependency versions abort packaging. The custom DalamudPackager target generates a manifest only, including on owner-operated Release builds; it avoids the upstream packager’s unfiltered latest.zip. Use a clean input build when adding runtime resources; update the script/tests for assets not represented by dependency metadata.
 
 Before distributing: manually test the Release build, inspect ZIP contents, include the matching complete source under AGPL-3.0-or-later (including the changes), and publish source and ZIP together. The inherited upstream URL credits AnoMech; it is not a source location for unpublished FluffySim changes. No repository release is created automatically. The manual CI verification workflow builds Debug and uploads a check artifact only.
 
 ## Manual acceptance check
 
-1. Disable/remove the old developer registration, select only FluffySim.dll and confirm `FluffySim v1.0.0.0` and saved preferences.
-2. For each of the eight scenarios, run the same seed/role once Easy and once Hard. Confirm unchanged assignments and later positioning in the documented eligible phases.
+1. Disable/remove the old developer registration, select only FluffySim.dll and confirm `FluffySim v1.1.0.0` and saved preferences.
+2. For each of the nine scenarios, run the same seed/role once Easy and once Hard. Confirm unchanged assignments and later positioning in the documented eligible phases.
 3. Check tower communication and tight dodges remain correct. Try Hard + invisible bots, then God Mode and both local practice actions in their eligible scenarios.
 4. Leave, re-enter and verify BGM restoration, model visibility, markers, arena and practice-action readiness. No development workflow reloads the running plugin automatically.
 
