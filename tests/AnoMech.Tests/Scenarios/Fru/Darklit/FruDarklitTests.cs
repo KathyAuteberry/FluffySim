@@ -399,10 +399,10 @@ public class FruDarklitTests
     public void CatalogPlacesTheFullProvisionalP4FragmentAfterApocalypse()
     {
         var catalog = ScenarioCatalog.Create();
-        Assert.That(catalog[3], Is.TypeOf<FruDarklitScenario>()); Assert.That(catalog[3].IsIncomplete, Is.True);
-        Assert.That(PhaseMusic.TrackFor(catalog[3]), Is.EqualTo(801));
-        Assert.That(catalog[3].SettingsOverrides, Is.TypeOf<FruDarklitStateOverrides>());
-        Assert.That(catalog[3].Phase.Zone, Is.SameAs(catalog[2].Phase.Zone));
+        Assert.That(catalog[4], Is.TypeOf<FruDarklitScenario>()); Assert.That(catalog[4].IsIncomplete, Is.True);
+        Assert.That(PhaseMusic.TrackFor(catalog[4]), Is.EqualTo(801));
+        Assert.That(catalog[4].SettingsOverrides, Is.TypeOf<FruDarklitStateOverrides>());
+        Assert.That(catalog[4].Phase.Zone, Is.SameAs(catalog[3].Phase.Zone));
     }
 
     [Test]

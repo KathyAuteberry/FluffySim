@@ -12,6 +12,7 @@ namespace AnoMech.Tests;
 
 public class ScenarioMusicTests
 {
+    [TestCase(typeof(AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario), (ushort)800)]
     [TestCase(typeof(FruLightRampantScenario), (ushort)230)]
     [TestCase(typeof(FruUltimateRelativityScenario), (ushort)802)]
     [TestCase(typeof(DsrStrengthScenario), (ushort)921)]

@@ -33,7 +33,7 @@ Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in D
 
 ## Added FRU and DSR practice scenarios
 
-- FRU: P2 Light Rampant, P3 Ultimate Relativity, P3 Apocalypse, P4 Darklit Dragonsong — Mana.
+- FRU: P1 Fall of Faith, P2 Light Rampant, P3 Ultimate Relativity, P3 Apocalypse, P4 Darklit Dragonsong — Mana.
 - DSR: P2 Strength of the Ward Parts 1 and 2, Sanctity of the Ward Parts 1 and 2 — Elemental.
 - Sanctity Meteors remains experimental; some timings and presentation need further recording validation.
 - Shared Easy/Hard bots, invisible simulated party, God Mode, and local-only practice defensive actions.

@@ -24,6 +24,7 @@ public static class ScenarioCatalog
 {
     public static IReadOnlyList<IScenario> Create() =>
     [
+        new Fru.FallOfFaith.FruFallOfFaithScenario(),
         new Fru.LightRampant.FruLightRampantScenario(),
         new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
         new Fru.Apocalypse.FruApocalypseScenario(),

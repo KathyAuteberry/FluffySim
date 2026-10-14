@@ -185,12 +185,12 @@ public class FruApocalypseTests
     public void CatalogExposesFullProvisionalFragmentAfterUltimateRelativity()
     {
         var catalog=ScenarioCatalog.Create();
-        Assert.That(catalog[2],Is.TypeOf<FruApocalypseScenario>());
-        Assert.That(catalog[2].IsIncomplete,Is.True);
-        Assert.That(catalog[2].EnablePhaseBgm,Is.True);
-        Assert.That(catalog[2].Phase,Is.SameAs(catalog[1].Phase));
-        Assert.That(catalog[2].SettingsOverrides,Is.TypeOf<FruApocalypseStateOverrides>());
-        Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[2]),Is.EqualTo("P3 Apocalypse"));
+        Assert.That(catalog[3],Is.TypeOf<FruApocalypseScenario>());
+        Assert.That(catalog[3].IsIncomplete,Is.True);
+        Assert.That(catalog[3].EnablePhaseBgm,Is.True);
+        Assert.That(catalog[3].Phase,Is.SameAs(catalog[2].Phase));
+        Assert.That(catalog[3].SettingsOverrides,Is.TypeOf<FruApocalypseStateOverrides>());
+        Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[3]),Is.EqualTo("P3 Apocalypse"));
     }
 
     [Test]

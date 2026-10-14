@@ -16,6 +16,9 @@ public class SharedPracticeTests
         .Where(s => s.Phase.Zone is AnoMech.Scenarios.Fru.FruZone or AnoMech.Scenarios.Dsr.DsrZone)
         .Select(s => new TestCaseData(s.GetType()).SetName("SharedPractice_" + s.GetType().Name));
 
+    public static IEnumerable<TestCaseData> DelayedMovementScenarios() => AllScenarios()
+        .Where(t => t.Arguments[0] is Type type && type != typeof(AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario));
+
     [TestCaseSource(nameof(AllScenarios))]
     public void HardInvisibleBotsClearAllEightSeats(Type type)
     {
@@ -44,7 +47,7 @@ public class SharedPracticeTests
                     }, WriteArtifactsOnFailure=false,
                 });
                 Assert.That(run.Passed,run.ToString);
-                Assert.That(delayed,Is.GreaterThan(0),type.Name);
+                Assert.That(delayed, type == typeof(AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario) ? Is.Zero : Is.GreaterThan(0), type.Name);
             }
     }
 

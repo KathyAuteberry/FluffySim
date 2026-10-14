@@ -24,3 +24,8 @@ These exemptions preserve communication and validated continuous movement; Hard 
 `HardAuditTests` compares full Easy/Hard runs using identical seeds and human seats across all eight scenarios. It asserts identical authoritative state, observes a specific Hard actor still waiting while the Easy counterpart has actually walked toward the same destination, and requires both executions to finish without deaths. Movement telemetry includes source, destination and the actual actor to distinguish real movement from passing a setting flag.
 
 `SharedPracticeTests` covers all seats/seeds in Hard with invisible bots and checks speed/deadline limits. `HardPatternTests` covers all 1,152 Darklit assignment graphs and 810 Meteor outer patterns without God Mode. Existing scenario tests retain damage/failure, communication and cleanup coverage. Native animation and human cue readability still require manual testing; passing these tests is not a native rendering claim.
+
+
+## P1 Fall of Faith exception (2026-10-15)
+
+The ninth scenario intentionally has identical Easy/Hard movement. Mana requires prompt tether sorting, element adjustments and first/third + second/fourth swaps once Fetters expires. Delaying these would teach the wrong strategy. Every movement still uses BotMovement at normal speed, without late-departure deadlines. Dedicated tests compare complete departure requests across all eight seats and all sixteen elements; existing late-movement assertions remain intact for the original eight scenarios.

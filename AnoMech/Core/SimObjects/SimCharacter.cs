@@ -302,9 +302,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     public IReadOnlyList<SimStatus> ActiveStatuses => statusList.Where(s => s.IsActive).ToList();
 
-    // A status's Lock* flags don't stop anyone client-side: the local player only through the
-    // server's conditions (SimPlayer), doppels not at all, so the sheet is read here.
-    public bool MovementLocked => AnyActiveStatusRow(row => row.LockMovement || row.LockControl);
+    // Floating Fetters uses native special processing rather than the sheet's LockMovement flag.
+    public bool MovementLocked => HasStatus(2304) || AnyActiveStatusRow(row => row.LockMovement || row.LockControl);
     public bool ActionsLocked => AnyActiveStatusRow(row => row.LockActions || row.LockControl);
 
     private protected bool AnyActiveStatusRow(Func<StatusRow, bool> predicate)

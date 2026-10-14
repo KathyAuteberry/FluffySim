@@ -10,7 +10,7 @@ namespace AnoMech.Tests;
 
 public class HardAuditTests
 {
-    [TestCaseSource(typeof(SharedPracticeTests), nameof(SharedPracticeTests.AllScenarios))]
+    [TestCaseSource(typeof(SharedPracticeTests), nameof(SharedPracticeTests.DelayedMovementScenarios))]
     public void SameAssignmentsClearWithActualLaterMovement(Type type)
     {
         foreach (var role in Enum.GetValues<PartyRole>())

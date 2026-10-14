@@ -2598,3 +2598,103 @@ remains independent, Ready on restart and timed protection only after clicking.
 - Debug regression/build and native migration verification results are recorded below after completion. Existing scene mechanics/presets/music/practice controls are preserved. Native Hard cue readability and the renamed DLL installation still require user verification.
 
 Validation: full Debug plugin suite 11,221 passed; final focused suite 14 passed (overlaps the full run and includes four new final-clock tests). The final comparison covers 256 matched Easy/Hard seed/seat pairs across eight scenarios, checking unchanged authoritative assignments, actual later departure and death-free completion. Relay 41 passed; tooling 50 passed. Final solution Debug build: 0 errors, 3,965 warnings (unchanged from the preceding Debug baseline). Actual generated FluffySim manifest/assembly/file/informational metadata and dependency-aware ZIP creation were checked using isolated Debug artifacts. No Release build or installed files were touched. Installation/native playtest remains manual.
+
+## P1 Fall of Faith — Mana standalone fragment (2026-10-15)
+
+### Evidence and scope
+
+Read-only sources actually located:
+
+- `Network_30303_20261014.log` in the local Logy directory: 12 Fall of Faith starts, 10 complete four-primary-hit sequences and two three-hit partial sequences. All 12 contain four channeling applications. Eleven distinct element sequences occur overall; ten occur in complete recordings. FFFF and LLLL were not observed locally and are covered through the independent mechanic model, not claimed as recorded.
+- `20261014-140137-8360820-fru-p1-f9fbbcc4e8de4ce7a87b8a70e2954288.json`, label `fru-p1`, in FluffySim's arena-snapshots directory. Territory 1238 / CFC 1006; filter keys zero, no active festivals; weather 2; all 54 MapEffect slots in state 4. P1 layers 0x5F88–0x5F94 and 0x5F9F active; 0x5FC9/CA/CB inactive. Central ice CollisionBox 10849287 and Fragment CollisionBox 10883630 report inactive colliders. P1 initialization resets the slots and holds precisely these P1-specific layers through existing abstractions. No guessed scene/festival selectors or broadphase writes.
+- Current Mana [Tuufless Fatebreaker, steps 16–26](https://ffxiv.tuufless.com/mana/fru/01_fatebreaker/) and all ten local Fall of Faith diagrams. West-to-East conga, not the Static North-to-South guide.
+- Read-only BossMod P1FallOfFaith/FRUEnums/FRUStates; Splatoon P1 Fall of Faith script. [NAUR P1](https://naurffxiv.com/ultimate/fru/guide/p1) independently confirms 90° Fire / 120° Lightning cones, nearest-player selection and four-second vulnerability. FRU-Sim has no selectable Fall of Faith implementation to port.
+
+`tools/fru_fall_of_faith_evidence.py` exports numeric NPC/action/status/tether identifiers, receive-relative timings, anonymous hit counts and recorded cone headings. It exports no actor IDs or player names. Raw log/replay data remains outside the repository. AbilityExtra packet coordinates are retained separately from sampled helper origins: zero packet vectors on self-anchored effects are not assumed to be absolute arena coordinates.
+
+### Verified native data
+
+| Item | Verified value |
+|---|---|
+| Fatebreaker / name row | BNpcBase 0x459B (17819), BNpcName 9707 |
+| Fatebreaker's Image / name row | BNpcBase 0x459C (17820), BNpcName 9708 |
+| Both models | ModelChara 3021, Type 3, model 683/base 1/variant 1, BNpc scale 3.6; Customize and NpcEquip rows zero. Complete monster appearance; no invented demihuman equipment. |
+| Native cone helpers | BNpcBase 0x233C (9020); recorded helper names inherit Fatebreaker/Image name rows |
+| Fall of Faith casts | Fire 40137, Lightning 40140; Action sheet 9.0s, received bar 8.7s |
+| Channeling | Fire 249 `chn_tergetfix2k1`; Lightning 287 `chn_tergetfix_ble1v` |
+| Charge / primary / cones | Fire charge 40138, Lightning charge 40141; primary Sinsmite 40142; Bow Shock cones 40143; Sinblaze cone 40156; Floating Fetters action 40171 |
+| Statuses | Prey 1051; Floating Fetters 2304 with param 0xC8 and 4s duration; Magic Vulnerability Up 2941 for 4s; Mark of Mortality 4372, recorded param 1 and 179.96s duration |
+| Cast elemental assets | CastVFX 588→VFX 2267 `m0683_i_2lp_c0v`; 589→2268 `m0683_i_2lp_c1v`, invoked by the native cast pipeline |
+| Native animations | Cast end 3219 `mon_sp/[SKL_ID]/mon_sp019`; Fire charge 3220 `mon_sp020`; Lightning charge 3205 `mon_sp005`; Fetters 3213 `mon_sp013`; Bow Shock 7928 `mon_sp/gimmick/n4gb_boss_gimmick02`; Sinblaze 7597 `mon_sp/gimmick/n4g6_boss_gimmick10`. These are sheet-driven actions, not replayed actor-control packets. |
+| P1 music | BGM 800, installed `music/ex3/BGM_EX3_Raid_10.scd`; [Orchestrion track table](https://github.com/ff-meli/OrchestrionPlugin/blob/master/Data/xiv_bgm.csv) identifies The Legendary Beast, matching installed Orchestrion entry 418's Shadowbringers title. |
+
+### Timeline
+
+The standalone fragment gives three seconds to form the conga, then normal event speed. Below are implemented times relative to the Fall of Faith cast (subtract 3 from scenario time):
+
+| Tether | Reveal/cast | Fetters | Charge | Primary/Fire hit | Lightning cones |
+|---|---:|---:|---:|---:|---:|
+| 1 | 0 | 9.70 | 11.77 | 13.10 | 13.412 |
+| 2 | 3.10 | 12.72 | 14.80 | 16.13 | 16.442 |
+| 3 | 5.60 | 15.22 | 17.30 | 18.62 | 18.932 |
+| 4 | 8.10 | 17.75 | 19.80 | 21.15 | 21.462 |
+
+Complete-record primary medians are 13.093 / 16.123 / 18.620 / 21.155s. These are network receive timestamps, not proof of exact server snapshot latency. Prey/tethers can precede StartsUsing by roughly 0.09s; presentation and assignment share the scenario reveal moment. Fetters expiration gates prompt swaps at relative 13.76 / 16.78s. No movement during Fetters is allowed: Status 2304's sheet Lock* flags are false, so the core now explicitly recognizes its native-special immobilization semantics. Other status handling is unchanged.
+
+Native cones use a fresh positioned helper per cone, explicit helper rotation and self-anchored native action effects. Closest-player selection uses actual ground-plane distances. Damage hit selection uses the same origin and rotation. Lightning holder damage precedes its three cones by 0.312s; cones exclude that already-hit holder. Overlap and live vulnerability therefore fail through actual hit detection. Fire includes the holder plus actual cone occupants; fewer than four applies recorded Mark of Mortality and records a mechanic mistake. It does not invent an instant KO for the first Mark; an unobserved multiple-Mark KO threshold is not guessed.
+
+### Mana positioning and controls
+
+The AI alone owns strategy: H1 H2 MT ST D1 D2 D3 D4 West-to-East south of the boss. First/third tether holders west, second/fourth east; first/second close, third/fourth outside. Untethered players split by their original priority, with higher-priority helpers north for Lightning on either side. Fire helpers stack outward. Positions use BossMod's 5.5-yalm holder placement and 2-yalm bait offset as comfortable practice geometry, with a small Fire stack separation; these are not mandatory coordinate checks. First/third and second/fourth exchange positions promptly after the earlier holder's Fetters expires, adjusting for the later element.
+
+Simple settings: Random / Tether 1 / 2 / 3 / 4 / Untethered and Fire / Lightning / Random for the player's tether. Advanced: ordered target permutation 0–1679 and independent Fire mask 0–15, with readable previews. Global role and seed controls are reused. All roles are eligible; no human privilege. No repeated target, fixed two-Fire/two-Lightning restriction, hidden theoretical hit positions, teleport or bot immunity.
+
+**Difficulty exception:** Fall of Faith sorting, stacks/spreads and swaps are prompt in both Easy and Hard, per the user's Mana correction. No artificial late movement is introduced. Shared invisibility and God Mode are reused; invisible bots still participate mechanically, and native tethers originate on visible boss/clone actors. Native actor-attached effects on hidden bots retain the existing visibility policy.
+
+### Native validation limits
+
+Actors are spawned visible with the established packet-spawn configuration. Presentation starts once the source actor exists, shortening only its remaining cast bar to retain the verified end time; there is no strict native-readiness startup abort. NPC charge travel interpolation is UNVERIFIED and timed to the recorded charge-to-impact interval; player movement remains normal speed. Actual dragon colour/aura, Floating Fetters lift, dash animation and cone rendering must be inspected in FFXIV. Optional local practice cone outlines show actual resolved geometry without inventing advance telegraphs; live diagnostics show revealed targets/elements, nearest distances, helper angles/hits and native source transforms. No unknown VFX paths, native offsets, real player action calls, recast writes, server requests or replay injection were added.
+
+The fragment ends at scenario 29s after all four tethers and final vulnerability expiry. It does not execute Utopian Sky, subsequent Burnished Glory/tankbusters or towers. Existing phase music teardown, waymarks, arenas and all eight earlier scenarios are preserved. Release version is unchanged; all development builds/tests use Debug.
+
+### Manual first test
+
+Owner builds/reloads Release personally. In an inn select **Futures Rewritten → P1 → P1 Fall of Faith**, Mana, a role and fixed seed. Verify P1 floor/center movement and The Legendary Beast. Start with Advanced target slider 1 (stored permutation 0: MT, ST, H1, H2) and element slider 16 (stored mask 15: FFFF), then element slider 1 (stored mask 0: LLLL), then 6/11 (stored masks 5/10: alternating). Slider 0 means Random; readable previews show the actual selected pattern. Check four visible sources, staggered red/blue tethers, Prey/lift, and all four cone impacts. Practice each tether with Simple controls and Untethered across roles. First/third and second/fourth must swap immediately when Fetters ends. Compare Easy/Hard (identical timing), toggle invisible party, then deliberately overlap a cone with God Mode off/on. Stop while fettered, leave and re-enter to check movement, actor/tether cleanup and music restoration. Enable diagnostics/outlines if native directions are unclear; send observations rather than treating headless tests as rendering confirmation.
+
+### Final Debug validation
+
+Full plugin regression: **11,259 passed, zero failures** (the separately executed exhaustive Fall of Faith method excluded). Separate exhaustive suite: **1,680 passed test cases**, each running all 16 independent element masks, for **26,880 complete scenario executions**, no deaths and no Fire understacks. Focused Fall of Faith suite: **30 passed** (overlaps the full suite), including all-seat Easy/Hard comparisons, actual cone geometry, wrong nearest targets, vulnerability clipping, missed swaps, Fetters immobility, delayed native spawns and cancellation/re-entry. Relay: **41 passed**. Python tooling: **53 passed**. Final solution Debug build: **0 errors, 3,944 warnings** in the incremental build; the one newly introduced nullable warning was corrected. Warning counts from incremental versus preceding full builds are not directly comparable. `git diff --check` passes. No Release build, installed output, automatic reload, version bump or history operation was performed. Native P1 arena, actors, elemental cues, charge/cone fidelity and music still require the owner's FFXIV playtest.
+
+## Fall of Faith melee uptime and Pause audit (2026-10-15)
+
+The first in-game playtest confirmed Fall of Faith is nearly complete. The first charge previously
+issued `MoveTo(holder.Position)` unconditionally, relocating the original boss even at contact.
+It now skips both that travel and the travel-only charge presentation for tether 1 when ground-plane
+separation is within the live source and target hitbox radii. Fatebreaker's verified radius is 5.004;
+a standard simulated party member is 0.5. This is a contact-based simulator rule, **not a recovered
+exact hidden native charge threshold**. Far first targets still use the existing charge interpolation;
+all three clones retain their own movement. No return teleport is added. The West active holder moves
+from X=-5.5 to -5.0 and its same-side Fire/Lightning helpers and subsequent swap destinations follow
+that origin; the East formation is unchanged. Damage/cone origins remain the immobilized holder.
+
+October 14's 12 opening charge samples were rechecked without exporting names or actor IDs.
+Receive-sampled distances around 4.78, 4.97, 5.13 and 5.50 show effectively stationary boss positions;
+farther examples around 5.62–6.23 show small position changes. One nearby sample does relocate, so
+these asynchronous samples do not establish a precise cutoff or charge destination formula. The
+new close-range presentation and the retained estimated far-charge interpolation require in-game
+confirmation; no new native animation ID or memory access is introduced.
+
+Full Pause is **not enabled**. [PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) traces the current
+shared internal freeze, independent user-action updates/native cast clocks, local input hooks and
+session firewall. Internal paused ticks preserve authoritative events, bot destinations, status
+expiration and virtual defenses, but do not lock the human or freeze native presentation. Existing
+input lockouts invoke a real stop-auto-attack action and do not provide audited complete queued-action,
+mouse/controller/facing suppression. No new Pause UI or input restriction is added. A correct feature
+needs an owned local input gate, shared ticking/callback scope and verified cosmetic restoration;
+session guards and UI must keep running. Existing scenario behavior and cleanup remain unchanged.
+
+Manual verification: owner builds/reloads Release personally; practice first tether Fire then Lightning.
+At the normal West hitbox position Fatebreaker should remain centered throughout all four resolutions,
+with the East group retaining uptime. Deliberately bait tether 1 farther West and confirm travel still
+occurs, then verify clones and all four cone directions, Fetters expiration and swaps. No full Pause
+button should be expected from this investigation.
