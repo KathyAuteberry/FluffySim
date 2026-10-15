@@ -194,7 +194,7 @@ public class DsrStrengthTests
     }
 
     [TestCase(0)] [TestCase(8)] [TestCase(32)]
-    public void ArenaDiagnosticHasNoActorsOrPresetWrites(int seed)
+    public void ArenaDiagnosticOnlyAppliesRecordedRestingMapStates(int seed)
     {
         var inspected = false;
         var run = ScenarioRun.Execute(typeof(DsrArenaDiagnosticScenario), 0, seed, new()
@@ -204,7 +204,7 @@ public class DsrStrengthTests
             {
                 inspected = true;
                 Assert.That(p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>(), Is.Empty);
-                Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Is.Empty);
+                Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Is.EqualTo(Enumerable.Range(0,9).Select(i => (0x00040004u,(byte)i))));
                 Assert.That(((FakeLayoutFunctions)AnoMech.Core.Native.Interfaces.Natives.Layout).HeldLayerStates, Is.Empty);
             },
         });

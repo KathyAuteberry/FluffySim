@@ -7,6 +7,9 @@ internal sealed class FakeEventObject(int slot, uint entityId, Vector3 position,
     : IEventObjectProxy
 {
     public bool Exists { get; private set; } = true;
+    public AnoMech.Core.SimObjects.EventObjectSpawnConfig SpawnConfig { get; init; } = new();
+    public bool BarrierCollisionEnabled => Exists && SpawnConfig.GimmickId != 0 && !BarrierOpened;
+    public bool BarrierOpened { get; private set; }
     public int Slot => slot;
     public uint EntityId => entityId;
 
@@ -14,7 +17,10 @@ internal sealed class FakeEventObject(int slot, uint entityId, Vector3 position,
     public float Rotation => rotation;
 
     public void ActorControl(uint category, uint arg1 = 0, uint arg2 = 0, uint arg3 = 0, uint arg4 = 0, uint arg5 = 0, uint arg6 = 0, uint arg7 = 0, uint arg8 = 0)
-        => timeline.Add("ac", entityId, name, $"0x{category:X}", p: SimTimeline.Params(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+    {
+        if (category == 0x6A && arg1 == 7) BarrierOpened = true;
+        timeline.Add("ac", entityId, name, $"0x{category:X}", p: SimTimeline.Params(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+    }
 
     public void Despawn()
     {

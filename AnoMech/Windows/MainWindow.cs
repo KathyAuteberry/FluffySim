@@ -740,6 +740,8 @@ public unsafe class MainWindow : Window, IDisposable
 
     private void DrawPrimaryActions(AnoMech.Core.Game.Game game, bool inSession)
     {
+        if (game.IsPreparingScenario)
+            ImGui.TextWrapped("Preparing arena: waiting for the native layout and entrance barrier.");
         var practice = game.World.PracticeInvulnerability;
         var party = game.World.Party;
         var controls = CurrentPracticeControls();
@@ -775,7 +777,7 @@ public unsafe class MainWindow : Window, IDisposable
             if (ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemSpacing.X + actionSize.X <= actionsRight)
                 ImGui.SameLine();
         }
-        if (RunActive)
+        if (RunActive || game.IsPreparingScenario)
         {
             if (DrawSemanticButton("Stop", actionSize, StopColor))
                 plugin.Runs.Reset();

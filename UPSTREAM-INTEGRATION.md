@@ -9,7 +9,7 @@ This integration keeps FluffySim 1.2.0.0 and its existing configuration identity
 - Evernow PR [38](https://github.com/anomek/AnoMech/pull/38), safety tests: `aa96ab9d800bf1868d5fecf3eebccf7b1d66b31a`.
 - Evernow PR [50](https://github.com/anomek/AnoMech/pull/50), consistency fixes: `4a1f8c2d93d5054a22d225a38c995d8aa1cb095d`.
 
-Each PR contributes one distinct authored commit. PR 50 does not contain PR 38; their fixes overlap in intent and are reconciled in the local feature revisions. None of the three tips is an ancestor of another. The first feature (`ysutpo`) has four parents: upstream master and the three original PR tips. This makes the PR APIs available while adapting the feature stack. The prepared `plkqvn` anchor is empty above the integrated feature tip; redundant PR parents were removed from that anchor. The graph therefore retains a real four-parent merge at the feature base rather than storing code in the final anchor. Evernow attribution is retained in history. The 13 FluffySim feature changes remain decomposed above master. Historical operation inventories show 50 distinct conflicted paths across the initial rebase and four-parent merge (43 at the rebased stack tip, 15 at merge creation, with overlap); inherited conflicts are not summed per descendant. The user's `xznrxk` working-area change remains a descendant.
+Each PR contributes one distinct authored commit. PR 50 does not contain PR 38; their fixes overlap in intent and are reconciled in the local feature revisions. None of the three tips is an ancestor of another. The first feature (`ysutpo`) has four parents: upstream master and the three original PR tips. This makes the PR APIs available while adapting the feature stack. The prepared `plkqvn` anchor records the runtime-fix tip and the three original PR heads as explicit parents, retaining the requested integration-merge identity. Those PRs are already ancestors through the first feature, so these parent edges do not apply their code twice. The anchor currently needs no additional code delta; functional corrections are in the local revisions before it. Evernow attribution is retained in history. The 13 FluffySim feature changes remain decomposed above master. Historical operation inventories show 50 distinct conflicted paths across the initial rebase and four-parent merge (43 at the rebased stack tip, 15 at merge creation, with overlap); inherited conflicts are not summed per descendant. The user's `xznrxk` working-area change remains a descendant.
 
 Encounter-specific adaptations were absorbed into their owning features where unambiguous; shared UI/Pause work remains in the corresponding features and native/offline/safety reconciliation is in the native-handling feature. The final integrated source tree was checked byte-for-byte through Jujutsu tree comparison against the pre-redistribution tree. The empty user working-area descendant is preserved.
 
@@ -25,7 +25,7 @@ Inspect with `jj op log` or `jj --at-operation 5b8f1ae125df log`. To inspect the
 
 - Adopt upstream `InstanceSession`, `ScenarioSession`, party providers and per-object motion, rather than retaining a second `Game` runtime. Keep FluffySim's nine scenarios, assignments, seeded overrides and shared training features.
 - Adopt packet-handler NPC/doppel spawning, enemy HUD handling, typed action-effect targets and native status-list ownership. Do not run the old spawner or an orphan sweeper alongside it. A fake delayed spawn is canceled when its owner is freed, matching production packet cancellation.
-- Retain the verified FRU/DSR phase presets, layer holds, waymarks, equipment and native presentation data. Unknown entrance-barrier IDs are not guessed; the original (0,0,16) local entry position is retained without spawning an unverified wall. Diamond Dust remains shelved and unregistered.
+- Retain the verified FRU/DSR phase presets, layer holds, waymarks, equipment and native presentation data. The initial zero-ID entrance placeholder was incorrect and is superseded by the recorded bindings in the runtime-repair section below. The validated (0,0,16) player entry remains separate from the native wall position. Diamond Dust remains shelved and unregistered.
 - Light Rampant has no competing upstream encounter implementation. Preserve Mana mechanics; adapt its scripted pushes and native effect delivery to upstream APIs. Its final puddle waypoint shifts two degrees to provide clearance for the upstream human movement driver's one-frame arrival margin. Puddle geometry, timings and damage remain unchanged. Headless waypoint assertions allow one input frame for the player only; bot precision and mechanic collisions remain checked.
 - Preserve owned persistent VFX behind the native interface for encounter effects that need explicit lifetime management. This does not restore the obsolete enemy spawning implementation.
 - Preserve Pause's authoritative statuses, virtual defenses and input ownership. Add frozen poses because upstream player position reads the live native model. Native animations may continue, as previously accepted. Resume refreshes owned status presentation; no server status packets are sent.
@@ -59,7 +59,7 @@ The imported 292-case suite was adapted to the cached NUnit runner and installed
 
 Linux cannot execute the three Windows-native hook patching tests; these must run on Windows. Metadata contracts and simulated hook-failure models still run. Mutation tools inherited from PR 38 target older API spellings and have not been revalidated as an integration gate; do not assume their edits still apply. No live game actions are used in automated tests.
 
-Current validation gates (Debug only):
+Pre-runtime-repair validation gates (Debug only):
 
 | Gate | Result |
 |---|---|
@@ -67,7 +67,7 @@ Current validation gates (Debug only):
 | Ordinary + optimized Debug safety IL and production-linked lifecycle | 300 passed, three Windows-native hook cases skipped; repeated successfully with the SafetyHook failure model. |
 | Relay | 44 passed. |
 | Python tooling | 65 passed. |
-| Full plugin/scenario suite | Final run in progress; result to be recorded before handoff. |
+| Full plugin/scenario suite before runtime repairs | 13,036 passed. This did not establish native entry correctness; the user then identified the regressions below. |
 
 Graph checks: upstream master and all three exact PR tips are ancestors; all 13 local feature change IDs and the user's empty working-area descendant remain; no visible divergent revisions or unresolved conflicts remain. `plkqvn` has no diff. Before documentation updates, its tree matched `c9fd0e036c93a6eca6ca5a1da2208fcc5a654974` exactly. Documentation changes are also absorbed into the native integration feature. No Release outputs, installed files, remote refs or version numbers were modified.
 
@@ -78,3 +78,51 @@ Graph checks: upstream master and all three exact PR tips are ancestors; all 13 
 3. Check Easy/Hard, invisible bots and God Mode. Pause during movement, a vulnerability and a cast; resume without status cleansing or assignment changes.
 4. In a filtered online simulation, use your normal defensive hotbar ability, restart, and repeat. Check filter counters and local cooldown. Leave, wait for the inn, and compare pre-entry cooldown/action state and normal gameplay. Never disable the filter to test it.
 5. Separately test offline mode at title, preferably with a disposable local profile and a backup of character settings. Confirm no live session, all guards armed, ordinary scenarios/bots/audio, and explicit return. Verify source configuration files are unchanged. Do not provoke a live login as a safety test; a detected attempt intentionally closes the client.
+
+
+## Native entry repairs after the first client test
+
+The user confirmed three actual regressions despite the preceding 13,036 passing headless tests. They were not attributed to stale installation.
+
+**Duty entrance:** FRU and DSR were reconciled with zero EObj/layout/gimmick identifiers. That skipped `InstanceSession.OpenEntranceBarrier`, leaving the layout's native entrance wall without its controlling EObj or open event. Read-only decoding of the installed `SpawnObjectPacket` layout and the native recordings established:
+
+| Territory | Entrance EObj | Placement LayoutId | Wall GimmickId | World position |
+|---|---|---|---|---|
+| FRU 1238 | 2007457 | 0xA58C08 | 0xA58C07 | (100,0,115) |
+| DSR 968 | 2007457 | 0x875BE2 | 0x875BE0 | (100,0,118) |
+
+Sources are `Futures Rewritten (Ultimate) 2026.10.14 23.01.42.dat` and `Dragonsong's Reprise (Ultimate) 2026.10.11 00.16.23.dat`. Both recordings contain entrance-targeted ActorControl category 0x6A, argument 7. The existing upstream EObj spawn/open mechanism now uses those exact bindings. It is not a broad collision disable. The existing two-second attachment window begins after layout readiness and successful EObj creation, rather than at the initial territory-load request. The wall remains owned by the instance across Stop/Restart and is despawned on Leave. The human spawn remains local (0,0,16); a new defaulted `IZone.PlayerSpawn` separates that practice position from the wall's authentic position. This avoids changing validated travel/tether timing.
+
+**Offline arena and actor race:** `EnterAndStart` previously issued party packets immediately after requesting native territory loading, then used a fixed two-second callback for phase/scenario start. The user's native logs show offline DSR at layout init 6 while party packets were already issued, reaching init 7 later. That can lose character/HUD initialization or apply environment state before native layout finalization. Entry now polls the existing native territory/layout readiness predicate (matching territory, territory load 2, layout init 7), creates and opens the entrance, then seats the party and starts the common phase/scenario pipeline. No server login or duty-ready request is added. Failed EObj creation retries without spawning combatants; a preparation timeout reports failure while the isolated instance remains available to Leave. Stop/Leave cancel a waiting start, and the main controls display the preparation state with Stop/Leave still available.
+
+Online and offline entry use the same pipeline. FRU's existing P1/P2/P3/P4 presets and layer holds are retained. DSR P2 explicitly applies the nine resting MapEffect states of 4 from its accepted P2 replay snapshot. `MapController.BeginPhase` clears obsolete queued map/director work and previous phase holds before the new phase's setup, so P1 holds cannot suppress later FRU scenery after a same-territory switch.
+
+**Offline party presentation:** party packets no longer precede native layout completion. `PartyHud.Refresh` also compares the actual native group with the expected actor roster, rather than trusting only its last-send cache; lost native membership is repaired through the existing local UpdateParty handler. Entries use GameMain's current native territory instead of Dalamud's potentially stale title-screen territory. Visibility preferences still apply only to simulated party models; roster/status presentation remains populated in invisible mode. There is no alternate actor-spawning implementation or server-side party creation.
+
+Diagnostics now report native readiness transitions, party roster/native count and `_PartyList` visibility, plus each bot's requested visibility/draw state after spawning. These are observations, not proof of native rendering. If the native addon remains absent, the diagnostic distinguishes missing UI from a missing native roster; no unverified forced-addon creation was added.
+
+**Regression scope:** the new production-entry matrix covers all nine custom scenarios × online/offline context × Easy/Hard × visible/invisible × eight seats (576 cases). It asserts no early party or phase mutation, frozen pre-start event time, the closed-to-open entrance transition, actual simulated actor/roster population, phase-specific map/hold state and cleanup. Additional cases cover original scenarios, failed barrier creation, cancellation, phase switching/restart and native group-cache invalidation. Fakes now model asynchronous doppel creation and model visibility; native collision and rendering still require client confirmation. The safety suite additionally checks the production party-HUD wiring and native-territory source.
+
+Functional repairs live in `oqwrrs` before `plkqvn`; no fix commits are appended above the merge. The pre-runtime-repair graph is inspectable at operation `aa82f11f5d33` (merge commit `15d1ac`). The temporary runtime-checkpoint bookmark is removed at handoff to avoid retaining obsolete divergent revisions; operation history remains the recovery mechanism. Post-repair validation:
+
+- Complete plugin/scenario suite: **13,625 passed**, zero failures (optimized **Debug**, unchanged 40-seed catalog settings, 5m02s). The ordinary Debug baseline before these repairs had 13,036 passes; that baseline alone missed the native regressions.
+- Focused ordinary Debug entry/positioning checks: **599 passed** (overlap the full suite).
+- Safety: **301 passed, three Windows-native cases skipped**, repeated successfully with both modeled hook backends, inspecting ordinary and optimized Debug native artifacts. Imported production-linked firewall/fuzz/restore checks remain enabled.
+- Relay: **44 passed**. Python tooling: **65 passed**.
+- Debug builds: zero errors. Remaining warnings are the unreachable NuGet audit feed and existing nullable warnings; Linux CA1416 platform warnings were suppressed for these local build commands.
+- No Release build, installation, reload, publication or version change was performed. Native barriers/collision, offline scenery and party rendering remain pending the manual matrix below.
+
+### Two-mode native test matrix
+
+Leave any current simulation before rebuilding/reloading. Build Release personally only when ready; development touched Debug outputs only.
+
+| Check | Inn entry | Title-screen offline entry |
+|---|---|---|
+| Original scenario control | Visible initial wall opens; movement resumes | Same, if that original scenario supports the imported local character |
+| FRU Fall of Faith | P1 floor; seven bots and eight party frames; entrance opens | Same; no mixed-phase scenery |
+| FRU Light Rampant | P2 floor/ice, native orbs and towers | Same P2 environment |
+| FRU Ultimate Relativity or Apocalypse | P3 floor, Oracle and mechanic cues | Same P3 environment |
+| FRU Darklit | P4 floor, both bosses, Fragment and towers | Same P4 environment |
+| Any DSR Strength/Sanctity fragment | Established P2 Thordan arena | P2 environment, not the P1 scene |
+
+For each representative entry, walk away from the spawn circle, Stop and Restart, then Leave. Repeat one case with hidden bots and Hard: models disappear, party frames remain and mechanics continue. Check Pause/Resume and a defensive hotbar action in one active run. Offline: exit the scenario to the virtual inn before using the explicit return-to-title control. Do not unload while in an isolated or offline session; a deliberate safety stop may close the client. Native wall visibility/collision, cold-load phase scenery, bot equipment and party-addon appearance are pending user validation.

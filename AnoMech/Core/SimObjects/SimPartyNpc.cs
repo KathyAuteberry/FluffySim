@@ -68,6 +68,13 @@ public sealed class SimPartyNpc : SimNpc, ISimPartyMember
         chara.SetModelHidden(!PresentationVisible);
     }
 
+    public override void Tick(float deltaSeconds)
+    {
+        base.Tick(deltaSeconds);
+        if (PacketSpawnFrames is 30 or 180 && Proxy is { Exists: true } proxy)
+            DiagnosticLog.Info($"[SimPartyNpc] {Role}, presentation visible={PresentationVisible}, {proxy.DescribeDrawState()}");
+    }
+
     public void OnKilled(bool byEnvironment)
     {
         GoDown(byEnvironment);

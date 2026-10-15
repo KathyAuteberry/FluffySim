@@ -1,3 +1,7 @@
+## Upstream runtime entry repair — 2026-10-15
+
+The first integration playtest exposed a missing native entrance EObj/open transition and cold offline loads starting party/phase work too early. Shared entry now waits for matching native layout completion and the recorded entrance opening before spawning the party or beginning the mechanic. The original player practice spawn is preserved independently of wall placement. Phase switches clear obsolete preparation; native party state is checked and repaired rather than trusting a cached send. All existing encounter assignments, choreography, damage and audio remain unchanged. See [UPSTREAM-INTEGRATION.md](UPSTREAM-INTEGRATION.md#native-entry-repairs-after-the-first-client-test) for recorded wall bindings, diagnostics, tests and the required two-mode client matrix. Native results remain unconfirmed until another in-game test. Debug validation: 13,625 plugin tests, 44 relay tests and 65 tooling tests passed; safety 301 passed / three Windows-native tests skipped on each modeled backend.
+
 # DSR implementation roadmap
 
 ## Current upstream integration — 2026-10-15

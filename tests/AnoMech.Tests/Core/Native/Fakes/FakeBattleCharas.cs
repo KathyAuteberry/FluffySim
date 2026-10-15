@@ -97,7 +97,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
         entityId = DoppelEntityIdBase + (uint)slot;
         Timeline.Add("spawn_doppel", entityId, preset.Name, preset.ClassJob.ToString(), "ClassJob", position: placement.Position,
             rotation: placement.Rotation);
-        slots[slot] = new FakeCharacter(entityId, preset.Name)
+        var actor = new FakeCharacter(entityId, preset.Name)
         {
             ClassJob = preset.ClassJob,
             Position = placement.Position,
@@ -106,7 +106,15 @@ internal sealed class FakeBattleCharas : IBattleCharas
             MaxHealth = DoppelMaxHealth,
             Health = DoppelMaxHealth,
             TargetableStatus = IsTargetable,
+            HasDrawObject = true,
+            IsDrawObjectVisible = true,
         };
+        if (PacketSpawnDelayFrames == 0) slots[slot] = actor;
+        else
+        {
+            reserved.Add(slot);
+            pending.Add((slot, actor, PacketSpawnDelayFrames));
+        }
         return new FakeBattleChara(this, slot);
     }
 

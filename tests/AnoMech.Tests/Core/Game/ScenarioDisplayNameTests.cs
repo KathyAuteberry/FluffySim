@@ -9,14 +9,16 @@ namespace AnoMech.Tests;
 
 public class ScenarioDisplayNameTests
 {
-    [Test]
-    public void FluffyArenasKeepTheirOriginalEntryPositionWithoutInventingNativeWallIds()
+    [TestCase(true, 0xA58C08u, 0xA58C07u, 15f)]
+    [TestCase(false, 0x875BE2u, 0x875BE0u, 18f)]
+    public void FluffyArenasBindTheirRecordedDutyEntrance(bool fru, uint placement, uint wall, float z)
     {
-        foreach(var zone in new IZone[]{AnoMech.Scenarios.Fru.FruZone.Instance,AnoMech.Scenarios.Dsr.DsrZone.Instance})
-        {
-            Assert.That(zone.EntranceBarrier.Position,Is.EqualTo(new System.Numerics.Vector3(0,0,16)));
-            Assert.That(zone.EntranceBarrier.EObjId,Is.Zero);
-        }
+        IZone zone = fru ? AnoMech.Scenarios.Fru.FruZone.Instance : AnoMech.Scenarios.Dsr.DsrZone.Instance;
+        Assert.That(zone.EntranceBarrier.Position, Is.EqualTo(new System.Numerics.Vector3(0, 0, z)));
+        Assert.That(zone.PlayerSpawn, Is.EqualTo(new System.Numerics.Vector3(0, 0, 16)));
+        Assert.That(zone.EntranceBarrier.EObjId, Is.EqualTo(2007457));
+        Assert.That(zone.EntranceBarrier.EObjLayoutId, Is.EqualTo(placement));
+        Assert.That(zone.EntranceBarrier.WallLayoutId, Is.EqualTo(wall));
     }
 
     [Test]

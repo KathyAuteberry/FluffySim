@@ -191,6 +191,15 @@ public sealed class MapController
         DiagnosticLog.Info($"[MapController] Enter: territoryId={territoryId}.");
     }
 
+    public void BeginPhase()
+    {
+        if (!InSim(nameof(BeginPhase))) return;
+        pendingEffects.Clear();
+        pendingSnapshot = null;
+        pendingDirectorUpdates.Clear();
+        Natives.Layout.ClearSuppressedLayers();
+    }
+
     // A fresh load delays the weather so the engine settles; a loaded zone takes it now.
     public void SetPhaseWeather(byte? weatherId, bool freshLoad)
     {

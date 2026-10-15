@@ -8,6 +8,19 @@ namespace AnoMech.SafetyTests.Architecture;
 public class OfflineIntegrationTests
 {
     [Fact]
+    public void PartyHudRepairsNativeRosterLossAndUsesTheNativeTerritory()
+    {
+        foreach (var il in PluginIL.Builds)
+        {
+            var refresh = il.Method("AnoMech.Core.Native.Implementations.PartyHud", "Refresh");
+            Assert.Contains(refresh.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "MatchesNativeParty");
+            var write = il.Method("AnoMech.Core.Native.Implementations.PartyHud", "WriteEntry");
+            Assert.Contains(write.Body.Instructions, i => i.Operand is MethodReference m && PluginIL.Name(m) == "FFXIVClientStructs.FFXIV.Client.Game.GameMain::Instance");
+            Assert.DoesNotContain(write.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "get_TerritoryType");
+        }
+    }
+
+    [Fact]
     public void OfflineImportHasSnapshotAndGuardsBeforeItCanMutateCharacterState()
     {
         foreach(var il in PluginIL.Builds)

@@ -23,13 +23,14 @@ internal sealed class RunController
         this.multiplayer = multiplayer;
     }
 
-    public string? StartWaitingOn => startWait.WaitingOn;
+    public string? StartWaitingOn => game.IsPreparingScenario ? "native arena and entrance barrier" : startWait.WaitingOn;
 
     public void Tick() => startWait.Tick();
 
     public string? StartRefusal(ScenarioSelection? selection, bool solo)
     {
         if (selection is not { Scenario: var scenario }) return "No scenario selected.";
+        if (game.IsPreparingScenario) return "Waiting for the native arena and entrance barrier.";
         if (solo && !scenario.SupportsSolo) return $"{scenario.Name} does not support Solo mode.";
         // Starting here bypasses MultiplayerManager: a host would run the fight without a
         // StartMessage, a peer would start a second independent simulation.

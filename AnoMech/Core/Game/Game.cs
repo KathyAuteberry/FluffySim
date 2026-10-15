@@ -130,17 +130,19 @@ public sealed class Game : IDisposable
     public void StartScenario(RunScenarioParams p, Action<string?>? resolved = null)
         => Deferred(() => StartScenarioNow(p), resolved);
 
-    private static readonly TimeSpan ZoneInStartDelay = TimeSpan.FromSeconds(2);
+    private (RunScenarioParams Params, Action<string?>? Resolved)? pendingStart;
+    private float preparationSeconds;
+    public bool IsPreparingScenario => pendingStart is not null;
 
-    // Zones in first unless already staying in the run's zone in `mode`; a stay entered in another
-    // mode refuses the run rather than playing it there. A fresh zone-in applies the phase and
-    // seats the party at once, and waits ZoneInStartDelay before the run starts.
+    // Party packets and phase changes must follow native layout completion, or the load can
+    // erase them. The entrance barrier has its own attachment/open lifecycle after that.
     public void EnterAndStart(RunScenarioParams p, SessionMode mode, Action<string?>? resolved = null)
     {
         var zone = p.Scenario.Phase.Zone;
         if (Zone == zone && Mode == mode)
         {
-            StartScenario(p, resolved);
+            if (instance?.IsReadyForRun == true) StartScenario(p, resolved);
+            else QueueStart(p, resolved);
             return;
         }
         // Pinned so the run reseeds to the stream the party was seated from, and its bots keep
@@ -153,10 +155,39 @@ public sealed class Game : IDisposable
                 resolved?.Invoke(refusal);
                 return;
             }
-            instance?.ApplyPhase(p.Scenario.Phase);
-            SeatParty(p);
-            Plugin.Framework.RunOnTick(() => StartScenario(p, resolved), ZoneInStartDelay);
+            QueueStart(p, resolved);
         });
+    }
+
+    private void QueueStart(RunScenarioParams p, Action<string?>? resolved)
+    {
+        CancelPendingStart();
+        pendingStart = (p with { Seed = p.Seed ?? Random.Shared.Next() }, resolved);
+        preparationSeconds = 0f;
+    }
+
+    private void CancelPendingStart()
+    {
+        var canceled = pendingStart;
+        pendingStart = null;
+        canceled?.Resolved?.Invoke("scenario preparation canceled");
+    }
+
+    private void TickPreparation(float deltaSeconds)
+    {
+        if (pendingStart is not { } start) return;
+        if (instance?.IsReadyForRun != true)
+        {
+            preparationSeconds += deltaSeconds;
+            if (preparationSeconds < 60f && instance?.IsLoaded == true) return;
+            pendingStart = null;
+            start.Resolved?.Invoke("native arena preparation did not finish; leave and retry");
+            DiagnosticLog.Warn("[Game] Native arena preparation did not finish; no party or mechanic was started.");
+            return;
+        }
+        pendingStart = null;
+        SeatParty(start.Params);
+        StartScenario(start.Params, start.Resolved);
     }
 
     private void SeatParty(RunScenarioParams p)
@@ -170,6 +201,7 @@ public sealed class Game : IDisposable
 
     public void Reset() => Plugin.Framework.Run(() =>
     {
+        CancelPendingStart();
         if (ActiveScenario is not null)
             instance?.ReturnPlayerIfOutsideArena();
         EndRun();
@@ -181,6 +213,7 @@ public sealed class Game : IDisposable
         DiagnosticLog.RotateNow();
         Plugin.Framework.Run(() =>
         {
+            CancelPendingStart();
             EndRun();
             ExitInstance();
         });
@@ -258,6 +291,11 @@ public sealed class Game : IDisposable
             return;
         }
         instance?.Tick(deltaSeconds);
+        if (pendingStart is not null)
+        {
+            TickPreparation(deltaSeconds);
+            return;
+        }
         if (instance?.CatchFall() == true && run is not null)
             World.Party.Player?.Die(SimCharacterDeathExtensions.Environment, "Fell off the arena");
         if (Paused)
@@ -318,6 +356,7 @@ public sealed class Game : IDisposable
     // Framework.Run wrapper would never fire.
     public void Dispose()
     {
+        CancelPendingStart();
         CancelPause();
         Events.ActionFailed -= CancelPause;
         run = null;

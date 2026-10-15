@@ -25,6 +25,7 @@ internal sealed unsafe class MapEffects : IMapEffects
     // other shape at load.
     private delegate void ProcessMapEffectDelegate(ContentDirector* module, uint index, ushort state, ushort timeline);
     private readonly Hook<ProcessMapEffectDelegate> hook;
+    private string? lastReadiness;
 
     internal MapEffects()
     {
@@ -51,9 +52,16 @@ internal sealed unsafe class MapEffects : IMapEffects
     {
         var game = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
         var layout = FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutWorld.Instance();
-        return game != null && layout != null && layout->ActiveLayout != null
+        var ready = game != null && layout != null && layout->ActiveLayout != null
             && game->CurrentTerritoryTypeId == territoryId && game->TerritoryLoadState == 2
             && layout->ActiveLayout->TerritoryTypeId == territoryId && layout->ActiveLayout->InitState == 7;
+        var status = $"requested={territoryId}, current={(game == null ? 0 : game->CurrentTerritoryTypeId)}, load={(game == null ? 0 : game->TerritoryLoadState)}, layout={(layout == null || layout->ActiveLayout == null ? 0 : layout->ActiveLayout->TerritoryTypeId)}, init={(layout == null || layout->ActiveLayout == null ? 0 : layout->ActiveLayout->InitState)}, ready={ready}";
+        if (lastReadiness != status)
+        {
+            lastReadiness = status;
+            AnoMech.Core.DiagnosticLog.Info($"[ArenaReady] {status}");
+        }
+        return ready;
     }
 
     public bool Apply(uint packetFlags, byte index)

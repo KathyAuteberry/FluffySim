@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AnoMech.Core.SimObjects;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using GroupPartyMember = FFXIVClientStructs.FFXIV.Client.Game.Group.PartyMember;
@@ -45,7 +46,7 @@ internal sealed unsafe class PartyHud : IPartyHud
             roster.Add((((GameObject*)bc)->EntityId, bc->ClassJob, bc->Level));
         }
 
-        if (!ownsRoster || !roster.SequenceEqual(sentRoster))
+        if (!ownsRoster || !roster.SequenceEqual(sentRoster) || !MatchesNativeParty(ref gm->MainGroup, roster))
         {
             if (!ownsRoster)
             {
@@ -53,9 +54,20 @@ internal sealed unsafe class PartyHud : IPartyHud
                 ownsRoster = true;
             }
             SendRoster(members, realParty);
+            var ui = FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkUnitManager.Instance();
+            var frames = ui == null ? null : ui->GetAddonByName("_PartyList");
+            AnoMech.Core.DiagnosticLog.Info($"[PartyHud] Local roster requested={members.Count}, native={gm->MainGroup.MemberCount}, party frames={(frames == null ? "absent" : frames->IsVisible ? "visible" : "hidden")}.");
             sentRoster.Clear();
             sentRoster.AddRange(roster);
         }
+    }
+
+    internal static bool MatchesNativeParty(ref GroupManager.Group group, List<(uint EntityId, byte ClassJob, byte Level)> expected)
+    {
+        if (group.MemberCount != expected.Count) return false;
+        for (var i = 0; i < expected.Count; i++)
+            if (group.PartyMembers[i].EntityId != expected[i].EntityId) return false;
+        return true;
     }
 
     public void Clear()
@@ -108,7 +120,8 @@ internal sealed unsafe class PartyHud : IPartyHud
         entry->CurrentMP = (ushort)bc->Mana;
         entry->MaxMP = (ushort)bc->MaxMana;
         entry->HomeWorld = bc->HomeWorld;
-        entry->TerritoryType = (ushort)Plugin.ClientState.TerritoryType;
+        var game = GameMain.Instance();
+        entry->TerritoryType = game == null ? (ushort)0 : (ushort)game->CurrentTerritoryTypeId;
         entry->Valid = 1;
         entry->ClassJob = bc->ClassJob;
         entry->Sex = bc->DrawData.CustomizeData.Sex;

@@ -8,10 +8,11 @@ namespace AnoMech.Scenarios.Dsr;
 public sealed class DsrZone : IZone
 {
     public static readonly DsrZone Instance = new();
-    public static readonly Phase P2 = new(Instance, "P2 King Thordan", 45, PhaseMusic.Heroes);
+    public static readonly Phase P2 = new(Instance, "P2 King Thordan", 45, PhaseMusic.Heroes, init: InitializeP2);
     public string DisplayName => "Dragonsong's Reprise";
     public string Name => "Dragonsong's Reprise (Ultimate)";
-    public Core.Map.EntranceBarrier EntranceBarrier => new(0, 0, 0, new(0f, 0f, 16f));
+    public Core.Map.EntranceBarrier EntranceBarrier => new(2007457, 0x875BE2, 0x875BE0, new(0f, 0f, 18f));
+    public Vector3 PlayerSpawn => new(0f, 0f, 16f);
     public uint TerritoryId => 968;
     public Vector3 Origin => new(100f, 0f, 100f);
     public byte Level => 90;
@@ -27,4 +28,9 @@ public sealed class DsrZone : IZone
         new(WaymarkSlot.Four, new(-9.193f, 0f, -9.193f)),
     ])];
     public void Run(SimWorld world) => world.EnforceArenaBoundary(21f);
+
+    private static void InitializeP2(SimWorld world)
+    {
+        for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
+    }
 }

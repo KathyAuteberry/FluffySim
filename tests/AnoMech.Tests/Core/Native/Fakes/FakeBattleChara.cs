@@ -57,7 +57,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
 
     public bool HasDrawObject => Actor?.HasDrawObject ?? false;
 
-    public bool IsDrawObjectVisible => Actor is { HasDrawObject: true, IsDrawObjectVisible: true };
+    public bool IsDrawObjectVisible => Actor is { HasDrawObject: true, IsDrawObjectVisible: true, ModelHidden: false };
 
     internal bool ModelHidden => Actor?.ModelHidden ?? false;
     public IActorVfxProxy? AttachVfx(string path) => new FakeVfxHandle();

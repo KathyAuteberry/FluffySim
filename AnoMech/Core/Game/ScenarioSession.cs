@@ -132,6 +132,7 @@ public sealed class ScenarioSession
         world.Reseed(seed);
         Plugin.Log.Info($"Game: {Scenario.Name} seed {seed}");
         world.ApplyParty(roster);
+        world.Map.BeginPhase();
         // Client-asset setup a peer needs too (see IZone.RunClientSetup).
         zone.RunClientSetup(world);
         phase.RunClientSetup(world);
