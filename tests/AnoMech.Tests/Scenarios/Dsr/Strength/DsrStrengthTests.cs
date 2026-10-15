@@ -194,7 +194,7 @@ public class DsrStrengthTests
     }
 
     [TestCase(0)] [TestCase(8)] [TestCase(32)]
-    public void ArenaDiagnosticOnlyAppliesRecordedRestingMapStates(int seed)
+    public void ArenaDiagnosticAppliesRecordedP2EnvironmentWithoutCombatActors(int seed)
     {
         var inspected = false;
         var run = ScenarioRun.Execute(typeof(DsrArenaDiagnosticScenario), 0, seed, new()
@@ -205,7 +205,15 @@ public class DsrStrengthTests
                 inspected = true;
                 Assert.That(p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>(), Is.Empty);
                 Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Is.EqualTo(Enumerable.Range(0,9).Select(i => (0x00040004u,(byte)i))));
-                Assert.That(((FakeLayoutFunctions)AnoMech.Core.Native.Interfaces.Natives.Layout).HeldLayerStates, Is.Empty);
+                var layout = (FakeLayoutFunctions)AnoMech.Core.Native.Interfaces.Natives.Layout;
+                Assert.That(layout.HeldLayerStates, Is.EquivalentTo(new Dictionary<(uint, ushort), bool>
+                {
+                    [(968, 0xF9D)] = false, [(968, 0x139F)] = false,
+                    [(968, 0xEE3C)] = false, [(968, 0xEE3F)] = false, [(968, 0xEE40)] = false,
+                    [(968, 0xF2DC)] = false, [(968, 0xFF52)] = false,
+                    [(968, 0x160C)] = true, [(968, 0xEE79)] = true, [(968, 0xEE7A)] = true,
+                }));
+                Assert.That(layout.HeldInstanceStates, Has.Count.EqualTo(9));
             },
         });
         Assert.That(inspected, Is.True);

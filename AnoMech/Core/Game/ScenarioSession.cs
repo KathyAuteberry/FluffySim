@@ -124,6 +124,7 @@ public sealed class ScenarioSession
         // Here rather than in scenario.Run (which peers skip).
         DiagnosticLog.Clear();
 #endif
+        world.Events.Clear();
         var phase = Scenario.Phase;
         var zone = phase.Zone;
         world.PlaceWaymarks(ResolveWaymarks(zone, run.SelectedWaymark));

@@ -126,3 +126,120 @@ Leave any current simulation before rebuilding/reloading. Build Release personal
 | Any DSR Strength/Sanctity fragment | Established P2 Thordan arena | P2 environment, not the P1 scene |
 
 For each representative entry, walk away from the spawn circle, Stop and Restart, then Leave. Repeat one case with hidden bots and Hard: models disappear, party frames remain and mechanics continue. Check Pause/Resume and a defensive hotbar action in one active run. Offline: exit the scenario to the virtual inn before using the explicit return-to-title control. Do not unload while in an isolated or offline session; a deliberate safety stop may close the client. Native wall visibility/collision, cold-load phase scenery, bot equipment and party-addon appearance are pending user validation.
+
+## Remaining offline regressions after the second client test
+
+The user confirmed the entrance/collision repair, movement in both modes, online arenas and
+FRU's offline phase presets. Those paths are retained. The following changes address the
+remaining failures; their native rendering results still require another client test.
+
+### DSR P2 scenery
+
+The BDEAD2 client logs distinguish a fully ready layout from the wrong phase: both modes
+reach territory 968/load 2/layout init 7 and accept all nine resting MapEffects, but offline
+retains P1 layers `EE3C`, `EE3F`, `EE40`, `F2DC`, `F9D`, `139F`, `FF52` and leaves P2 layers
+`EE79`, `EE7A`, `160C` inactive. The working inn logs and the accepted P2 replay snapshot
+agree on their opposite states. MapEffect slots B47/B48 control separate shared groups;
+setting their state to 4 does not switch this background scenery.
+
+`DsrZone.P2` now holds only these differing layers in the recorded P2 state through the same
+ready-layout reconciliation used by FRU. Mixed layers are not switched wholesale: only seven
+recorded light instances in `EE3E` and two background parts in `F2E0` are held inactive, leaving
+their other scenery intact. The shared layout facility resolves instance keys against the
+current layout every tick, so late streaming and later phase reactivation are reconciled
+without retaining old native pointers. Holds clear on phase change/leave. Already-correct
+inn objects receive no SetActive call. No collision flags, floors, coordinates, weather,
+barrier or mechanic rules were altered independently of those verified scenery operations.
+
+### Offline party models and party HUD
+
+The same seven doppels have visible draw objects and RenderFlags=0 in inn logs, but hidden
+draw objects and RenderFlags=`0x40000000` offline, despite Show Simulated Party being true.
+Their race, skeleton, scale and appearance are populated. This is **not** a missing spawn or
+permanently missing draw object. Intentionally invisible bots additionally have the existing
+Model/Nameplate mask (`0x802`); their draw objects can be unloaded by the client.
+
+Read-only inspection of the installed executable traces bit 30 to the native character
+RepresentationContainer visibility update (function at image VA `1408D6E50` in this binary).
+The non-local PC branch can set render bit 30 via the native render-bit setter; the local
+player/non-PC branches clear it. The corresponding native clear path at `14089B730` removes
+only the requested bit and restores draw visibility once no hide reasons remain. The SDK
+names only Model/Nameplate in VisibilityFlags, so the new internal name
+`RepresentationSuppressed` documents this inspected bit rather than pretending it is an
+SDK enum value. Exact upstream bootstrap/global representation-context causes remain a
+native integration uncertainty; no login/global visibility state is fabricated to fix it.
+
+The shared native party-model setter now reconciles this suppression **only** while offline
+and only for a PC whose reserved slot and synthetic doppel entity ID match. It retains all
+other hide reasons and obeys the existing visibility preference, restoring only the loaded draw
+object's requested-draw bit, exactly as the inspected native clear path does. Native culling
+and asynchronous model loading retain their own bits; no draw object is reallocated. Missing draw objects remain
+under the normal asynchronous spawn/load lifecycle and are reconciled when they arrive.
+Presentation reconciliation also runs during pause without ticking mechanics or statuses.
+Neither the human, enemies, unrelated players, online presentation nor packet filtering is
+changed. Tethers/markers remain governed by the existing presentation policy.
+
+Native-structure tests exercise this actual production reconciliation with loaded/hidden
+and delayed draw objects, repeated suppression, both visibility settings, foreign slots,
+non-PCs and unrelated hide flags. They do not execute FFXIV's renderer.
+
+All six relevant offline BDEAD2 logs already report `requested=8, native=8, party frames=visible`
+after the earlier roster fix. There is no evidence of a remaining shared party-HUD failure
+in these captures. The existing UpdateParty local-handler path and native-roster repair are
+preserved and regression-tested independently; correct rows/status icons still need visual
+confirmation. New bounded actor diagnostics include slot, entity, ready-to-draw state,
+representation type, native party flag and offline state alongside draw/skeleton/render flags.
+Existing map diagnostics report phase territory/layout readiness and layer counts.
+
+### Meteors clock regression
+
+Comparison against pre-merge `bbd8c479` confirms its `ResetInternal` always cleared Events.
+After integration, `EndRun` clears them only through an existing ScenarioSession. Time can
+therefore accumulate in a newly entered/stopped instance with **no** active run. On its first
+start, relative event offsets began at that accumulated time while Meteor tower expiration,
+Hard departure deadlines and ScenarioSession.Elapsed still assumed zero. This explains
+short/missing tower windows and disagreement between hazards and movement without changing
+FFXIV's frame delta or inventing longer tower durations.
+
+Every ScenarioSession now explicitly clears its run scheduler before phase/scenario setup.
+The existing first/second tower snapshot times remain 12.4/25.8 seconds (release 12.7/26.1),
+Fire presentation 5.5 and Ice/Storm 8.5. Pause still suspends that same scheduler; native
+cosmetic timers may continue as previously documented. The local tower diagnostic displays
+the authoritative simulation clock. New regressions wait 8/45 seconds before first start,
+compare complete Easy/Hard clears, freeze a visible tower window across a 20-second pause,
+and exercise idle/Stop/restart in both entry contexts. No assignment, attack geometry,
+choreography, provisional impact interval or tower renderer was replaced.
+
+### History and manual validation
+
+The recovery checkpoint is operation `2acfe2457244`, with working revision `xznrxk/fb3947`
+and merge `plkqvn/956c05` before these edits. Inspect with
+`jj --at-operation 2acfe2457244 log`; review later/concurrent work before any restore.
+Functional changes are in `soxsns`, inserted after `oqwrrs` and before `plkqvn`. The existing
+four merge parents and original Evernow commits remain represented. Version remains 1.2.0.0.
+
+After the user builds Release: test an original scenario offline, FRU P4 offline, and DSR P2
+offline; verify seven equipped bots, eight party entries and the correct floor/scenery.
+Toggle Show Simulated Party, pause for several seconds, resume, Stop/restart and Leave.
+Repeat representative inn runs. For Meteors, wait at least 15 seconds in the loaded instance
+before Start; observe towers from ~0.7–12.4 and ~15.1–25.8 seconds, Fire before Ice, pause
+with towers visible, and complete both Easy and Hard with the correct human assignment.
+Keep tower diagnostics open if a discrepancy remains. Do not unload the plugin inside an
+isolated/offline session; use Leave and the explicit offline exit first.
+
+### Final Debug validation for the remaining offline repairs
+
+- Root `dotnet build -c Debug`: passed, zero errors; existing NU1900 feed warning and two
+  nullable warnings remain. Output is isolated from Release.
+- Complete plugin suite: **13,647 passed**, including scenario/assignment exhaustives,
+  original/custom entry paths, all nine custom scenarios and the new clock/model/layout cases.
+  The 611-case focused matrix is an overlapping subset, not an additional total; the final
+  complete run also includes the added native-culling preservation case.
+- Relay: **44 passed**. Python tooling: **65 passed**.
+- Safety: **301 passed / three Windows-native skips** on each modeled backend, against final
+  ordinary and optimized Debug native artifacts. These repeated counts are not additive.
+- Native model/culling, cold DSR scenery, visible party rows and wall-clock tower durations
+  remain subject to the manual client checks above. No Release/installed output was written,
+  no version was changed, and no packet-filter/action/recast production code was modified.
+- The merge remains empty with four parents, all three accepted PR heads and upstream master
+  are ancestors, the working area is empty above it, and no conflicts/divergent changes remain.

@@ -144,16 +144,49 @@ public class NativeEntryLifecycleTests
     public static IEnumerable<Type> OriginalControls() => ScenarioCatalog.Create().Scenarios
         .Where(s => s.Phase.Zone is not FruZone and not DsrZone).Select(s => s.GetType()).Take(3);
 
-    [TestCaseSource(nameof(OriginalControls))]
-    public void OriginalScenariosUseTheSameReadyBarrierTransition(Type type)
+    public static IEnumerable<TestCaseData> OriginalEntries() => OriginalControls()
+        .SelectMany(type => new[] { false, true }.Select(offline => new TestCaseData(type, offline)));
+
+    [TestCaseSource(nameof(OriginalEntries))]
+    public void OriginalScenariosUseTheSameReadyBarrierTransition(Type type, bool offline)
     {
-        var fake = Install(false, false, true);
+        var fake = Install(offline, false, true);
         using var game = CreateGame();
         var scenario = (IScenario)Activator.CreateInstance(type)!;
         game.EnterAndStart(Parameters(scenario, PartyRole.MainTank), SessionMode.Local);
         Frames(fake, game, 160);
         Assert.That(game.ActiveScenario, Is.SameAs(scenario));
         Assert.That(fake.EventObjects.Objects.Single(o => o.SpawnConfig.GimmickId == scenario.Phase.Zone.EntranceBarrier.WallLayoutId).BarrierOpened, Is.True);
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void MeteorsRestartAfterIdleStartsAtZeroAndReleasesTowerVisuals(bool offline)
+    {
+        var fake = Install(offline, true, true);
+        using var game = CreateGame();
+        game.ZoneIn(DsrZone.Instance, SessionMode.Local);
+        Frames(fake, game, 180);
+        var scenario = new AnoMech.Scenarios.Dsr.Sanctity2.DsrSanctity2Scenario();
+        for (var run = 0; run < 3; ++run)
+        {
+            Frames(fake, game, 1800);
+            Assert.That(game.Events.Elapsed, Is.GreaterThan(29));
+            game.EnterAndStart(Parameters(scenario, PartyRole.MeleeDpsA), SessionMode.Local);
+            Frames(fake, game, 2);
+            Assert.That(game.Events.Elapsed, Is.LessThan(.1));
+            Frames(fake, game, 60);
+            Assert.That(scenario.ActiveTowerVisuals, Has.Count.EqualTo(8));
+            Assert.That(game.World.Party.AllMembers().Count(), Is.EqualTo(8));
+            game.Reset();
+            Frames(fake, game, 1);
+            Assert.That(scenario.ActiveTowerVisuals, Is.Empty);
+            Assert.That(fake.BattleCharas.OccupiedSlots, Is.EqualTo(7), "Stop retains the idle party but removes mechanic actors");
+            Assert.That(((FakePartyHud)Natives.PartyHud).Members, Has.Count.EqualTo(8));
+        }
+        game.Leave();
+        Frames(fake, game, 2);
+        Assert.That(fake.BattleCharas.OccupiedSlots, Is.Zero);
+        Assert.That(((FakePartyHud)Natives.PartyHud).Members, Is.Empty);
     }
 
     private static FakeGame Install(bool offline, bool hard, bool visible)
@@ -183,6 +216,16 @@ public class NativeEntryLifecycleTests
         if (scenario.Phase.Zone is DsrZone)
         {
             for (byte i = 0; i < 9; i++) Assert.That(fake.MapEffects.Applied.Last(e => e.Index == i).Flags, Is.EqualTo(0x00040004));
+            var dsrLayers = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;
+            foreach (ushort layer in new ushort[] { 0xF9D, 0x139F, 0xEE3C, 0xEE3F, 0xEE40, 0xF2DC, 0xFF52 })
+                Assert.That(dsrLayers[(968, layer)], Is.False);
+            foreach (ushort layer in new ushort[] { 0x160C, 0xEE79, 0xEE7A })
+                Assert.That(dsrLayers[(968, layer)], Is.True);
+            Assert.That(dsrLayers.ContainsKey((968, 0xEE3E)), Is.False, "Mixed scenery must not be switched as a whole layer");
+            Assert.That(dsrLayers.ContainsKey((968, 0xF2E0)), Is.False);
+            var dsrInstances = ((FakeLayoutFunctions)Natives.Layout).HeldInstanceStates;
+            Assert.That(dsrInstances, Has.Count.EqualTo(9));
+            Assert.That(dsrInstances.Values.All(active => !active), Is.True);
             return;
         }
         var holds = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;

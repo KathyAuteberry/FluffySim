@@ -213,6 +213,11 @@ public sealed class SimWorld : ISimObject, IDisposable
     // ApplyParty without entering combat: the party standing in the zone before a run starts.
     public void SeatParty(IReadOnlyList<PartySlot?> roster) => Party.Apply(roster, this);
 
+    internal void RefreshPartyPresentation()
+    {
+        foreach (var member in Party.ActiveMembers().OfType<SimPartyNpc>()) member.SetPresentationVisible(ShowSimulatedParty);
+    }
+
     public void Tick(float deltaSeconds)
     {
         PracticeInvulnerability.Tick(deltaSeconds);
@@ -220,7 +225,7 @@ public sealed class SimWorld : ISimObject, IDisposable
         Map.Tick();
         Party.Tick(deltaSeconds);
         children.Update(deltaSeconds);
-        foreach (var member in Party.ActiveMembers().OfType<SimPartyNpc>()) member.SetPresentationVisible(ShowSimulatedParty);
+        RefreshPartyPresentation();
         SoftMarkers.RemoveInactive();
         enemyList.Tick(children.OfType<SimEnemy>(), deltaSeconds);
     }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Numerics;
 using AnoMech.Core.Native.Implementations.Interop;
@@ -15,6 +16,11 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
     private readonly List<nint> suppressedLayerInstances = new();
     private readonly Dictionary<(uint Territory, ushort Layer), bool> heldLayerStates = new();
 
+    private readonly Dictionary<(uint Territory, ushort Layer, uint Instance), bool> heldInstanceStates = new();
+
+    public void HoldInstanceActive(uint territoryId, ushort layerKey, uint instanceKey, bool active)
+        => heldInstanceStates[(territoryId, layerKey, instanceKey)] = active;
+
     public void HoldLayerActive(uint territoryId, ushort layerKey, bool active)
         => heldLayerStates[(territoryId, layerKey)] = active;
 
@@ -29,19 +35,34 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
     {
         foreach (var ptr in suppressedLayerInstances)
             ((ILayoutInstance*)ptr)->SetActive(false);
-        if (heldLayerStates.Count == 0) return;
+        if (heldLayerStates.Count == 0 && heldInstanceStates.Count == 0) return;
         var world = LayoutWorld.Instance();
         var game = GameMain.Instance();
         if (world == null || game == null || world->ActiveLayout == null
-            || world->ActiveLayout->InitState != 7 || game->TerritoryLoadState != 2) return;
+            || world->ActiveLayout->InitState != 7 || game->TerritoryLoadState != 2
+            || world->ActiveLayout->TerritoryTypeId != game->CurrentTerritoryTypeId) return;
+        ReassertHeldLayers(game->CurrentTerritoryTypeId, true, LayoutQuery.CollectLayerInstances,
+            static p => ((ILayoutInstance*)p)->Id.InstanceKey,
+            static p => ((ILayoutInstance*)p)->IsActive,
+            static (p, active) => ((ILayoutInstance*)p)->SetActive(active));
+    }
+
+    internal void ReassertHeldLayers(uint territory, bool ready,
+        Func<ushort, IReadOnlyList<nint>> instances,
+        Func<nint, uint> instanceKey, Func<nint, bool> isActive, Action<nint, bool> setActive)
+    {
+        if (!ready) return;
         foreach (var (key, active) in heldLayerStates)
         {
-            if (world->ActiveLayout->TerritoryTypeId != key.Territory || game->CurrentTerritoryTypeId != key.Territory) continue;
-            foreach (var ptr in LayoutQuery.CollectLayerInstances(key.Layer))
-            {
-                var instance = (ILayoutInstance*)ptr;
-                if (instance->IsActive != active) instance->SetActive(active);
-            }
+            if (key.Territory != territory) continue;
+            foreach (var ptr in instances(key.Layer))
+                if (isActive(ptr) != active) setActive(ptr, active);
+        }
+        foreach (var (key, active) in heldInstanceStates)
+        {
+            if (key.Territory != territory) continue;
+            foreach (var ptr in instances(key.Layer))
+                if (instanceKey(ptr) == key.Instance && isActive(ptr) != active) setActive(ptr, active);
         }
     }
 
@@ -49,6 +70,7 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
     {
         suppressedLayerInstances.Clear();
         heldLayerStates.Clear();
+        heldInstanceStates.Clear();
     }
 
 

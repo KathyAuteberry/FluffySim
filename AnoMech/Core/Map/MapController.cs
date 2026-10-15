@@ -86,7 +86,12 @@ public sealed class MapController
     // arena-transform lighting cues that no SimObject carries.
     public event Action<byte, float>? WeatherChanged;
 
-    // Immediately change the active weather (mid-scenario). transition = fade seconds.
+    public void HoldInstanceActive(ushort layerKey, uint instanceKey, bool active)
+    {
+        if (InSim(nameof(HoldInstanceActive))) Natives.Layout.HoldInstanceActive(TerritoryId, layerKey, instanceKey, active);
+    }
+
+    // Immediately change the weather (mid-scenario). transition = fade seconds.
     public void SetWeather(byte weatherId, float transition = 0.5f)
     {
         Natives.Zone.SetWeather(weatherId, transition);

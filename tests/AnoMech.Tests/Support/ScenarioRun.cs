@@ -20,6 +20,7 @@ internal sealed record ScenarioRunOptions
     public bool GodMode { get; init; }
     public Func<IScenario>? ScenarioFactory { get; init; }
     public Action<FakeGame>? ConfigureNative { get; init; }
+    public Action<Game, FakeGame>? BeforeStart { get; init; }
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
@@ -127,6 +128,11 @@ internal sealed record ScenarioRun(
                 setOverrides(scenario.SettingsOverrides
                              ?? throw new InvalidOperationException($"{scenarioType.Name} has no settings overrides."));
             game.ZoneIn(scenario.Phase.Zone, SessionMode.Local);
+            if (options.BeforeStart is { } beforeStart)
+            {
+                fake.Frame(0, game.Tick);
+                beforeStart(game, fake);
+            }
             game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo }, options.Solo ? null : strat, 0, seed));
             fake.Frame(FrameSeconds, game.Tick);
             if (game.Status < SessionStatus.Running)

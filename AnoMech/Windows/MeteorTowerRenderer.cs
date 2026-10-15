@@ -20,6 +20,7 @@ internal static class MeteorTowerRenderer
         }
         if (!scenario.ShowTowerDiagnostics) return;
         ImGui.Begin("Meteor tower diagnostics");
+        ImGui.TextUnformatted($"Simulation clock: {game.World.Events.Elapsed:F2}s (frozen while paused)");
         ImGui.TextUnformatted($"Rendering: local projected overlay; active towers: {towers.Count}");
         foreach (var tower in towers)
             ImGui.TextUnformatted($"Wave {(tower.SecondWave ? 2 : 1)} world {tower.Position + game.World.ScenarioOrigin} radius {tower.Radius} window {tower.From:F2}–{tower.Until:F2}s");

@@ -300,6 +300,7 @@ public sealed class Game : IDisposable
             World.Party.Player?.Die(SimCharacterDeathExtensions.Environment, "Fell off the arena");
         if (Paused)
         {
+            World.RefreshPartyPresentation();
             if (paused) Natives.PlayerConditions.SetAfflictions(true, true);
             return;
         }

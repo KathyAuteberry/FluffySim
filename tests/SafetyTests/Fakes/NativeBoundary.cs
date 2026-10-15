@@ -28,6 +28,7 @@ namespace AnoMech.Core.Native.Interfaces
         public void ReassertSuppressedLayers() { }
         public int SuppressLayer(ushort layer) => 0;
         public void HoldLayerActive(uint territory,ushort layer,bool active) { }
+        public void HoldInstanceActive(uint territory,ushort layer,uint instance,bool active) { }
         public string DescribeActiveLayers() => "fake";
         public string DescribeLiveEffects() => "fake";
     }

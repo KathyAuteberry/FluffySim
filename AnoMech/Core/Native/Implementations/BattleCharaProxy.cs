@@ -176,10 +176,7 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
     {
         var obj = Ptr;
         if (obj == null) return;
-        const VisibilityFlags bits = VisibilityFlags.Model | VisibilityFlags.Nameplate;
-        var go = (GameObject*)obj;
-        if (hidden) go->RenderFlags |= bits;
-        else go->RenderFlags &= ~bits;
+        PartyModelVisibility.Reconcile(obj, Slot, hidden, Offline.OfflineSession.InWorld);
     }
 
     public bool IsDrawObjectVisible
@@ -469,7 +466,8 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         var go = (GameObject*)obj;
         var draw = obj->DrawObject;
         return $"DrawObject={(draw == null ? "null" : draw->IsVisible ? "visible" : "hidden")} "
-            + $"RenderFlags={go->RenderFlags} ModelCharaId={obj->ModelContainer.ModelCharaId} "
+            + $"Slot={Slot} Entity=0x{go->EntityId:X} ReadyToDraw={go->IsReadyToDraw()} Representation={obj->RepresentationContainer.NameType} PartyMember={obj->IsPartyMember} "
+            + $"Offline={Offline.OfflineSession.InWorld} RenderFlags={go->RenderFlags} ModelCharaId={obj->ModelContainer.ModelCharaId} "
             + $"VfxScale={go->VfxScale:F2} Height={go->Height:F2} Scale={go->Scale:F2} "
             + $"ObjectKind={obj->ObjectKind} SubKind={obj->BattleNpcSubKind} Mode={obj->Mode}/{obj->ModeParam} "
             + $"ModelSkeletonId={obj->ModelContainer.ModelSkeletonId} Race={obj->DrawData.CustomizeData.Race}";
