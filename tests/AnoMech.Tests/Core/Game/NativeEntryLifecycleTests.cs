@@ -216,16 +216,8 @@ public class NativeEntryLifecycleTests
         if (scenario.Phase.Zone is DsrZone)
         {
             for (byte i = 0; i < 9; i++) Assert.That(fake.MapEffects.Applied.Last(e => e.Index == i).Flags, Is.EqualTo(0x00040004));
-            var dsrLayers = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;
-            foreach (ushort layer in new ushort[] { 0xF9D, 0x139F, 0xEE3C, 0xEE3F, 0xEE40, 0xF2DC, 0xFF52 })
-                Assert.That(dsrLayers[(968, layer)], Is.False);
-            foreach (ushort layer in new ushort[] { 0x160C, 0xEE79, 0xEE7A })
-                Assert.That(dsrLayers[(968, layer)], Is.True);
-            Assert.That(dsrLayers.ContainsKey((968, 0xEE3E)), Is.False, "Mixed scenery must not be switched as a whole layer");
-            Assert.That(dsrLayers.ContainsKey((968, 0xF2E0)), Is.False);
-            var dsrInstances = ((FakeLayoutFunctions)Natives.Layout).HeldInstanceStates;
-            Assert.That(dsrInstances, Has.Count.EqualTo(9));
-            Assert.That(dsrInstances.Values.All(active => !active), Is.True);
+            Assert.That(((FakeLayoutFunctions)Natives.Layout).HeldLayerStates, Is.Empty);
+            Assert.That(((FakeLayoutFunctions)Natives.Layout).HeldInstanceStates, Is.Empty);
             return;
         }
         var holds = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;

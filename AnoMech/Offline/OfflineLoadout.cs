@@ -30,7 +30,10 @@ internal sealed record OfflineLoadout(
     byte[] Customize,
     byte Voice,
     OfflineInnRoom Inn,
-    string Summary);
+    string Summary)
+{
+    public ushort HomeWorld { get; init; }
+}
 
 internal static class OfflineLoadouts
 {
@@ -97,7 +100,7 @@ internal static class OfflineLoadouts
         var inn = inns[0];
         var summary = $"{JobName(set.ClassJobId)} level {level}, i{set.ItemLevel}, about {maxHp:N0} HP, in {inn.Name}";
         return new OfflineLoadout(character, ChosenName(choice), set.ClassJobId, level, maxHp, DefaultMaxMp, Attributes(equipment, level), LookFromGearset(set),
-                                  equipment, appearance?.Customize ?? DefaultCustomize, appearance?.Voice ?? DefaultVoice, inn, summary);
+                                  equipment, appearance?.Customize ?? DefaultCustomize, appearance?.Voice ?? DefaultVoice, inn, summary) { HomeWorld = choice.HomeWorld };
     }
 
     public static ClassJob? JobRow(byte classJobId)

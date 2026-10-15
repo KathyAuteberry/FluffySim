@@ -18,6 +18,8 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Environment;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using FFXIVClientStructs.FFXIV.Client.Network;
+using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
+using AnoMech.Core.Native.Policies;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using Lumina.Excel.Sheets;
 using static FFXIVClientStructs.FFXIV.Client.Network.PacketDispatcher.Delegates;
@@ -249,13 +251,18 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         // SetWeatherMessage after a Leave) would permanently alter the open-world sky.
         if (!IsActive) return;
         pendingWeather = null;
+        offlineWeatherTransition.Clear();
         SaveOriginalWeather();
         ReceiveWeatherChange(weatherId, true, transition);
+        var game = GameMain.Instance();
+        if (AnoMech.Offline.OfflineSession.InWorld && game != null && game->CurrentTerritoryTypeId == 968)
+            offlineWeatherTransition.Request(weatherId);
         StartWeatherDiagnostic(weatherId);
     }
 
     // Weather for a fresh zone load, sent by TickWeather once the environment scene exists.
     private byte? pendingWeather;
+    private readonly OfflineWeatherTransition offlineWeatherTransition = new();
 
     private (byte WeatherId, bool Forced)? originalWeather;
     // The slot the WeatherChange handler writes.
@@ -286,9 +293,12 @@ public sealed unsafe partial class ZoneControl : IZoneControl
 
     private void RestoreOriginalWeather()
     {
+        offlineWeatherTransition.Clear();
         if (originalWeather is not { } original) return;
         originalWeather = null;
         ReceiveWeatherChange(original.WeatherId, original.Forced, 0f);
+        if (AnoMech.Offline.OfflineSession.InWorld && WeatherManager.Instance() != null)
+            WeatherManager.Instance()->Weathers[ServerWeatherSlot].Update();
     }
 
     // Read-only weather investigation: logs EnvManager/WeatherManager state at fixed checkpoints
@@ -317,6 +327,32 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     {
         if (!IsActive) return;
         SendPendingWeather();
+        if (AnoMech.Offline.OfflineSession.InWorld)
+        {
+            var world = LayoutWorld.Instance();
+            var game = GameMain.Instance();
+            var layout = world == null ? null : world->ActiveLayout;
+            var ready = layout != null && layout->InitState == 7 && layout->TerritoryTypeId == 968
+                && game != null && game->CurrentTerritoryTypeId == 968 && game->TerritoryLoadState == 2;
+            var manager = WeatherManager.Instance();
+            if (manager != null)
+                offlineWeatherTransition.Tick(ready ? (nint)layout : 0,
+                    () => manager->Weathers[ServerWeatherSlot].CurrentWeatherId,
+                    wanted =>
+                    {
+                        var previous = manager->Weathers[ServerWeatherSlot];
+                        ReceiveWeatherChange(wanted, true, 0f);
+                        AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=ready-layout before={previous.CurrentWeatherId}/{previous.NextWeatherId} requested={wanted} actual={manager->Weathers[ServerWeatherSlot].CurrentWeatherId}/{manager->Weathers[ServerWeatherSlot].NextWeatherId}");
+                    },
+                    () =>
+                    {
+                        ref var weather = ref manager->Weathers[ServerWeatherSlot];
+                        var before = weather.CurrentWeatherId;
+                        weather.Update();
+                        if (before != weather.CurrentWeatherId)
+                            AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=ServerWeather.Update before={before} requested={weather.NextWeatherId} actual={weather.CurrentWeatherId}");
+                    });
+        }
 
         if (weatherDiagStartMs is not { } start) return;
         var elapsedMs = Environment.TickCount64 - start;

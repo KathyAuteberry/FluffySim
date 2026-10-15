@@ -97,16 +97,48 @@ internal sealed unsafe class PartyHud : IPartyHud
         var packet = new UpdatePartyPacket();
         var entries = (UpdatePartyPacketMember*)&packet;
         var count = Math.Min(members.Count, UpdatePartyPacket.Capacity);
+        var game = GameMain.Instance();
+        var territory = game == null ? (ushort)0 : (ushort)game->CurrentTerritoryTypeId;
         for (var i = 0; i < count; i++)
-            WriteEntry(&entries[i], (BattleChara*)members[i]);
+            WriteEntry(&entries[i], (BattleChara*)members[i], territory);
+        if (AnoMech.Offline.OfflineSession.InWorld)
+            CacheOfflineNames(ref packet, count, OfflinePartyIdentity.Store);
         packet.MemberCount = (byte)count;
         packet.LeaderIndex = 0;
         packet.PartyId = real.PartyId != 0 ? real.PartyId : SimPartyId;
         packet.PartyId_2 = real.PartyId_2 != 0 ? real.PartyId_2 : SimPartyId;
         PacketDispatcherPointers.HandleUpdatePartyPacket(0, &packet, 0);
+        if (AnoMech.Offline.OfflineSession.InWorld && AnoMech.Offline.OfflineProbe.TraceEnvironment)
+        {
+            var manager = GroupManager.Instance();
+            for (var i = 0; manager != null && i < count; i++)
+            {
+                var actor = (BattleChara*)members[i];
+                ref var member = ref manager->MainGroup.PartyMembers[i];
+                var nativeName = member.Name;
+                var terminator = nativeName.IndexOf((byte)0);
+                var rosterName = System.Text.Encoding.UTF8.GetString(terminator < 0 ? nativeName : nativeName[..terminator]);
+                AnoMech.Core.DiagnosticLog.Info($"[OfflineIdentity] slot={i} actor=0x{actor->EntityId:X} roster=0x{member.EntityId:X} actorName={((GameObject*)actor)->GetName()} rosterName={rosterName} actorWorld={actor->HomeWorld} rosterWorld={member.HomeWorld} draw={actor->DrawObject != null}");
+            }
+        }
     }
 
-    private static void WriteEntry(UpdatePartyPacketMember* entry, BattleChara* bc)
+    internal static void CacheOfflineNames(ref UpdatePartyPacket packet, int count, Action<uint, ulong, string, ushort, byte> cache)
+    {
+        fixed (UpdatePartyPacket* ptr = &packet)
+        {
+            var entries = (UpdatePartyPacketMember*)ptr;
+            for (var i = 0; i < Math.Min(count, UpdatePartyPacket.Capacity); i++)
+            {
+                var entry = &entries[i];
+                var name = new ReadOnlySpan<byte>(entry->Name, UpdatePartyPacketMember.NameLength);
+                var end = name.IndexOf((byte)0);
+                cache(entry->EntityId, entry->ContentId, System.Text.Encoding.UTF8.GetString(end < 0 ? name : name[..end]), entry->HomeWorld, entry->Sex);
+            }
+        }
+    }
+
+    internal static void WriteEntry(UpdatePartyPacketMember* entry, BattleChara* bc, ushort territory)
     {
         var obj = (GameObject*)bc;
         // The local player keeps its real ids: AgentReadyCheck and other party lookups match on them.
@@ -120,8 +152,7 @@ internal sealed unsafe class PartyHud : IPartyHud
         entry->CurrentMP = (ushort)bc->Mana;
         entry->MaxMP = (ushort)bc->MaxMana;
         entry->HomeWorld = bc->HomeWorld;
-        var game = GameMain.Instance();
-        entry->TerritoryType = game == null ? (ushort)0 : (ushort)game->CurrentTerritoryTypeId;
+        entry->TerritoryType = territory;
         entry->Valid = 1;
         entry->ClassJob = bc->ClassJob;
         entry->Sex = bc->DrawData.CustomizeData.Sex;

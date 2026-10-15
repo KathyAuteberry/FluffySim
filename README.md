@@ -42,7 +42,7 @@ Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in D
 
 FluffySim extends [AnoMech by Anomek and contributors](https://github.com/anomek/AnoMech). Original native simulation infrastructure and the scenarios listed below retain their upstream attribution. The existing icon is inherited from AnoMech; no new logo is implied.
 
-Experimental title-screen offline mode and Evernow's firewall/recast consistency improvements are integrated; read [usage, limitations and attribution](UPSTREAM-INTEGRATION.md) before testing. Native offline launch has not yet been validated in this fork.
+Experimental title-screen offline mode and Evernow's firewall/recast consistency improvements are integrated; read [usage, limitations and attribution](UPSTREAM-INTEGRATION.md) before testing. Offline config requires your character name and actual home world; local gearset files do not contain that identity metadata. Manually disable Discord Chat Bridge before offline entry until it handles invalid authenticated-world references. See the [offline repair notes and client checklist](OFFLINE-DSR-REPAIR.md) for the remaining DSR scenery and party-UI validation.
 
 See [Hard movement audit](HARD-DIFFICULTY-AUDIT.md), [release/versioning instructions](RELEASING.md), and [release notes](CHANGELOG.md).
 

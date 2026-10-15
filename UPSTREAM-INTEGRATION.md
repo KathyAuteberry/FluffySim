@@ -142,14 +142,12 @@ retains P1 layers `EE3C`, `EE3F`, `EE40`, `F2DC`, `F9D`, `139F`, `FF52` and leav
 agree on their opposite states. MapEffect slots B47/B48 control separate shared groups;
 setting their state to 4 does not switch this background scenery.
 
-`DsrZone.P2` now holds only these differing layers in the recorded P2 state through the same
-ready-layout reconciliation used by FRU. Mixed layers are not switched wholesale: only seven
-recorded light instances in `EE3E` and two background parts in `F2E0` are held inactive, leaving
-their other scenery intact. The shared layout facility resolves instance keys against the
-current layout every tick, so late streaming and later phase reactivation are reconciled
-without retaining old native pointers. Holds clear on phase change/leave. Already-correct
-inn objects receive no SetActive call. No collision flags, floors, coordinates, weather,
-barrier or mechanic rules were altered independently of those verified scenery operations.
+The initial layer-hold repair was superseded after the user's flicker report. Offline
+ServerWeather retained current 2 while next 45 was queued; continuous P2 holds competed
+with native phase selection. DSR now commits the existing native pending weather once per
+ready layout generation and leaves scenery ownership to the native environment selector.
+See [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md) for snapshot/runtime evidence, native
+method verification, identity fixes and remaining client checks. FRU holds are unchanged.
 
 ### Offline party models and party HUD
 
@@ -243,3 +241,12 @@ isolated/offline session; use Leave and the explicit offline exit first.
   no version was changed, and no packet-filter/action/recast production code was modified.
 - The merge remains empty with four parents, all three accepted PR heads and upstream master
   are ancestors, the working area is empty above it, and no conflicts/divergent changes remain.
+
+## Final offline follow-up
+
+The local functional change before the four-parent merge replaces DSR's competing holds
+with bounded weather finalization, initializes configured world metadata and local display
+name caches, and adds change-only diagnostics. The offline lobby remains disconnected;
+Discord Chat Bridge requires an invalid-HomeWorld guard and should be disabled manually
+for offline testing until updated. No installed external plugin is modified. Details and
+proposed unpublished upstream patch: [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md).

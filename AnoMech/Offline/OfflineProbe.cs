@@ -14,6 +14,7 @@ namespace AnoMech.Offline;
 
 internal static unsafe class OfflineProbe
 {
+    internal static bool TraceEnvironment;
     public static string Describe(string where)
     {
         try
@@ -56,7 +57,7 @@ internal static unsafe class OfflineProbe
 
         var state = CSPlayerState.Instance();
         if (state != null)
-            text.Append($" playerState loaded={state->IsLoaded} entity=0x{state->EntityId:X} job={state->CurrentClassJobId} level={state->CurrentLevel};");
+            text.Append($" playerState loaded={state->IsLoaded} entity=0x{state->EntityId:X} job={state->CurrentClassJobId} level={state->CurrentLevel} name={state->CharacterNameString};");
 
         var characters = CharacterManager.Instance();
         if (characters != null)
@@ -87,6 +88,7 @@ internal static unsafe class OfflineProbe
 
         var conditions = string.Join(",", Enum.GetValues<ConditionFlag>().Where(f => (int)f != 0 && Plugin.Condition[f]).Select(f => f.ToString()).Distinct());
         text.Append($" conditions=[{conditions}];");
+        text.Append($" identity name={Plugin.PlayerState.CharacterName} homeRow={Plugin.PlayerState.HomeWorld.RowId} homeValid={Plugin.PlayerState.HomeWorld.IsValid} currentRow={Plugin.PlayerState.CurrentWorld.RowId} currentValid={Plugin.PlayerState.CurrentWorld.IsValid};");
         text.Append($" dalamud loggedIn={Plugin.ClientState.IsLoggedIn} territory={Plugin.ClientState.TerritoryType} localPlayer={Plugin.ObjectTable.LocalPlayer?.Name.TextValue ?? "none"}");
         return text.ToString();
     }

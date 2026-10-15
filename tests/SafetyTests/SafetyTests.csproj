@@ -34,6 +34,7 @@
     <Compile Include="../../AnoMech/Core/Native/Implementations/ZoneControl.Practice.cs" Link="Plugin/ZoneControl.Practice.cs" />
     <Compile Include="../../AnoMech/Core/Native/Interfaces/IZoneControl.cs" Link="Plugin/IZoneControl.cs" />
     <Compile Include="../../AnoMech/Core/Map/MapController.cs" Link="Plugin/MapController.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Policies/OfflineWeatherTransition.cs" Link="Plugin/OfflineWeatherTransition.cs" />
     <Compile Include="../../AnoMech/Core/Native/Policies/PacketFilterPolicy.cs" Link="Plugin/PacketFilterPolicy.cs" />
     <Compile Include="../../AnoMech/Core/Native/Policies/FirewallLiftPolicy.cs" Link="Plugin/FirewallLiftPolicy.cs" />
     <Compile Include="../../AnoMech/Core/UserActions/PracticeRecastSession.cs" Link="Plugin/PracticeRecastSession.cs" />

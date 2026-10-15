@@ -37,12 +37,14 @@ internal sealed class OfflineConfigWindow : Window
                            + "and settings as saved on this PC. Nothing can write to the game's folder while it runs, and returning to the title screen "
                            + "puts everything back, so logging in afterwards is exactly as if offline mode never ran. Anything changed offline is forgotten.");
         ImGui.TextDisabled(OfflineSession.LoginPrecaution);
+        ImGui.TextWrapped("Discord Chat Bridge currently assumes an authenticated home world and can crash during offline entry. Disable it before offline practice until its invalid-world handling is fixed.");
         if (Store.LoadProblem is { } problem) ImGui.TextColored(ImGuiColors.DalamudRed, problem);
         ImGui.PopTextWrapPos();
         ImGui.Spacing();
 
         ImGui.BeginDisabled(session.Busy);
         DrawChoices();
+        ImGui.Checkbox("Trace offline environment and party identity", ref OfflineProbe.TraceEnvironment);
         ImGui.EndDisabled();
 
         if (session.OtherPlugins.Count > 0)
@@ -137,6 +139,22 @@ internal sealed class OfflineConfigWindow : Window
         if (ImGui.IsItemDeactivatedAfterEdit()) Changed(selected);
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGui.SetTooltip("The name your character shows offline. The game doesn't keep character names on this PC.");
+
+        Label("Home world");
+        var worlds = Plugin.DataManager.GetExcelSheet<Lumina.Excel.Sheets.World>();
+        var selectedWorld = worlds.GetRowOrDefault(choice.HomeWorld);
+        ImGui.SetNextItemWidth(FieldWidth * ImGuiHelpers.GlobalScale);
+        if (ImGui.BeginCombo("##offlineworld", selectedWorld?.Name.ExtractText() ?? "Select your actual home world"))
+        {
+            foreach (var world in worlds.Where(w => w.IsPublic).OrderBy(w => w.Name.ExtractText()))
+                if (ImGui.Selectable(world.Name.ExtractText(), world.RowId == choice.HomeWorld))
+                {
+                    choice.HomeWorld = (ushort)world.RowId;
+                    Changed(selected);
+                }
+            ImGui.EndCombo();
+        }
+        ImGui.TextDisabled("Local display metadata only; no server login. Choose your character's actual world.");
 
         var appearances = session.Appearances;
         var appearance = OfflineLoadouts.ChosenAppearance(choice, appearances);

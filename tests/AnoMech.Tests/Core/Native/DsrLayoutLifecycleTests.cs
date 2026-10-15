@@ -9,7 +9,7 @@ namespace AnoMech.Tests;
 public class DsrLayoutLifecycleTests
 {
     [TestCase(false)] [TestCase(true)]
-    public void RecordedP2HoldsSurviveColdStreamingAndLaterP1Reactivation(bool initiallyP1)
+    public void GenericHoldsRespectColdStreamingAndMixedInstances(bool initiallyP1)
     {
         var fake = FakeGame.Install();
         DalamudServices.Install(nameof(Plugin.Config), new Configuration());
@@ -18,7 +18,11 @@ public class DsrLayoutLifecycleTests
         fake.Frame(0, game.Tick);
         var layout = new LayoutFunctions();
         Natives.Layout = layout;
-        DsrZone.P2.RunClientSetup(game.World);
+        layout.HoldLayerActive(968, 0xEE3C, false);
+        layout.HoldLayerActive(968, 0xEE79, true);
+        layout.HoldLayerActive(968, 0xEE7A, true);
+        layout.HoldInstanceActive(968, 0xEE3E, 0x833316, false);
+        layout.HoldInstanceActive(968, 0xF2E0, 0x8A4AF3, false);
         var objects = new Dictionary<nint, (ushort Layer, uint Instance, bool Active)>
         {
             [1] = (0xEE3C, 1, initiallyP1),

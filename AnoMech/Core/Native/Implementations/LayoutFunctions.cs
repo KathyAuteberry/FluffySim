@@ -35,6 +35,7 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
     {
         foreach (var ptr in suppressedLayerInstances)
             ((ILayoutInstance*)ptr)->SetActive(false);
+        TraceOfflineDsr();
         if (heldLayerStates.Count == 0 && heldInstanceStates.Count == 0) return;
         var world = LayoutWorld.Instance();
         var game = GameMain.Instance();
@@ -66,8 +67,31 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
         }
     }
 
+    private string? lastOfflineDsrState;
+
+    private void TraceOfflineDsr()
+    {
+        if (!AnoMech.Offline.OfflineSession.InWorld || !AnoMech.Offline.OfflineProbe.TraceEnvironment) return;
+        var game = GameMain.Instance();
+        var world = LayoutWorld.Instance();
+        var layout = world == null ? null : world->ActiveLayout;
+        if (game == null || game->CurrentTerritoryTypeId != 968 || layout == null) return;
+        var state = $"layout=0x{(nint)layout:X} init={layout->InitState} load={game->TerritoryLoadState}";
+        foreach (ushort key in new ushort[] {60988, 61049, 61050, 60991, 62172})
+        {
+            var instances = LayoutQuery.CollectLayerInstances(key);
+            var active = 0;
+            foreach (var ptr in instances) if (((ILayoutInstance*)ptr)->IsActive) active++;
+            state += $" layer={key}:{active}/{instances.Count}";
+        }
+        if (state == lastOfflineDsrState) return;
+        DiagnosticLog.Info($"[OfflineDsrLayout] monotonic={System.Diagnostics.Stopwatch.GetTimestamp()} sim={Plugin.Game?.EventClockNow:F3} observer=LayoutFunctions previous=[{lastOfflineDsrState ?? "none"}] actual=[{state}]");
+        lastOfflineDsrState = state;
+    }
+
     public void ClearSuppressedLayers()
     {
+        lastOfflineDsrState = null;
         suppressedLayerInstances.Clear();
         heldLayerStates.Clear();
         heldInstanceStates.Clear();

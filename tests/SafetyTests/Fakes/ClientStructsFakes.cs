@@ -29,6 +29,7 @@ namespace FFXIVClientStructs.FFXIV.Client.Game
     [StructLayout(LayoutKind.Sequential)]
     public unsafe struct GameMain
     {
+        public uint TerritoryLoadState;
         public uint CurrentTerritoryTypeId;
 
         public static GameMain* Instance() => (GameMain*)VirtualGame.Current.GameMainMemory;
@@ -96,6 +97,7 @@ namespace FFXIVClientStructs.FFXIV.Client.Game
             public byte CurrentWeatherId;
             public bool IsCurrentWeatherForced;
             public bool IsNextWeatherForced;
+            public bool Update() => false;
         }
 
         public byte GetCurrentWeather() => WeatherId;
@@ -318,5 +320,19 @@ namespace FFXIVClientStructs.FFXIV.Client.LayoutEngine
         public void SetActive(bool active)
         {
         }
+    }
+}
+
+namespace FFXIVClientStructs.FFXIV.Client.LayoutEngine
+{
+    public unsafe struct LayoutWorld
+    {
+        public LayoutManager* ActiveLayout;
+        public static LayoutWorld* Instance() => null;
+    }
+    public struct LayoutManager
+    {
+        public int InitState;
+        public uint TerritoryTypeId;
     }
 }

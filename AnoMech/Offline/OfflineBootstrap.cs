@@ -1,4 +1,5 @@
 using System;
+using AnoMech.Core.Native.Implementations.Interop;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -191,6 +192,8 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
 
         if (Plugin.DataManager.GetExcelSheet<TerritoryType>().GetRowOrDefault(inn.TerritoryId) is not { } territory)
             return Fail(out status, "The inn room couldn't be read from the game data.");
+        if (!OfflineIdentity.HasHomeWorld(loadout.HomeWorld, id => Plugin.DataManager.GetExcelSheet<World>().GetRowOrDefault(id) is { IsPublic: true }))
+            return Fail(out status, "Select your actual home world in Offline config before starting. Local gearset files do not contain it.");
         weatherId = FirstWeather(territory);
         if (session.UseConfig && !OfflineGameFiles.CanLoadConfig(out var configWhy))
             return Fail(out status, $"Your configuration can't be loaded on this game version ({configWhy}). Turn off \"Use my hotbars, keybinds, HUD layout and settings\" to go offline without it.");
@@ -402,6 +405,7 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
     {
         status = "Entering the inn...";
         var packet = BuildSpawn();
+        OfflinePartyIdentity.Store(LocalEntityId, SandboxContentId, loadout.Name, loadout.HomeWorld, loadout.Customize[1]);
         OfflineTrace.Write("[Offline] HandleSpawnPlayerPacket.");
         PacketDispatcher.HandleSpawnPlayerPacket(LocalEntityId, &packet);
         if (Control.Instance()->LocalPlayer == null)
@@ -459,6 +463,7 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
     {
         var look = loadout.Look;
         var packet = new SpawnPlayerPacket { ContentId = SandboxContentId };
+        OfflineIdentity.ConfigureSpawn(ref packet, loadout.Name, loadout.HomeWorld);
         ref var common = ref packet.Common;
         common.TargetId = InvalidObjectId;
         common.CombatTaggerId = InvalidObjectId;
@@ -488,7 +493,6 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
         }
         common.GlassesIds[0] = look.Glasses[0];
         common.GlassesIds[1] = look.Glasses[1];
-        WriteString(common.Name, loadout.Name);
         loadout.Customize.CopyTo(common.CustomizeData.Data);
         return packet;
     }

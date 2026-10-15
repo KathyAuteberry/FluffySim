@@ -206,14 +206,8 @@ public class DsrStrengthTests
                 Assert.That(p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>(), Is.Empty);
                 Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Is.EqualTo(Enumerable.Range(0,9).Select(i => (0x00040004u,(byte)i))));
                 var layout = (FakeLayoutFunctions)AnoMech.Core.Native.Interfaces.Natives.Layout;
-                Assert.That(layout.HeldLayerStates, Is.EquivalentTo(new Dictionary<(uint, ushort), bool>
-                {
-                    [(968, 0xF9D)] = false, [(968, 0x139F)] = false,
-                    [(968, 0xEE3C)] = false, [(968, 0xEE3F)] = false, [(968, 0xEE40)] = false,
-                    [(968, 0xF2DC)] = false, [(968, 0xFF52)] = false,
-                    [(968, 0x160C)] = true, [(968, 0xEE79)] = true, [(968, 0xEE7A)] = true,
-                }));
-                Assert.That(layout.HeldInstanceStates, Has.Count.EqualTo(9));
+                Assert.That(layout.HeldLayerStates, Is.Empty);
+                Assert.That(layout.HeldInstanceStates, Is.Empty);
             },
         });
         Assert.That(inspected, Is.True);

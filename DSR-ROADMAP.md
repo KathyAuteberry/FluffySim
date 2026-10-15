@@ -732,3 +732,13 @@ Native hotbar tank defenses and Arm's Length/Surecast resolve independently of t
 - Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
 - Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
 - Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
+
+### Offline P2 flicker follow-up
+
+The latest online/offline snapshots and weather checkpoints identify a queued but
+uncommitted offline weather-45 transition. DSR's previous continuous layer holds have been
+removed; a ready-layout generation finalizes the existing native weather transition once,
+then leaves the native environment selector in charge. All four scenarios share this path.
+No mechanic, map-slot, collision, Meteors clock or tower-lifetime changes. Cold-load and
+restart policy tests are automated; stable native scenery still requires user validation.
+See [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md) for evidence and the two-mode checklist.

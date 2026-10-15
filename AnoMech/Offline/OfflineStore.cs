@@ -10,6 +10,7 @@ namespace AnoMech.Offline;
 public sealed class OfflineChoice
 {
     public string Name { get; set; } = "";
+    public ushort HomeWorld { get; set; }
     public int GearsetId { get; set; } = -1;
     public string? Appearance { get; set; }
 }
