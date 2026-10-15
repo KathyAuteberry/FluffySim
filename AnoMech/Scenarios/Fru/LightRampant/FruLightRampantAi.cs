@@ -103,7 +103,7 @@ public sealed class FruLightRampantAi : IScenarioAi<FruLightRampantState>
 
     private void MovePuddles(int drop)
     {
-        float[] angles = [-135f, -135f, -90f, -55f, -25f];
+        float[] angles = [-135f, -135f, -90f, -55f, -23f];
         float[] radii = [4f, 10.5f, 12f, 12f, 10f];
         var angle = angles[drop] * MathF.PI / 180f;
         var radius = radii[drop];

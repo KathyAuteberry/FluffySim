@@ -11,10 +11,8 @@ using Dalamud.Hooking;
 
 namespace AnoMech.Offline;
 
-// While armed, nothing in the process can change the game's user folder, character folders or
-// saved appearance data: not the game, not Dalamud, not another plugin. The hooks sit on
-// KernelBase's own implementations, which every module's file calls end in; reads and every
-// other path pass straight through.
+// Blocks new write-capable opens and path mutations through the reviewed KernelBase APIs.
+// Existing writable handles and memory mappings are outside this guard.
 internal sealed unsafe class OfflineFileGuard : IDisposable
 {
     private const string KernelBase = "kernelbase.dll";
@@ -59,6 +57,7 @@ internal sealed unsafe class OfflineFileGuard : IDisposable
     private readonly string finalUserFolder;
     private readonly List<IDisposable> hooks = [];
     private readonly List<Action> enables = [];
+    private readonly List<Func<bool>> enabled = [];
     private CreateFileDelegate createFile = null!;
     private CreateFile2Delegate createFile2 = null!;
     private ReOpenFileDelegate reOpenFile = null!;
@@ -126,10 +125,12 @@ internal sealed unsafe class OfflineFileGuard : IDisposable
         }
     }
 
+    public bool Armed => armed && enabled.Count > 0 && enabled.All(check => check());
+
     public bool Arm(out string why)
     {
         why = "";
-        if (armed) return true;
+        if (armed) { why = Armed ? "" : "an offline guard hook is no longer enabled"; return Armed; }
         if (userFolder.Length == 0)
         {
             why = "the game's user folder couldn't be determined";
@@ -157,6 +158,7 @@ internal sealed unsafe class OfflineFileGuard : IDisposable
             // compiling a detour or its marshalling stub on first use could deadlock.
             WarmUp();
             foreach (var enable in enables) enable();
+            if (enabled.Any(check => !check())) throw new InvalidOperationException("An offline guard hook did not enable.");
             armed = true;
             if (Probe() is { } failed)
             {
@@ -165,7 +167,7 @@ internal sealed unsafe class OfflineFileGuard : IDisposable
                 DiagnosticLog.Warn($"[Offline] File guard failed its check: {failed}.");
                 return false;
             }
-            DiagnosticLog.Info($"[Offline] File guard armed and checked: nothing in the process can change {userFolder}, FFXIV_CHR folders or saved appearance data.");
+            DiagnosticLog.Info($"[Offline] File guard armed and checked: reviewed writes and path mutations are blocked for {userFolder}.");
             return true;
         }
         catch (Exception e)
@@ -182,6 +184,7 @@ internal sealed unsafe class OfflineFileGuard : IDisposable
         var hook = Plugin.GameInterop.HookFromSymbol(KernelBase, function, detour);
         hooks.Add(hook);
         enables.Add(hook.Enable);
+        enabled.Add(() => hook.IsEnabled && !hook.IsDisposed);
         KeepAlive.Add(detour);
         KeepAlive.Add(hook.Original);
         return hook.Original;

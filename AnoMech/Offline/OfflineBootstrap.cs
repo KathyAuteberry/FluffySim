@@ -89,6 +89,8 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
 
     public OfflineMenuGuard Menus { get; }
 
+    public bool GuardsIntact => files.Armed && guard.Armed && connections.Armed;
+
     public bool RearmGuards(out string why) => files.Arm(out why) && guard.Arm(out why) && connections.Arm(out why);
 
     public bool ChangedGameState => stage > Stage.Preflight;
@@ -222,6 +224,8 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
     private Result LoadConfig(out string status)
     {
         status = "Loading your configuration...";
+        if (!GuardsIntact || OfflineProbe.ZoneClient() != 0 || Plugin.ClientState.IsLoggedIn)
+            return Fail(out status, "The client is no longer disconnected or an offline guard is unavailable.");
         OfflineProcessState.Tainted = true;
         if (session.UseConfig) OfflineGameFiles.LoadConfig(loadout.Character.Folder, OfflineTrace.Write);
         else OfflineGameFiles.LoadDefaults(OfflineTrace.Write);

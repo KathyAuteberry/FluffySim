@@ -10,7 +10,7 @@ internal static class OfflineTrace
     public static void Begin()
     {
         DiagnosticLog.BeginOffline();
-        Write($"[Offline] AnoMech {PluginBuildInfo.Version} ({PluginBuildInfo.ShortChecksum}), game {OfflineGameFiles.GameVersion()}.");
+        Write($"[Offline] FluffySim {PluginBuildInfo.Version} ({PluginBuildInfo.ShortChecksum}), game {OfflineGameFiles.GameVersion()}.");
     }
 
     public static void End() => DiagnosticLog.EndOffline();

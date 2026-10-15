@@ -1,6 +1,7 @@
 using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -51,7 +52,7 @@ public class ZoneLoadFailureTests : FirewallTestBase
         };
         StartAndSettle(SimZone.Top);
         Game.RunFor(3);
-        AssertStoppedWithTheFirewallUp("inn reload did not complete");
+        AssertStoppedWithTheFirewallUp("inn reload threw");
     }
 
     [Fact]

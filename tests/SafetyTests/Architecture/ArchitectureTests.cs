@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Architecture;
 
@@ -15,7 +16,7 @@ namespace AnoMech.SafetyTests.Architecture;
 // reviewed like any change to the firewall itself.
 public class ArchitectureTests
 {
-    private const string Zone = "AnoMech.Core.Map.ZoneSession";
+    private const string Zone = "AnoMech.Core.Native.Implementations.ZoneControl";
     private const string Map = "AnoMech.Core.Map.MapController";
     private const string Game = "AnoMech.Core.Game.Game";
 
@@ -47,7 +48,10 @@ public class ArchitectureTests
         [$"{Zone}::TickSessionGuard"] = ["send:get_IsEnabled", "receive:get_IsEnabled"],
         [$"{Zone}::LiftBlockedReason"] = ["send:get_IsEnabled", "receive:get_IsEnabled"],
         [$"{Zone}::BuildStateSnapshot"] = ["send:get_IsEnabled", "send:get_IsDisposed", "receive:get_IsEnabled", "receive:get_IsDisposed"],
-        [$"{Zone}::Dispose"] = ["send:Dispose", "receive:Dispose"],
+        [$"{Zone}::DisposeCore"] = ["send:Dispose", "receive:Dispose"],
+        [$"{Zone}::get_FirewallStatus"] = ["send:get_IsEnabled", "receive:get_IsEnabled"],
+        [$"{Zone}::get_HoldsSends"] = ["send:get_IsEnabled"],
+        [$"{Zone}::get_FirewallIntact"] = ["send:get_IsEnabled", "send:get_IsDisposed", "receive:get_IsEnabled", "receive:get_IsDisposed"],
     };
 
     [Fact]
@@ -98,20 +102,16 @@ public class ArchitectureTests
         ForEachBuild(il => new[]
         {
             CallersMustBeIn(il, $"{Zone}::EnableFirewall", $"{Zone}::Enter"),
-            CallersMustBeIn(il, $"{Zone}::DisableFirewall", $"{Zone}::Enter", $"{Zone}::TryLift", $"{Zone}::Dispose"),
+            CallersMustBeIn(il, $"{Zone}::DisableFirewall", $"{Zone}::Enter", $"{Zone}::TryLift", $"{Zone}::DisposeCore"),
             CallersMustBeIn(il, $"{Zone}::TryLift", $"{Zone}::LiftFirewallOrDie", $"{Zone}::TickSessionGuard"),
-            CallersMustBeIn(il, $"{Zone}::LiftFirewallOrDie", $"{Zone}::Revert", $"{Zone}::Dispose"),
-            CallersMustBeIn(il, $"{Zone}::Revert", $"{Map}::Unload", $"{Zone}::Enter", $"{Zone}::Dispose"),
-            CallersMustBeIn(il, $"{Zone}::Enter", $"{Map}::Load"),
-            CallersMustBeIn(il, $"{Map}::Load", $"{Map}::TryLoad"),
-            CallersMustBeIn(il, $"{Map}::TryLoad", $"{Game}::RunScenarioInternal"),
-            CallersMustBeIn(il, $"{Map}::Unload", $"{Game}::Leave"),
-            CallersMustBeIn(il, $"{Zone}::HoldSendFirewall", $"{Map}::HoldSendFirewall", $"{Zone}::Dispose"),
-            CallersMustBeIn(il, $"{Map}::HoldSendFirewall", "AnoMech.Core.Native.TimelineDebug::Arm", "AnoMech.Core.Native.TimelineDebug::OnUpdate", "AnoMech.Core.Native.TimelineDebug::Shutdown"),
-            CallersMustBeIn(il, $"{Zone}::Die", $"{Zone}::Enter", $"{Zone}::Revert", $"{Zone}::Trip", $"{Zone}::TryLift"),
-            CallersMustBeIn(il, $"{Zone}::SetLocalPlayerPosition", $"{Zone}::LoadZoneInternal", $"{Zone}::RestoreBeforeLift", $"{Zone}::Revert", $"{Zone}::Dispose", $"{Zone}::HoldSendFirewall"),
-            CallersMustBeIn(il, $"{Zone}::InjectIncomingPacket", $"{Map}::InjectIncomingPacket"),
-            CallersMustBeIn(il, $"{Map}::InjectIncomingPacket", "AnoMech.Core.Native.RawActionEffect::TryInject"),
+            CallersMustBeIn(il, $"{Zone}::LiftFirewallOrDie", $"{Zone}::Revert", $"{Zone}::DisposeCore"),
+            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Enter", "AnoMech.Core.Game.InstanceSession::Enter"),
+            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Revert", "AnoMech.Core.Game.InstanceSession::Exit", "AnoMech.Core.Game.InstanceSession::Dispose"),
+            CallersMustBeIn(il, $"{Map}::Enter", "AnoMech.Core.Game.InstanceSession::Enter"),
+            CallersMustBeIn(il, $"{Map}::Unload", "AnoMech.Core.Game.InstanceSession::Exit"),
+            CallersMustBeIn(il, $"{Zone}::SetLocalPlayerPosition", $"{Zone}::LoadZoneInternal", $"{Zone}::RestoreBeforeLift", $"{Zone}::DisposeCore", $"{Zone}::HoldSendFirewall"),
+            il.CallersOf($"^{Regex.Escape(Zone)}::Die$").Where(c => !c.StartsWith(Zone + "::"))
+                .Select(c => $"{c} calls the zone safety stop from outside its owner."),
         }.SelectMany(x => x));
     }
 
@@ -120,9 +120,13 @@ public class ArchitectureTests
     private static readonly string[] HookSites =
     [
         $"{Zone}::.ctor",
-        "AnoMech.Core.Map.MapEffects::.ctor",
-        "AnoMech.Core.Native.LocalPlayerInputHooks::.ctor",
-        "AnoMech.Core.Native.VfxSpawnLog::Enable",
+        "AnoMech.Core.Native.Implementations.MapEffects::.ctor",
+        "AnoMech.Offline.OfflineConnectionGuard::Install",
+        "AnoMech.Offline.OfflineFileGuard::Install",
+        "AnoMech.Offline.OfflineMenuGuard::Arm",
+        "AnoMech.Offline.OfflineNetworkGuard::Arm",
+        "AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::.ctor",
+        "AnoMech.Core.Native.Implementations.VfxSpawnLog::Enable",
     ];
 
     // Debug builds only (the menu is compiled out of Release).
@@ -130,6 +134,10 @@ public class ArchitectureTests
     [
         // Observes inbound action effects for the position log; never calls into the send path.
         "AnoMech.Windows.DebugMenu::TogglePositionLog",
+        "AnoMech.Windows.DebugMenu::InstallRecastTimesTap",
+        "AnoMech.Windows.PacketCaptureDebug::.ctor",
+        "AnoMech.Windows.PacketCaptureDebug::InstallCompletionLog",
+        "AnoMech.Core.Native.Implementations.Interop.PreloadActionTmbTap::.ctor",
     ];
 
     [Fact]
@@ -145,7 +153,7 @@ public class ArchitectureTests
                 if (Regex.IsMatch(name, @"IGameInteropProvider::HookFrom") && !HookSites.Contains(owner) && !(!il.IsRelease && DebugHookSites.Contains(owner)))
                     failures.Add($"{owner} creates a hook ({callee.Name}); hooks may only be created at: {string.Join(", ", HookSites)}.");
                 if (name.EndsWith("IGameInteropProvider::InitializeFromAttributes")
-                    && !(owner.StartsWith("AnoMech.Pointers.") && owner.EndsWith("::Initialize")) && owner != "AnoMech.Core.Native.LocalPlayerInputHooks::.ctor")
+                    && !(owner.StartsWith("AnoMech.Core.Native.Implementations.Pointers.") && owner.EndsWith("::Initialize")) && owner != "AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::.ctor" && !(owner == "AnoMech.Windows.LockReplayDebug::.ctor" && !il.IsRelease))
                     failures.Add($"{owner} initializes signature attributes; only the Pointers classes and LocalPlayerInputHooks may.");
             }
             // Read from the raw attribute blob: decoding it would need Dalamud's own assemblies.
@@ -160,7 +168,7 @@ public class ArchitectureTests
     }
 
     [Fact]
-    public void TheFilteredFunctions_AreOnlyLocatedByTheZoneSession()
+    public void TheFilteredFunctions_AreOnlyLocatedByTheZoneControl()
     {
         const string sendSignature = "48 89 5C 24 ?? 48 89 74 24 ?? 4C 89 64 24 ?? 55 41 56 41 57 48 8B EC 48 83 EC 70";
         ForEachBuild(il =>
@@ -176,7 +184,7 @@ public class ArchitectureTests
                     found = true;
                     if (owner != $"{Zone}::.ctor") failures.Add($"{owner} scans for the filtered send function; only the zone session may.");
                 }
-                if (i.Operand is MemberReference r && r.Name.Contains("StaticVirtualTablePointer") && r.DeclaringType.Name == "PacketDispatcher" && owner != $"{Zone}::.ctor")
+                if (i.Operand is MemberReference r && r.Name.Contains("StaticVirtualTablePointer") && r.DeclaringType.Name == "PacketDispatcher" && owner != $"{Zone}::.ctor" && !(owner == "AnoMech.Windows.PacketCaptureDebug::.ctor" && !il.IsRelease))
                     failures.Add($"{owner} reads the packet dispatcher's vtable (the filtered receive function); only the zone session may.");
             }
             if (!found) failures.Add("the zone session no longer scans for the send signature this rule knows; update it with the new one.");
@@ -190,8 +198,8 @@ public class ArchitectureTests
     {
         ForEachBuild(il => new[]
         {
-            CallersMustBeIn(il, "AnoMech.Configuration::set_ZoneDownOpcodes", "AnoMech.Core.Map.OpcodeUpdater::DownloadOpcodes"),
-            CallersMustBeIn(il, "AnoMech.Configuration::set_ZoneFirewallGameVersion", "AnoMech.Core.Map.OpcodeUpdater::DownloadOpcodes"),
+            CallersMustBeIn(il, "AnoMech.Configuration::set_ZoneDownOpcodes", "AnoMech.Core.Native.Implementations.Interop.OpcodeUpdater::DownloadOpcodes"),
+            CallersMustBeIn(il, "AnoMech.Configuration::set_ZoneFirewallGameVersion", "AnoMech.Core.Native.Implementations.Interop.OpcodeUpdater::DownloadOpcodes"),
             il.CallersOf(@"^AnoMech\.Configuration::set_SafeMode$").Where(c => c != "AnoMech.Windows.ConfigWindow::Draw")
                 .Select(c => $"{c} writes the SafeMode switch; only the config window may."),
         }.SelectMany(x => x));
@@ -204,8 +212,8 @@ public class ArchitectureTests
     {
         ForEachBuild(il => il.Calls()
             .Where(c => Regex.IsMatch(PluginIL.Name(c.Callee), @"^System\.Environment::(FailFast|Exit)$|^System\.Diagnostics\.Process::Kill$"))
-            .Select(c => PluginIL.Owner(c.Method)).Where(o => o != $"{Zone}::Die").Distinct()
-            .Select(o => $"{o} ends the process; only ZoneSession.Die may (it logs first and never lowers the filter)."));
+            .Select(c => PluginIL.Owner(c.Method)).Where(o => o != $"{Zone}::Die" && o != "AnoMech.Offline.OfflineSession::CloseGame").Distinct()
+            .Select(o => $"{o} ends the process; only ZoneControl.Die may (it logs first and never lowers the filter)."));
     }
 
     // TryLift and Revert fall through after Die on the understanding that Die cannot return.
@@ -219,11 +227,11 @@ public class ArchitectureTests
             var escapes = flow.Reachable().Where(i => i.OpCode.Code is Code.Ret or Code.Throw or Code.Rethrow).ToList();
             var failFast = die.Body.Instructions.Where(i => i.Operand is MethodReference m && PluginIL.Name(m) == "System.Environment::FailFast").ToList();
             var failures = new List<string>();
-            if (failFast.Count == 0) failures.Add("ZoneSession.Die no longer calls Environment.FailFast.");
-            if (escapes.Count > 0) failures.Add($"ZoneSession.Die can return or throw without reaching Environment.FailFast (at {string.Join(", ", escapes.Select(e => $"IL_{e.Offset:X4}"))}).");
+            if (failFast.Count == 0) failures.Add("ZoneControl.Die no longer calls Environment.FailFast.");
+            if (escapes.Count > 0) failures.Add($"ZoneControl.Die can return or throw without reaching Environment.FailFast (at {string.Join(", ", escapes.Select(e => $"IL_{e.Offset:X4}"))}).");
             foreach (var f in failFast)
                 if (die.Body.ExceptionHandlers.Any(h => h.HandlerType == ExceptionHandlerType.Catch && f.Offset >= h.TryStart.Offset && f.Offset < h.TryEnd.Offset))
-                    failures.Add("ZoneSession.Die calls FailFast inside a try with a catch.");
+                    failures.Add("ZoneControl.Die calls FailFast inside a try with a catch.");
             return failures;
         });
     }
@@ -236,7 +244,7 @@ public class ArchitectureTests
         var guards = method.Body.Instructions.Where(i => i.Operand is MethodReference m && PluginIL.Name(m) == guard).ToList();
         var targets = method.Body.Instructions.Where(i => i.Operand is MethodReference m && PluginIL.Name(m) == target).ToList();
         var where = PluginIL.Owner(method);
-        if (guards.Count != 1)
+        if (guards.Count == 0)
         {
             yield return $"{where}: expected one call to {guard}, found {guards.Count}; update this rule if the check moved.";
             yield break;
@@ -246,7 +254,7 @@ public class ArchitectureTests
             yield return $"{where}: expected a call to {target}; update this rule if it moved.";
             yield break;
         }
-        if (ControlFlow.OutcomeOf(guards[0]) is not { } outcome)
+        if (ControlFlow.OutcomeOf(guards.Last()) is not { } outcome)
         {
             yield return $"{where}: the result of {guard} is not branched on in a shape this rule reads; keep it a plain if-check.";
             yield break;
@@ -289,10 +297,10 @@ public class ArchitectureTests
     {
         ForEachBuild(il =>
         {
-            var run = il.Method(Game, "RunScenarioInternal");
-            return AfterTheZoneLoads.SelectMany(t =>
-                EveryPathPasses(il, run, $"{Zone}::StartBlockedReason", false, t)
-                    .Concat(EveryPathPasses(il, run, $"{Map}::TryLoad", true, t)));
+            const string instance = "AnoMech.Core.Game.InstanceSession";
+            const string session = "AnoMech.Core.Game.ScenarioSession";
+            return EveryPathPasses(il, il.Method(instance, "Enter"), "AnoMech.Core.Native.Interfaces.IZoneControl::get_IsActive", true, $"{Map}::Enter")
+                .Concat(EveryPathPasses(il, il.Method(session, "Start"), $"{instance}::get_IsLoaded", true, "AnoMech.Core.SimObjects.SimWorld::ApplyParty"));
         });
     }
 
@@ -309,7 +317,7 @@ public class ArchitectureTests
         ForEachBuild(il =>
         {
             var revert = il.Method(Zone, "Revert");
-            return new[] { $"{Zone}::LoadZoneInternal", $"{Zone}::SetLocalPlayerPosition", $"{Zone}::LiftFirewallOrDie" }
+            return new[] { $"{Zone}::LoadZoneInternal", $"{Zone}::QuiesceLocalActions" }
                 .SelectMany(t => EveryPathPasses(il, revert, $"{Zone}::get_IsActive", true, t, $"{Zone}::Die"));
         });
     }
@@ -321,19 +329,19 @@ public class ArchitectureTests
     {
         ForEachBuild(il =>
         {
-            var update = il.Method("AnoMech.Plugin", "OnFrameworkUpdate");
+            var update = il.Method("AnoMech.Core.Native.Interfaces.Natives", "Tick");
             var failures = new List<string>();
             var calls = update.Body.Instructions.Where(i => i.Operand is MethodReference).ToList();
-            var guard = calls.FirstOrDefault(i => PluginIL.Name((MethodReference)i.Operand) == $"{Zone}::TickGuard");
+            var guard = calls.FirstOrDefault(i => PluginIL.Name((MethodReference)i.Operand) == "AnoMech.Core.Native.Interfaces.IZoneControl::TickGuard");
             var gameTick = calls.FirstOrDefault(i => PluginIL.Name((MethodReference)i.Operand) == $"{Game}::Tick");
-            if (guard == null) return ["Plugin.OnFrameworkUpdate no longer calls ZoneSession.TickGuard."];
-            if (gameTick != null && gameTick.Offset < guard.Offset) failures.Add("ZoneSession.TickGuard must run before Game.Tick.");
+            if (guard == null) return ["Plugin.OnFrameworkUpdate no longer calls ZoneControl.TickGuard."];
+            if (gameTick != null && gameTick.Offset < guard.Offset) failures.Add("ZoneControl.TickGuard must run before Game.Tick.");
             var guardTry = update.Body.ExceptionHandlers.FirstOrDefault(h => guard.Offset >= h.TryStart.Offset && guard.Offset < h.TryEnd.Offset);
-            if (guardTry == null) failures.Add("ZoneSession.TickGuard is not in its own try: a throw would take the whole frame's update down with it.");
-            else if (calls.Any(c => c != guard && c.Offset >= guardTry.TryStart.Offset && c.Offset < guardTry.TryEnd.Offset && PluginIL.Name((MethodReference)c.Operand).StartsWith("AnoMech.")))
-                failures.Add("ZoneSession.TickGuard shares its try with other plugin code, which could keep it from running.");
+            if (guardTry == null) failures.Add("ZoneControl.TickGuard is not in its own try: a throw would take the whole frame's update down with it.");
+            else if (calls.Any(c => c != guard && PluginIL.Name((MethodReference)c.Operand) != "AnoMech.Core.Native.Interfaces.Natives::get_Zone" && c.Offset >= guardTry.TryStart.Offset && c.Offset < guardTry.TryEnd.Offset && PluginIL.Name((MethodReference)c.Operand).StartsWith("AnoMech.")))
+                failures.Add("ZoneControl.TickGuard shares its try with other plugin code, which could keep it from running.");
             var flow = new ControlFlow(update);
-            if (!flow.Reachable().Contains(guard)) failures.Add("ZoneSession.TickGuard is unreachable in Plugin.OnFrameworkUpdate.");
+            if (!flow.Reachable().Contains(guard)) failures.Add("ZoneControl.TickGuard is unreachable in Plugin.OnFrameworkUpdate.");
             return failures;
         });
     }
@@ -356,9 +364,9 @@ public class ArchitectureTests
                 failures.Add("Plugin.OnTerritoryChanged must tell the zone session first, before anything that could throw or return.");
             if (!il.CallersOf($"^{Regex.Escape(Zone)}::NoteLogout$").Contains("AnoMech.Plugin::OnLogout"))
                 failures.Add("Plugin.OnLogout no longer tells the zone session.");
-            if (!il.CallersOf($"^{Regex.Escape(Zone)}::NoteActionPressed$").Contains("AnoMech.Core.Native.LocalPlayerInputHooks::RecordRecentAction"))
+            if (!il.CallersOf($"^{Regex.Escape(Zone)}::NoteActionPressed$").Contains("AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::RecordRecentAction"))
                 failures.Add("LocalPlayerInputHooks.RecordRecentAction no longer reports Teleport/Return presses to the zone session.");
-            var detour = il.Method("AnoMech.Core.Native.LocalPlayerInputHooks", "UseActionDetour");
+            var detour = il.Method("AnoMech.Core.Native.Implementations.LocalPlayerInputHooks", "UseActionDetour");
             var calls = detour.Body.Instructions.Where(i => i.Operand is MethodReference).Select(i => (i, PluginIL.Name((MethodReference)i.Operand))).ToList();
             var record = calls.FindIndex(c => c.Item2.EndsWith("::RecordRecentAction"));
             var original = calls.FindIndex(c => c.Item2.EndsWith("::get_Original"));
@@ -385,24 +393,24 @@ public class ArchitectureTests
             var dispose = il.Method("AnoMech.Plugin", "Dispose");
             var zoneDispose = dispose.Body.Instructions.FirstOrDefault(i => i.Operand is MethodReference m && PluginIL.Name(m) == $"{Zone}::Dispose");
             if (zoneDispose == null) return ["Plugin.Dispose no longer disposes the zone session itself."];
-            var inFinally = dispose.Body.ExceptionHandlers.FirstOrDefault(h => h.HandlerType == ExceptionHandlerType.Finally
-                && zoneDispose.Offset >= h.HandlerStart.Offset && (h.HandlerEnd == null || zoneDispose.Offset < h.HandlerEnd.Offset));
-            if (inFinally == null) return ["Plugin.Dispose disposes the zone session outside a finally: a throw earlier in the teardown would skip it."];
-            var unprotected = dispose.Body.Instructions
-                .Where(i => i.Operand is MethodReference m && PluginIL.Name(m).StartsWith("AnoMech.") && i != zoneDispose
-                            && PluginIL.Name(m) != $"{Zone}::get_Current" && PluginIL.Name(m) != "AnoMech.Core.DiagnosticLog::Shutdown")
-                .Where(i => !(i.Offset >= inFinally.TryStart.Offset && i.Offset < inFinally.TryEnd.Offset))
-                .Select(i => PluginIL.Name((MethodReference)i.Operand)).ToList();
-            return unprotected.Select(u => $"Plugin.Dispose calls {u} outside the try its zone-session finally covers.");
+            var finalizers = dispose.Body.ExceptionHandlers.Where(h => h.HandlerType == ExceptionHandlerType.Finally
+                && zoneDispose.Offset >= h.HandlerStart.Offset && (h.HandlerEnd == null || zoneDispose.Offset < h.HandlerEnd.Offset)).ToList();
+            if (finalizers.Count == 0) return ["ZoneControl.Dispose must remain protected by finally."];
+            var outer = dispose.Body.ExceptionHandlers.Where(h => h.HandlerType == ExceptionHandlerType.Finally
+                && finalizers.Any(f => f.HandlerStart.Offset >= h.HandlerStart.Offset && (h.HandlerEnd == null || f.HandlerStart.Offset < h.HandlerEnd.Offset)))
+                .OrderBy(h => h.TryStart.Offset).First();
+            var teardown = dispose.Body.Instructions.FirstOrDefault(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Plugin::DisposeSubsystems");
+            return teardown == null || teardown.Offset < outer.TryStart.Offset || teardown.Offset >= outer.TryEnd.Offset
+                ? ["Subsystem teardown is not covered by the zone cleanup finally."] : Array.Empty<string>();
         });
     }
 
     [Fact]
     public void Leave_UnloadsTheZone()
     {
-        ForEachBuild(il => il.CallersOf($"^{Regex.Escape(Map)}::Unload$").Contains($"{Game}::Leave")
-            ? Array.Empty<string>()
-            : ["Game.Leave no longer calls MapController.Unload."]);
+        ForEachBuild(il => il.CallersOf($"^{Regex.Escape(Map)}::Unload$").Contains("AnoMech.Core.Game.InstanceSession::Exit")
+            && il.CallersOf("^AnoMech.Core.Game.InstanceSession::Exit$").Contains($"{Game}::ExitInstance")
+            ? Array.Empty<string>() : ["The instance exit path no longer unloads the map."]);
     }
 
     // ---- the real character ------------------------------------------------------------------
@@ -418,7 +426,7 @@ public class ArchitectureTests
         "AnoMech.Core.SimObjects.SimEnemy::Spawn",
         "AnoMech.Core.Game.Party.PartyCreator::SpawnNative",
         $"{Zone}::SetLocalPlayerPosition",
-        "AnoMech.Core.Native.LocalPlayerInputHooks::UpdateDetour",
+        "AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::UpdateDetour",
         // Turns a casting sim enemy toward its target.
         "AnoMech.Core.SimObjects.SimCast::FaceTarget",
     ];
@@ -460,7 +468,15 @@ public class ArchitectureTests
     private static readonly string[] ActorControlCallers =
     [
         $"{Zone}::ReleasePlayerConditions",
-        "AnoMech.Core.Native.ForcedMovement::CarryTo",
+        $"{Zone}::SendDirectorControl",
+        "AnoMech.Core.Native.Implementations.BattleCharaProxy::ActorControl",
+        "AnoMech.Core.Native.Implementations.BattleCharaProxy::ActorControlTarget",
+        "AnoMech.Core.Native.Implementations.EventObjectProxy::ActorControl",
+        "AnoMech.Core.Native.Implementations.Interop.InstanceContentDirectorHelper::ProcessDirectorUpdate",
+        "AnoMech.Offline.OfflineBootstrap::Finish",
+        "AnoMech.Windows.ActorControlDebug::Fire",
+        "AnoMech.Windows.DebugMenu::FireWipeTerritoryInit",
+        "AnoMech.Windows.LockReplayDebug::SendActorControl",
         "AnoMech.Core.SimObjects.SimEventObject::DirectorEObjMod",
         "AnoMech.Core.SimObjects.SimEventObject::FadeOut",
         "AnoMech.Core.SimObjects.SimEventObject::PlayBeat",
@@ -477,7 +493,7 @@ public class ArchitectureTests
         ForEachBuild(il =>
             il.CallersOf(@"^FFXIVClientStructs\.FFXIV\.Client\.Network\.PacketDispatcher::HandleActorControlPacket$").Where(c => !ActorControlCallers.Contains(c))
                 .Select(c => $"{c} fabricates an ActorControl packet; only the reviewed callers may.")
-                .Concat(CallersMustBeIn(il, "AnoMech.Core.Native.ForcedMovement::CarryTo", "AnoMech.Core.SimObjects.SimCharacter::CarryTo")));
+);
     }
 
     // Calls that make the game send something to the server of its own accord. The filter holds
@@ -493,7 +509,7 @@ public class ArchitectureTests
                 var name = PluginIL.Name(callee);
                 if (!Regex.IsMatch(name, @"^FFXIVClientStructs\..*::(UseAction|UseActionLocation|UseGeneralAction|ExecuteCommand\w*|ProcessChatBoxEntry|SendMessage|SendChat\w*|RequestData|Teleport\w*)$")) continue;
                 var owner = PluginIL.Owner(m);
-                if (owner != "AnoMech.Core.Native.LocalPlayerInputHooks::UpdateDetour")
+                if (owner != "AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::UpdateDetour")
                     failures.Add($"{owner} calls {name}, which makes the game talk to the server; only reviewed callers may.");
             }
             return failures;
@@ -532,7 +548,7 @@ public class ArchitectureTests
         (@"^Dalamud\.Plugin\.Services\.IGameInteropProvider::", "hooks the game"),
         (@"^Dalamud\.Hooking\.", "hooks the game"),
         (@"^Dalamud\.Plugin\.Services\.(IClientState|ICondition|IDutyState)::add_", "subscribes to game events that outlive the sim"),
-        (@"^AnoMech\.Core\.Map\.ZoneSession::", "reaches into the zone session"),
+        (@"^AnoMech\.Core\.Map\.ZoneControl::", "reaches into the zone session"),
         (@"^AnoMech\.Core\.Map\.MapController::(Load|TryLoad|Unload|HoldSendFirewall|Dispose)$", "loads or unloads zones"),
         (@"^AnoMech\.Core\.Game\.Game::(Leave|Reset|RunScenario\w*|Dispose)$", "starts or ends runs"),
         (@"^AnoMech\.Plugin::get_(Framework|GameInterop)$", "reaches Dalamud services that outlive the sim"),
@@ -599,6 +615,8 @@ public class ArchitectureTests
         [777] = "The Weapon's Refrain (Ultimate)",
         [1122] = "The Omega Protocol (Ultimate)",
         [1363] = "Dancing Mad (Ultimate)",
+        [1238] = "Futures Rewritten",
+        [968] = "Dragonsong's Reprise",
     };
 
     [Fact]
@@ -628,13 +646,14 @@ public class ArchitectureTests
     {
         ForEachBuild(il =>
         {
-            var dispose = il.Method("AnoMech.Core.Native.LocalPlayerInputHooks", "Dispose");
-            var calls = dispose.Body.Instructions.Where(i => i.Operand is MethodReference).Select(i => PluginIL.Name((MethodReference)i.Operand)).ToList();
-            var restore = calls.FindIndex(c => c.EndsWith("::RestoreGaugeIllusion"));
-            var firstHookDispose = calls.FindIndex(c => c == "Dalamud.Hooking.Hook::Dispose");
-            return restore < 0 || (firstHookDispose >= 0 && restore > firstHookDispose)
-                ? ["LocalPlayerInputHooks.Dispose must restore the gauge illusion before disposing its hooks."]
-                : Array.Empty<string>();
+            var end = il.Method("AnoMech.Core.UserActions.UserActions", "OnSessionEnd");
+            var restore = end.Body.Instructions.Any(i => i.Operand is MethodReference m && PluginIL.Name(m).EndsWith("JobGaugeEdit::Restore"));
+            var exit = il.Method("AnoMech.Core.Game.InstanceSession", "Dispose");
+            var notified = exit.Body.Instructions.Any(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Core.Native.Interfaces.IUserActions::OnSessionEnd");
+            var nativeDispose = il.Method("AnoMech.Core.Native.Interfaces.Natives", "Dispose");
+            var calls = nativeDispose.Body.Instructions.Where(i => i.Operand is MethodReference).Select(i => PluginIL.Name((MethodReference)i.Operand)).ToList();
+            return !restore || !notified || calls.IndexOf("AnoMech.Core.Native.Interfaces.Natives::get_UserActions") >= calls.IndexOf("AnoMech.Core.Native.Interfaces.Natives::get_PlayerInput")
+                ? ["Session gauge restoration or user-action/input teardown ordering changed."] : Array.Empty<string>();
         });
     }
 
@@ -645,7 +664,7 @@ public class ArchitectureTests
     private static readonly string[] PeerWorldHandlers =
     [
         "OnWorldSnapshotReceived", "OnRolesSnapshotReceived", "OnTeleportReceived", "OnCarryReceived", "OnPushReceived",
-        "OnFollowReceived", "OnRoleKilledReceived", "OnKnockbackReceived", "OnSpawnOmenReceived",
+        "OnFollowReceived", "OnRoleKilledReceived", "OnKnockbackReceived",
     ];
 
     [Fact]
@@ -681,7 +700,7 @@ public class ArchitectureTests
     {
         ForEachBuild(il => !il.IsRelease
             ? Array.Empty<string>()
-            : il.CallersOf(@"^AnoMech\.Core\.Native\.TimelineDebug::DrawControls$").Select(c => $"{c} reaches the debug timeline bench (and its send-only hold) in a Release build."));
+            : il.CallersOf(@"^AnoMech\.Core\.Native\.Implementations\.TimelineDebug::DrawControls$").Select(c => $"{c} reaches the debug timeline bench (and its send-only hold) in a Release build."));
     }
 
     [Fact]

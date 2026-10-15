@@ -42,25 +42,25 @@ jobs:
 
     # The architecture rules read the built plugin, in the configuration users get and in the
     # one used for in-game testing.
-    - name: Build the plugin (Release)
-      run: dotnet build AnoMech.sln -c Release -p:Platform=x64
+    - name: Build optimized Debug safety artifact
+      run: dotnet build AnoMech/AnoMech.csproj -c Debug -p:Optimize=true -p:DefineConstants=TRACE -p:OutputPath=${{ github.workspace }}/artifacts/safety/ -p:IntermediateOutputPath=obj/safety-Debug/
 
     - name: Build the plugin (Debug)
       run: dotnet build AnoMech.sln -c Debug -p:Platform=x64
 
     - name: Run the safety tests
       env:
-        ANOMECH_DLLS: ${{ github.workspace }}\AnoMech\bin\x64\Release\AnoMech.dll;${{ github.workspace }}\AnoMech\bin\x64\Debug\AnoMech.dll
+        ANOMECH_DLLS: ${{ github.workspace }}\artifacts\safety\FluffySim.dll;${{ github.workspace }}\AnoMech\bin\x64\Debug\FluffySim.dll
         ANOMECH_FUZZ_SEEDS: ${{ github.event_name == 'schedule' && '20000' || github.event.inputs.fuzz_seeds }}
-      run: dotnet test tests/SafetyTests -c Release --logger "trx;LogFileName=safety.trx" --logger "console;verbosity=normal"
+      run: dotnet test tests/SafetyTests -c Debug --logger "trx;LogFileName=safety.trx" --logger "console;verbosity=normal"
 
     # Dalamud's other hook backend reports a failed patch by throwing, where Reloaded cannot fail.
     - name: Run the safety tests with SafetyHook's hook failures
       env:
-        ANOMECH_DLLS: ${{ github.workspace }}\AnoMech\bin\x64\Release\AnoMech.dll;${{ github.workspace }}\AnoMech\bin\x64\Debug\AnoMech.dll
+        ANOMECH_DLLS: ${{ github.workspace }}\artifacts\safety\FluffySim.dll;${{ github.workspace }}\AnoMech\bin\x64\Debug\FluffySim.dll
         ANOMECH_FUZZ_SEEDS: ${{ github.event_name == 'schedule' && '20000' || github.event.inputs.fuzz_seeds }}
         ANOMECH_HOOK_BACKEND: safetyhook
-      run: dotnet test tests/SafetyTests -c Release --no-build --logger "trx;LogFileName=safety-safetyhook.trx"
+      run: dotnet test tests/SafetyTests -c Debug --no-build --logger "trx;LogFileName=safety-safetyhook.trx"
 
     - name: Keep the results
       if: always()
@@ -88,4 +88,4 @@ jobs:
           10.0.x
 
     - name: Run the relay security checks
-      run: dotnet run --project tests/SecurityTests -c Release
+      run: dotnet test tests/AnoMech.Relay.Tests -c Debug

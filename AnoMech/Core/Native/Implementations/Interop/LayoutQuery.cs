@@ -40,6 +40,24 @@ internal static unsafe class LayoutQuery
         return count;
     }
 
+    public static List<nint> CollectLayerInstances(ushort layerKey)
+    {
+        var lw = LayoutWorld.Instance();
+        var result = new List<nint>();
+        if (lw == null || lw->ActiveLayout == null) return result;
+        foreach (var layerKv in lw->ActiveLayout->Layers)
+        {
+            var layer = layerKv.Item2.Value;
+            if (layer == null || layerKv.Item1 != layerKey) continue;
+            foreach (var instKv in layer->Instances)
+            {
+                var inst = instKv.Item2.Value;
+                if (inst != null) result.Add((nint)inst);
+            }
+        }
+        return result;
+    }
+
     public static string DescribeLiveEffects()
     {
         var lw = LayoutWorld.Instance();

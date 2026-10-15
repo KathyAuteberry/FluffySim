@@ -68,7 +68,7 @@ namespace AnoMech.SafetyTests.Fakes
     }
 
     // Dalamud's plugin-scoped client state: TerritoryType is get-only and backed by no field of
-    // either name ZoneSession's reflection tries, so its territory sync is a no-op, as in game.
+    // either name ZoneControl's reflection tries, so its territory sync is a no-op, as in game.
     internal class FakeClientState
     {
         private readonly VirtualGame game;
@@ -136,6 +136,7 @@ namespace AnoMech.SafetyTests.Fakes
         public int FakeId { get; }
         public nint Address { get; }
         public uint EntityId => 0x10000001;
+        public List<FakePlayerStatus> StatusList { get; } = new();
         public Vector3 Position => game.ClientPosition;
         public float Rotation => game.ClientRotation;
         public byte Level => game.PlayerLevel;
@@ -144,6 +145,8 @@ namespace AnoMech.SafetyTests.Fakes
         public float CurrentCastTime => game.Cast?.Elapsed ?? 0f;
         public float TotalCastTime => game.Cast?.Total ?? 0f;
     }
+
+    internal readonly record struct FakePlayerStatus(uint StatusId, float RemainingTime);
 
     internal sealed class FakePlayerState
     {

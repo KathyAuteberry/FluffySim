@@ -28,6 +28,7 @@ internal sealed class FakeGame
         var game = new FakeGame();
         var rsv = new FakeRsvFunctions();
         Natives.Data = new DataminingGameData(rsv);
+        Natives.Vfx = new FakeVfxFunctions();
         Natives.BattleCharas = game.BattleCharas;
         Natives.EventObjects = game.EventObjects;
         Natives.PlayerInput = game.PlayerInput;
@@ -61,6 +62,7 @@ internal sealed class FakeGame
 
     private void WalkSteeredPlayer(float deltaSeconds)
     {
+        if (PlayerInput.PauseInput || PlayerInput.TransitionInput || PlayerConditions.StatusAffliction || PlayerConditions.ControlAffliction) return;
         if (PlayerInput.SteerDirection is not { } dir) return;
         var step = dir * PlayerInput.SteerSpeed * deltaSeconds;
         BattleCharas.Player.Position += new System.Numerics.Vector3(step.X, 0f, step.Y);

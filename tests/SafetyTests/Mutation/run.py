@@ -1,5 +1,5 @@
 """Mutation check for the safety tests: copies the repository, then for each mutant in mutants.py
-applies its edits, builds the plugin (Release) and the safety tests, runs every test and records
+applies its edits, builds the plugin (Debug) and the safety tests, runs every test and records
 which failed. A mutant nothing catches is a gap in the tests (or a check another one covers).
 
     python tests/SafetyTests/Mutation/run.py            # every mutant
@@ -77,14 +77,14 @@ def main():
             originals = {}
             try:
                 originals = apply(work, m)
-                code, out = run(work, "dotnet", "build", "AnoMech.sln", "-c", "Release", "-p:Platform=x64", "-nologo", "-v", "q", timeout=900)
+                code, out = run(work, "dotnet", "build", "AnoMech.sln", "-c", "Debug", "-p:Optimize=true", "-p:DefineConstants=TRACE", "-p:Platform=x64", "-nologo", "-v", "q", timeout=900)
                 if code != 0:
                     rec["result"] = "does not build"
                     rec["detail"] = [l for l in out.splitlines() if " error " in l][:5]
                 else:
                     trx_dir = os.path.join(work, "tests", "SafetyTests", "TestResults")
                     shutil.rmtree(trx_dir, ignore_errors=True)
-                    run(work, "dotnet", "test", "tests/SafetyTests", "-c", "Release", "-nologo", "--logger", "trx;LogFileName=m.trx", timeout=1800)
+                    run(work, "dotnet", "test", "tests/SafetyTests", "-c", "Debug", "-nologo", "--logger", "trx;LogFileName=m.trx", timeout=1800)
                     failed = failures(os.path.join(trx_dir, "m.trx"))
                     if failed is None:
                         rec["result"] = "tests did not run"

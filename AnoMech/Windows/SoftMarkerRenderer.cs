@@ -11,7 +11,7 @@ internal static class SoftMarkerRenderer
         ApocalypseRenderer.Draw();
         DarklitRenderer.Draw();
         FallOfFaithRenderer.Draw();
-        foreach (var marker in Plugin.GameInstance.World.SoftMarkers.Snapshot(Plugin.GameInstance.World.ScenarioOrigin, Plugin.GameInstance.World.ShowSimulatedParty))
+        foreach (var marker in Plugin.Game.World.SoftMarkers.Snapshot(Plugin.Game.World.ScenarioOrigin, Plugin.Game.World.ShowSimulatedParty))
         {
             if (!Plugin.GameGui.WorldToScreen(marker.Position, out var screen)) continue;
             var texture = Plugin.TextureProvider.GetFromGameIcon(marker.IconId).GetWrapOrEmpty();

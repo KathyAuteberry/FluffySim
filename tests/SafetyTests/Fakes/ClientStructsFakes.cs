@@ -44,6 +44,7 @@ namespace FFXIVClientStructs.FFXIV.Client.Game
     [StructLayout(LayoutKind.Sequential)]
     public struct StatusManager
     {
+        public static bool ExecuteStatusOff(uint id, uint source = 0xE0000000) => true;
         public int Reserved;
         public Span<Status> Status => Span<Status>.Empty;
     }
@@ -189,8 +190,16 @@ namespace FFXIVClientStructs.FFXIV.Client.Game.UI
     }
 
     [StructLayout(LayoutKind.Sequential)]
+    public struct AutoAttackState
+    {
+        public bool IsAutoAttacking;
+        public bool SetImpl(bool enabled,bool sendPacket,bool arg) { IsAutoAttacking = enabled; return true; }
+    }
+    public struct WeaponState { public AutoAttackState AutoAttackState; }
+
     public unsafe struct UIState
     {
+        public WeaponState WeaponState;
         public DirectorTodo DirectorTodo;
         public PlayerState PlayerState;
 

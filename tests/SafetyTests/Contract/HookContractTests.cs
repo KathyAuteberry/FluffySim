@@ -9,6 +9,7 @@ using Dalamud.Hooking;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Contract;
 
@@ -26,10 +27,11 @@ public unsafe class HookContractTests
 
     public static TheoryData<HookBackend> Backends => new() { HookBackend.Reloaded, HookBackend.SafetyHook };
 
-    [Theory]
+    [Xunit.Theory]
     [MemberData(nameof(Backends))]
     public void EverySequenceOfTheOperationsThePluginUses_BehavesAsTheFake(HookBackend backend)
     {
+        if (!System.OperatingSystem.IsWindows()) NUnit.Framework.Assert.Ignore("Native Dalamud hook execution requires Windows/Wine; the transport harness still tests both failure models.");
         var differences = new List<string>();
         foreach (var sequence in Sequences(4))
         {
@@ -52,7 +54,7 @@ public unsafe class HookContractTests
             .Select(i => ((MethodReference)i.Operand).DeclaringType.GetElementType().FullName)
             .Where(t => t.StartsWith("Dalamud.Hooking."))
             .ToHashSet();
-        Assert.Equal(new HashSet<string> { "Dalamud.Hooking.Internal.ReloadedHook`1", "Dalamud.Hooking.Internal.SafetyHookHook`1" }, built);
+        Assert.Equal(new HashSet<string> { "Dalamud.Hooking.Internal.SafetyHookHook`1", "Dalamud.Hooking.Internal.ReloadedHook`1" }, built);
         Assert.Contains("Dalamud.Hooking.Hook`1::CreateBackend", RealDalamud.CalledNames(RealDalamud.Method(hook, "FromAddress")));
     }
 
@@ -60,6 +62,7 @@ public unsafe class HookContractTests
     [Fact]
     public void FromAddress_BuildsTheConfiguredBackend()
     {
+        if (!System.OperatingSystem.IsWindows()) NUnit.Framework.Assert.Ignore("Native hook creation requires Windows/Wine.");
         var useSafetyHook = (bool)RealDalamud.RuntimeType("Dalamud", "Dalamud.Configuration.Internal.EnvironmentConfiguration")
             .GetProperty("DalamudUseSafetyHook", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)!
             .GetValue(null)!;
@@ -79,7 +82,7 @@ public unsafe class HookContractTests
 
     // SafetyHook reports a failed native patch by throwing InvalidOperationException from Enable
     // and Disable, with the hook left as it was: what the fake throws on a refused change.
-    [Theory]
+    [Xunit.Theory]
     [InlineData("Enable")]
     [InlineData("Disable")]
     public void SafetyHook_ThrowsWhenTheNativePatchFails_AsTheFakeDoes(string operation)
@@ -101,7 +104,7 @@ public unsafe class HookContractTests
 
     // A created Reloaded hook only rewrites its own stub, so Enable and Disable have no failure of
     // their own; nothing Reloaded throws is caught on the way to the plugin.
-    [Theory]
+    [Xunit.Theory]
     [InlineData("Enable")]
     [InlineData("Disable")]
     public void Reloaded_CatchesNothing(string operation)

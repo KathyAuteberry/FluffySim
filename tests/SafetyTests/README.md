@@ -8,20 +8,23 @@ pull request, and daily against the current Dalamud release and staging build
 
 ## Running them
 
-```
-dotnet build AnoMech.sln -c Release -p:Platform=x64
-dotnet test tests/SafetyTests -c Release
+Build only Debug artifacts. To test production preprocessor paths without touching installed Release output:
+
+```sh
+dotnet build AnoMech/AnoMech.csproj -c Debug
+dotnet build AnoMech/AnoMech.csproj -c Debug -p:Optimize=true -p:DefineConstants=TRACE -p:OutputPath=/tmp/fluffysim-safety/ -p:IntermediateOutputPath=obj/safety-Debug/
+ANOMECH_DLLS="$PWD/AnoMech/bin/Debug/FluffySim.dll;/tmp/fluffysim-safety/FluffySim.dll" dotnet test tests/SafetyTests -c Debug
 ```
 
-The architecture tests read the built `AnoMech/bin/x64/Release/AnoMech.dll` and refuse a DLL older
-than the sources. `ANOMECH_DLLS` (`;`-separated) points them at other builds, e.g. Release and
-Debug together as CI does. The contract tests use the Dalamud the plugin builds with
-(`DALAMUD_HOME`, else XIVLauncher's dev folder). `ANOMECH_HOOK_BACKEND=safetyhook` runs the whole
-suite with SafetyHook's hook failures instead of Reloaded's.
+Set `DalamudLibPath` as a build property and `DALAMUD_HOME` for contract-test runtime metadata if your SDK is outside the standard Windows location. On this Linux workspace it is `/home/kath/.xlcore/dalamud/Hooks/dev/`. Never build Release or point these commands at installed output.
+
+The suite uses the repository's NUnit runner. The small `XunitCompatibility` assertion adapter retains Evernow's original test data/assertions without requiring another runner package. Mono.Cecil comes from the installed Dalamud SDK. The three native Windows hook-patching cases are explicitly skipped on Linux; metadata contracts, fake transport and both modeled hook failure backends remain testable. `ANOMECH_HOOK_BACKEND=safetyhook` selects the throwing backend model.
+
+`ANOMECH_DLLS` accepts semicolon-separated ordinary and optimized Debug artifacts. Architecture tests reject stale DLLs. The `IsRelease` internal IL flag means optimizations are enabled, not that a Release output was built.
 
 ## What is in here
 
-- `Firewall/`: the plugin's real `ZoneSession`, `ZoneSession.Guard`, `MapController` and
+- `Firewall/`: the plugin's real `ZoneControl`, `ZoneControl.Guard`, `MapController` and
   `NetGuard` sources, compiled unmodified against the fakes in `Fakes/` and driven through
   `Harness/VirtualGame`: a simulated client, server and Dalamud. Every packet the send path lets
   through is judged against what the server believes; every hook change, every frame and every
@@ -103,7 +106,7 @@ to that rule's allowlist in `ArchitectureTests.cs` with a comment saying why it 
 filter or act on the character outside a stay, and have it reviewed like a firewall change. A
 stay-boundary failure prints the path from where the code starts running to the move: do that
 work from the scenario's timeline, or check `IsInInstance` first. If
-`ZoneSession` starts using a new game or Dalamud API, extend the fakes to match the real API's
+`ZoneControl` starts using a new game or Dalamud API, extend the fakes to match the real API's
 behaviour, not just its shape, and add a contract test pinning that behaviour.
 
 A contract failure means Dalamud (or ClientStructs) changed something the fakes model. Update

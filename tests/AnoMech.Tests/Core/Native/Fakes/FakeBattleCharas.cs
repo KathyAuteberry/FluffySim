@@ -52,6 +52,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
     internal void Free(int slot)
     {
         slots[slot] = null;
+        pending.RemoveAll(p => p.Slot == slot);
         reserved.Remove(slot);
     }
 

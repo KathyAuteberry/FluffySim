@@ -23,6 +23,27 @@ public class PauseControlsTests
     }
 
     [Test]
+    public void ResumeFailureStillReleasesPauseInputAndVirtualClockRestrictions()
+    {
+        var (native, game) = Start();
+        using (game)
+        {
+            game.Paused = true;
+            var actions = (FakeUserActions)Natives.UserActions;
+            actions.ThrowOnResume = true;
+            try
+            {
+                Assert.Throws<InvalidOperationException>(() => game.Paused = false);
+                Assert.That(Natives.PlayerInput.PauseInput, Is.False);
+                Assert.That(game.Paused, Is.False);
+                Assert.That(game.World.PracticeInvulnerability.Suspended, Is.False);
+                Assert.That(game.Events.Suspended, Is.False);
+            }
+            finally { actions.ThrowOnResume = false; }
+        }
+    }
+
+    [Test]
     public void ButtonAvailabilityTogglesTheActiveRunAndRejectsIdleOrMultiplayer()
     {
         var (native, game) = Start();

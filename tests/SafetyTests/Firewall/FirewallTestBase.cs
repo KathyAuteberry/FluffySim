@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -62,7 +63,7 @@ public abstract class FirewallTestBase : IDisposable
         Assert.False(Game.PluginHoldsOccupied, "The player was left Occupied.");
         Assert.False(Plugin.Map.IsInInstance);
         Assert.False(Plugin.Zone.IsActive);
-        Assert.False(ZoneSessionProbe.GuardArmed(Plugin.Zone));
+        Assert.False(ZoneControlProbe.GuardArmed(Plugin.Zone));
     }
 
     // Stopped by the safety stop for the expected reason, with nothing unsafe before it.

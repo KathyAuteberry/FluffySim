@@ -27,7 +27,7 @@ class PauseSafety(unittest.TestCase):
         self.assertNotIn('UseAction(', update)
         self.assertIn('updateHook.Original(self);', update)
 
-    def test_pause_transition_only_reads_statuses_and_has_no_status_action_recast_or_packet_operations(self):
+    def test_pause_status_capture_is_readonly_and_scoped_recast_freeze_is_delegated(self):
         game = source('Core/Game/Game.cs')
         transition = section(game, 'public bool Paused\n', 'public SessionStatus Status')
         for forbidden in ['AddStatus(', 'AddStatusParam(', 'RemoveStatus(', 'ApplyStatus(',
@@ -36,8 +36,9 @@ class PauseSafety(unittest.TestCase):
         self.assertIn('AllMembers()', transition)
         self.assertIn('s.Snapshot', transition)
         capture = section(source('Core/UserActions/UserActions.cs'), 'public void OnPause()', 'private void OnActionExecuted(')
-        for forbidden in ['UseAction(', 'ApplyStatus(', 'SendPacket', 'Recast']:
+        for forbidden in ['UseAction(', 'ApplyStatus(', 'SendPacket']:
             self.assertNotIn(forbidden, capture)
+        self.assertIn('Natives.Zone.SetPracticeRecastsPaused(true)', capture)
 
     def test_simulated_actions_and_cancel_requests_are_gated_while_paused(self):
         actions = source('Core/UserActions/UserActions.cs')

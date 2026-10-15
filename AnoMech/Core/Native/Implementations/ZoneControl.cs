@@ -68,6 +68,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     // PostSetup listener closes it again and clears this. Distinguishes our open from
     // a manual one so manual opens aren't auto-closed.
     private bool autoCloseSocial;
+    private bool partyResyncDue;
 
     public bool IsActive { get; private set; }
 
@@ -100,6 +101,9 @@ public sealed unsafe partial class ZoneControl : IZoneControl
 
         Plugin.AddonLifecycle.RegisterListener(AddonEvent.PostSetup, "Social", OnSocialPostSetup);
 
+        outboundPolicy = new(heartbeatOpcode);
+        practiceRecasts = new(new AnoMech.Core.UserActions.NativePracticeRecastStore(), () => FirewallIntact, () => Stopwatch.GetTimestamp() / (double)Stopwatch.Frequency);
+        lastActionSequence = LastActionSequence();
         Current = this;
         Plugin.Log.Information("[ZoneControl] Initialized.");
     }
@@ -201,6 +205,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         sessionSave.Position = localPlayer.Position;
         sessionSave.Rotation = localPlayer.Rotation;
         levelSync.Capture();
+        armedCounters = TakeClientCounters();
 
         EnableFirewall();
         if (!FirewallArmed(out var why))
@@ -211,18 +216,20 @@ public sealed unsafe partial class ZoneControl : IZoneControl
             return false;
         }
         CaptureInnState();
+        recastJob = (byte)Plugin.PlayerState.ClassJob.RowId;
         try
         {
+            practiceRecasts.Capture();
             LoadZoneInternal(territoryId, false, playerSpawn);
         }
         catch (Exception e)
         {
             // Part-way into the load with the firewall up: back out through the verified revert,
             // or nothing would ever lift the firewall.
-            AnoMech.Core.DiagnosticLog.Warn($"[ZoneGuard] Enter: the zone load threw -- reverting to the inn. {e}");
             IsActive = true;
             ArmGuard(territoryId);
-            Revert(false);
+            try { AnoMech.Core.DiagnosticLog.Warn($"[ZoneGuard] Enter: the zone load threw -- reverting to the inn. {e}"); }
+            finally { Revert(); }
             return false;
         }
         IsActive = true;
@@ -394,7 +401,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     public void ApplyWeather(byte weatherId) => pendingWeather = weatherId;
 
     // Reload the saved inn territory and restore position; disable firewall.
-    public void Revert(bool dispose)
+    public void Revert()
     {
         // A tripped stay never reaches the inn reload: the client would be shown a zone the
         // server doesn't have it in.
@@ -402,7 +409,10 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         // Outside a session sessionSave is stale: the delayed position re-assert would move the
         // real character with the firewall down.
         if (!IsActive) return;
-        if (guardArmed) AnoMech.Core.DiagnosticLog.Info(StateSnapshot($"revert starting (dispose={dispose})"));
+        revertedAt = Stopwatch.GetTimestamp();
+        Natives.PlayerInput.TransitionInput = true;
+        QuiesceLocalActions();
+        if (guardArmed) AnoMech.Core.DiagnosticLog.Info(StateSnapshot("revert starting"));
 
         // We need to wait before calling DisableFirewall(), so we'll set the Occupied condition to be sure the Player doesn't do anything in the meantime.
         var condition = Conditions.Instance();
@@ -423,7 +433,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[ZoneControl] Revert: the inn reload threw -- releasing the firewall anyway. {e}");
+            Die($"the inn reload threw: {e.Message}");
         }
 
         sessionSave.TerritoryId = 0;
@@ -433,47 +443,17 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         LogStaySummary();
         if (guardArmed) AnoMech.Core.DiagnosticLog.Info(StateSnapshot("inn reload done"));
 
-        // If this is getting called on Dispose(), then these Tasks will not be properly executed, so we'll gate them to be safe
-        if (!dispose)
+        var savedPosition = sessionSave.Position;
+        var savedRotation = sessionSave.Rotation;
+        var stay = stayId;
+        ThreadingTask.Delay(1000).ContinueWith(_ => Plugin.Framework.Run(() =>
         {
-            // If this isn't delayed, a Packet will be sent to the server!!!
-            var savedPosition = sessionSave.Position;
-            var savedRotation = sessionSave.Rotation;
-            var stay = stayId;
-            ThreadingTask.Delay(1000).ContinueWith(_ => Plugin.Framework.Run(() =>
-            {
-                // Already lifted (an unload during the wait), or a later stay owns the character
-                // (Enter refuses while this is pending, so only a bypass gets here): a restore now
-                // would move the character with nothing holding the move.
-                if (stay != stayId || !guardArmed) return;
-                // A throw here must not strand the stay: the lift below verifies the position itself.
-                try
-                {
-                    RestoreBeforeLift(savedPosition, savedRotation);
-                }
-                catch (Exception e)
-                {
-                    AnoMech.Core.DiagnosticLog.Warn($"[ZoneGuard] The restore before the lift threw: {e}");
-                }
-                ReleasePlayerConditions();
-                LiftFirewallOrDie("after the inn reload");
-            }));
-
-            // Resync the real party HUD once the inn reload has settled. A bare
-            // InfoProxyPartyMember.RequestData() sends the same request the Social window
-            // does but doesn't sync MainGroup — the HUD update is client-side work the
-            // Social agent does on the reply (proven via packet trace). So open the Social
-            // agent and let it do that work itself. (Closing it again is a follow-up step.)
-            ThreadingTask.Delay(1500).ContinueWith(_ => Plugin.Framework.Run(OpenSocialForPartyResync));
-        }
-        else
-        {
-            // This skips all safety delays, so if possible, don't disable the plugin while being in a Scenario
-            SetLocalPlayerPosition(sessionSave.Position, sessionSave.Rotation);
+            if (stay != stayId || !guardArmed) return;
+            try { RestoreBeforeLift(savedPosition, savedRotation); }
+            catch (Exception e) { DiagnosticLog.Warn($"[ZoneGuard] Restore before lift failed: {e}"); }
             ReleasePlayerConditions();
-            LiftFirewallOrDie("on plugin unload", mayRetry: false);
-            Plugin.Framework.Run(OpenSocialForPartyResync);
-        }
+            LiftFirewallOrDie("after the inn reload");
+        }));
     }
 
     private void RestoreBeforeLift(Vector3 savedPosition, float savedRotation)
@@ -511,6 +491,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     // can't trigger. Firing this from the settled inn state mirrors a manual open.
     private void OpenSocialForPartyResync()
     {
+        if (Current != this || IsActive || guardArmed || !IsInInn()) return;
         var am = AgentModule.Instance();
         var social = am != null ? am->GetAgentByInternalId(AgentId.Social) : null;
         if (social == null) return;
@@ -548,6 +529,8 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     private bool sendHoldActive;
     // Where the server last placed the character: the hold's start, or the latest zone-in during it.
     private Vector3? holdPosition;
+    private ClientCounters? holdCounters;
+    internal static bool HoldsSends => Current is { } zone && zone.sendPacketHook.IsEnabled && (zone.IsActive || zone.sendHoldActive);
     private bool holdSawZoning;
 
     public void HoldSendFirewall(bool hold)
@@ -562,6 +545,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
                 return;
             }
             holdPosition = Plugin.ObjectTable.LocalPlayer?.Position;
+            holdCounters = TakeClientCounters();
             holdSawZoning = false;
             try { sendPacketHook.Enable(); }
             catch (Exception e) { AnoMech.Core.DiagnosticLog.Warn($"[ZoneControl] The send filter would not enable: {e.Message}"); }
@@ -576,6 +560,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
             if (!Zoning() && !holdSawZoning && sendPacketHook.IsEnabled && holdPosition is { } at
                 && Plugin.ObjectTable.LocalPlayer is { } player && Vector3.Distance(player.Position, at) > LiftPositionTolerance)
                 SetLocalPlayerPosition(at);
+            if (sendPacketHook.IsEnabled) RestoreClientCounters(holdCounters);
             try { sendPacketHook.Disable(); }
             catch (Exception e) { AnoMech.Core.DiagnosticLog.Warn($"[ZoneControl] The send filter would not disable: {e.Message}"); }
         }
@@ -755,16 +740,17 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     private byte SendPacketDetour(nint a1, nint a2, nint a3, byte a4)
     {
         const byte defaultReturn = 1;
-        if (a2 == IntPtr.Zero) return defaultReturn;
+        if (a2 == IntPtr.Zero) { outboundPolicy.Allow(null); return defaultReturn; }
         try
         {
             var opcode = *(ushort*)a2;
-            if (opcode == heartbeatOpcode)
+            if (outboundPolicy.Allow(opcode))
                 return sendPacketHook.Original(a1, a2, a3, a4);
             heldOutbound.AddOrUpdate(opcode, 1, (_, held) => held + 1);
         }
         catch (Exception e)
         {
+            outboundPolicy.Allow(null);
             Plugin.Log.Error($"[ZoneControl] SendPacketDetour: {e.Message}");
             return defaultReturn;
         }
@@ -829,32 +815,35 @@ public sealed unsafe partial class ZoneControl : IZoneControl
 
     bool IZoneControl.IsInInn() => IsInInn();
     string? IZoneControl.StartBlockedReason(out string? settling) => StartBlockedReason(out settling);
-    void IZoneControl.Revert() => Revert(false);
+
 
     // ── Lifecycle ─────────────────────────────────────────────────────────────
 
     public void Dispose()
     {
+        try { DisposeCore(); }
+        catch (Exception e)
+        {
+            if (IsActive || guardArmed || practiceRecasts.Captured)
+                Die($"plugin unload could not verify restoration: {e.Message}");
+            throw;
+        }
+    }
+
+    private void DisposeCore()
+    {
         Plugin.AddonLifecycle.UnregisterListener(AddonEvent.PostSetup, "Social", OnSocialPostSetup);
 
-        // To not freeze a player that's disabling/reloading/etc the plugin while not in a Scenario
-        if (IsActive)
+        if (IsActive) Die("FluffySim was unloaded during a virtual-zone stay");
+        if (guardArmed)
         {
-            Revert(true);
+            partyResyncDue = false;
+            SetLocalPlayerPosition(armedPosition, armedRotation);
+            ReleasePlayerConditions();
+            LiftFirewallOrDie("on plugin unload during the post-revert wait", mayRetry: false);
         }
-        else
-        {
-            // The 1s lift after a Revert may still be pending, position re-assert included.
-            if (guardArmed)
-            {
-                SetLocalPlayerPosition(armedPosition, armedRotation);
-                ReleasePlayerConditions();
-                LiftFirewallOrDie("on plugin unload during the post-revert wait", mayRetry: false);
-            }
-            // Through its own release, which puts the character back first.
-            HoldSendFirewall(false);
-            DisableFirewall(); // To be sure the Hooks are disabled before calling Dispose
-        }
+        HoldSendFirewall(false);
+        if (!DisableFirewall()) Die("filters could not be disabled during verified disposal");
 
         if (Current == this) Current = null;
         sendPacketHook.Dispose();

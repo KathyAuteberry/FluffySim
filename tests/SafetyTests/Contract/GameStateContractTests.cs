@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using AnoMech.Core.Map;
+using AnoMech.Core.Native.Implementations;
 using AnoMech.SafetyTests.Fakes;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Contract;
 
@@ -16,6 +18,19 @@ namespace AnoMech.SafetyTests.Contract;
 public class GameStateContractTests
 {
     private const string ClientState = "Dalamud.Game.ClientState.ClientState";
+
+    [Fact]
+    public void LoginDetectionUsesLobbyStateAndOfflinePracticeUsesItsOwnExplicitGate()
+    {
+        var login=RealDalamud.Method(RealDalamud.Type("Dalamud.dll",ClientState),"get_IsLoggedIn");
+        Assert.Contains(login.Body.Instructions,i=>i.Operand is FieldReference f && f.DeclaringType.Name=="AgentLobby" && f.Name=="IsLoggedIn");
+        foreach(var il in Architecture.PluginIL.Builds)
+        {
+            var gate=il.Method("AnoMech.Core.Native.Implementations.ZoneControl","get_LoggedIn");
+            Assert.Contains(gate.Body.Instructions,i=>i.Operand is MethodReference m && Architecture.PluginIL.Name(m)=="AnoMech.Offline.OfflineSession::get_InWorld");
+            Assert.Contains(gate.Body.Instructions,i=>i.Operand is MethodReference m && m.Name=="get_IsLoggedIn");
+        }
+    }
 
     // ICondition[flag] is the byte at Conditions + flag, read on every call (as the fake reads it),
     // so a write by the plugin shows at once.
@@ -88,13 +103,13 @@ public class GameStateContractTests
             "set_TerritoryType no longer skips an unchanged value; the harness raises TerritoryChanged only on a change.");
     }
 
-    // ZoneSession's territory sync looks for a writable TerritoryType by these names. On the
+    // ZoneControl's territory sync looks for a writable TerritoryType by these names. On the
     // client state plugins get there is none, so Dalamud keeps reading the inn through a stay, as
     // the default fake does (FakeClientStateSyncable covers a Dalamud that had one).
     [Fact]
     public void ThePluginsTerritorySync_FindsNothingToWrite_AsWithTheDefaultFake()
     {
-        var names = PluginStrings(nameof(ZoneSession), "SyncClientStateTerritoryType");
+        var names = PluginStrings(nameof(ZoneControl), "SyncClientStateTerritoryType");
         Assert.Contains("TerritoryType", names);
         var scoped = RealDalamud.Type("Dalamud.dll", "Dalamud.Game.ClientState.ClientStatePluginScoped");
         Assert.DoesNotContain(scoped.Properties, p => names.Contains(p.Name) && p.SetMethod != null);
@@ -126,8 +141,8 @@ public class GameStateContractTests
 
     private static HashSet<string> PluginStrings(string type, string method)
     {
-        var module = ModuleDefinition.ReadModule(typeof(ZoneSession).Assembly.Location);
-        var sync = module.GetType($"AnoMech.Core.Map.{type}").Methods.Single(m => m.Name == method);
+        var module = ModuleDefinition.ReadModule(typeof(ZoneControl).Assembly.Location);
+        var sync = module.GetType($"AnoMech.Core.Native.Implementations.{type}").Methods.Single(m => m.Name == method);
         return sync.Body.Instructions.Where(i => i.OpCode == OpCodes.Ldstr).Select(i => (string)i.Operand).ToHashSet();
     }
 }

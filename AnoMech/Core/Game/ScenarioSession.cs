@@ -119,6 +119,7 @@ public sealed class ScenarioSession
 
     public void Start()
     {
+        if (!instance.IsLoaded) throw new InvalidOperationException("The simulation zone is no longer loaded.");
 #if DEBUG
         // Here rather than in scenario.Run (which peers skip).
         DiagnosticLog.Clear();
@@ -158,7 +159,7 @@ public sealed class ScenarioSession
         instance.PlacePlayer();
         Natives.UserActions.OnScenarioStart();
         StartMusic();
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
     }
 
     public void Tick(float deltaSeconds)

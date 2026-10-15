@@ -518,6 +518,8 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
     internal void NativeActorControl(uint entityId, uint category, uint arg1, uint arg2)
     {
         if (ThrowOnActorControl) throw new InvalidOperationException("injected ActorControl failure");
+        if (category == 0x64) NativeInitDirector(arg1, arg2);
+        if (category == 0x65) NativeTerminateDirector(arg1);
         ActorControls.Add((category, Now));
         Note($"native: actor control {category} on 0x{entityId:X}");
     }
@@ -601,7 +603,7 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
         ((byte*)ConditionsMemory)[(int)flag] = on ? (byte)1 : (byte)0;
     }
 
-    // Occupied written by the plugin itself (ZoneSession.Revert), as opposed to the game's own.
+    // Occupied written by the plugin itself (ZoneControl.Revert), as opposed to the game's own.
     public bool PluginHoldsOccupied => ((Conditions*)ConditionsMemory)->Occupied && !gameFlags.Contains(ConditionFlag.Occupied);
     public bool PluginSetStatusAffliction => ((Conditions*)ConditionsMemory)->SufferingStatusAffliction && !gameFlags.Contains(ConditionFlag.SufferingStatusAffliction);
 
@@ -890,7 +892,7 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
     // its own cast bar at once, and the request goes out through the send path.
     public void PressZoneChangeAction(uint actionId = TeleportActionId)
     {
-        if (Dead || !LoggedIn || LocalPlayerVisible == null || ClientZoning) return;
+        if (Dead || !LoggedIn || LocalPlayerVisible == null || ClientZoning || AnoMech.Core.Native.Interfaces.Natives.PlayerInput.TransitionInput) return;
         if (UseActionHandler is { } handler) RunPluginCode(() => handler(ActionType.Action, actionId), "UseAction");
         // The hook sees the press either way; the game refuses a second cast while one is up.
         if (Cast != null)
@@ -929,7 +931,7 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
         lastSentPosition = ClientPosition;
     }
 
-    private void CancelCast(string why)
+    internal void CancelCast(string why)
     {
         Cast = null;
         SetCondition(ConditionFlag.Casting, false);
@@ -1096,8 +1098,11 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
         throw new GameTerminated(message ?? "");
     }
 
+    public bool ThrowDiagnostics { get; set; }
+
     internal void Diagnostic(string level, string line)
     {
+        if (ThrowDiagnostics) throw new InvalidOperationException("Diagnostic writer failed");
         DiagnosticLines.Add($"{Now:F3} {level} {line}");
         Timeline.Add($"{Now:F3}s [{level}] {line}");
     }

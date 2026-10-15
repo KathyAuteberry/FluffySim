@@ -1,3 +1,4 @@
+using AnoMech.Core.SimObjects;
 #pragma warning disable CA1416
 using System.Numerics;
 using AnoMech.Core.Game.Party;
@@ -30,7 +31,7 @@ public class FruDarklitTests
                 foreach (var cone in scenario.PathCones)
                 {
                     var target = p.World.Party.Get(cone.Target)!;
-                    var request = requests.Single(r => r.Effect.ActionTarget == target.GameObjectId);
+                    var request = requests.Single(r => r.Effect.Targets?.Any(t => t.Id == target.GameObjectId) == true);
                     Assert.That(MathF.Atan2(MathF.Sin(request.Rotation - cone.Source.Rotation), MathF.Cos(request.Rotation - cone.Source.Rotation)), Is.EqualTo(0).Within(.0001f));
                     Assert.That(request.Effect.Rotation, Is.EqualTo(cone.Source.Rotation).Within(.0001f));
                     Assert.That(request.Position, Is.EqualTo(cone.Source.Position + p.World.ScenarioOrigin));
@@ -323,7 +324,7 @@ public class FruDarklitTests
             {
                 if (p.Crossed(2.2f))
                 {
-                    var bosses = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Where(a => a.SpawnConfig.IsVisible).ToArray();
+                    var bosses = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Where(a => (a.SpawnConfig.Visibility == SpawnVisibility.Visible)).ToArray();
                     Assert.That(bosses.Select(a => a.BNpcBaseId).Order(), Is.EqualTo(new uint[] { 17833, 17835, 17841 }));
                     Assert.That(bosses.All(a => a.Proxy!.IsDrawObjectVisible), Is.True);
                     Assert.That(bosses.Single(a => a.BNpcBaseId == 17835).SpawnConfig.Appearance!.BodyModel, Is.EqualTo(65537));
@@ -398,7 +399,7 @@ public class FruDarklitTests
     [Test]
     public void CatalogPlacesTheFullProvisionalP4FragmentAfterApocalypse()
     {
-        var catalog = ScenarioCatalog.Create();
+        var catalog = ScenarioCatalog.Create().Scenarios;
         Assert.That(catalog[4], Is.TypeOf<FruDarklitScenario>()); Assert.That(catalog[4].IsIncomplete, Is.True);
         Assert.That(PhaseMusic.TrackFor(catalog[4]), Is.EqualTo(801));
         Assert.That(catalog[4].SettingsOverrides, Is.TypeOf<FruDarklitStateOverrides>());

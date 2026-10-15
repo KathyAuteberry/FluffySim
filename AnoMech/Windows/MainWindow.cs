@@ -1,3 +1,4 @@
+using AnoMech.Core.Native.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -58,6 +59,7 @@ public unsafe class MainWindow : Window, IDisposable
         : null;
 
     private PartyRole? _roleOverride;
+    internal PartyRole? SelectedRoleOverride => _roleOverride;
     private bool _soloMode;
 
     // Index into the selected scenario's AiStrats; reset to the first strat whenever the
@@ -210,9 +212,9 @@ public unsafe class MainWindow : Window, IDisposable
         }
 
         var practiceControls = CurrentPracticeControls();
-        var antiKnockback = PracticeAntiKnockbackControls.Evaluate(plugin.Game.ActiveScenario,
-            plugin.Game.World.Party.Player?.IsAlive() == true, plugin.Game.World.PracticeAntiKnockback);
-        var practiceVisible = practiceControls.Visible || antiKnockback.Visible;
+        var antiKnockback = PracticeAntiKnockbackControls.Evaluate(Plugin.Game.ActiveScenario,
+            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeAntiKnockback);
+        var practiceVisible = !Natives.Zone.NativePracticeReady && (practiceControls.Visible || antiKnockback.Visible);
         if (practiceVisible && !_wasPracticeVisible) RequestCollapsed(false);
         _wasPracticeVisible = practiceVisible;
         var scenarioActive = RunActive;
@@ -733,15 +735,15 @@ public unsafe class MainWindow : Window, IDisposable
     }
 
     private PracticeInvulnerabilityControls CurrentPracticeControls()
-        => PracticeInvulnerabilityControls.Evaluate(plugin.Game.ActiveScenario, plugin.Game.World.Party.PlayerRole,
-            plugin.Game.World.Party.Player?.IsAlive() == true, plugin.Game.World.PracticeInvulnerability);
+        => PracticeInvulnerabilityControls.Evaluate(Plugin.Game.ActiveScenario, Plugin.Game.World.Party.PlayerRole,
+            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeInvulnerability);
 
     private void DrawPrimaryActions(AnoMech.Core.Game.Game game, bool inSession)
     {
         var practice = game.World.PracticeInvulnerability;
         var party = game.World.Party;
         var controls = CurrentPracticeControls();
-        if (controls.Visible)
+        if (controls.Visible && !Natives.Zone.NativePracticeReady)
         {
             ImGui.TextUnformatted($"Practice Invulnerability: {controls.State}");
             ImGui.BeginDisabled(game.Paused || !controls.CanActivate);
@@ -751,13 +753,19 @@ public unsafe class MainWindow : Window, IDisposable
         }
         var anti = game.World.PracticeAntiKnockback;
         var antiControls = PracticeAntiKnockbackControls.Evaluate(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
-        if (antiControls.Visible)
+        if (antiControls.Visible && !Natives.Zone.NativePracticeReady)
         {
             ImGui.TextUnformatted($"Practice Anti-Knockback: {antiControls.State}");
             ImGui.BeginDisabled(game.Paused || !antiControls.CanActivate);
             if (ImGui.Button("Practice Anti-Knockback (Local Only)"))
                 PracticeAntiKnockbackControls.Press(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
             ImGui.EndDisabled();
+        }
+        if (Natives.Zone.NativePracticeReady && (controls.Visible || antiControls.Visible))
+        {
+            ImGui.TextWrapped("Use your normal defensive hotbar ability. Its local cooldown resets on scenario start.");
+            if (antiControls.Visible)
+                ImGui.TextWrapped("Arm's Length / Surecast locked? Use /fluffysim antikb for a local six-second substitute (once per run).");
         }
         var uiScale = ImGuiHelpers.GlobalScale;
         var actionSize = new Vector2(140f * uiScale, 32f * uiScale);

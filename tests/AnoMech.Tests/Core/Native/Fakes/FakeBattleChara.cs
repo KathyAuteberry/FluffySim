@@ -190,7 +190,11 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
                         ? (byte)(t.TargetableStatus | TargetableBits)
                         : (byte)(t.TargetableStatus & ~TargetableBits);
                 break;
+            case 0x3E:
+                Actor?.AnimationStates.Add(((int)arg1, (int)arg2));
+                break;
             case 0x197: // action timeline; a warp_end shows a hidden actor, a warp_start hides it
+                Actor?.Timelines.Add((ushort)arg1);
                 if (Actor is { } warped)
                 {
                     if (arg1 is ActionTimelineId.WarpEnd or ActionTimelineId.WarpEnd2) warped.IsDrawObjectVisible = true;

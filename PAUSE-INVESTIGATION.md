@@ -45,7 +45,9 @@ While PauseInput is set:
   activity/action bookkeeping. The stop-auto exception is **not** permitted.
 - CancelCast returns before its native original and before latching a cancellation request.
 - The auto-cancel branch is bypassed (`DisableAllActions && !PauseInput`). Native ActionManager
-  Update itself still runs: no real cooldown/recast clock is paused, reset or overwritten.
+  Update itself still runs. Native cooldown bars may count down visually; scoped owned practice
+  recasts are now captured/restored on Pause/Resume under the verified filter, as documented in
+  PACKET-FILTER-AUDIT.md. Server cooldowns and unrelated native cooldowns are not frozen.
 
 Pause applies **no** HP, death-mode or incapacitation status. It makes no real action call,
 sends no marking/status/action/movement packet and changes no firewall rule. Normal death/stun
@@ -125,7 +127,7 @@ UI control eligibility/toggling, death/Fetters ownership, native cast continuati
 defenses, stop/leave/restart/dispose, callback/runtime exceptions, exact multi-owner status equivalence
 on party/enemies, overlapping expiry, once-only events, native carry drift and input-lock policy.
 Source-contract tooling checks both real action detours, the auto-cancel exclusion, cancellation gate,
-no status/recast/packet operations in the pause transition and actual common UI wiring. Headless tests
+no status/packet operations in status capture, isolated ownership of practice-recast restoration and actual common UI wiring. Headless tests
 cannot certify native input interception or rendering.
 
 Owner builds/reloads Release personally. In Fall of Faith, pause before the first reveal, while bots
@@ -140,3 +142,13 @@ visually on Resume; capture any discrepancy that changes actual mechanic resolut
 ### Pause release validation — 1.1.0.0
 
 Owner reports successful native Pause playtesting. Debug regression: 11,291 plugin tests passed; final focused checks after cleanup refinements: 97 passed. Relay: 41 passed; tooling: 58 passed. Debug build: zero errors, 3,965 warnings. The 26,880 Fall of Faith assignment/element combinations passed the prior exhaustive sweep. These counts are separate runs, not additive coverage totals. Native cosmetic timers may continue while authoritative statuses remain frozen.
+
+### Owned native defensive cooldowns
+
+The subsequent packet-filter audit adds scoped native hotbar practice. Pause captures the touched
+practice-recast records; Resume restores their exact values while the zone remains filtered. Native
+cooldown rings may finish visually while paused, but waiting cannot recharge the owned defensive
+actions on Resume. The original pre-entry cooldown baseline remains separate and advances in real
+time for Leave. Restore exceptions still release pause input in a finally block; plugin disposal
+reaches verified zone cleanup even if pause cleanup reports an error. See PACKET-FILTER-AUDIT.md.
+Final focused safety/Pause checks: 75 passed, including all nine complete scenarios.

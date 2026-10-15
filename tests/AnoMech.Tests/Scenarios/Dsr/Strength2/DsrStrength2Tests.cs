@@ -1,3 +1,4 @@
+using AnoMech.Core.SimObjects;
 using AnoMech.Scenarios;
 using System.Numerics;
 using AnoMech.Core.Game.Party;
@@ -168,7 +169,7 @@ public class DsrStrength2Tests
     [Test]
     public void CatalogKeepsIndependentPartTwoImmediatelyAfterPartOne()
     {
-        var catalog=ScenarioCatalog.Create();
+        var catalog=ScenarioCatalog.Create().Scenarios;
         Assert.That(catalog[5],Is.TypeOf<AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario>());
         Assert.That(catalog[6],Is.TypeOf<DsrStrength2Scenario>());
         Assert.That(catalog[6].SettingsOverrides,Is.TypeOf<DsrStrength2StateOverrides>());
@@ -214,9 +215,9 @@ public class DsrStrength2Tests
                 var actors=p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().ToArray();
                 var visible=actors.Where(a=>a.SpawnConfig.BNpcBaseId!=9020).ToArray();
                 Assert.That(visible.Length,Is.EqualTo(8));
-                Assert.That(visible.All(a=>a.SpawnConfig.IsVisible&&a.SpawnConfig.Appearance!.BodyModel!=0),Is.True);
+                Assert.That(visible.All(a=>(a.SpawnConfig.Visibility == SpawnVisibility.Visible)&&a.SpawnConfig.Appearance!.BodyModel!=0),Is.True);
                 var helpers=actors.Where(a=>a.SpawnConfig.BNpcBaseId==9020).ToArray();
-                Assert.That(helpers.All(a=>a.SpawnConfig.PacketSpawnEnableDraw),Is.True);
+                Assert.That(helpers.All(a=>a.SpawnConfig.Visibility == SpawnVisibility.InvisibleHelper),Is.True);
                 var state=((DsrStrength2Scenario)p.Game.ActiveScenario!).LastState!;
                 foreach(var role in DsrStrength2State.NonTanks)
                     Assert.That(p.World.Party.Get(role)!.LastLockonVfxId,Is.EqualTo(state.Leaps.Contains(role)?330u:(uint?)null));

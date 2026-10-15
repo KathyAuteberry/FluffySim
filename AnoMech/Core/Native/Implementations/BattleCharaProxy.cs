@@ -1,3 +1,4 @@
+using FFXIVClientStructs.FFXIV.Client.Graphics.Vfx;
 using System;
 using System.Collections.Generic;
 using System.Linq;

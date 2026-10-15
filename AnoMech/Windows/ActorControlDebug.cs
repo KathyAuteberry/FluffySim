@@ -143,6 +143,7 @@ internal sealed unsafe class ActorControlDebug
 
     private void Fire(BattleChara* actor)
     {
+        if (!AnoMech.Core.Native.Implementations.ZoneControl.HoldsSends) return;
         if (actor == null)
         {
             Report("no actor: target something or tick 'On self'");

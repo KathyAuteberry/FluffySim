@@ -7,6 +7,7 @@ using AnoMech.SafetyTests.Harness;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Contract;
 

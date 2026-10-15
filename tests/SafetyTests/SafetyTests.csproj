@@ -14,6 +14,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == '' and '$(OS)' == 'Windows_NT'">$(APPDATA)/XIVLauncher/addon/Hooks/dev/</DalamudLibPath>
+    <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(HOME)/.xlcore/dalamud/Hooks/dev/</DalamudLibPath>
     <Nullable>enable</Nullable>
     <ImplicitUsings>disable</ImplicitUsings>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -21,27 +23,26 @@
     <IsTestProject>true</IsTestProject>
     <RootNamespace>AnoMech.SafetyTests</RootNamespace>
     <!-- The plugin sources carry warnings the plugin build already reports. -->
-    <NoWarn>$(NoWarn);CS0162;CS0169;CS0414;CS0649;CS8500;CS8602;CS8618;CS8625;CS9124</NoWarn>
+    <NoWarn>$(NoWarn);NUnit1032;CS0162;CS0169;CS0414;CS0649;CS8500;CS8602;CS8618;CS8625;CS9124</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Mutation/ holds tools that break copies of the plugin or of Dalamud; never compiled in. -->
     <Compile Remove="Mutation/**" />
-    <Compile Include="../../AnoMech/Core/Map/ZoneSession.cs" Link="Plugin/ZoneSession.cs" />
-    <Compile Include="../../AnoMech/Core/Map/ZoneSession.Guard.cs" Link="Plugin/ZoneSession.Guard.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Implementations/ZoneControl.cs" Link="Plugin/ZoneControl.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Implementations/ZoneControl.Guard.cs" Link="Plugin/ZoneControl.Guard.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Implementations/ZoneControl.Practice.cs" Link="Plugin/ZoneControl.Practice.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Interfaces/IZoneControl.cs" Link="Plugin/IZoneControl.cs" />
     <Compile Include="../../AnoMech/Core/Map/MapController.cs" Link="Plugin/MapController.cs" />
-    <Compile Include="../../AnoMech/Core/Map/TargetInstance.cs" Link="Plugin/TargetInstance.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Policies/PacketFilterPolicy.cs" Link="Plugin/PacketFilterPolicy.cs" />
+    <Compile Include="../../AnoMech/Core/Native/Policies/FirewallLiftPolicy.cs" Link="Plugin/FirewallLiftPolicy.cs" />
+    <Compile Include="../../AnoMech/Core/UserActions/PracticeRecastSession.cs" Link="Plugin/PracticeRecastSession.cs" />
+    <Compile Include="../../AnoMech/Core/UserActions/NativePracticeRecastStore.cs" Link="Plugin/NativePracticeRecastStore.cs" />
     <Compile Include="../../AnoMech/Multiplayer/NetGuard.cs" Link="Plugin/NetGuard.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
-    <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="Mono.Cecil" Version="0.11.6" />
+    <Reference Include="Mono.Cecil" HintPath="$(DalamudLibPath)Mono.Cecil.dll" Private="true" />
   </ItemGroup>
 
   <!-- The included plugin sources must compile with shipped (Release) semantics in every test

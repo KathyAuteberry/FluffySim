@@ -6,6 +6,7 @@ using System.Numerics;
 using System.Runtime.InteropServices;
 using AnoMech.Core;
 using AnoMech.Core.Map;
+using AnoMech.Core.Native.Implementations;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Interface.Colors;
@@ -43,6 +44,7 @@ internal sealed unsafe class OfflineSession : IDisposable
     internal static OfflineSession? Current { get; private set; }
     // Process-wide rather than this instance's phase: the game stays in the offline world across
     // plugin reloads.
+    internal static bool ConnectionBlocked => OfflineProcessState.Tainted || Current?.Busy == true;
     internal static bool InWorld => OfflineProcessState.InWorld;
 
     public OfflineStore Store { get; }
@@ -258,6 +260,8 @@ internal sealed unsafe class OfflineSession : IDisposable
 
     public void Tick()
     {
+        if (OfflineProcessState.Tainted && bootstrap?.GuardsIntact != true)
+            CloseGame("an offline guard was lost while local character state was active");
         if (OfflineProcessState.Tainted && LoginReached() is { } login)
         {
             CloseGameForLogin(login);
@@ -336,8 +340,8 @@ internal sealed unsafe class OfflineSession : IDisposable
 
     internal string? LeaveBlockedReason()
     {
-        if (Plugin.GameInstance?.World.Map.IsInInstance ?? false) return "Leave the scenario first.";
-        if (ZoneSession.GuardArmed) return "The scenario is still winding down; try again in a moment.";
+        if (Plugin.Game?.World.Map.IsInInstance ?? false) return "Leave the scenario first.";
+        if (ZoneControl.GuardArmed) return "The scenario is still winding down; try again in a moment.";
         if (Plugin.Condition[ConditionFlag.BetweenAreas] || Plugin.Condition[ConditionFlag.BetweenAreas51]) return "Wait for the loading screen to finish.";
         return null;
     }
@@ -462,7 +466,7 @@ internal sealed unsafe class OfflineSession : IDisposable
     // takes frames an unload doesn't have.
     public void CloseGameIfStarted()
     {
-        if (OfflineProcessState.Tainted) CloseGame("AnoMech is unloading");
+        if (OfflineProcessState.Tainted) CloseGame("FluffySim is unloading");
     }
 
     // The fallback whenever the game can't be put back: nothing in the offline world is worth
@@ -470,7 +474,7 @@ internal sealed unsafe class OfflineSession : IDisposable
     internal static void CloseGame(string why, bool explainNextTime = true)
     {
         if (!why.EndsWith('.')) why += ".";
-        if (explainNextTime) OfflineStore.RecordClose($"AnoMech closed the game ({DateTime.Now:g}): {why}");
+        if (explainNextTime) OfflineStore.RecordClose($"FluffySim closed the game ({DateTime.Now:g}): {why}");
         try
         {
             DiagnosticLog.Info($"[Offline] Closing the game: {why}");
@@ -480,13 +484,15 @@ internal sealed unsafe class OfflineSession : IDisposable
         {
             // Closing the game is all that is left to do.
         }
-        TerminateProcess(GetCurrentProcess(), 0);
+        try { TerminateProcess(GetCurrentProcess(), 0); }
+        catch { }
+        Environment.FailFast($"FluffySim could not terminate the offline process: {why}");
     }
 
     internal static void CloseGameForLogin(string what)
     {
-        OfflineTrace.Write($"[Offline] {what} while offline mode was active.");
-        CloseGame($"{what} while offline mode was active. {LoginPrecaution}");
+        try { OfflineTrace.Write($"[Offline] {what} while offline mode was active."); }
+        finally { CloseGame($"{what} while offline mode was active. {LoginPrecaution}"); }
     }
 
     // OfflineConnectionGuard stops the game before it reaches a server; these are what a login

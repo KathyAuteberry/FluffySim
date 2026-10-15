@@ -1,7 +1,7 @@
 // Stand-ins for the plugin types the included sources reach outside their own files, plus three
 // shadows inside AnoMech.Core.Map that redirect the zone session's clock, deferred work and
 // process kill into VirtualGame. A type declared in the source's own namespace takes precedence
-// over its using directives, so ZoneSession compiles against these unmodified.
+// over its using directives, so ZoneControl compiles against these unmodified.
 using System;
 using System.Collections.Generic;
 using System.Numerics;
@@ -60,11 +60,13 @@ namespace AnoMech.Core
     }
 }
 
-namespace AnoMech.Pointers
+namespace AnoMech.Core.Native.Implementations.Pointers
 {
     using System.Runtime.InteropServices;
     using FFXIVClientStructs.FFXIV.Client.Game;
     using FFXIVClientStructs.FFXIV.Client.Game.Event;
+
+    public struct WeatherChangePacket { public byte WeatherId, Forced; public float TransitionTime; }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x10)]
     public struct UpdateClassInfoPacket
@@ -94,12 +96,13 @@ namespace AnoMech.Pointers
 
     internal static unsafe class PacketDispatcherPointers
     {
+        public static void HandleWeatherChangePacket(WeatherManager* manager, WeatherChangePacket* packet) => ((FFXIVClientStructs.FFXIV.Client.Graphics.Environment.EnvManager*)VirtualGame.Current.EnvManagerMemory)->ActiveWeather = packet->WeatherId;
         public static void HandleUpdateClassInfoPacket(uint entityId, UpdateClassInfoPacket* packet)
             => VirtualGame.Current.NativeUpdateClassInfo(packet->SyncedLevel);
     }
 }
 
-namespace AnoMech.Helpers
+namespace AnoMech.Core.Native.Implementations.Interop
 {
     internal static class InstanceContentDirectorHelper
     {
@@ -113,7 +116,7 @@ namespace AnoMech.Helpers
     }
 }
 
-namespace AnoMech.Core.Map
+namespace AnoMech.Core.Native.Implementations
 {
     internal sealed class MapEffects : IDisposable
     {
@@ -122,6 +125,8 @@ namespace AnoMech.Core.Map
         public bool Loaded { get; set; }
         public IEnumerable<byte> SuppressedSlots => suppressed;
 
+        public bool ApplySnapshot(ReadOnlySpan<ushort> states, bool zoneIn) => true;
+        public bool IsTerritoryReady(uint territory) => true;
         public bool Apply(uint packetFlags, byte index) => VirtualGame.Current.NativeMapEffect(packetFlags, index);
         public bool SuppressSlot(byte index) => suppressed.Add(index) || true;
         public void KeepSlotSuppressed(byte index) { }

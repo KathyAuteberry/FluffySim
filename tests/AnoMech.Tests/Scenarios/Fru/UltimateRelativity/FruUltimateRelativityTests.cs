@@ -184,7 +184,7 @@ public class FruUltimateRelativityTests
             Probe = p => markers = p.World.SoftMarkers,
         });
         Assert.That(run.Passed, run.ToString);
-        for (var frame = 0; frame < 20; frame++) { native!.BattleCharas.Tick(ScenarioRun.FrameSeconds); native.BattleCharas.SweepOrphans(); }
+        for (var frame = 0; frame < 20; frame++) { native!.BattleCharas.Tick(ScenarioRun.FrameSeconds);  }
         Assert.That(native!.BattleCharas.PendingSpawns, Is.Zero);
         Assert.That(native.BattleCharas.OccupiedSlots, Is.Zero);
         Assert.That(markers!.Count, Is.Zero);
@@ -221,7 +221,7 @@ public class FruUltimateRelativityTests
                 if (p.Crossed(15f))
                 {
                     var boss = actors.Single(a => a.SpawnConfig.BNpcBaseId == 17831);
-                    Assert.That(boss.SpawnConfig.IsVisible, Is.True);
+                    Assert.That((boss.SpawnConfig.Visibility == SpawnVisibility.Visible), Is.True);
                     Assert.That(boss.SpawnConfig.Appearance, Is.EqualTo(new NpcAppearance(65537, 4295237459)));
                     Assert.That(boss.SpawnConfig.NameId, Is.EqualTo(9832));
                     Assert.That(boss.SpawnConfig.Targetable, Is.True);
@@ -232,7 +232,7 @@ public class FruUltimateRelativityTests
                     Assert.That(hourglasses, Has.Length.EqualTo(8));
                     foreach (var glass in hourglasses)
                     {
-                        Assert.That(glass.SpawnConfig.IsVisible, Is.True);
+                        Assert.That((glass.SpawnConfig.Visibility == SpawnVisibility.Visible), Is.True);
                         Assert.That(glass.SpawnConfig.Targetable, Is.False);
                     }
                     for (var i = 0; i < 8; i++) Assert.That(Vector3.Distance(hourglasses[i].Position, state.Hourglass(i)), Is.LessThan(0.005f));
@@ -307,7 +307,7 @@ public class FruUltimateRelativityTests
     [Test]
     public void NormalCatalogContainsManaAfterLightRampantAndKeepsDiamondDustShelved()
     {
-        var catalog = ScenarioCatalog.Create();
+        var catalog = ScenarioCatalog.Create().Scenarios;
         Assert.That(catalog[1], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
         Assert.That(catalog[2], Is.TypeOf<FruUltimateRelativityScenario>());
         Assert.That(catalog.Any(s => s is AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario), Is.False);

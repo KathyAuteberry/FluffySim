@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using System.Net;
 using System.Runtime.InteropServices;
@@ -31,6 +32,7 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
 
     private readonly List<IDisposable> hooks = [];
     private readonly List<Action> enables = [];
+    private readonly List<Func<bool>> enabled = [];
     private ConnectDelegate connect = null!;
     private GetHostByNameDelegate getHostByName = null!;
     private GetAddrInfoDelegate getAddrInfo = null!;
@@ -38,10 +40,12 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
     private WinHttpSendRequestDelegate winHttpSendRequest = null!;
     private bool armed;
 
+    public bool Armed => armed && enabled.Count > 0 && enabled.All(check => check());
+
     public bool Arm(out string why)
     {
         why = "";
-        if (armed) return true;
+        if (armed) { why = Armed ? "" : "an offline guard hook is no longer enabled"; return Armed; }
         try
         {
             connect = Install<ConnectDelegate>(Winsock, "connect", ConnectOrdinal, ConnectDetour);
@@ -50,6 +54,7 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
             winHttpConnect = Install<WinHttpConnectDelegate>(WinHttp, "WinHttpConnect", 0, WinHttpConnectDetour);
             winHttpSendRequest = Install<WinHttpSendRequestDelegate>(WinHttp, "WinHttpSendRequest", 0, WinHttpSendRequestDetour);
             foreach (var enable in enables) enable();
+            if (enabled.Any(check => !check())) throw new InvalidOperationException("An offline guard hook did not enable.");
             armed = true;
             DiagnosticLog.Info("[Offline] Connection guard armed: a server connection or lookup by the game closes it while offline mode is active.");
             return true;
@@ -68,6 +73,7 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
         var hook = Plugin.GameInterop.HookFromImport(null, module, function, ordinal, detour);
         hooks.Add(hook);
         enables.Add(hook.Enable);
+        enabled.Add(() => hook.IsEnabled && !hook.IsDisposed);
         KeepAlive.Add(detour);
         KeepAlive.Add(hook.Original);
         return hook.Original;
@@ -75,35 +81,35 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
 
     private int ConnectDetour(nint socket, byte* address, int length)
     {
-        if (!OfflineProcessState.Tainted) return connect(socket, address, length);
+        if (!OfflineSession.ConnectionBlocked) return connect(socket, address, length);
         Close($"connect to {Describe(address, length)}");
         return SocketError;
     }
 
     private nint GetHostByNameDetour(byte* name)
     {
-        if (!OfflineProcessState.Tainted) return getHostByName(name);
+        if (!OfflineSession.ConnectionBlocked) return getHostByName(name);
         Close($"look up {Marshal.PtrToStringAnsi((nint)name) ?? "a server"}");
         return 0;
     }
 
     private int GetAddrInfoDetour(byte* node, byte* service, nint hints, nint* result)
     {
-        if (!OfflineProcessState.Tainted) return getAddrInfo(node, service, hints, result);
+        if (!OfflineSession.ConnectionBlocked) return getAddrInfo(node, service, hints, result);
         Close($"look up {Marshal.PtrToStringAnsi((nint)node) ?? "a server"}");
         return HostNotFound;
     }
 
     private nint WinHttpConnectDetour(nint session, char* server, ushort port, uint reserved)
     {
-        if (!OfflineProcessState.Tainted) return winHttpConnect(session, server, port, reserved);
+        if (!OfflineSession.ConnectionBlocked) return winHttpConnect(session, server, port, reserved);
         Close($"connect to {(server == null ? "a server" : new string(server))}:{port}");
         return 0;
     }
 
     private int WinHttpSendRequestDetour(nint request, char* headers, uint headersLength, nint optional, uint optionalLength, uint totalLength, nint context)
     {
-        if (!OfflineProcessState.Tainted) return winHttpSendRequest(request, headers, headersLength, optional, optionalLength, totalLength, context);
+        if (!OfflineSession.ConnectionBlocked) return winHttpSendRequest(request, headers, headersLength, optional, optionalLength, totalLength, context);
         Close("send a web request");
         return 0;
     }
@@ -130,6 +136,7 @@ internal sealed unsafe class OfflineConnectionGuard : IDisposable
         foreach (var hook in hooks) hook.Dispose();
         hooks.Clear();
         enables.Clear();
+        enabled.Clear();
         armed = false;
     }
 }

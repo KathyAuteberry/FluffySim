@@ -5,7 +5,7 @@ using Dalamud.Game.ClientState.Conditions;
 namespace AnoMech.SafetyTests.Harness;
 
 // When loading a sim zone is safe, written from the game's point of view rather than copied from
-// ZoneSession.StartBlockedReason: the harness judges every real load against this, so a gate that
+// ZoneControl.StartBlockedReason: the harness judges every real load against this, so a gate that
 // lets through anything here fails the tests. The plugin may be stricter; it may not be looser.
 internal static class StartSpecification
 {

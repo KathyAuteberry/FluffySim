@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using AnoMech.Core.Map;
+using AnoMech.Core.Native.Implementations;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
@@ -27,7 +28,7 @@ public sealed unsafe class PluginDriver : IDisposable
     private bool disposed;
 
     public MapController Map { get; }
-    public ZoneSession Zone { get; }
+    public ZoneControl Zone { get; }
     public bool ScenarioActive { get; private set; }
     public string? LastRefusal { get; private set; }
     public int StartsCompleted { get; private set; }
@@ -36,15 +37,18 @@ public sealed unsafe class PluginDriver : IDisposable
     public PluginDriver(VirtualGame game)
     {
         this.game = game;
-        ZoneSessionProbe.ResetStatics();
+        ZoneControlProbe.ResetStatics();
+        *ActionManager.Instance() = default;
+        for(var group=0;group<80;group++) *ActionManager.Instance()->GetRecastGroupDetail(group)=default;
+        AnoMech.Core.Native.Interfaces.Natives.PlayerInput.TransitionInput=false;
+        Zone = new ZoneControl();
         Map = new MapController();
-        Zone = ZoneSession.Current ?? throw new InvalidOperationException("MapController did not create a ZoneSession.");
         game.PluginUpdate = Update;
-        game.TerritoryChangedHandler = ZoneSession.NoteTerritoryChanged;
-        game.LogoutHandler = ZoneSession.NoteLogout;
-        game.UseActionHandler = ZoneSession.NoteActionPressed;
-        game.StartSafetyOracle = spec => StartSpecification.Violation(spec, ZoneSessionProbe.GuardArmed(Zone))
-            ?? (ZoneSessionProbe.SendHoldActive(Zone) ? "the debug send hold was on (the server has not seen the character's last moves)" : null);
+        game.TerritoryChangedHandler = ZoneControl.NoteTerritoryChanged;
+        game.LogoutHandler = ZoneControl.NoteLogout;
+        game.UseActionHandler = ZoneControl.NoteActionPressed;
+        game.StartSafetyOracle = spec => StartSpecification.Violation(spec, ZoneControlProbe.GuardArmed(Zone))
+            ?? (ZoneControlProbe.SendHoldActive(Zone) ? "the debug send hold was on (the server has not seen the character's last moves)" : null);
         game.StuckOracle = Stuck;
         game.ExtraInvariant = InstanceImpliesFirewall;
     }
@@ -64,7 +68,7 @@ public sealed unsafe class PluginDriver : IDisposable
         if (disposed) return;
         try
         {
-            ZoneSession.TickGuard();
+            Zone.TickGuard();
         }
         catch (GameTerminated)
         {
@@ -74,7 +78,7 @@ public sealed unsafe class PluginDriver : IDisposable
         {
             // The real update swallows this; a guard that throws every frame is a guard that
             // never trips.
-            game.Violation($"ZoneSession.TickGuard threw {e.GetType().Name}: {e.Message}");
+            game.Violation($"ZoneControl.TickGuard threw {e.GetType().Name}: {e.Message}");
         }
         RetryWaitingStart();
         Map.Tick();
@@ -87,7 +91,7 @@ public sealed unsafe class PluginDriver : IDisposable
     {
         if (disposed || game.Dead) return "the plugin is gone";
         if (StartWaitingOn is { } waiting) return $"Waiting for {waiting} to settle before starting...";
-        if (ZoneSession.StartBlockedReason(out var settling) is { } blocked && settling == null)
+        if (ZoneControl.StartBlockedReason(out var settling) is { } blocked && settling == null)
             return LastRefusal = $"Cannot start: {blocked}.";
         RunScenario(zone);
         return null;
@@ -95,7 +99,7 @@ public sealed unsafe class PluginDriver : IDisposable
 
     private void RunScenario(SimZone zone)
     {
-        if (ZoneSession.StartBlockedReason(out var settling) != null && settling != null)
+        if (ZoneControl.StartBlockedReason(out var settling) != null && settling != null)
         {
             waitingStart = zone;
             StartWaitingOn = settling;
@@ -109,7 +113,7 @@ public sealed unsafe class PluginDriver : IDisposable
     private void RetryWaitingStart()
     {
         if (waitingStart is not { } waiting) return;
-        if (ZoneSession.StartBlockedReason(out var settling) != null && settling != null)
+        if (ZoneControl.StartBlockedReason(out var settling) != null && settling != null)
         {
             StartWaitingOn = settling;
             return;
@@ -123,7 +127,7 @@ public sealed unsafe class PluginDriver : IDisposable
         // Queued before an unload: in game it runs into disposed hooks and throws before loading
         // anything.
         if (disposed) return;
-        if (ZoneSession.StartBlockedReason() is { } blocked)
+        if (ZoneControl.StartBlockedReason() is { } blocked)
         {
             LastRefusal = blocked;
             return;
@@ -134,12 +138,14 @@ public sealed unsafe class PluginDriver : IDisposable
             LastRefusal = "no local player";
             return;
         }
-        var freshLoad = !Map.IsZoneLoaded;
-        if (!Map.TryLoad(new TargetInstance(zone.TerritoryId, zone.Origin, zone.Origin + PlayerSpawnLocal, zone.Weather, null), zone.Level, zone.ItemLevel))
+        var freshLoad = !Zone.IsActive;
+        if (freshLoad && !Zone.Enter(zone.TerritoryId, zone.Origin + PlayerSpawnLocal))
         {
             LastRefusal = "the zone was not entered (see the log)";
             return;
         }
+        if (freshLoad) Map.Enter(zone.TerritoryId);
+        Map.SetPhaseWeather(zone.Weather, freshLoad);
         activeZone = zone;
         if (freshLoad) TeleportPlayerToSpawn();
         else TeleportPlayerToSpawnIfOutsideArena();
@@ -198,6 +204,7 @@ public sealed unsafe class PluginDriver : IDisposable
             StartWaitingOn = null;
             ScenarioActive = false;
             Map.Unload();
+            Zone.Revert();
         });
     }
 
@@ -207,7 +214,7 @@ public sealed unsafe class PluginDriver : IDisposable
         if (disposed) return;
         disposed = true;
         game.PluginUnloaded = true;
-        game.RunPluginCode(Map.Dispose, "plugin unload");
+        game.RunPluginCode(Zone.Dispose, "plugin unload");
         if (dalamudSweepsHooks) game.DalamudDisposesPluginHooks();
     }
 
@@ -231,7 +238,7 @@ public sealed unsafe class PluginDriver : IDisposable
             if (game.PluginSetStatusAffliction) return "the unloaded plugin left a status affliction condition set";
             return null;
         }
-        var armed = ZoneSessionProbe.GuardArmed(Zone);
+        var armed = ZoneControlProbe.GuardArmed(Zone);
         if (armed && !Zone.IsActive)
         {
             postRevertSince ??= game.Now;
@@ -244,7 +251,7 @@ public sealed unsafe class PluginDriver : IDisposable
         if (game.PluginHoldsOccupied) return "the plugin left the Occupied condition set with no session to clear it";
         if (game.PluginSetStatusAffliction) return "the plugin left a status affliction condition set with no session to clear it";
         if (!game.SendFilterUp && !game.ReceiveFilterUp) return null;
-        if (game.SendFilterUp && !game.ReceiveFilterUp && ZoneSessionProbe.SendHoldActive(Zone)) return null;
+        if (game.SendFilterUp && !game.ReceiveFilterUp && ZoneControlProbe.SendHoldActive(Zone)) return null;
         return $"the firewall is up (send {game.SendFilterUp}, receive {game.ReceiveFilterUp}) with no session and no pending lift, so nothing will lower it";
     }
 }

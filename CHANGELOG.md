@@ -1,3 +1,14 @@
+# FluffySim 1.2.0.0 — 2026-10-15
+
+- Adds normal hotbar defensive practice with scoped client-local cooldown resets for tank invulnerability in Darklit/Apocalypse and anti-knockback in Sanctity Meteors.
+- Preserves pre-entry cooldowns and restores them on Leave with elapsed real time accounted for. Pause/Resume preserves owned practice recasts without refreshing them.
+- Hides the dedicated virtual defensive buttons when native practice is ready. Low-level Meteor players retain `/fluffysim antikb`, an explicit six-second, once-per-run local substitute requiring no unlocked ability.
+- Hardens packet-filter restoration and unload ordering, clears pending local action intent, and adds `/fluffysim firewall` diagnostics without packet payload logging.
+
+Leave and wait for the inn to finish restoring before disabling or reloading the plugin. An unverified unload now fails closed by stopping the client. Native reset/restore integration still requires client validation; this release does not guarantee account safety. See PACKET-FILTER-AUDIT.md for evidence, limitations and manual checks.
+
+Validation: full Debug plugin regression 13,009 passed; final focused safety/Pause checks 75 passed; relay 41 passed; tooling 65 passed. Runs overlap and are not additive totals.
+
 # FluffySim 1.1.0.0 — 2026-10-15
 
 - Adds independently playable FRU P1 Fall of Faith (Mana), including all four Fire/Lightning tethers, assignment practice options and post-resolution repositioning.

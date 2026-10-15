@@ -236,7 +236,7 @@ public sealed class CharacterFind<T> where T : IPositioned
             Plugin.Log.Warning($"InsideActionAoe: action {actionId} not found");
             return Array.Empty<T>();
         }
-        AoeQuery.RaiseEvaluated(new AoeQuery(actionId, target, omenRotate, size, castTypeOverride, casterHitboxRadius));
+        AoeQuery.RaiseEvaluated(new AoeQuery(actionId, target, omenRotate, size, castTypeOverride, casterHitboxRadius) { CandidateType = typeof(T) });
         var castType = castTypeOverride ?? action.CastType;
         var halfWidth = action.XAxisModifier > 0 ? action.XAxisModifier * 0.5f : action.EffectRange;
         var range = action.EffectRange + (castType.AddsCasterHitbox() ? casterHitboxRadius : 0f);
@@ -320,6 +320,7 @@ public sealed class CharacterFind<T> where T : IPositioned
 public readonly struct AoeQuery(uint actionId, Placement source,
     float omenRotate = 0f, float? size = null, CastType? castTypeOverride = null, float casterHitboxRadius = 0f)
 {
+    public Type CandidateType { get; init; } = typeof(SimCharacter);
     public uint ActionId { get; } = actionId;
     public Placement Source { get; } = source;
     public float OmenRotate { get; } = omenRotate;

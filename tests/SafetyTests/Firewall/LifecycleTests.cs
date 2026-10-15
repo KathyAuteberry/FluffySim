@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -85,7 +86,7 @@ public class LifecycleTests : FirewallTestBase
         AssertBackInTheInnWithTheFirewallDown();
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void Restart_InsideTheLoadedZone_KeepsTheStayArmed(bool outsideArena)
@@ -115,7 +116,7 @@ public class LifecycleTests : FirewallTestBase
         AssertBackInTheInnWithTheFirewallDown();
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(1)]
     [InlineData(5)]
     public void RepeatedStays_NeverLiftEarlyNorStick(int stays)
@@ -128,10 +129,10 @@ public class LifecycleTests : FirewallTestBase
             AssertBackInTheInnWithTheFirewallDown();
             Game.RunFor(3.1);
         }
-        Assert.Equal(stays, ZoneSessionProbe.StayId(Plugin.Zone));
+        Assert.Equal(stays, ZoneControlProbe.StayId(Plugin.Zone));
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(1f / 30f, true)]
     [InlineData(1f / 144f, true)]
     [InlineData(1f / 20f, false)]

@@ -8,8 +8,8 @@ using Mono.Cecil.Cil;
 
 namespace AnoMech.SafetyTests.Architecture;
 
-// The built plugin, read as IL (never loaded or run). Release by default, because that is what
-// users get; ANOMECH_DLLS (';'-separated) adds or replaces builds, e.g. a Debug one.
+// Reads Debug and optimized Debug artifacts as IL, without loading the plugin.
+// ANOMECH_DLLS selects the artifacts; installed Release output is never needed.
 public sealed class PluginIL
 {
     private static readonly Lazy<IReadOnlyList<PluginIL>> Loaded = new(LoadAll);
@@ -52,11 +52,11 @@ public sealed class PluginIL
         var configured = Environment.GetEnvironmentVariable("ANOMECH_DLLS");
         var paths = !string.IsNullOrWhiteSpace(configured)
             ? configured.Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList()
-            : new[] { "AnoMech/bin/x64/Release/AnoMech.dll", "AnoMech/bin/Release/AnoMech.dll" }
+            : new[] { "AnoMech/bin/x64/Debug/FluffySim.dll", "AnoMech/bin/Debug/FluffySim.dll" }
                 .Select(p => System.IO.Path.Combine(root, p)).Where(File.Exists).Take(1).ToList();
         if (paths.Count == 0)
             throw new InvalidOperationException(
-                "No built plugin found. Build it first: dotnet build AnoMech.sln -c Release -p:Platform=x64 (or set ANOMECH_DLLS).");
+                "No built plugin found. Build it first: dotnet build AnoMech.sln -c Debug -p:Platform=x64 (or set ANOMECH_DLLS).");
         var newestSource = Directory.EnumerateFiles(System.IO.Path.Combine(root, "AnoMech"), "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{System.IO.Path.DirectorySeparatorChar}obj{System.IO.Path.DirectorySeparatorChar}") && !f.Contains($"{System.IO.Path.DirectorySeparatorChar}bin{System.IO.Path.DirectorySeparatorChar}"))
             .Select(File.GetLastWriteTimeUtc).DefaultIfEmpty(DateTime.MinValue).Max();
@@ -141,5 +141,5 @@ public sealed class PluginIL
     public IReadOnlyList<string> CallersOf(string callee)
         => Calls().Where(c => Regex.IsMatch(Name(c.Callee), callee)).Select(c => Owner(c.Method)).Distinct().OrderBy(x => x).ToList();
 
-    public override string ToString() => $"{System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(Path))}/{System.IO.Path.GetFileName(Path)} ({(IsRelease ? "Release" : "Debug")})";
+    public override string ToString() => $"{System.IO.Path.GetFileName(System.IO.Path.GetDirectoryName(Path))}/{System.IO.Path.GetFileName(Path)} ({(IsRelease ? "optimized" : "Debug")})";
 }

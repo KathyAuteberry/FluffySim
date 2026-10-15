@@ -12,6 +12,10 @@ internal sealed class FakeUserActions : IUserActions
     public void OnScenarioStart() { }
     public void OnSessionEnd() { }
     public int Pauses { get; private set; }
+    public int Resumes { get; private set; }
+    public bool ThrowOnResume { get; set; }
+    public Action? Resuming { get; set; }
+    public void OnResume() { if (ThrowOnResume) throw new InvalidOperationException("Resume failed"); Resumes++; Resuming?.Invoke(); }
     public void OnPause() => Pauses++;
     public void Tick(float deltaSeconds) { }
 

@@ -1,5 +1,10 @@
 # DSR implementation roadmap
 
+## Current upstream integration — 2026-10-15
+
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
+
+
 ## Development build workflow (current)
 
 Use `dotnet build -c Debug` and run automated tests with `-c Debug`. Debug output
@@ -698,3 +703,18 @@ and BGM are unchanged; Debug development only.
 ### Pause release validation — 1.1.0.0
 
 Owner reports successful native Pause playtesting. Debug regression: 11,291 plugin tests passed; final focused checks after cleanup refinements: 97 passed. Relay: 41 passed; tooling: 58 passed. Debug build: zero errors, 3,965 warnings. The 26,880 Fall of Faith assignment/element combinations passed the prior exhaustive sweep. These counts are separate runs, not additive coverage totals. Native cosmetic timers may continue while authoritative statuses remain frozen.
+
+## Native hotbar defensive practice and filter audit — 2026-10-15
+
+Supersedes the earlier conservative native-reset decision. See [PACKET-FILTER-AUDIT.md](PACKET-FILTER-AUDIT.md) for actual source paths, the owner's Holmgang/Cactbot evidence, scoped confidence and residual transport risks. Outgoing traffic through the inherited hook is heartbeat-only; unknown requests fail closed. No queued packet bytes are retained or replayed. The unload exception to native inn readiness and settling has been removed; pending actions and disposal failures cannot bypass verification. An unsafe unload now stops the client, so Leave and wait for restoration before rebuilding/reloading.
+
+Native hotbar tank defenses and Arm's Length/Surecast resolve independently of the optional combat module. Their owned client recasts reset only for relevant practice scenarios and restore the pre-entry baseline with real elapsed time on Leave, including shared-group ownership. Sprint uses the same snapshot/restore rather than its old unowned reset. No server cooldown is reset or ability automatically pressed. Main virtual buttons are suppressed when native practice is ready; unavailable gates retain safe fallback controls. Low-level Meteor players can use `/fluffysim antikb` (explicit, six seconds, once per run) without a skill unlock. Native cooldown/exit behavior still requires owner testing. All nine mechanics, Pause status ownership, arenas and BGM remain unchanged.
+
+### Validation results
+
+- Full Debug plugin regression: **13,009 passed**, zero failures, including the complete 1,680 × 16 Fall of Faith sweep.
+- Final isolated Debug focused checks after the restore/Pause refinements: **75 passed**, zero failures; includes all nine paused complete scenarios, cooldown ownership/shared groups, repeated native-timer pause restoration, missed/timed tank defenses and cleanup exceptions. These are overlapping runs, not additive test totals.
+- Relay: **41 passed**. Tooling: **65 passed**.
+- Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
+- Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
+- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.

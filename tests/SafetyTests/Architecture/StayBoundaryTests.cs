@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Architecture;
 
@@ -26,7 +27,7 @@ public class StayBoundaryTests
     [
         "AnoMech.Core.SimObjects.SimCharacter::SetPosition",
         "AnoMech.Core.SimObjects.SimCharacter::SetRotation",
-        "AnoMech.Core.Native.ForcedMovement::CarryTo",
+        "AnoMech.Core.Native.Implementations.ForcedMovement::CarryTo",
     ];
 
     // Native position writes elsewhere are moves too, except in the move methods' own bodies,
@@ -41,7 +42,7 @@ public class StayBoundaryTests
         "AnoMech.Core.SimObjects.SimCast::FaceTarget",
     ];
 
-    private const string ZoneSessionWriter = "AnoMech.Core.Map.ZoneSession::SetLocalPlayerPosition";
+    private const string ZoneControlWriter = "AnoMech.Core.Native.Implementations.ZoneControl::SetLocalPlayerPosition";
 
     // Checks that a stay is running. Each is true only between a verified arm and the lift:
     // IsInInstance and IsActive by the zone session's own design (the firewall tests check "in
@@ -50,8 +51,8 @@ public class StayBoundaryTests
     private static bool IsStayCheck(Instruction i) => i.Operand switch
     {
         FieldReference f => i.OpCode.Code == Code.Ldfld && PluginIL.Name(f) == $"{Game}::activeScenario",
-        MethodReference m => PluginIL.Name(m) is $"{Map}::get_IsInInstance" or "AnoMech.Core.Map.ZoneSession::get_IsActive"
-            or "AnoMech.Multiplayer.MultiplayerManager::get_PeerInRun" or $"{Map}::TryLoad" or $"{Game}::get_ActiveScenario" or $"{Game}::get_IsScenarioActive",
+        MethodReference m => PluginIL.Name(m) is $"{Map}::get_IsInInstance" or "AnoMech.Core.Native.Implementations.ZoneControl::get_IsActive"
+            or "AnoMech.Multiplayer.MultiplayerManager::get_PeerInRun" or $"{Map}::TryLoad" or $"{Game}::get_ActiveScenario" or $"{Game}::get_IsScenarioActive" or "AnoMech.Core.Game.InstanceSession::get_IsLoaded",
         _ => false,
     };
 
@@ -70,7 +71,7 @@ public class StayBoundaryTests
     // or moves it.
     private static readonly Dictionary<string, string> ReviewedWorldEntries = new()
     {
-        ["AnoMech.Core.Native.TimelineDebug::SpawnChaosNearPlayer"] = "the debug timeline bench's test enemy (its controls are Debug-only)",
+        ["AnoMech.Core.Native.Implementations.TimelineDebug::SpawnChaosNearPlayer"] = "the debug timeline bench's test enemy (its controls are Debug-only)",
         ["AnoMech.Windows.DebugMenu::DrawDebugContent"] = "the debug menu's manual enemy and event-object spawns (Debug builds only)",
         ["AnoMech.Scenarios.Umad.P1TeleTrouncing.UmadP1TeleTrouncingScenario::FireAppearNow"] = "a settings button replaying the statue-appear tell: statue beats and effects",
         ["AnoMech.Scenarios.Umad.P1TeleTrouncing.UmadP1TeleTrouncingScenario::FireWindUpNow"] = "a settings button replaying the gaze wind-up tell: statue beats and effects",
@@ -149,7 +150,7 @@ public class StayBoundaryTests
         var name = PluginIL.Name(r);
         var owner = PluginIL.Owner(m);
         if (Moves.Contains(name)) return !Moves.Contains(owner) && !MovesItselfAsAnNpc(i, m);
-        return !Moves.Contains(owner) && !SimObjectWriters.Contains(owner) && owner != ZoneSessionWriter && ArchitectureTests.IsNativeTransformCall(name);
+        return !Moves.Contains(owner) && !SimObjectWriters.Contains(owner) && owner != ZoneControlWriter && ArchitectureTests.IsNativeTransformCall(name);
     }
 
     // A move whose target is statically an NPC (SimNpc and below: an index into the game's
@@ -222,76 +223,50 @@ public class StayBoundaryTests
 
     // ---- what makes Game.activeScenario a stay check ------------------------------------------
 
-    // Set to a scenario only once the zone loaded behind a verified filter.
     [Fact]
     public void TheActiveScenario_IsOnlySetAfterTheZoneLoaded()
     {
-        var failures = new List<string>();
         foreach (var il in PluginIL.Builds)
-            foreach (var m in il.Methods)
-                foreach (var store in m.Body.Instructions.Where(i => i.OpCode.Code == Code.Stfld && PluginIL.Name((FieldReference)i.Operand) == $"{Game}::activeScenario"))
-                {
-                    if (store.Previous?.OpCode.Code == Code.Ldnull) continue;
-                    var owner = PluginIL.Owner(m);
-                    if (owner != $"{Game}::RunScenarioInternal")
-                    {
-                        failures.Add($"[{il}] {owner} sets Game.activeScenario; only RunScenarioInternal may, after the zone loaded.");
-                        continue;
-                    }
-                    var load = m.Body.Instructions.Single(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{Map}::TryLoad");
-                    if (ControlFlow.OutcomeOf(load) is not { } outcome || !new ControlFlow(m).EveryPathTakes(store, outcome.Branch, outcome.WhenTruthy))
-                        failures.Add($"[{il}] RunScenarioInternal can set Game.activeScenario without TryLoad having returned true.");
-                }
-        Assert.True(failures.Count == 0, string.Join("\n", failures));
+        {
+            var writers = il.Methods.Where(m => m.Body.Instructions.Any(i => i.OpCode.Code == Code.Stfld
+                && i.Operand is FieldReference f && PluginIL.Name(f) == $"{Game}::run" && i.Previous?.OpCode.Code != Code.Ldnull));
+            Assert.Equal(new[] { $"{Game}::StartScenarioNow" }, writers.Select(PluginIL.Owner).ToArray());
+            var start = il.Method(Game,"StartScenarioNow");
+            var create = start.Body.Instructions.Single(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Core.Game.ScenarioSession::Create");
+            var store = start.Body.Instructions.Single(i => i.OpCode.Code == Code.Stfld && i.Operand is FieldReference f && PluginIL.Name(f) == $"{Game}::run");
+            Assert.True(create.Offset < store.Offset);
+            var refusal = il.Method("AnoMech.Core.Game.ScenarioSession", "Refusal");
+            Assert.Contains(refusal.Body.Instructions, i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Core.Game.InstanceSession::get_IsLoaded");
+        }
     }
 
-    // Cleared, and the world emptied, before the stay can end: the zone only unloads from Leave,
-    // after ResetInternal, which does both before anything else can fail.
     [Fact]
     public void TheActiveScenarioAndTheWorld_AreClearedBeforeTheZoneUnloads()
     {
-        var failures = new List<string>();
-        foreach (var il in PluginIL.Builds)
+        foreach(var il in PluginIL.Builds)
         {
-            var reset = il.Method(Game, "ResetInternal");
-            var straight = reset.Body.Instructions.TakeWhile(i => i.OpCode.FlowControl is FlowControl.Next or FlowControl.Call).ToList();
-            if (!straight.Any(i => i.OpCode.Code == Code.Stfld && PluginIL.Name((FieldReference)i.Operand) == $"{Game}::activeScenario" && i.Previous?.OpCode.Code == Code.Ldnull))
-                failures.Add($"[{il}] Game.ResetInternal no longer clears activeScenario before anything else.");
-            if (!straight.Any(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{World}::Despawn"))
-                failures.Add($"[{il}] Game.ResetInternal no longer empties the sim world before anything that could return early.");
-            var despawn = il.Method(World, "Despawn");
-            var drop = despawn.Body.Instructions.TakeWhile(i => i.OpCode.FlowControl is FlowControl.Next or FlowControl.Call).ToList();
-            if (!drop.Any(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{World}::set_Party" && i.Previous?.Operand is FieldReference e && PluginIL.Name(e) == "AnoMech.Core.SimObjects.SimParty::Empty"))
-                failures.Add($"[{il}] SimWorld.Despawn no longer drops the party (and with it the player).");
-            var leave = il.Methods.Where(m => PluginIL.Owner(m) == $"{Game}::Leave")
-                .FirstOrDefault(m => m.Body.Instructions.Any(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{Map}::Unload"));
-            if (leave == null)
-            {
-                failures.Add($"[{il}] Game.Leave no longer unloads the zone; update this rule.");
-                continue;
-            }
-            var resetCall = leave.Body.Instructions.FirstOrDefault(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{Game}::ResetInternal");
-            var unload = leave.Body.Instructions.First(i => i.Operand is MethodReference r && PluginIL.Name(r) == $"{Map}::Unload");
-            if (resetCall == null || new ControlFlow(leave).ReachableAvoiding([(resetCall, resetCall.Next)]).Contains(unload))
-                failures.Add($"[{il}] Game.Leave can unload the zone without ResetInternal having run first.");
+            var end = il.Method(Game,"EndRun");
+            var clear = end.Body.Instructions.Single(i => i.OpCode.Code == Code.Stfld && i.Operand is FieldReference f && PluginIL.Name(f) == $"{Game}::run");
+            var stop = end.Body.Instructions.Single(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Core.Game.ScenarioSession::End");
+            Assert.True(clear.Offset < stop.Offset);
+            Assert.Contains(il.Method("AnoMech.Core.Game.ScenarioSession","End").Body.Instructions, i => i.Operand is MethodReference m && PluginIL.Name(m) == $"{World}::Despawn");
+            var exit=il.Method("AnoMech.Core.Game.InstanceSession","Exit");
+            var drop=exit.Body.Instructions.Single(i=>i.Operand is MethodReference m && PluginIL.Name(m)==$"{World}::DespawnParty");
+            var revert=exit.Body.Instructions.Single(i=>i.Operand is MethodReference m && PluginIL.Name(m)=="AnoMech.Core.Native.Interfaces.IZoneControl::Revert");
+            Assert.True(new ControlFlow(exit).EveryPathTakes(revert,drop,drop.Next));
         }
-        Assert.True(failures.Count == 0, string.Join("\n", failures));
     }
 
-    // The player's sim object is made in one place, only after the zone loaded.
     [Fact]
     public void TheSimPlayer_IsOnlyMadeForARun()
     {
-        var failures = new List<string>();
-        foreach (var il in PluginIL.Builds)
+        foreach(var il in PluginIL.Builds)
         {
-            var makers = il.CallersOf(@"^AnoMech\.Core\.SimObjects\.SimPlayer::\.ctor$");
-            if (!makers.SequenceEqual([$"{World}::CreateParty"]))
-                failures.Add($"[{il}] the SimPlayer is made by {string.Join(", ", makers)}; only SimWorld.CreateParty may.");
-            var parties = il.CallersOf($"^{Regex.Escape(World)}::CreateParty$");
-            if (!parties.SequenceEqual([$"{Game}::RunScenarioInternal"]))
-                failures.Add($"[{il}] SimWorld.CreateParty is called by {string.Join(", ", parties)}; only Game.RunScenarioInternal may (after TryLoad, see ArchitectureTests).");
+            Assert.Equal(new[] { "AnoMech.Core.SimObjects.SimParty::Apply" }, il.CallersOf(@"^AnoMech\.Core\.SimObjects\.SimPlayer::\.ctor$").ToArray());
+            Assert.Equal(new[] { $"{World}::SeatParty" }, il.CallersOf(@"^AnoMech\.Core\.SimObjects\.SimParty::Apply$").ToArray());
+            var callers=il.CallersOf($"^{Regex.Escape(World)}::SeatParty$");
+            Assert.Equal(new[] { $"{Game}::SeatParty", $"{World}::ApplyParty" }, callers.OrderBy(x=>x).ToArray());
+            Assert.Equal(new[] { "AnoMech.Core.Game.ScenarioSession::Start" }, il.CallersOf($"^{Regex.Escape(World)}::ApplyParty$").ToArray());
         }
-        Assert.True(failures.Count == 0, string.Join("\n", failures));
     }
 }

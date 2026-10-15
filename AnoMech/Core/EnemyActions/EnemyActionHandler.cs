@@ -89,6 +89,7 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
     // CharacterManager null-derefs ApplyAll.
     private void Release(EnemyAction action, SimCharacter? target, Vector3? location, GameObjectId? castTarget, byte animationVariation, Delivery delivery)
     {
+        if (!world.Map.IsInInstance) return;
         var id = action.ActionId;
         if (target == caster) target = null;
         var aim = location ?? target?.Position;

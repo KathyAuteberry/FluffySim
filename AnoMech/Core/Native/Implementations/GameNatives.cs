@@ -1,3 +1,4 @@
+using AnoMech.Core.Native.Implementations.Pointers;
 using AnoMech.Core.Native.Implementations.Interop;
 using AnoMech.Core.Native.Interfaces;
 
@@ -8,6 +9,8 @@ internal static class GameNatives
 {
     public static void Install()
     {
+        VfxDataPointers.Initialize();
+        Natives.Vfx = new VfxFunctions();
         Natives.Data = new GameData();
         Natives.BattleCharas = new BattleCharas();
         Natives.EventObjects = new EventObjects();

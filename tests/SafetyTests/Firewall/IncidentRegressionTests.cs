@@ -2,6 +2,7 @@ using System.Linq;
 using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -51,12 +52,12 @@ public class IncidentRegressionTests : FirewallTestBase
         Enter();
         Plugin.ClickLeave();
         Game.Frame();
-        ForceOpenTheStartGate();
+        Game.RunFor(4);
         Assert.Null(Plugin.ClickStart(SimZone.Umad));
         Game.Frame();
         Game.Frame();
         Assert.True(Plugin.ScenarioActive, Game.Report());
-        Assert.Equal(2, ZoneSessionProbe.StayId(Plugin.Zone));
+        Assert.Equal(2, ZoneControlProbe.StayId(Plugin.Zone));
         var writes = Game.NativePositionWrites.Count;
         Game.RunFor(5);
         Assert.False(Game.Dead, Game.Report());
@@ -66,10 +67,24 @@ public class IncidentRegressionTests : FirewallTestBase
         AssertBackInTheInnWithTheFirewallDown();
     }
 
+    [Fact]
+    public void GuardTripStillStopsWhenTheDiagnosticWriterThrows()
+    {
+        Enter();
+        Game.ThrowDiagnostics=true;
+        try
+        {
+            Game.DisableHookExternally(HookRole.Receive,"diagnostic failure regression");
+            Game.Frame();
+            AssertStoppedWithTheFirewallUp("disabled");
+        }
+        finally { Game.ThrowDiagnostics=false; }
+    }
+
     private unsafe void ForceOpenTheStartGate()
     {
         const System.Reflection.BindingFlags any = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static;
-        var type = typeof(AnoMech.Core.Map.ZoneSession);
+        var type = typeof(AnoMech.Core.Native.Implementations.ZoneControl);
         type.GetField("guardArmed", any)!.SetValue(Plugin.Zone, false);
         type.GetField("lastBusyAt", any)!.SetValue(null, null);
         ((FFXIVClientStructs.FFXIV.Client.Game.Conditions*)Game.ConditionsMemory)->Occupied = false;
@@ -77,7 +92,7 @@ public class IncidentRegressionTests : FirewallTestBase
 
     // The fixed one-second settle can end before the inn has finished loading; the game's
     // post-load packet would then leave with nothing holding it.
-    [Theory]
+    [Xunit.Theory]
     [InlineData(1.05)]
     [InlineData(1.6)]
     [InlineData(2.5)]
@@ -100,18 +115,17 @@ public class IncidentRegressionTests : FirewallTestBase
         AssertStoppedWithTheFirewallUp("loading");
     }
 
-    // An unload has no frames left to wait for the inn load in: the post-load packet follows the
-    // lift. Documented in the README as an accepted exposure.
+    // An unload has no frames left for the inn reload; no post-load packet may escape.
     [Fact]
-    public void UnloadMidStay_PostLoadPacketIsTheOnlyExposure()
+    public void UnloadMidStay_StopsBeforeAnyPostLoadPacketEscapes()
     {
         Enter();
         Game.RunFor(2);
         Plugin.Unload();
         Game.RunFor(3);
         Assert.Empty(Game.Violations);
-        Assert.Single(Game.AcceptedRisks);
-        Assert.Contains("zone-load-finished", Game.AcceptedRisks[0]);
+        Assert.Empty(Game.AcceptedRisks);
+        AssertStoppedWithTheFirewallUp("unloaded");
     }
 
     // A throw between the revert and the lift used to strand the stay: the firewall up for good
@@ -124,7 +138,8 @@ public class IncidentRegressionTests : FirewallTestBase
         Leave(6);
         Assert.True(Game.Dead || !Game.SendFilterUp, Game.Report());
         Assert.Empty(Game.Violations);
-        Assert.False(ZoneSessionProbe.GuardArmed(Plugin.Zone));
+        if (Game.Dead) AssertStoppedWithTheFirewallUp("inn reload threw");
+        else Assert.False(ZoneControlProbe.GuardArmed(Plugin.Zone));
     }
 
     [Fact]
@@ -139,7 +154,7 @@ public class IncidentRegressionTests : FirewallTestBase
         Game.RunFor(6);
         Assert.True(Game.Dead || !Game.SendFilterUp, Game.Report());
         Assert.Empty(Game.Violations);
-        Assert.False(ZoneSessionProbe.GuardArmed(Plugin.Zone));
+        Assert.False(ZoneControlProbe.GuardArmed(Plugin.Zone));
     }
 
     // The debug bench's send-only hold, still counted as held after a stay's lift took the hook
@@ -147,17 +162,17 @@ public class IncidentRegressionTests : FirewallTestBase
     [Fact]
     public void DebugHold_AfterAStay_HoldsAgain()
     {
-        Plugin.Map.HoldSendFirewall(true);
-        typeof(AnoMech.Core.Map.ZoneSession).GetMethod("DisableFirewall")!.Invoke(Plugin.Zone, null);
-        Plugin.Map.HoldSendFirewall(true);
+        Plugin.Zone.HoldSendFirewall(true);
+        typeof(AnoMech.Core.Native.Implementations.ZoneControl).GetMethod("DisableFirewall")!.Invoke(Plugin.Zone, null);
+        Plugin.Zone.HoldSendFirewall(true);
         Assert.True(Game.SendFilterUp, "The hold believed it was on while the send filter was down.");
-        Plugin.Map.HoldSendFirewall(false);
+        Plugin.Zone.HoldSendFirewall(false);
         Enter();
         Leave();
         AssertBackInTheInnWithTheFirewallDown();
-        Plugin.Map.HoldSendFirewall(true);
+        Plugin.Zone.HoldSendFirewall(true);
         Assert.True(Game.SendFilterUp);
-        Plugin.Map.HoldSendFirewall(false);
+        Plugin.Zone.HoldSendFirewall(false);
         AssertClean();
     }
 
@@ -192,7 +207,7 @@ public class IncidentRegressionTests : FirewallTestBase
         var updates = Game.NativeDirectorUpdates;
         Plugin.Map.AddEffect(0x00020001, 3);
         Plugin.Map.DirectorUpdate(0x80000004, 1);
-        Plugin.Map.SuppressArenaSlot(4);
+        Plugin.Map.SetEffectSnapshot([4]);
         Game.RunFor(2);
         Assert.Equal(effects, Game.NativeMapEffects);
         Assert.Equal(updates, Game.NativeDirectorUpdates);

@@ -1,5 +1,5 @@
 // Stand-ins for the Lumina sheet API. Rows come from VirtualGame's tables; the sheet and row-ref
-// semantics that ZoneSession relies on match Lumina's (a missing row throws from the indexer,
+// semantics that ZoneControl relies on match Lumina's (a missing row throws from the indexer,
 // RowRef.Value throws on an invalid reference).
 using System;
 using System.Collections.Generic;
@@ -98,6 +98,8 @@ namespace Lumina.Excel.Sheets
         public RowRef<TerritoryIntendedUse> TerritoryIntendedUse { get; init; }
         public RowRef<ContentFinderCondition> ContentFinderCondition { get; init; }
     }
+
+    public struct Status { public byte ParamEffect { get; init; } }
 
     public struct ContentFinderCondition
     {

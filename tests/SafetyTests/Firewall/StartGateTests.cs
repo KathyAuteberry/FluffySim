@@ -2,9 +2,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Map;
+using AnoMech.Core.Native.Implementations;
 using AnoMech.SafetyTests.Harness;
 using Dalamud.Game.ClientState.Conditions;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -113,7 +115,7 @@ public class StartGateTests : FirewallTestBase
 
     // Under lag the zone change lands seconds after the cast bar ends; a second press the game
     // refused must not release the first cast's hold.
-    [Theory]
+    [Xunit.Theory]
     [InlineData(0.5)]
     [InlineData(4)]
     [InlineData(12)]
@@ -200,7 +202,7 @@ public class StartGateTests : FirewallTestBase
 
     public static IEnumerable<object[]> BusyFlags() => StartSpecification.BusyFlags.Select(f => new object[] { f });
 
-    [Theory]
+    [Xunit.Theory]
     [MemberData(nameof(BusyFlags))]
     public void WhileBusy_Refused(ConditionFlag flag)
     {
@@ -215,7 +217,7 @@ public class StartGateTests : FirewallTestBase
 
     public static IEnumerable<object[]> ServerActingFlags() => StartSpecification.ServerActingSoonFlags.Select(f => new object[] { f });
 
-    [Theory]
+    [Xunit.Theory]
     [MemberData(nameof(ServerActingFlags))]
     public void RightAfterAServerActingState_WaitsForItToSettle(ConditionFlag flag)
     {
@@ -238,7 +240,7 @@ public class StartGateTests : FirewallTestBase
         Enter();
         Plugin.ClickLeave();
         Game.Frame();
-        Assert.True(ZoneSessionProbe.GuardArmed(Plugin.Zone));
+        Assert.True(ZoneControlProbe.GuardArmed(Plugin.Zone));
         Plugin.ClickStart(SimZone.Umad);
         Game.RunFor(0.3);
         Assert.False(Plugin.ScenarioActive, "Started while the previous lift was pending.");
@@ -252,7 +254,7 @@ public class StartGateTests : FirewallTestBase
 
     // Dalamud reports a zone change as its load begins; the settle must still count from the
     // load's end. A start deferred on it runs on the first frame the gate opens.
-    [Theory]
+    [Xunit.Theory]
     [InlineData(VirtualGame.OtherInnTerritory)]
     [InlineData(VirtualGame.InnTerritory)]
     public void AStartRightAfterAZoneIn_WaitsTheWholeSettleFromTheLoadsEnd(uint territory)
@@ -291,14 +293,14 @@ public class StartGateTests : FirewallTestBase
     {
         Plugin.Dispose();
         Game.SendSignatureMissing = true;
-        Assert.ThrowsAny<System.Exception>(() => new MapController());
+        Assert.ThrowsAny<System.Exception>(() => new AnoMech.Core.Native.Implementations.ZoneControl());
         Assert.False(Game.SendFilterUp);
     }
 
     [Fact]
     public void GateAgreesWithTheSpecification_WhenIdle()
     {
-        Assert.Null(ZoneSession.StartBlockedReason());
+        Assert.Null(ZoneControl.StartBlockedReason());
         Assert.Null(StartSpecification.Violation(Game.StartSpecNow(), false));
     }
 }

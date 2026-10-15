@@ -14,6 +14,7 @@ public sealed class FruZone : IZone
     public static readonly Phase P4 = new(Instance, "P4", 105, PhaseMusic.PromisesToKeep, init: InitializeP4, clientSetup: HoldP4Layers);
     public string DisplayName => "Futures Rewritten";
     public string Name => "Futures Rewritten (Ultimate)";
+    public Core.Map.EntranceBarrier EntranceBarrier => new(0, 0, 0, new(0f, 0f, 16f));
     public uint TerritoryId => 1238;
     public Vector3 Origin => new(100f, 0f, 100f);
     public byte Level => 100;

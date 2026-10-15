@@ -1,8 +1,10 @@
 using System.Numerics;
 using AnoMech.Core.Map;
+using AnoMech.Core.Native.Implementations;
 using AnoMech.SafetyTests.Harness;
 using Dalamud.Game.ClientState.Conditions;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -31,7 +33,7 @@ public class StayGuardTests : FirewallTestBase
         AssertStoppedWithTheFirewallUp("logout");
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(ConditionFlag.BetweenAreas)]
     [InlineData(ConditionFlag.BetweenAreas51)]
     [InlineData(ConditionFlag.LoggingOut)]
@@ -79,7 +81,7 @@ public class StayGuardTests : FirewallTestBase
         AssertBackInTheInnWithTheFirewallDown();
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(HookRole.Send)]
     [InlineData(HookRole.Receive)]
     public void FilterTakenDownByAnythingElse_StopsTheGameInTheSameFrame(HookRole role)
@@ -143,7 +145,7 @@ public class StayGuardTests : FirewallTestBase
     public void LeaveAfterATrip_StopsInsteadOfReloadingTheInn()
     {
         Enter();
-        typeof(ZoneSession).GetField("tripReason", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
+        typeof(ZoneControl).GetField("tripReason", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!
             .SetValue(Plugin.Zone, "test trip");
         Plugin.ClickLeave();
         Game.RunFor(2);
@@ -156,8 +158,8 @@ public class StayGuardTests : FirewallTestBase
     public void ARestartAfterATrip_IsRefused()
     {
         Enter();
-        var reason = typeof(ZoneSession).GetField("tripReason", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
+        var reason = typeof(ZoneControl).GetField("tripReason", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)!;
         reason.SetValue(Plugin.Zone, "test trip");
-        Assert.NotNull(ZoneSession.StartBlockedReason());
+        Assert.NotNull(ZoneControl.StartBlockedReason());
     }
 }

@@ -184,7 +184,7 @@ public class FruApocalypseTests
     [Test]
     public void CatalogExposesFullProvisionalFragmentAfterUltimateRelativity()
     {
-        var catalog=ScenarioCatalog.Create();
+        var catalog=ScenarioCatalog.Create().Scenarios;
         Assert.That(catalog[3],Is.TypeOf<FruApocalypseScenario>());
         Assert.That(catalog[3].IsIncomplete,Is.True);
         Assert.That(catalog[3].EnablePhaseBgm,Is.True);

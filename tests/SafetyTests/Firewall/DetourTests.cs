@@ -1,6 +1,7 @@
 using System.Linq;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 

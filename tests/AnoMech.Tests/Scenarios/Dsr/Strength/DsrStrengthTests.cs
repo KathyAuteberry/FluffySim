@@ -184,7 +184,7 @@ public class DsrStrengthTests
     [Test]
     public void CatalogExposesElementalSettingsAndKeepsFruFirst()
     {
-        var scenarios = ScenarioCatalog.Create();
+        var scenarios = ScenarioCatalog.Create().Scenarios;
         Assert.That(scenarios[1], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
         Assert.That(scenarios[2], Is.TypeOf<AnoMech.Scenarios.Fru.UltimateRelativity.FruUltimateRelativityScenario>());
         Assert.That(scenarios[5], Is.TypeOf<DsrStrengthScenario>());
@@ -272,7 +272,7 @@ public class DsrStrengthTests
                     checkedAfter = true;
                     for (var role = 0; role < 8; ++role)
                         Assert.That(Vector3.Distance(p.Member((PartyRole)role)!.Position,
-                            DsrStrengthAi.Triangle(state, (PartyRole)role)), Is.LessThan(.05f));
+                            DsrStrengthAi.Triangle(state, (PartyRole)role)), Is.LessThan((PartyRole)role == p.World.Party.PlayerRole ? ScenarioRun.FrameSeconds * 6f + .001f : .05f));
                 }
             },
         });

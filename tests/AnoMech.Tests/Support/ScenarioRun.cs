@@ -14,12 +14,12 @@ internal sealed record ScenarioRunOptions
 {
     // Ends the run at this scenario time, as a pass unless something already failed.
     public float? StopAt { get; init; }
-    public Func<IScenario>? ScenarioFactory { get; init; }
-    public Action<FakeGame>? ConfigureNative { get; init; }
     public bool Solo { get; init; }
     public AnoMech.Core.Game.Ai.BotDifficulty BotDifficulty { get; init; }
     public bool ShowSimulatedParty { get; init; } = true;
     public bool GodMode { get; init; }
+    public Func<IScenario>? ScenarioFactory { get; init; }
+    public Action<FakeGame>? ConfigureNative { get; init; }
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
@@ -42,13 +42,19 @@ internal sealed record ScenarioRunOptions
 
     // Hits check a human player's mitigation only with the UserActions module on.
     public bool UserActionsEnabled { get; init; }
+
+    // Writes what the sim sent to the fakes here, as a replay-timeline-shaped CSV (SimTimeline).
+    public string? TimelinePath { get; init; }
+
+    // Edits the plugin configuration before the run.
+    public Action<Configuration>? Configure { get; init; }
 }
 
 // From the first player takeover on, the player stops following the AI, as a human who froze there
 // would; knockbacks and forced moves still apply. A bot (`Bot` set) is only put somewhere: its AI
-// moves it on at its next step. `TeleportTo` is scenario-local XZ; `Facing` uses Placement's
-// convention (0 = +Z).
-internal sealed record Takeover(float At, Vector2? TeleportTo, float? Facing = null, PartyRole? Bot = null);
+// moves it on at its next step. `TeleportTo` is scenario-local XZ, at height `Y`; `Facing` uses
+// Placement's convention (0 = +Z).
+internal sealed record Takeover(float At, Vector2? TeleportTo, float? Facing = null, PartyRole? Bot = null, float Y = 0f);
 
 // One headless scenario run: every seat (the player's included) on the strat's AI, on a fresh
 // fake game, ticked at a fixed rate until it ends.
@@ -70,6 +76,8 @@ internal sealed record ScenarioRun(
         fake.UserActions.Enabled = options.UserActionsEnabled;
         Game? game = null;
         var log = TraceLog.Create(() => game?.World.Events.Elapsed ?? 0f);
+        fake.Timeline.Clock = () => game?.World.Events.Elapsed ?? 0f;
+        fake.Timeline.Source = () => log.LastFired;
         var role = options.PlayerRole ?? (PartyRole)new Rng(seed).Fork("player-seat").Next(8);
         // A real player's job always fits their seat; job-keyed actions read it.
         fake.BattleCharas.Player.ClassJob = PartyPresets.Standard[(int)role].ClassJob;
@@ -82,6 +90,7 @@ internal sealed record ScenarioRun(
 
         void OnAoeEvaluated(AoeQuery query)
         {
+            if (query.CandidateType == typeof(SimEnemy)) return;
             var now = game?.World.Events.Elapsed ?? 0f;
             aoeChecks.RemoveAll(check => check.Time < now - AoeCheckWindowSeconds);
             var positions = game is null
@@ -97,16 +106,18 @@ internal sealed record ScenarioRun(
         }
 
         DalamudServices.Install(nameof(Plugin.Log), log);
-        DalamudServices.Install(nameof(Plugin.Config), new Configuration { BotDifficulty = options.BotDifficulty, ShowSimulatedParty = options.ShowSimulatedParty, PracticeGodMode = options.GodMode });
+        var config = new Configuration { BotDifficulty = options.BotDifficulty, ShowSimulatedParty = options.ShowSimulatedParty, PracticeGodMode = options.GodMode };
+        options.Configure?.Invoke(config);
+        DalamudServices.Install(nameof(Plugin.Config), config);
         DebugBotControl.Enabled = true;
         PerRole.ForceSeats = true;
         AoeQuery.Evaluated += OnAoeEvaluated;
         game = new Game();
-        DalamudServices.Install(nameof(Plugin.GameInstance), game);
+        DalamudServices.Install(nameof(Plugin.Game), game);
         var probe = new ScenarioProbe(game, log, RecentAoeChecks);
         try
         {
-            scenario = options.ScenarioFactory?.Invoke() ?? game.Scenarios.Single(s => s.GetType() == scenarioType);
+            scenario = options.ScenarioFactory?.Invoke() ?? game.Catalog.Scenarios.Single(s => s.GetType() == scenarioType);
             game.PartyMemberKilled += (r, cause, actionId) =>
             {
                 var snapshot = WorldSnapshot.Describe(game.World, RecentAoeChecks(), game.World.Party.Get(r), includeHidden: true);
@@ -115,12 +126,13 @@ internal sealed record ScenarioRun(
             if (options.Overrides is { } setOverrides)
                 setOverrides(scenario.SettingsOverrides
                              ?? throw new InvalidOperationException($"{scenarioType.Name} has no settings overrides."));
-            game.RunScenario(new RunScenarioParams(scenario, role, options.Solo ? null : strat, 0, seed));
+            game.ZoneIn(scenario.Phase.Zone, SessionMode.Local);
+            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo }, options.Solo ? null : strat, 0, seed));
             fake.Frame(FrameSeconds, game.Tick);
-            if (!game.IsScenarioActive)
+            if (game.Status < SessionStatus.Running)
                 failure = "did not start";
 
-            while (failure is null && !game.HasScenarioSucceeded && !game.Paused)
+            while (failure is null && game.Status is not (SessionStatus.Succeeded or SessionStatus.Frozen))
             {
                 if (game.HasScenarioMistake && game.World.Events.IsEmpty)
                 {
@@ -151,6 +163,8 @@ internal sealed record ScenarioRun(
         }
 
         var endTime = game.World.Events.Elapsed;
+        if (options.TimelinePath is { } timelinePath)
+            fake.Timeline.Write(timelinePath);
         string? artifacts = null;
         try
         {
@@ -178,7 +192,7 @@ internal sealed record ScenarioRun(
         if (world.Party.Get(role) is not { } member) return;
         member.StopMoving();
         if (takeover.TeleportTo is { } to)
-            member.SetPosition(new Vector3(to.X, 0f, to.Y));
+            member.SetPosition(new Vector3(to.X, takeover.Y, to.Y));
         if (takeover.Facing is { } facing)
             member.SetRotation(facing);
         log.Add("TEST", $"{(takeover.Bot is null ? "player" : "bot")} {role} taken over"

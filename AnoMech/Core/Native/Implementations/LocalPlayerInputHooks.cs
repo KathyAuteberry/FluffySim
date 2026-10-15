@@ -25,6 +25,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
     public event Action<ActionType, uint, ulong>? ActionExecuted;
     public event Action? CastCancelRequested;
     public bool PauseInput { get; set; }
+    public bool TransitionInput { get; set; }
 
     // --- Player activity signals (read by SimPlayer to drive Party.Player.IsMoving/IsActing) ---
     // The engine's own per-frame movement sample (the signal bossmod reads): input intent, not a
@@ -133,7 +134,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     public void Dispose()
     {
-        PauseInput = false;
+        PauseInput = TransitionInput = false;
         rmiWalkHook?.Dispose();
         updateHook?.Dispose();
         useActionHook?.Dispose();
@@ -145,7 +146,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
     // outgoing packet is firewalled in the sim, so it has no visible effect here).
     private void CancelCastDetour(Hotbar* thisPtr)
     {
-        if (PauseInput) return;
+        if (PauseInput || TransitionInput) return;
         cancelCastRequested = true;
         CastCancelRequested?.Invoke();
         cancelCastHook.Original(thisPtr);
@@ -160,7 +161,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
         rmiWalkHook.Original(self, sumLeft, sumForward, sumTurnLeft, haveBackwardOrStrafe, a6, bAdditiveUnk);
         // self is a MoveControllerSubMemberForMine*; the sums are its move vector.
         MovementInputActive = *sumLeft != 0 || *sumForward != 0;
-        if (PauseInput)
+        if (PauseInput || TransitionInput)
         {
             *sumLeft = *sumForward = *sumTurnLeft = 0;
             *haveBackwardOrStrafe = 0;
@@ -199,8 +200,9 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     private bool UseActionDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* outOptAreaTargeted)
     {
-        if (PauseInput) return false;
+        if (PauseInput || TransitionInput) return false;
         RecordRecentAction(actionId, actionType);
+        ZoneControl.VerifyActionIsolation();
         var result = useActionHook.Original(self, actionType, actionId, targetId, extraParam, mode, comboRouteId, outOptAreaTargeted);
         if (result)
         {
@@ -212,7 +214,8 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     private bool UseActionLocationDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam, byte a7)
     {
-        if (PauseInput) return false;
+        if (PauseInput || TransitionInput) return false;
+        ZoneControl.VerifyActionIsolation();
         var result = useActionLocationHook.Original(self, actionType, actionId, targetId, location, extraParam, a7);
         if (result)
         {

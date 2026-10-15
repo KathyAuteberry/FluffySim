@@ -11,6 +11,7 @@ public interface ILocalPlayerInput : IDisposable
     event Action<ActionType, uint, ulong>? ActionExecuted;
 
     bool PauseInput { get; set; }
+    bool TransitionInput { get; set; }
     event Action? CastCancelRequested;
 
     bool MovementInputActive { get; }

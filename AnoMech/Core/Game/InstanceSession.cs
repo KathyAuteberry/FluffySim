@@ -56,6 +56,7 @@ public sealed class InstanceSession
             Plugin.Log.Warning($"InstanceSession: not entering {zone.Name} -- {refusal}.");
             return null;
         }
+        if (!Natives.Zone.IsActive) return null;
         world.Map.Enter(zone.TerritoryId);
         var session = new InstanceSession(world, zone, spawn, mode);
         // Before any action mutates it, so Exit can restore it.
@@ -182,6 +183,7 @@ public sealed class InstanceSession
     // SimWorld so a run's teardown doesn't despawn it.
     private void OpenEntranceBarrier(EntranceBarrier entrance)
     {
+        if (entrance.EObjId == 0) return;
         var config = new EventObjectSpawnConfig
         {
             EObjId = entrance.EObjId,

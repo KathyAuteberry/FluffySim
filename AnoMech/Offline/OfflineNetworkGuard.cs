@@ -36,6 +36,7 @@ internal sealed class OfflineNetworkGuard : IDisposable
             chatSend ??= Plugin.GameInterop.HookFromAddress<SendDelegate>(chatAddress, ChatSendDetour);
             zoneSend.Enable();
             chatSend.Enable();
+            if (!Armed) throw new InvalidOperationException("Offline packet hooks did not enable.");
             DiagnosticLog.Info($"[Offline] Network guard armed: zone send 0x{zoneAddress:X}, chat send 0x{chatAddress:X}.");
             return true;
         }

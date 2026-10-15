@@ -37,9 +37,12 @@ Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in D
 - DSR: P2 Strength of the Ward Parts 1 and 2, Sanctity of the Ward Parts 1 and 2 — Elemental.
 - Sanctity Meteors remains experimental; some timings and presentation need further recording validation.
 - Shared Easy/Hard bots, invisible simulated party, God Mode, and local-only practice defensive actions.
+- Native defensive hotbar practice includes scoped local cooldown resets and exit restoration, pending client validation of the new integration. Low-level Meteors players can use `/fluffysim antikb`; see the [packet-filter audit and manual checks](PACKET-FILTER-AUDIT.md). Leave and wait for the inn before reloading the plugin.
 - Solo Pause/Resume freezes the ongoing run and status durations while restricting player movement/actions. Native animations may continue; see [Pause details](PAUSE-INVESTIGATION.md).
 
 FluffySim extends [AnoMech by Anomek and contributors](https://github.com/anomek/AnoMech). Original native simulation infrastructure and the scenarios listed below retain their upstream attribution. The existing icon is inherited from AnoMech; no new logo is implied.
+
+Experimental title-screen offline mode and Evernow's firewall/recast consistency improvements are integrated; read [usage, limitations and attribution](UPSTREAM-INTEGRATION.md) before testing. Native offline launch has not yet been validated in this fork.
 
 See [Hard movement audit](HARD-DIFFICULTY-AUDIT.md), [release/versioning instructions](RELEASING.md), and [release notes](CHANGELOG.md).
 

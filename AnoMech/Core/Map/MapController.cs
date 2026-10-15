@@ -180,6 +180,10 @@ public sealed class MapController
     // Once the zone is loaded.
     public void Enter(uint territoryId)
     {
+        pendingEffects.Clear();
+        pendingSnapshot = null;
+        pendingDirectorUpdates.Clear();
+        Natives.Layout.ClearSuppressedLayers();
         IsInInstance = true;
         TerritoryId = territoryId;
         layerDumpFrame = 0;

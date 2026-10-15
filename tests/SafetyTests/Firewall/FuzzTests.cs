@@ -5,6 +5,7 @@ using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Dalamud.Game.ClientState.Conditions;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -23,7 +24,7 @@ public class FuzzTests
             ? Math.Max(1, total / Batches)
             : DefaultSeedsPerBatch;
 
-    [Theory]
+    [Xunit.Theory]
     [MemberData(nameof(SeedBatches))]
     public void RandomSequences_KeepEveryInvariant(int batch)
     {
@@ -122,7 +123,7 @@ internal sealed class FuzzRun
     private string Failure(int seed, bool fullTrace)
         => $"Fuzz seed {seed} (rerun with ANOMECH_FUZZ_REPRO={seed}):\nOps:\n  {string.Join("\n  ", fullTrace ? ops : ops.TakeLast(60))}\n{game.Report(fullTrace ? 2000 : 150)}";
 
-    private bool Armed => plugin.Zone.IsActive || ZoneSessionProbe.GuardArmed(plugin.Zone);
+    private bool Armed => plugin.Zone.IsActive || ZoneControlProbe.GuardArmed(plugin.Zone);
 
     // Conditions under which stopping the game is a correct answer.
     private void NoteHazards()
@@ -225,7 +226,7 @@ internal sealed class FuzzRun
                 hazard |= Armed;
                 break;
             case < 700:
-                if (ZoneSessionProbe.SendHoldActive(plugin.Zone)) goto default;
+                if (ZoneControlProbe.SendHoldActive(plugin.Zone)) goto default;
                 game.IgnorePositionWrites = !game.IgnorePositionWrites;
                 Op($"position writes {(game.IgnorePositionWrites ? "ignored" : "taken")}");
                 break;
@@ -244,7 +245,7 @@ internal sealed class FuzzRun
                 if (game.IgnorePositionWrites) goto default;
                 var hold = rng.Next(2) == 0;
                 Op($"debug hold {hold}");
-                plugin.Map.HoldSendFirewall(hold);
+                plugin.Zone.HoldSendFirewall(hold);
                 break;
             }
             case < 780:
@@ -255,6 +256,7 @@ internal sealed class FuzzRun
                 break;
             case < 790:
                 Op("unload the plugin");
+                if (Armed) hazard = true;
                 plugin.Unload();
                 unloaded = true;
                 break;
@@ -300,14 +302,14 @@ internal sealed class FuzzRun
         game.ThrowAfterNativeLoad = false;
         game.LocalPlayerPresent = true;
         foreach (var flag in game.GameFlags.ToList()) game.SetCondition(flag, false);
-        plugin.Map.HoldSendFirewall(false);
+        plugin.Zone.HoldSendFirewall(false);
         // Stop cancels a start still waiting to settle; Leave only acts inside a sim.
         plugin.ClickReset();
         game.RunFor(1);
         plugin.ClickLeave();
         game.RunFor(12);
         if (game.Dead) return;
-        if (plugin.Zone.IsActive || ZoneSessionProbe.GuardArmed(plugin.Zone))
+        if (plugin.Zone.IsActive || ZoneControlProbe.GuardArmed(plugin.Zone))
             game.Violation("STUCK: a stay is still armed long after the last Leave");
         if (game.SendFilterUp || game.ReceiveFilterUp)
             game.Violation($"STUCK: a filter is still up after the last Leave (send {game.SendFilterUp}, receive {game.ReceiveFilterUp})");

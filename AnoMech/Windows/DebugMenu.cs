@@ -284,7 +284,7 @@ internal sealed unsafe class DebugMenu
         ImGui.InputText("ModeAttrFlags (blank = none)", ref debugSpawnModeAttrFlagsText, 16);
         if (ImGui.Button("Spawn"))
         {
-            if (!plugin.Game.World.Map.IsInInstance)
+            if (!Plugin.Game.World.Map.IsInInstance)
             {
                 Plugin.Log.Warning($"Spawn: {SpawnNeedsRun}");
             }
@@ -320,7 +320,7 @@ internal sealed unsafe class DebugMenu
         ImGui.InputText("EObjRowId", ref debugEObjRowIdText, 16);
         if (ImGui.Button("Spawn EObj"))
         {
-            if (!plugin.Game.World.Map.IsInInstance)
+            if (!Plugin.Game.World.Map.IsInInstance)
             {
                 Plugin.Log.Warning($"Spawn EObj: {SpawnNeedsRun}");
             }
@@ -837,6 +837,7 @@ internal sealed unsafe class DebugMenu
     // later, then ActorControlSelf 0xC8 ~0.4s after that.
     private static unsafe void FireWipeTerritoryInit()
     {
+        if (!AnoMech.Core.Native.Implementations.ZoneControl.HoldsSends) return;
         var territory = ZoneControl.LoadedTerritory;
         if (territory == 0 || Plugin.ObjectTable.LocalPlayer is not { } player)
         {

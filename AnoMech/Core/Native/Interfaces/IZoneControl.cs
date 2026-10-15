@@ -13,6 +13,12 @@ public interface IZoneControl : IDisposable
     string? StartBlockedReason(out string? settling);
 
     bool IsActive { get; }
+    bool NativePracticeReady { get; }
+    string FirewallStatus { get; }
+    void EndSpeedBuffs();
+    void ResetPracticeRecast(uint action);
+    void NotePracticeAction(uint action);
+    void SetPracticeRecastsPaused(bool paused);
 
     // Every frame, inside a session or not: the start gate's timers and the session's safety nets.
     void TickGuard();

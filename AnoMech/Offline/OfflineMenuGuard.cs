@@ -14,8 +14,8 @@ namespace AnoMech.Offline;
 // would wait on a server, go through offline mode's own return to the title screen.
 internal sealed unsafe class OfflineMenuGuard : IDisposable
 {
-    private const string SettingsMessage = "These settings cannot be changed while in an AnoMech offline sim.";
-    private const string ServerMessage = "This isn't available in an AnoMech offline sim.";
+    private const string SettingsMessage = "These settings cannot be changed while in an FluffySim offline sim.";
+    private const string ServerMessage = "This isn't available in an FluffySim offline sim.";
     // MainCommand rows.
     private const uint LogOut = 23, ExitGame = 24;
     private static readonly HashSet<uint> Settings = [19, 20, 21, 22, 34, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 63, 71, 83, 97, 99];

@@ -6,7 +6,7 @@ rewritten) must fail none.
     python tests/SafetyTests/Mutation/Dalamud/run.py            # every mutant
     python tests/SafetyTests/Mutation/Dalamud/run.py D2 D13     # just these
 
-Needs the safety tests built (dotnet build tests/SafetyTests -c Release) and room in the temp
+Needs the safety tests built (dotnet build tests/SafetyTests -c Debug) and room in the temp
 folder for a copy of Dalamud's (~200 MB).
 """
 import json
@@ -50,8 +50,8 @@ def dalamud_home():
 def main():
     wanted = sys.argv[1:] or list(MUTANTS)
     source = dalamud_home()
-    subprocess.run(["dotnet", "build", HERE, "-c", "Release", "-nologo", "-v", "q"], check=True)
-    patcher = os.path.join(HERE, "bin", "Release", "net10.0", "DalamudMutants.dll")
+    subprocess.run(["dotnet", "build", HERE, "-c", "Debug", "-nologo", "-v", "q"], check=True)
+    patcher = os.path.join(HERE, "bin", "Debug", "net10.0", "DalamudMutants.dll")
     results = []
     with tempfile.TemporaryDirectory(prefix="anomech-dalamud-") as tmp:
         copy = os.path.join(tmp, "dev")
@@ -67,7 +67,7 @@ def main():
             else:
                 trx_dir = os.path.join(TESTS, "TestResults")
                 shutil.rmtree(trx_dir, ignore_errors=True)
-                subprocess.run(["dotnet", "test", TESTS, "-c", "Release", "--no-build", "-nologo",
+                subprocess.run(["dotnet", "test", TESTS, "-c", "Debug", "--no-build", "-nologo",
                                 "--filter", "FullyQualifiedName~Contract", "--logger", "trx;LogFileName=d.trx"],
                                capture_output=True, text=True, env=env, timeout=900)
                 trx = os.path.join(trx_dir, "d.trx")

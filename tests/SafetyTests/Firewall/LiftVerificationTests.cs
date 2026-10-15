@@ -2,6 +2,7 @@ using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Dalamud.Game.ClientState.Conditions;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -65,7 +66,7 @@ public class LiftVerificationTests : FirewallTestBase
         AssertBackInTheInnWithTheFirewallDown();
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(ConditionFlag.BetweenAreas)]
     [InlineData(ConditionFlag.LoggingOut)]
     public void ZoneTransitionAtTheLift_NeverLifts(ConditionFlag flag)
@@ -80,7 +81,7 @@ public class LiftVerificationTests : FirewallTestBase
         Assert.Empty(Game.Violations);
     }
 
-    [Theory]
+    [Xunit.Theory]
     [InlineData(float.NaN)]
     [InlineData(float.PositiveInfinity)]
     public void NonFinitePositionAtTheLift_NeverLifts(float bad)

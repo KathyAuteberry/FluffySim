@@ -1,6 +1,7 @@
 using System.Numerics;
 using AnoMech.SafetyTests.Harness;
 using Xunit;
+using Assert = Xunit.Assert;
 
 namespace AnoMech.SafetyTests.Firewall;
 
@@ -26,10 +27,7 @@ public class UnloadTests : FirewallTestBase
         Game.RunFor(2);
         Plugin.Unload();
         Game.RunFor(3);
-        AssertClean();
-        Assert.Equal(VirtualGame.InnTerritory, Game.LoadedTerritory);
-        Assert.Empty(Game.Divergence());
-        Assert.False(Game.PluginHoldsOccupied);
+        AssertStoppedWithTheFirewallUp("unloaded");
     }
 
     [Fact]
@@ -57,9 +55,7 @@ public class UnloadTests : FirewallTestBase
         Game.RunFor(0.3);
         Plugin.Unload();
         Game.RunFor(3);
-        AssertClean();
-        Assert.Empty(Game.Divergence());
-        Assert.False(Game.PluginHoldsOccupied, "The unload left the player Occupied.");
+        AssertStoppedWithTheFirewallUp("loading");
     }
 
     // The delayed re-assert queued by Leave outlives an unload that lifted the firewall itself;
@@ -78,7 +74,7 @@ public class UnloadTests : FirewallTestBase
             Game.Frame();
         }
         Game.RunFor(3);
-        AssertClean();
+        AssertStoppedWithTheFirewallUp("loading");
     }
 
     [Fact]
@@ -88,7 +84,7 @@ public class UnloadTests : FirewallTestBase
         Game.SetPluginStatusAffliction();
         Plugin.Unload();
         Game.RunFor(2);
-        Assert.False(Game.PluginSetStatusAffliction, "A status affliction the sim set survived the unload.");
+        AssertStoppedWithTheFirewallUp("unloaded");
     }
 
     [Fact]

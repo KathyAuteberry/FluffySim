@@ -1,3 +1,4 @@
+using AnoMech.Core.Native.Interfaces;
 using System;
 using System.Numerics;
 using AnoMech.Core.Game;
@@ -40,7 +41,7 @@ internal static unsafe class TimelineDebug
         if (!ticking) return;
         Plugin.Framework.Update -= OnUpdate;
         ticking = false;
-        if (holdFramesLeft > 0) Plugin.GameInstance?.World.Map.HoldSendFirewall(false);
+        if (holdFramesLeft > 0) ZoneControl.Current?.HoldSendFirewall(false);
         holdFramesLeft = 0;
         DiagnosticLog.ForcePersist = false;
     }
@@ -50,7 +51,7 @@ internal static unsafe class TimelineDebug
         if (holdFramesLeft > 0 && --holdFramesLeft == 0)
         {
             DiagnosticLog.ForcePersist = false;
-            Plugin.GameInstance?.World.Map.HoldSendFirewall(false);
+            ZoneControl.Current?.HoldSendFirewall(false);
         }
         if (playerWatchFrames < 0) return;
         var player = Plugin.ObjectTable.LocalPlayer;
@@ -65,12 +66,19 @@ internal static unsafe class TimelineDebug
     }
 
     // ~7s of persisted logging with the send firewall held (outside a session).
-    private static void Arm()
+    private static bool Arm()
     {
+        Natives.Zone.HoldSendFirewall(true);
+        if (!ZoneControl.HoldsSends)
+        {
+            Plugin.Log.Warning("[TimelineDebug] refused: no active simulation or verified send hold");
+            return false;
+        }
         EnsureTicking();
         DiagnosticLog.ForcePersist = true;
-        Plugin.GameInstance?.World.Map.HoldSendFirewall(true);
+        ZoneControl.Current?.HoldSendFirewall(true);
         holdFramesLeft = 400;
+        return true;
     }
 
     private static bool TryParse(string text, out uint value)
@@ -90,7 +98,7 @@ internal static unsafe class TimelineDebug
             return;
         }
         var chara = (BattleChara*)player.Address;
-        Arm();
+        if (!Arm()) return;
         DiagnosticLog.Info($"[TimelineDebug] Play timeline {timelineId} on the local player (territory {Plugin.ClientState.TerritoryType}) -- before: {BattleCharaProxy.LocalPlayer.DescribeActionTimeline()}");
         chara->Timeline.PlayActionTimeline(timelineId, 0);
         DiagnosticLog.Info($"[TimelineDebug] Play timeline {timelineId} on the local player -- after: {BattleCharaProxy.LocalPlayer.DescribeActionTimeline()}");
@@ -99,14 +107,14 @@ internal static unsafe class TimelineDebug
 
     public static void SpawnChaosNearPlayer()
     {
-        var game = Plugin.GameInstance;
+        var game = Plugin.Game;
         var player = Plugin.ObjectTable.LocalPlayer;
         if (game == null || player == null)
         {
             Plugin.Log.Warning("[TimelineDebug] no game/player to spawn next to");
             return;
         }
-        Arm();
+        if (!Arm()) return;
         // 4y in front of the player, facing the way the player faces, so an effect fired from it
         // runs away from the player like a wave from its anchor.
         var world = game.World;
@@ -114,7 +122,7 @@ internal static unsafe class TimelineDebug
         var local = world.Coordinates.ToLocal(player.Position + forward * 4f);
         LastSpawn = world.SpawnEnemy(new EnemySpawnConfig(
             BNpcBaseId: ChaosBNpcBase, NameId: HelperNameId, Level: 1,
-            Targetable: false, EnemyList: EnemyListMode.Never, IsVisible: false,
+            Targetable: false, EnemyList: EnemyListMode.Never, Visibility: SpawnVisibility.HiddenUntilShown,
             Placement: new Placement(local, player.Rotation)));
         DiagnosticLog.Info($"[TimelineDebug] spawned Chaos test carrier at {local} (territory {Plugin.ClientState.TerritoryType}): {(LastSpawn == null ? "failed" : LastSpawn.DescribeDrawState())}");
     }
@@ -126,7 +134,7 @@ internal static unsafe class TimelineDebug
             Plugin.Log.Warning("[TimelineDebug] no live test spawn -- spawn one first");
             return;
         }
-        Arm();
+        if (!Arm()) return;
         DiagnosticLog.Info($"[TimelineDebug] Play timeline {timelineId} on test spawn (territory {Plugin.ClientState.TerritoryType}) -- before: {enemy.DescribeActionTimeline()}");
         enemy.PlayActionTimeline(timelineId);
         enemy.StartTimelineWatch(4f);
@@ -136,13 +144,13 @@ internal static unsafe class TimelineDebug
     // (caster = animation target, no targets, lock 1.1, zero target position).
     public static void EffectOnLastSpawn(uint actionId)
     {
-        var game = Plugin.GameInstance;
+        var game = Plugin.Game;
         if (game == null || LastSpawn is not { IsActive: true } enemy)
         {
             Plugin.Log.Warning("[TimelineDebug] no live test spawn -- spawn one first");
             return;
         }
-        Arm();
+        if (!Arm()) return;
         DiagnosticLog.Info($"[TimelineDebug] Action effect {actionId} on test spawn at {enemy.Position} rot={enemy.Rotation:F3} (territory {Plugin.ClientState.TerritoryType}).");
         enemy.Casting.NativeActionEffect(actionId, 1.1f, (ushort)actionId, 0, ActionType.Action, 0,
             position: game.World.Coordinates.ToLocal(Vector3.Zero), animationTargetId: enemy.GameObjectId);
