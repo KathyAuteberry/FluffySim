@@ -1,6 +1,17 @@
 # Install FluffySim
 
-1. Download `FluffySim-<version>.zip` from the Fluffy community release announcement and extract **all files** into a dedicated folder. Keep the DLL, manifest, dependency JSON and dependency DLLs together.
+After the first public release, add this custom repository URL under Dalamud settings →
+Experimental → Custom Plugin Repositories, then find FluffySim in the plugin installer:
+
+https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json
+
+The prepared bootstrap is empty until publication. Leave the simulation and disable any
+old developer registration or AnoMech installation before installing through the repository.
+Never load both copies. Repository-installed updates are managed by Dalamud.
+
+## Manual developer installation
+
+1. Download `FluffySim-<version>.zip` from [FluffySim releases](https://github.com/KathyAuteberry/FluffySim/releases) and extract **all files** into a dedicated folder. Keep the DLL, manifest, dependency JSON and dependency DLLs together.
 2. Run `/xlsettings`, open **Experimental**, and use **Select Dev Plugin DLL** to select `FluffySim.dll`.
 3. Run `/xlplugins` → **Dev Tools** → **Installed Dev Plugins** and enable **FluffySim**.
 4. Use the first green power-symbol button to disable automatic plugin loading. Automatic loading and automatic reload are separate controls; disable reload-on-file-change too if you want to update files without interrupting the running client.

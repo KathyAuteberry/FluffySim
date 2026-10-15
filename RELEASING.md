@@ -1,47 +1,98 @@
-# FluffySim releases
+# Maintaining and releasing FluffySim
 
-`FluffySim.Version.props` is the authoritative plugin version. The inherited AnoMech source version was `0.4.2.0`; the first FluffySim major release is `1.0.0.0` (SemVer `1.0.0`).
+**Local builds and tests are Debug-only. Never write installed Release output.**
+Dalamud watches it and can reload/freeze the running client. Only clean GitHub Actions
+runners build Release. Use Conventional Commit messages for every new commit.
 
-Edit only `FluffySimVersion` for a future release:
+## Development and history
 
-- Major: major milestone, significant feature set or breaking change.
-- Minor: a new scenario or meaningful simulator functionality.
-- Patch (assembly build component): fixes and small improvements.
-- Assembly/file revision remains zero. Debug builds never automatically increment versions.
+`master` is FluffySim's trunk/publication bookmark; plogons independently publishes master.
+The initial six-parent integration combines upstream, original Evernow PR 35/38/50 tips,
+the complete FRU/DSR feature/fix branch and a separate CI branch. `plkqvn` is an empty
+`chore: integration commit`; its child `xznrxk` prepares 2.0.0.0 and is local master.
+An empty working area follows. All features and CI are ancestors of the versioned release.
+The old four-parent layout is historical, not the final release topology.
 
-The plugin project imports this file. Assembly/file version, informational version, dependency metadata and Dalamud's generated manifest all derive from it. Main UI reads the loaded assembly version. RootNamespace, project/solution names, relay assembly and existing scenario IDs remain AnoMech for source/protocol compatibility. DLL/assembly/InternalName are FluffySim; typed legacy configuration import bridges the changed Dalamud config identity.
+Local workspace setup (jj configuration is not cloned):
 
-## Development verification
+```sh
+jj config set --repo 'revset-aliases."trunk()"' master
+jj config set --repo revsets.log '@ | heads(::@ & merges())::@ | parents(heads(::@ & merges()))'
+```
 
-**Never build Release during development.** Dalamud watches the user's installed Release output; touching it can freeze the running game. Build/test Debug only, never publish/copy into installed plugin directories. Debug and Release output/intermediate trees stay separate.
+Everyday: edit → Debug checks → Conventional Commit on the intended branch → inspect and
+advance the reviewed bookmark. Inherit the user-level restack alias without a repo override;
+inspect `jj config list` before use and
+never restack published ancestry. Upstream updates fetch/inspect/merge/test new changes on
+published history as described in [AGENTS.md](AGENTS.md). Recovery starts with `jj op log`
+and `jj --at-operation <id> log`; preserve current work before any targeted recovery.
 
 ```sh
 dotnet build -c Debug
-python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check
+dotnet test tests/AnoMech.Tests -c Debug
+dotnet test tests/AnoMech.Relay.Tests -c Debug
+python -m unittest discover -s tools/tests -p test_package_release.py
 ```
 
-For direct project builds use `AnoMech/bin/Debug`. The ZIP above contains Debug binaries and is only a packaging check, not a public release. Never register it alongside the installed plugin.
+Run both Debug safety backends using [tests/SafetyTests/README.md](tests/SafetyTests/README.md).
+Native acceptance still requires all nine encounters, Easy/Hard, Pause, visibility, God Mode,
+local abilities, offline FRU/DSR, party HUD and safe Leave/BGM restoration.
+Local packaging dry-run only:
+`python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check`.
+Never distribute this Debug ZIP. The packager never builds or mutates its input.
 
-## User-operated release build and ZIP
+## First publication (explicit owner authorization required)
 
-Only the owner performs the Release build, after leaving/handling their running installed plugin:
+Prepared version: **2.0.0.0**. `FluffySim.Version.props` contains `2.0.0`; assembly/file/tag
+versions append `.0`. Increase major for breaking milestones, minor for features, patch for
+fixes; revision stays zero. No public release or live manifest update has been performed.
 
-```sh
-dotnet build -c Release
-python tools/package_release.py --input AnoMech/bin/x64/Release --output dist
-```
+1. Review and publish plogons/master from its own directory with
+   `jj git push --remote origin --bookmark master`. Its bootstrap is `[]`, plus updater/tools.
+2. In FluffySim, inspect `master` and confirm its release-preparation parent is the complete
+   integration merge. Run `jj git push --remote origin --bookmark master --dry-run`, then
+   publish that bookmark only with owner authorization. It already includes the feature
+   branch and CI; no private-label override is needed for the Conventionally named merge.
+3. Inspect `jj status`, `jj log` and both bookmark lists again. Preserve the empty working area.
+4. Set GitHub default branches to master for FluffySim and master for plogons. Enable Actions.
+   Configure FluffySim's `PLOGONS_TOKEN` secret: a fine-grained token restricted to plogons
+   with Contents read/write. Its branch rules must permit the metadata update. The release
+   job requests Contents write in FluffySim; the standard GITHUB_TOKEN cannot write plogons.
+   Keep tokens out of source and shell history. GitHub App authentication is a future option,
+   not implemented here. [Token scope reference](https://docs.github.com/en/actions/concepts/security/github_token).
+5. With explicit release approval, run in FluffySim:
+   `jj tag set v2.0.0.0 -r master`, inspect `jj tag list`, then
+   `jj git push --remote origin --tag v2.0.0.0`. Installed jj 0.46 supports tags natively.
+   Never move published tags. Recheck status and bookmarks afterward.
 
-The script **does not build, publish, mutate the input, register plugins, bump versions, commit, tag or upload**. It outputs `dist/FluffySim-1.2.0.0.zip` at the current version, refuses overwriting an existing ZIP, and refuses ZIP destinations inside Release/build input directories. It packages runtime assets from the dependency manifest, excluding stale AnoMech plugin DLLs, test hosts, Dalamud-shipped libraries, logs and private snapshots. Missing dependencies or mismatched manifest/dependency versions abort packaging. The custom DalamudPackager target generates a manifest only, including on owner-operated Release builds; it avoids the upstream packager’s unfiltered latest.zip. Use a clean input build when adding runtime resources; update the script/tests for assets not represented by dependency metadata.
+## Recurring release pipeline
 
-Before distributing: manually test the Release build, inspect ZIP contents, include the matching complete source under AGPL-3.0-or-later (including the changes), and publish source and ZIP together. The inherited upstream URL credits AnoMech; it is not a source location for unpublished FluffySim changes. No repository release is created automatically. The manual CI verification workflow builds Debug and uploads a check artifact only.
+Bump version props, update changelog, Debug-test, commit and publish the reviewed integrated
+master. Tag `vX.Y.Z.0`. The workflow verifies version, master ancestry and all nine custom scenario registrations, runs plugin/relay
+and both safety backends, builds Release on its isolated runner and packages declared runtime
+dependencies plus selected public documentation. Preserve matching complete source at the
+tag and AGPL attribution; GitHub provides tagged source archives.
 
-## Manual acceptance check
+The workflow extracts the matching CHANGELOG.md entry with tools/release_notes.py and uses
+it as the GitHub release body; it does not substitute generated PR notes.
 
-1. Disable/remove the old developer registration, select only FluffySim.dll and confirm `FluffySim v1.2.0.0` and saved preferences.
-2. For each of the nine scenarios, run the same seed/role once Easy and once Hard. Confirm unchanged assignments and later positioning in the documented eligible phases.
-3. Check tower communication and tight dodges remain correct. Try Hard + invisible bots, then God Mode and both local practice actions in their eligible scenarios.
-4. Leave, re-enter and verify BGM restoration, model visibility, markers, arena and practice-action readiness. No development workflow reloads the running plugin automatically.
+The public release is created before metadata changes. Its downloaded ZIP supplies the
+manifest; the updater validates identity/API/version and constructs exact release URLs in
+plogons/mostly-harmless.json. Other plugins survive; versions never decrease.
 
-## Loader/configuration compatibility evidence
+Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json
 
-DalamudPackager derives InternalName and AssemblyVersion from the assembly and looks for a manifest sharing its filename. Dalamud uses InternalName for configuration lookup, but the developer-plugin loading preferences use the registered DLL path. Therefore this rename changes the plugin identity to FluffySim, imports typed legacy settings explicitly, and requires manual developer-registration migration. Sources: [packager implementation](https://github.com/goatcorp/DalamudPackager/blob/master/DalamudPackager/DalamudPackager.cs), [configuration storage](https://github.com/goatcorp/Dalamud/blob/master/Dalamud/Configuration/PluginConfigurations.cs), [developer plugin lifecycle](https://github.com/goatcorp/Dalamud/blob/master/Dalamud/Plugin/Internal/Types/LocalDevPlugin.cs). Namespaces, relay protocol headers, canonical scenario identifiers and ImGui window IDs remain unchanged. Diagnostic archive filenames/header parsing remain AnoMech to keep historical build/log recognition compatible.
+## Failed publication
+
+Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
+metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
+tag: `gh workflow run publish-fluffysim.yml --ref v2.0.0.0`. Reruns reuse the existing asset and
+never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
+higher version, never a moved tag or replacement ZIP.
+
+Metadata push races fetch the latest plogons/master and recompute up to three times. A newer
+version or inconsistent equal-version entry fails without changing live metadata. Manual
+recovery: fetch plogons with jj, preserve current work, create a clean change on master@origin,
+download the exact public ZIP, run its updater/tests, inspect diff and commit with a
+Conventional Commit message. Advance master and publish only with owner authorization.
+Never roll back other plugins or force-push over concurrent work.

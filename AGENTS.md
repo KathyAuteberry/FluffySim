@@ -1,7 +1,6 @@
-# CLAUDE.md
+# FluffySim agent instructions
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this
-repository.
+Persistent instructions for agents working in this repository.
 
 ## What this is
 
@@ -15,7 +14,7 @@ inn, drives their casts and movement, and renders the real VFX, cast bars, tethe
   `%AppData%/XIVLauncher/addon/Hooks/dev/`.
 - Never build Release during development or copy/publish into `bin/Release`. The installed
   Release output is watched by Dalamud; changing it hot-reloads the plugin and freezes the
-  running FFXIV client. The user alone builds Release when ready to playtest.
+  running FFXIV client. Only isolated GitHub Actions runners may build Release as part of automation.
 - Keep development output and intermediates in Debug-specific `bin`/`obj` trees, separate
   from Release (the solution plugin output is `AnoMech/bin/x64/Debug`; direct project builds
   use `AnoMech/bin/Debug`). Run tests with `-c Debug`; do not introduce automatic reloads.
@@ -152,3 +151,65 @@ FluffySim configuration exists, without mutating the original. Never load both p
 ## Integration safety tests
 
 `tests/SafetyTests` exercises the production zone/filter lifecycle against a simulated client and server. Run its Debug configuration with the plugin Debug binary; never run mutation tooling against installed files.
+
+## Jujutsu, integration and releases
+
+Use Conventional Commit messages for every new commit. Use jj locally, not Git history
+commands. Inspect `jj status`, `jj log`, `jj bookmark list --all-remotes`,
+`jj git remote list` and `jj op log` before changing either repository.
+Source is KathyAuteberry/FluffySim; `../plogons` is a separate jj repository publishing master.
+FluffySim publishes master. Origin is FluffySim, upstream is anomek/AnoMech, and lowercase
+evernow is Evernow/AnoMech. Preserve the existing SSH host alias. Local master tracks
+master@origin, not master@upstream. Repository-local `trunk()` is master.
+
+The prepared 2.0 history is: upstream plus original Evernow PR 35/38/50 tips, the complete
+FRU/DSR feature branch through xpmlyn, and the separate codex/release-engineering branch →
+plkqvn (`chore: integration commit`) → xznrxk (`chore(release): prepare 2.0.0.0`) → an empty
+`wip: Working area`. The integration intentionally has six explicit parents and no changes
+beyond their automatic merge. Master points to release preparation, so it includes every
+feature, runtime repair and CI change. Do not move it back to an infrastructure-only branch.
+
+The earlier four-parent merge and pre-merge investigations are historical integration state;
+see UPSTREAM-INTEGRATION.md and OFFLINE-DSR-REPAIR.md. Preserve original upstream/Evernow
+attribution and ancestry. Never flatten the integration or rewrite published releases.
+Only unpublished history may be restacked when explicitly authorized. `jj restack` inherits
+the user-level alias without a repository override; inspect its configuration before use.
+The integration is below trunk, so ordinary restacking above master does not touch it.
+The repository log shows the nearest merge through the working copy and its immediate
+parents, with older history collapsed. A fresh clone does not inherit jj configuration.
+
+Everyday: edit → Debug build/tests → `jj commit -m "fix(scope): description"` on the intended
+branch. Inspect the diff before advancing a bookmark. For recovery inspect `jj op log` and
+`jj --at-operation <id> log` / `diff`; preserve current work and recover specific revisions
+instead of blindly restoring an old whole-repository operation.
+
+For upstream updates, `jj git fetch --remote upstream` and `jj git fetch --remote evernow`;
+inspect `jj log -r 'master..master@upstream'` and candidate Evernow tips, including all newly
+included ancestors. Create a reviewed merge with `jj new master <candidate>`, resolve with
+`jj resolve --list` and edits, and run Debug regressions before moving master. Future updates
+build on published ancestry; they need not recreate this initial six-parent integration.
+Do not blindly merge every remote branch or replay old pre-release insertion instructions.
+
+Preserve all nine custom scenarios: FRU Fall of Faith, Light Rampant, Ultimate Relativity,
+Apocalypse and Darklit Dragonsong; DSR Strength 1/2 and Sanctity 1/2. Preserve Mana/Elemental,
+seven bots, native arenas/party behavior, Easy/Hard, visibility, God Mode, Pause, local actions,
+BGM and offline identity. Diamond Dust remains shelved. Packet filtering must stay armed while
+client/server state differs; never bypass entry guards, move real positions outside a stay,
+or send fabricated simulation traffic to the server. Comments are not proof of behavior.
+
+Tests: tests/AnoMech.Tests, tests/AnoMech.Relay.Tests and tests/SafetyTests. Use Debug only;
+see tests/SafetyTests/README.md for ordinary/optimized Debug artifacts and both failure models.
+Python tooling tests are under tools/tests. Native rendering/hook behavior still needs client
+checks; consult the integration, packet-filter and offline diagnostics documents.
+
+FluffySim.Version.props is the only plugin version source (three parts; assembly/tag adds .0).
+CHANGELOG.md supplies reviewed GitHub release notes through tools/release_notes.py.
+.github/workflows/publish-fluffysim.yml verifies tags/ancestry/scenarios, tests, builds Release
+only on an isolated runner, packages, publishes, then updates plogons/master with PLOGONS_TOKEN.
+The old release-plugin.yml is only the inherited manual Debug package check. Exact setup,
+versioning, publication and partial-failure recovery are in RELEASING.md.
+
+Never push, tag, publish or update live metadata without explicit owner authorization. Never
+replace released assets or downgrade manifest versions. Never commit/push secrets, private
+configuration, logs, captures or game/SDK binaries; never bundle those, stale plugin DLLs,
+test hosts or Debug check ZIPs. Keep AnoMech attribution and matching source available.

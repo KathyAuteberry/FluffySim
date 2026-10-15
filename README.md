@@ -29,7 +29,7 @@ As this feature is still in beta, some edge cases and less common interactions m
 
 ## Installation
 
-Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in Dalamud's Experimental settings. Follow [installation and migration instructions](INSTALLATION.md). Do not load AnoMech and FluffySim together.
+After publication, install through the [custom repository](https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json), or manually register the release ZIP. Follow [installation and migration instructions](INSTALLATION.md). Do not load AnoMech and FluffySim together.
 
 ## Added FRU and DSR practice scenarios
 
@@ -131,3 +131,10 @@ AnoMech's zone changes are built on **Hyperborea**, which served as the baseline
 
 **FFXIV-RaidsRewritten** and **bossmod** were the initial inspiration for the project, though neither is part of the                                                                                                                                                                              
 codebase anymore.
+
+## Maintainer workflows
+
+Use Jujutsu for development and integration; see [AGENTS.md](AGENTS.md). Local builds are
+strictly Debug-only. Version bumps and reviewed `vX.Y.Z.0` tags drive isolated CI releases
+and update the separate plogons manifest. Setup, publication and failure recovery are in
+[RELEASING.md](RELEASING.md). Original AnoMech attribution and upstream ancestry are preserved.

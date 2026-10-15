@@ -3,8 +3,8 @@
     "Name": "FluffySim",
     "Punchline": "Solo Ultimate practice with DSR Elemental and FRU Mana strategies.",
     "Description": "FluffySim \u2014 an FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters. Based on AnoMech by Anomek and contributors.",
-    "RepoUrl": "https://github.com/anomek/AnoMech",
-    "IconUrl": "https://raw.githubusercontent.com/anomek/AnoMech/master/images/icon.png",
+    "RepoUrl": "https://github.com/KathyAuteberry/FluffySim",
+    "IconUrl": "https://raw.githubusercontent.com/KathyAuteberry/FluffySim/master/images/icon.png",
     "Tags": [
         "dsr",
         "fru",

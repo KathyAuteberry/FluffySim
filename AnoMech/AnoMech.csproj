@@ -8,7 +8,7 @@
     <Product>FluffySim</Product>
     <Description>FluffySim — an FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters.</Description>
     <RootNamespace>AnoMech</RootNamespace>
-    <PackageProjectUrl>https://github.com/anomek/AnoMech</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/KathyAuteberry/FluffySim</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
