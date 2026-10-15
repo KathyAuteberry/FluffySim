@@ -107,4 +107,39 @@ public class OfflineIntegrationTests
         }
     }
 
+    [Fact]
+    public void OfflineSpawnIdentifiersCannotBeInstalledInTheOnlineDoppelPath()
+    {
+        foreach (var il in PluginIL.Builds)
+        {
+            var spawn = il.Method("AnoMech.Core.Native.Implementations.BattleCharas", "SpawnDoppel");
+            var prepare = spawn.Body.Instructions.Single(i => i.Operand is MethodReference m && m.Name == "PrepareDoppel");
+            var check = spawn.Body.Instructions.Single(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Offline.OfflineSession::get_InWorld");
+            var outcome = ControlFlow.OutcomeOf(check);
+            Assert.NotNull(outcome);
+            Assert.False(new ControlFlow(spawn).FeasiblyReachableAvoiding([(outcome!.Value.Branch, outcome.Value.WhenTruthy)]).Contains(prepare));
+        }
+    }
+
+    [Fact]
+    public void ActualPartyAddonUpdateInvokesTheOfflinePresentationBridge()
+    {
+        foreach (var il in PluginIL.Builds)
+        {
+            var callback = il.Method("AnoMech.Core.Native.Implementations.PartyHud", "BeforePartyUpdate");
+            Assert.Contains(callback.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "PublishOfflinePresentation");
+            var dispose = il.Method("AnoMech.Core.Native.Implementations.PartyHud", "Dispose");
+            Assert.Contains(dispose.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "UnregisterListener");
+            Assert.Contains(dispose.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "Clear");
+            var publish = il.Method("AnoMech.Core.Native.Implementations.PartyHud", "PublishOfflinePresentation");
+            var check = publish.Body.Instructions.Single(i => i.Operand is MethodReference m && PluginIL.Name(m) == "AnoMech.Offline.OfflineSession::get_InWorld");
+            var outcome = ControlFlow.OutcomeOf(check);
+            Assert.NotNull(outcome);
+            var writes = publish.Body.Instructions.Where(i => i.Operand is MethodReference m && m.Name is "PublishHudMember" or "SetValue").ToArray();
+            Assert.True(writes.Length >= 2);
+            foreach (var write in writes)
+                Assert.False(new ControlFlow(publish).FeasiblyReachableAvoiding([(outcome!.Value.Branch, outcome.Value.WhenTruthy)]).Contains(write));
+        }
+    }
+
 }

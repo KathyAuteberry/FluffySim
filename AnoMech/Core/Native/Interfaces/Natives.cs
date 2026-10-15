@@ -45,6 +45,7 @@ public static class Natives
     // that failed part-way through installing.
     public static void Dispose()
     {
+        (PartyHud as IDisposable)?.Dispose();
         Bgm?.Dispose();
         MapEffects?.Dispose();
         Zone?.Dispose();

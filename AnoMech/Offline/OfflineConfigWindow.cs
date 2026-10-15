@@ -44,8 +44,15 @@ internal sealed class OfflineConfigWindow : Window
 
         ImGui.BeginDisabled(session.Busy);
         DrawChoices();
-        ImGui.Checkbox("Trace offline environment and party identity", ref OfflineProbe.TraceEnvironment);
         ImGui.EndDisabled();
+        ImGui.Checkbox("Trace offline environment and party identity", ref OfflineProbe.TraceEnvironment);
+        if (OfflineProbe.TraceEnvironment)
+        {
+            ImGui.TextWrapped($"Trace directory: {AnoMech.Core.DiagnosticLog.LogDirectory ?? "disk logging unavailable"}");
+            ImGui.TextWrapped($"Active trace: {AnoMech.Core.DiagnosticLog.ActiveLogPath ?? "writer not ready"}");
+            ImGui.TextWrapped("Archived runs: AnoMech-Offline-*.log.gz. Trace changes are bounded and also appear in Dalamud's log.");
+            if (ImGui.Button("Flush trace to disk")) AnoMech.Core.DiagnosticLog.Flush();
+        }
 
         if (session.OtherPlugins.Count > 0)
         {

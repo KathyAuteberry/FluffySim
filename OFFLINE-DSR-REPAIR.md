@@ -32,13 +32,27 @@ method as `ServerWeather.Update()`.
 
 ## Implementation
 
-Only offline territory 968 opts into the missing local weather commit. After territory load
-2, matching layout territory and initialization 7, the existing WeatherChange handler queues
-the phase weather with zero fade and the typed native Update commits it. Completion stops
-all further queue/update calls for that layout. A different active layout pointer or a real
-readiness loss permits one new finalization. Phase changes supersede the request, and leave
-clears it and commits the saved original weather locally. There are no delayed callbacks
-holding stale layout-object pointers.
+The first repair used only ServerWeather.Update. The subsequent 3308CD runtime trace
+shows why that was insufficient: its slot becomes 45 while WeatherManager.WeatherId stays
+0, selector stays 3, EnvManager.ActiveWeather stays 2, and the P1 objects remain active.
+A committed server slot is not a completed rendered environment transition.
+
+Offline DSR P2 now queues the phase weather through the existing handler and invokes the
+complete native WeatherManager.Update once after layout readiness. Read-only inspection
+of the installed executable identifies this routine at image VA 140E140E0: it updates the
+weather interfaces, selects the active interface, notifies the event system when it changes,
+and publishes the rendered weather/fade and manager cache. The signature uniquely matches
+this installed binary; no hardcoded address or raw flag write is used. This routine is not
+exposed by the installed ClientStructs, so it is resolved with the existing signature-based
+native pointer facility. It is called only inside the offline DSR lifecycle and restoration.
+Normal inn initialization and FRU restoration keep their previous paths.
+
+Completion now requires rendered weather 45 **and** matching actual object activation in
+all thirteen differing layers. The verifier checks instance IDs and activity, including the
+mixed layers, against the known-good snapshot. It is read-only. After the one transition,
+subsequent ticks only observe completion; they never requeue or rerun the transition for
+the same ready layout generation. Readiness loss/a new layout permits a new finalization.
+Stop/Leave invalidate ownership through the existing phase/session lifecycle.
 
 DSR's per-frame layer/individual-instance holds have been removed. The native environment
 selector now owns its P1/P2 scenery; mixed layers are never overwritten. The nine existing
@@ -134,7 +148,7 @@ clock gating. They do not execute FFXIV's layout selector, native drawing or Del
 Native stability and third-party UI compatibility remain pending the user's Release playtest.
 Version stays 1.2.0.0. Development builds and tests use Debug only.
 
-## Completed headless validation
+## Previous repair headless validation
 
 - Solution `dotnet build -c Debug --no-restore`: succeeds; no Release output touched.
 - Final optimized Debug plugin suite: 13,658 passed, zero failed (4m26s). DEBUG remains
@@ -153,3 +167,91 @@ upstream 1babdfbe3615 remains an ancestor. The empty working area is `xznrxk` ab
 The pre-task recovery operation is `515d7fc54c14`: inspect with
 `jj --at-operation 515d7fc54c14 log` before selecting a recovery operation. Do not blindly
 restore an old operation over concurrent work. No push or remote history changes occurred.
+
+## Follow-up: real 3308CD traces and HUD publication
+
+The user's traces were found in:
+`/home/kath/Projekty/anomek/AnoMech/AnoMech/bin/x64/Release/anomech-logs/`.
+The 08:24 session is preserved in `AnoMech-Offline-20261016-082720-3308CD.log.gz`;
+the preceding 08:17 session is in `AnoMech-Offline-20261016-082226-3308CD.log.gz`.
+These files were read only. Offline config now shows both the exact current active-file
+path and the archive directory, and offers Flush while a session is active. Active data is
+also written to Dalamud logging and the bounded in-memory diagnostic buffer. Rotations
+produce `AnoMech-Offline-*.log.gz`; the active path can have a stamped fallback filename.
+
+The trace establishes eight correct, distinct actor/entity and native group identities,
+names and home world 72. It does **not** record the old HUD row contents or actor content
+IDs. Source inspection finds a further real mismatch: doppel spawn packets left content
+and account IDs zero, while PartyHud substituted reserved virtual values in the group.
+The repaired offline spawn packet now uses those same reserved IDs from the outset;
+the virtual human also has consistent local packet metadata. No authenticated identities
+are invented and no packet is sent to a server. Inn doppel creation is unchanged.
+
+Name caches alone do not publish native HUD rows or its StringArrayData. The offline
+bridge now maps every native group entry to its actual actor, entity/content ID and stable
+name buffer in AgentHUD.PartyMembers. It publishes names through the existing managed
+StringArrayData.SetValue API before the _PartyList addon consumes them. It uses the typed
+PartyListStringArray member locations, not DelvUI's private offsets. Status/cast arrays and
+model visibility are untouched. Listener disposal and Clear remove owned HUD pointers;
+managed strings remain owned by the native UI allocator.
+
+The public DelvUI raw-info offset E18 corresponds to the installed typed HUD row base E10
+plus its Name field at +8; this is not evidence of an outdated offset. Its map uses HUD
+names as keys and then resolves Dalamud members. Eight correct group names therefore do
+not establish eight correct DelvUI inputs. Zero/shared actor IDs can make content-based
+lookups ambiguous; duplicated/missing HUD names can collapse its map. The exact old values
+that made only Paladin survive were not captured, so that last causal detail is not claimed
+as observed. The new bounded per-slot table includes actor and roster content IDs, names,
+world/job, HUD-before values, addon text, Dalamud names/IDs and actor association.
+
+Dalamud's installed IPartyList reads the native group count and requires loaded, nonzero
+PlayerState.ContentId to construct members. The offline bootstrap supplies its existing
+sandbox ID; the actual trace confirms PlayerState loaded. No lobby login or HomeWorld API
+semantics were changed. The user's confirmed Discord Bridge compatibility is preserved by
+leaving its integration and external plugin untouched.
+
+Native environment/UI success remains subject to a fresh client test. The full-manager
+call and HUD adapter are headlessly tested through policies, real native struct projections,
+recorded object-state fixtures and production IL safety checks; the game engine itself is
+not executed by those tests.
+
+The follow-up functional change is inserted after `roszql` and before the same four-parent
+`plkqvn` merge. Pre-task operation checkpoint: `c2869e0f2f24`. The accepted upstream and
+Evernow histories are retained; no remote operations or version change are required.
+
+Follow-up manual checks:
+
+1. Open Offline config and enable Trace. Note the exact Active trace path; Flush is available
+   without leaving the active session. Confirm the new checksum in diagnostics after your
+   own Release build.
+2. Cold-enter DSR; try both immediate Start and waiting before Start. Trace should show
+   rendered environment 2→45, cached weather 45/selector 2, and `requested=P2 verified=True`
+   for recorded instance activation. Check the actual floor, lighting and collision.
+3. Run each Strength/Sanctity entry, Stop/Restart, switch, Leave and re-enter. Confirm stable
+   P2 and normal Meteors tower windows; pause during a tower wave.
+4. Confirm eight distinct native names and eight DelvUI entries with debuffs. The table
+   should show matching actor/roster content IDs and correct per-slot HUD/Dalamud identities.
+5. Repeat with invisible bots, an original offline scenario and FRU P4, then inn DSR. No
+   installed UI plugins need patching by FluffySim. Existing Discord Bridge/login handling
+   is unchanged; retain the user's already-working compatibility setup.
+6. If incomplete, retain the trace and a fresh post-initialization snapshot. A weather slot
+   alone is no longer considered success, nor are populated actors alone evidence of HUD
+   publication. The trace explicitly distinguishes these stages.
+
+Follow-up validation completed:
+- Solution Debug build: succeeds, zero errors. Existing NU1900 and two nullable warnings.
+- Final isolated optimized Debug suite (DEBUG still defined): 13,668 passed, zero failed,
+  4m52s. This includes all nine scenarios, recorded P1/P2 layer-state comparisons, mixed
+  instance activation, native eight-row name/identity projection, invisibility and cleanup.
+- Relay 44 passed; tooling 65 passed.
+- Safety 305 passed per hook backend, with three Windows-native cases skipped on Linux.
+  Both ordinary Debug and optimized TRACE-only Debug plugin artifacts were inspected.
+- Full weather-manager signature: exactly one match in the installed game executable.
+  This is static validation, not execution of the new native transition in a live client.
+- No Release build/output writes, external plugin changes, remote pushes or version changes.
+
+The exact old HUD cache contents were not logged, so an explanation that all seven raw HUD
+rows specifically reused Paladin is not presented as an observation. The first bot is
+Paladin in the actual roster trace, all bot spawn packets had zero identity fields in the
+old source, and DelvUI consumes a different HUD identity table from the verified group.
+The repaired path removes those inconsistencies and exposes every stage for client checking.

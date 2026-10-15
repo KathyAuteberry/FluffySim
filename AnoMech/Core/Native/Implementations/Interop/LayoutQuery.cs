@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Linq;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine.Group;
@@ -39,6 +40,9 @@ internal static unsafe class LayoutQuery
         }
         return count;
     }
+
+    internal static bool MatchesDsrP2() => AnoMech.Core.Native.Policies.DsrP2LayoutState.Matches(layer =>
+        CollectLayerInstances(layer).Select(p => (((ILayoutInstance*)p)->Id.InstanceKey, ((ILayoutInstance*)p)->IsActive)).ToArray());
 
     public static List<nint> CollectLayerInstances(ushort layerKey)
     {

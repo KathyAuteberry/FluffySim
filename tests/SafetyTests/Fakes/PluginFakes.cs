@@ -96,6 +96,7 @@ namespace AnoMech.Core.Native.Implementations.Pointers
 
     internal static unsafe class PacketDispatcherPointers
     {
+        public static void UpdateWeatherManager(WeatherManager* manager) { }
         public static void HandleWeatherChangePacket(WeatherManager* manager, WeatherChangePacket* packet) => ((FFXIVClientStructs.FFXIV.Client.Graphics.Environment.EnvManager*)VirtualGame.Current.EnvManagerMemory)->ActiveWeather = packet->WeatherId;
         public static void HandleUpdateClassInfoPacket(uint entityId, UpdateClassInfoPacket* packet)
             => VirtualGame.Current.NativeUpdateClassInfo(packet->SyncedLevel);
@@ -138,6 +139,7 @@ namespace AnoMech.Core.Native.Implementations
 
     internal static class LayoutQuery
     {
+        internal static bool MatchesDsrP2() => true;
         public static List<nint> CollectLayerInstances(ushort layerKey) => new();
         public static string DescribeActiveLayers() => "(fake layout)";
         public static string DescribeLiveEffects() => "(fake effects)";

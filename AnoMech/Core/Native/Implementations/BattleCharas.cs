@@ -171,7 +171,10 @@ internal sealed unsafe class BattleCharas : IBattleCharas
 
         var id = DoppelEntityIdBase + (uint)idx;
         if (AnoMech.Offline.OfflineSession.InWorld)
-            OfflinePartyIdentity.Store(id, 0xFF00000000000000UL | id, preset.Name, packet.HomeWorldId, common.CustomizeData.Sex);
+        {
+            OfflinePartyIdentity.PrepareDoppel(ref packet, id);
+            OfflinePartyIdentity.Store(id, packet.ContentId, preset.Name, packet.HomeWorldId, common.CustomizeData.Sex);
+        }
         DiagnosticLog.Info($"[BattleCharas.SpawnDoppel] job {preset.ClassJob} level {level} -> index {idx}, entity 0x{id:X}, pos {placement.Position}, rot {placement.Rotation:F3}.");
         try
         {

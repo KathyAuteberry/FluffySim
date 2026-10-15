@@ -1,11 +1,20 @@
 using System;
 using System.Text;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Network;
 
 namespace AnoMech.Core.Native.Implementations.Interop;
 
 internal static unsafe class OfflinePartyIdentity
 {
+    internal static void PrepareDoppel(ref SpawnPlayerPacket packet, uint entity)
+    {
+        var content = 0xFF00000000000000UL | entity;
+        if (!Owns(entity, content)) throw new ArgumentOutOfRangeException(nameof(entity));
+        packet.ContentId = content;
+        packet.AccountId = content;
+    }
+
     internal static bool Owns(uint entity, ulong content)
         => (entity == 0x10FFA001 || entity >= 0x10FFFE00 && entity < 0x10FFFE64)
            && (content == 0x00FFA0FF00000001UL || content == (0xFF00000000000000UL | entity));

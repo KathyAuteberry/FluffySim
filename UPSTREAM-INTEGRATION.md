@@ -250,3 +250,13 @@ name caches, and adds change-only diagnostics. The offline lobby remains disconn
 Discord Chat Bridge requires an invalid-HomeWorld guard and should be disabled manually
 for offline testing until updated. No installed external plugin is modified. Details and
 proposed unpublished upstream patch: [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md).
+
+### Offline follow-up from the user's 3308CD trace
+
+The actual trace shows server weather 45 but rendered weather 2, and correct eight-person
+actor/group names despite broken HUD text. The next pre-merge repair uses the complete
+native weather-manager transition, read-only recorded object-state verification, consistent
+reserved IDs in offline spawn/roster data, and a typed offline party-HUD publication bridge.
+No phase holds, raw environment flags, real identities, network traffic or third-party DLL
+patches are introduced. The trace UI shows its exact active path and bounded before/after
+HUD tables. See OFFLINE-DSR-REPAIR.md; fresh native validation remains required.

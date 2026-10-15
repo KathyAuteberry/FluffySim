@@ -55,17 +55,35 @@ public class OfflineWeatherTransitionTests
     }
 
     [Test]
-    public void NativeFadeCanFinishLaterWithoutRequeueingThePhase()
+    public void NativeLayoutCanFinishLaterWithoutRepeatedUpdates()
     {
         var transition = new OfflineWeatherTransition();
-        byte current = 2;
+        byte environment = 2;
         var queued = 0;
         var updates = 0;
+        var layoutReady = false;
         transition.Request(45);
         for (var frame = 0; frame < 10; frame++)
-            transition.Tick(1, () => current, _ => queued++, () => { if (++updates == 3) current = 45; });
+        {
+            if (frame == 3) layoutReady = true;
+            transition.Tick(1, () => layoutReady ? environment : (byte)0, _ => queued++, () => { updates++; environment = 45; });
+        }
         Assert.That(queued, Is.EqualTo(1));
-        Assert.That(updates, Is.EqualTo(3));
-        Assert.That(current, Is.EqualTo(45));
+        Assert.That(updates, Is.EqualTo(1));
+        Assert.That(transition.Complete, Is.True);
     }
+
+    [Test]
+    public void ACommittedServerSlotIsNotEquivalentToACompletedEnvironmentTransition()
+    {
+        var transition = new OfflineWeatherTransition();
+        byte server = 45, environment = 2;
+        var updates = 0;
+        transition.Request(45);
+        transition.Tick(1, () => environment, _ => { }, () => { updates++; environment = server; });
+        Assert.That(environment, Is.EqualTo(45));
+        transition.Tick(1, () => environment, _ => Assert.Fail("Completed layouts must not requeue"), () => Assert.Fail("Completed layouts must not update again"));
+        Assert.That(updates, Is.EqualTo(1));
+    }
+
 }

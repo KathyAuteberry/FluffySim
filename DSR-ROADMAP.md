@@ -742,3 +742,14 @@ then leaves the native environment selector in charge. All four scenarios share 
 No mechanic, map-slot, collision, Meteors clock or tower-lifetime changes. Cold-load and
 restart policy tests are automated; stable native scenery still requires user validation.
 See [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md) for evidence and the two-mode checklist.
+
+### Offline P2 / HUD follow-up after build 3308CD
+
+Actual traces prove the inner server-weather commit left EnvManager at weather 2 and the
+P1 object set active. The repair now invokes the complete native weather-manager update
+once per ready layout generation and verifies rendered weather plus the thirteen recorded
+layer/instance activation signatures. No repeated layer holds or raw flag writes.
+Offline bot spawn identity now matches its reserved roster identity; native HUD rows/name
+arrays receive all eight actor associations at the addon update boundary. Inn behavior,
+Meteors clocks/towers and all strategies remain unchanged. Fresh native validation pending;
+see OFFLINE-DSR-REPAIR.md for trace filenames, evidence limits and testing.

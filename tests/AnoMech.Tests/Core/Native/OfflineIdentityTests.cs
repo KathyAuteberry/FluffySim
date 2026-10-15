@@ -116,4 +116,29 @@ public unsafe class OfflineIdentityTests
         Assert.That(OfflinePartyIdentity.Owns(0x10FFA001, 0x00FFA0FF00000001), Is.True);
     }
 
+    [Test]
+    public void NativeOfflineDoppelIdentityMatchesItsPartyEntryInsteadOfSharingZero()
+    {
+        var identities = new HashSet<ulong>();
+        for (uint slot = 1; slot <= 7; slot++)
+        {
+            SpawnPlayerPacket packet = default;
+            packet.HomeWorldId = 21;
+            var entity = 0x10FFFE00 + slot;
+            OfflinePartyIdentity.PrepareDoppel(ref packet, entity);
+            Assert.That(packet.ContentId, Is.EqualTo(0xFF00000000000000UL | entity));
+            Assert.That(packet.AccountId, Is.EqualTo(packet.ContentId));
+            Assert.That(packet.HomeWorldId, Is.EqualTo(21));
+            Assert.That(identities.Add(packet.ContentId), Is.True);
+            BattleChara actor = default;
+            actor.EntityId = entity;
+            actor.ContentId = packet.ContentId;
+            actor.AccountId = packet.AccountId;
+            UpdatePartyPacketMember member = default;
+            PartyHud.WriteEntry(&member, &actor, 968);
+            Assert.That(member.ContentId, Is.EqualTo(actor.ContentId));
+            Assert.That(member.AccountId, Is.EqualTo(actor.AccountId));
+        }
+    }
+
 }

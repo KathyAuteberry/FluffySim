@@ -76,7 +76,7 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
         var world = LayoutWorld.Instance();
         var layout = world == null ? null : world->ActiveLayout;
         if (game == null || game->CurrentTerritoryTypeId != 968 || layout == null) return;
-        var state = $"layout=0x{(nint)layout:X} init={layout->InitState} load={game->TerritoryLoadState}";
+        var state = $"layout=0x{(nint)layout:X} init={layout->InitState} load={game->TerritoryLoadState} requested=P2 verified={LayoutQuery.MatchesDsrP2()}";
         foreach (ushort key in new ushort[] {60988, 61049, 61050, 60991, 62172})
         {
             var instances = LayoutQuery.CollectLayerInstances(key);

@@ -4,10 +4,12 @@ namespace AnoMech.Core.Native.Policies;
 
 internal sealed class OfflineWeatherTransition
 {
+    internal bool Complete => complete;
     public uint Epoch { get; private set; }
     private byte? requested;
     private nint generation;
     private bool complete;
+    private bool applied;
 
     public void Request(byte weather)
     {
@@ -21,6 +23,7 @@ internal sealed class OfflineWeatherTransition
         requested = null;
         generation = 0;
         complete = false;
+        applied = false;
     }
 
     public void Tick(nint readyLayout, Func<byte> current, Action<byte> queue, Action update)
@@ -30,16 +33,22 @@ internal sealed class OfflineWeatherTransition
         {
             generation = 0;
             complete = false;
+            applied = false;
             return;
         }
         if (generation != readyLayout)
         {
             generation = readyLayout;
             complete = false;
+            applied = false;
             queue(wanted);
         }
         if (complete) return;
-        update();
+        if (!applied)
+        {
+            update();
+            applied = true;
+        }
         complete = current() == wanted;
     }
 }

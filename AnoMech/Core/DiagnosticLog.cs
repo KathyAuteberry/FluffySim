@@ -155,6 +155,8 @@ internal static class DiagnosticLog
 
     // Null when disk logging is disabled; other debug captures live under the same folder.
     internal static string? LogDirectory => logDir;
+    private static volatile string? activeLogPath;
+    internal static string? ActiveLogPath => activeLogPath;
 
     // Called once from Plugin's constructor; the only synchronous work is creating a directory.
     public static void Initialize()
@@ -246,6 +248,7 @@ internal static class DiagnosticLog
             // Leftover active files from a reload, crash or failed load are preserved, not truncated.
             await RotateLeftoverActiveFilesAsync();
             (activePath, activeStream, activeWriter, activeBytes) = OpenFreshActiveFile(prefix);
+            activeLogPath = activePath;
         }
         catch (Exception e)
         {
@@ -273,6 +276,7 @@ internal static class DiagnosticLog
                     await RotateActiveFileAsync(activePath);
                     prefix = cmd.Prefix ?? prefix;
                     (activePath, activeStream, activeWriter, activeBytes) = OpenFreshActiveFile(prefix);
+                    activeLogPath = activePath;
                 }
                 else if (reader.Count == 0 || cmd.Flushed != null)
                 {

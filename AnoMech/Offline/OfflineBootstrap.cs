@@ -462,7 +462,7 @@ internal sealed unsafe class OfflineBootstrap : IDisposable
     private SpawnPlayerPacket BuildSpawn()
     {
         var look = loadout.Look;
-        var packet = new SpawnPlayerPacket { ContentId = SandboxContentId };
+        var packet = new SpawnPlayerPacket { ContentId = SandboxContentId, AccountId = SandboxContentId };
         OfflineIdentity.ConfigureSpawn(ref packet, loadout.Name, loadout.HomeWorld);
         ref var common = ref packet.Common;
         common.TargetId = InvalidObjectId;

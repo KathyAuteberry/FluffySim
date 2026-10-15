@@ -1,6 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Text;
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.UI.Arrays;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 using AnoMech.Core.SimObjects;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -20,9 +27,9 @@ namespace AnoMech.Core.Native.Implementations;
 //
 // The firewall keeps real UpdateParty packets out during a sim, so the pre-sim party captured
 // at the first send is what Clear restores.
-internal sealed unsafe class PartyHud : IPartyHud
+internal sealed unsafe class PartyHud : IPartyHud, IDisposable
 {
-    // Doppels have no ContentId; this top byte never appears on a real one.
+    // Reserved display identities never overlap authenticated content IDs.
     private const ulong DoppelContentIdTag = 0xFF00000000000000UL;
     private const long SimPartyId = 0xFFFFFFFF;
 
@@ -30,6 +37,75 @@ internal sealed unsafe class PartyHud : IPartyHud
     private readonly List<(uint EntityId, byte ClassJob, byte Level)> roster = new();
     private bool ownsRoster;
     private UpdatePartyPacket realParty;
+
+    private List<nint> presentedActors = new();
+    private string? lastPresentationTrace;
+    private int presentationTraceChanges;
+
+    public PartyHud() => Plugin.AddonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, "_PartyList", BeforePartyUpdate);
+
+    public void Dispose()
+    {
+        Plugin.AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "_PartyList", BeforePartyUpdate);
+        Clear();
+    }
+
+    private void BeforePartyUpdate(AddonEvent type, AddonArgs args) => PublishOfflinePresentation();
+
+    internal static void PublishHudMember(ref HudPartyMember target, BattleChara* actor, ref GroupPartyMember member, byte index)
+    {
+        target.Object = actor;
+        target.EntityId = member.EntityId;
+        target.ContentId = member.ContentId;
+        target.Index = index;
+        fixed (byte* name = member.Name) target.Name = name;
+    }
+
+    private void PublishOfflinePresentation()
+    {
+        if (!AnoMech.Offline.OfflineSession.InWorld) return;
+        if (!ownsRoster) return;
+        var group = GroupManager.Instance();
+        var agent = AgentHUD.Instance();
+        var stage = AtkStage.Instance();
+        if (group == null || agent == null || stage == null) return;
+        var data = stage->GetStringArrayData(StringArrayType.PartyList);
+        var strings = PartyListStringArray.Instance();
+        var count = Math.Min(presentedActors.Count, (int)group->MainGroup.MemberCount);
+        var trace = new StringBuilder();
+        for (var i = 0; i < count; i++)
+        {
+            var actor = (BattleChara*)presentedActors[i];
+            ref var member = ref group->MainGroup.PartyMembers[i];
+            if (actor == null || actor->EntityId != member.EntityId) return;
+            var before = agent->PartyMembers[i];
+            var beforeName = AnoMech.Offline.OfflineProbe.TraceEnvironment ? before.Name.ToString() : "";
+            var displayed = !AnoMech.Offline.OfflineProbe.TraceEnvironment || strings == null ? "unavailable" : strings->Members[i].Name.ToString();
+            PublishHudMember(ref agent->PartyMembers[i], actor, ref member, (byte)i);
+            if (data != null && strings != null)
+            {
+                var nameIndex = NameIndex(strings, i);
+                if (nameIndex >= 0 && nameIndex < data->Size)
+                    data->SetValue(nameIndex, agent->PartyMembers[i].Name, true, true, false);
+            }
+            if (AnoMech.Offline.OfflineProbe.TraceEnvironment)
+            {
+                var api = i < Plugin.PartyList.Length ? Plugin.PartyList[i] : null;
+                trace.AppendLine($"slot={i} actor=0x{actor->EntityId:X} roster=0x{member.EntityId:X} actorContent=0x{actor->ContentId:X} rosterContent=0x{member.ContentId:X} contentMatch={actor->ContentId == member.ContentId} name={agent->PartyMembers[i].Name} world={member.HomeWorld}/{actor->CurrentWorld} job={member.ClassJob} HUD-before={beforeName}/0x{before.EntityId:X} display-before={displayed} Dalamud={api?.Name.TextValue}/0x{api?.EntityId:X} associated={api?.GameObject != null}");
+            }
+        }
+        agent->PartyMemberCount = (short)count;
+        if (AnoMech.Offline.OfflineProbe.TraceEnvironment && presentationTraceChanges < 24)
+        {
+            var table = trace.ToString();
+            if (table != lastPresentationTrace)
+            {
+                DiagnosticLog.Info($"[OfflinePartyPresentation] monotonic={System.Diagnostics.Stopwatch.GetTimestamp()} count={count} source=PartyHud/PreRequestedUpdate\n{table}");
+                lastPresentationTrace = table;
+                presentationTraceChanges++;
+            }
+        }
+    }
 
     public void Refresh(SimParty party)
     {
@@ -39,6 +115,7 @@ internal sealed unsafe class PartyHud : IPartyHud
         if (gm == null) return;
 
         var members = OrderedMembers(party);
+        presentedActors = members;
         roster.Clear();
         foreach (var p in members)
         {
@@ -60,6 +137,7 @@ internal sealed unsafe class PartyHud : IPartyHud
             sentRoster.Clear();
             sentRoster.AddRange(roster);
         }
+        PublishOfflinePresentation();
     }
 
     internal static bool MatchesNativeParty(ref GroupManager.Group group, List<(uint EntityId, byte ClassJob, byte Level)> expected)
@@ -70,8 +148,29 @@ internal sealed unsafe class PartyHud : IPartyHud
         return true;
     }
 
+    internal static void ClearVirtualHud(Span<HudPartyMember> members)
+    {
+        foreach (ref var member in members)
+            if (OfflinePartyIdentity.Owns(member.EntityId, member.ContentId)) member = default;
+    }
+
+    internal static int NameIndex(PartyListStringArray* strings, int slot)
+        => (int)(((nint)Unsafe.AsPointer(ref strings->Members[slot].Name) - (nint)strings) / sizeof(nint));
+
     public void Clear()
     {
+        if (ownsRoster && AnoMech.Offline.OfflineSession.InWorld)
+        {
+            var hud = AgentHUD.Instance();
+            if (hud != null)
+            {
+                ClearVirtualHud(hud->PartyMembers);
+                hud->PartyMemberCount = 0;
+            }
+        }
+        presentedActors.Clear();
+        lastPresentationTrace = null;
+        presentationTraceChanges = 0;
         if (!ownsRoster) return;
         ownsRoster = false;
         sentRoster.Clear();
