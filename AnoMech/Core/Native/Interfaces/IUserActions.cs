@@ -14,5 +14,7 @@ public interface IUserActions : IDisposable
     void OnScenarioStart();
     void OnSessionEnd();
 
+    void OnPause();
+    void OnResume();
     void Tick(float deltaSeconds);
 }

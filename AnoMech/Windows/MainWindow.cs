@@ -1,3 +1,4 @@
+using AnoMech.Core.Native.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -12,6 +13,7 @@ using Dalamud.Interface.Windowing;
 using AnoMech.Core.Map;
 using AnoMech.Core;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
 using SessionStatus = AnoMech.Core.Game.SessionStatus;
 using PracticeLoop = AnoMech.Core.Game.PracticeLoop;
@@ -57,6 +59,7 @@ public unsafe class MainWindow : Window, IDisposable
         : null;
 
     private PartyRole? _roleOverride;
+    internal PartyRole? SelectedRoleOverride => _roleOverride;
     private bool _soloMode;
 
     // Index into the selected scenario's AiStrats; reset to the first strat whenever the
@@ -70,12 +73,9 @@ public unsafe class MainWindow : Window, IDisposable
     private readonly Dictionary<IZone, int> _waymarkMemory = new();
 
     // Seed for the next Start: empty rolls a fresh one each time, a number replays it every time.
-#if DEBUG
-    private int? SelectedSeed => int.TryParse(_seedText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seed) ? seed : null;
+    internal int? SelectedSeed => int.TryParse(_seedText.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var seed) ? seed : null;
     private string _seedText = "";
-#else
-    private int? SelectedSeed => null;
-#endif
+
 
     // The region/group label currently selected in the strat picker, for scenarios that
     // declare StratGroups. Null until a grouped scenario is drawn (then it snaps to the
@@ -95,13 +95,13 @@ public unsafe class MainWindow : Window, IDisposable
     private readonly DebugMenu debugMenu;
 #endif
 
-    // <Version> from AnoMech.csproj flows into the assembly version; surface it in the
+    // Build metadata supplies the release version; surface it in the
     // title bar. Use a ### id so the window identity stays "MainWindow" across versions.
     private static string TitleWithVersion()
     {
         var v = Assembly.GetExecutingAssembly().GetName().Version;
         var version = v is null ? "" : $" v{v.Major}.{v.Minor}.{v.Build}.{v.Revision}";
-        return $"AnoMech{version}###MainWindow";
+        return $"FluffySim{version}###MainWindow";
     }
 
     public MainWindow(Plugin plugin)
@@ -158,6 +158,7 @@ public unsafe class MainWindow : Window, IDisposable
 #endif
     }
 
+    private bool _wasPracticeVisible;
     private bool _wasInInstance;
     private bool _wasScenarioActive;
     private SessionStatus _lastStatus;
@@ -210,11 +211,17 @@ public unsafe class MainWindow : Window, IDisposable
             _clearCollapsedRequest = false;
         }
 
+        var practiceControls = CurrentPracticeControls();
+        var antiKnockback = PracticeAntiKnockbackControls.Evaluate(Plugin.Game.ActiveScenario,
+            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeAntiKnockback);
+        var practiceVisible = !Natives.Zone.NativePracticeReady && (practiceControls.Visible || antiKnockback.Visible);
+        if (practiceVisible && !_wasPracticeVisible) RequestCollapsed(false);
+        _wasPracticeVisible = practiceVisible;
         var scenarioActive = RunActive;
         var status = Plugin.Game.Status;
         if (scenarioActive && !_wasScenarioActive)
         {
-            if (Plugin.Config.AutoCollapseWhileRunning)
+            if (Plugin.Config.AutoCollapseWhileRunning && !practiceVisible)
                 RequestCollapsed(true);
         }
         if (status > SessionStatus.Running && status != _lastStatus)
@@ -232,7 +239,7 @@ public unsafe class MainWindow : Window, IDisposable
             IsOpen = true;
             ShowCloseButton = false;
             RespectCloseHotkey = false;
-            if (scenarioActive)
+            if (scenarioActive && !practiceVisible)
                 Flags &= ~ImGuiWindowFlags.NoCollapse;
             else
                 Flags |= ImGuiWindowFlags.NoCollapse;
@@ -289,6 +296,7 @@ public unsafe class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
+        plugin.Offline?.DrawMainWindowBar();
         var windowPos = ImGui.GetWindowPos();
         var contentTop = windowPos.Y + ImGui.GetFrameHeight();
         ScenarioPanelAnchor = new Vector2(windowPos.X, contentTop);
@@ -308,7 +316,7 @@ public unsafe class MainWindow : Window, IDisposable
         var widest = 0f;
         foreach (var zone in Plugin.Game.Catalog.Zones)
         {
-            widest = Math.Max(widest, ImGui.CalcTextSize(zone.Name).X + style.IndentSpacing);
+            widest = Math.Max(widest, ImGui.CalcTextSize(zone.DisplayName).X + style.IndentSpacing);
             foreach (var phase in Plugin.Game.Catalog.PhasesOf(zone))
                 foreach (var scenario in Plugin.Game.Catalog.ScenariosOf(phase))
                     widest = Math.Max(widest, ImGui.CalcTextSize(scenario.DisplayName()).X + style.IndentSpacing);
@@ -349,7 +357,7 @@ public unsafe class MainWindow : Window, IDisposable
                 containsSelection ? BlendColor(headerColor, SelectionColor, 0.58f) : headerColor);
             ImGui.PushStyleColor(ImGuiCol.HeaderHovered, containsSelection ? SelectionHoveredColor : HoverColor);
             ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectionActiveColor);
-            var open = ImGui.CollapsingHeader($"{zone.Name}###scenario-zone-{zone.GetType().FullName}");
+            var open = ImGui.CollapsingHeader($"{zone.DisplayName}###scenario-zone-{zone.GetType().FullName}");
             ImGui.PopStyleColor(3);
             if (containsSelection) DrawSelectionAccent();
             var sectionRight = ImGui.GetItemRectMax().X;
@@ -475,6 +483,8 @@ public unsafe class MainWindow : Window, IDisposable
         if (inSession) DrawSession();
         DrawPrimaryActions(game, inSession);
         if (!inSession) DrawSoloOption(game);
+        ImGui.TextDisabled("FluffySim extends AnoMech by Anomek and contributors.");
+        ImGui.TextDisabled($"Build {Assembly.GetExecutingAssembly().ManifestModule.ModuleVersionId.ToString("N")[..8]} — FluffySim");
         DrawLocationHint();
         DrawRunOptions(game, Plugin.Practice, inSession);
 
@@ -496,7 +506,6 @@ public unsafe class MainWindow : Window, IDisposable
         ReconcileStrat();
     }
 
-#if DEBUG
     private void DrawSeedControl()
     {
         ImGui.SetNextItemWidth(120f * ImGuiHelpers.GlobalScale);
@@ -517,6 +526,7 @@ public unsafe class MainWindow : Window, IDisposable
         ImGui.Separator();
     }
 
+#if DEBUG
     // In a session MultiplayerManager owns DebugBotControl.Enabled per run, so route through its
     // sticky toggle (as the Party panel does); solo nothing else writes the flag.
     private void DrawBotControlsPlayer(bool inSession)
@@ -580,6 +590,7 @@ public unsafe class MainWindow : Window, IDisposable
 
     private void DrawSections(IScenario scenario, bool inSession, bool mpGuest)
     {
+        if (scenario.IsIncomplete) ImGui.TextWrapped("Incomplete practice fragment. See Scenario settings for its endpoint and omitted mechanics.");
         // In a session the seat comes from the Party panel, so Setup can be left with nothing.
         var hasSetup = !inSession || HasStratChoice(scenario) || HasWaymarkChoice(scenario);
         if (hasSetup)
@@ -612,12 +623,16 @@ public unsafe class MainWindow : Window, IDisposable
             ImGui.TreePop();
         }
 
+        if (ImGui.TreeNodeEx("Advanced / RNG Seed###seed-v3", ImGuiTreeNodeFlags.FramePadding))
+        {
+            DrawSeedControl();
+            ImGui.TreePop();
+        }
 #if DEBUG
         ImGui.Spacing();
         if (ImGui.TreeNodeEx("Debug###debug-v3",
                 ImGuiTreeNodeFlags.FramePadding))
         {
-            DrawSeedControl();
             DrawBotControlsPlayer(inSession);
             ImGui.BeginDisabled(inSession);
             ImGui.BeginGroup();
@@ -644,7 +659,7 @@ public unsafe class MainWindow : Window, IDisposable
 
         DrawScenarioPanelToggle();
         ImGui.SameLine();
-        ImGui.TextDisabled($"{scenario.Phase.Zone.Name} —");
+        ImGui.TextDisabled($"{scenario.Phase.Zone.DisplayName} —");
         ImGui.SameLine(0f, 4f * uiScale);
         ImGui.TextUnformatted(scenario.DisplayName());
 
@@ -719,14 +734,64 @@ public unsafe class MainWindow : Window, IDisposable
         return clicked;
     }
 
+    private PracticeInvulnerabilityControls CurrentPracticeControls()
+        => PracticeInvulnerabilityControls.Evaluate(Plugin.Game.ActiveScenario, Plugin.Game.World.Party.PlayerRole,
+            Plugin.Game.World.Party.Player?.IsAlive() == true, Plugin.Game.World.PracticeInvulnerability);
+
     private void DrawPrimaryActions(AnoMech.Core.Game.Game game, bool inSession)
     {
+        if (game.IsPreparingScenario)
+            ImGui.TextWrapped("Preparing arena: waiting for the native layout and entrance barrier.");
+        var practice = game.World.PracticeInvulnerability;
+        var party = game.World.Party;
+        var controls = CurrentPracticeControls();
+        if (controls.Visible && !Natives.Zone.NativePracticeReady)
+        {
+            ImGui.TextUnformatted($"Practice Invulnerability: {controls.State}");
+            ImGui.BeginDisabled(game.Paused || !controls.CanActivate);
+            if (ImGui.Button("Practice Invulnerability (Local Only)"))
+                PracticeInvulnerabilityControls.Press(game.ActiveScenario, party.PlayerRole, party.Player?.IsAlive() == true, practice);
+            ImGui.EndDisabled();
+        }
+        var anti = game.World.PracticeAntiKnockback;
+        var antiControls = PracticeAntiKnockbackControls.Evaluate(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
+        if (antiControls.Visible && !Natives.Zone.NativePracticeReady)
+        {
+            ImGui.TextUnformatted($"Practice Anti-Knockback: {antiControls.State}");
+            ImGui.BeginDisabled(game.Paused || !antiControls.CanActivate);
+            if (ImGui.Button("Practice Anti-Knockback (Local Only)"))
+                PracticeAntiKnockbackControls.Press(game.ActiveScenario, party.Player?.IsAlive() == true, anti);
+            ImGui.EndDisabled();
+        }
+        if (Natives.Zone.NativePracticeReady && (controls.Visible || antiControls.Visible))
+        {
+            ImGui.TextWrapped("Use your normal defensive hotbar ability. Its local cooldown resets on scenario start.");
+            if (antiControls.Visible)
+                ImGui.TextWrapped("Arm's Length / Surecast locked? Use /fluffysim antikb for a local six-second substitute (once per run).");
+        }
         var uiScale = ImGuiHelpers.GlobalScale;
         var actionSize = new Vector2(140f * uiScale, 32f * uiScale);
-        if (RunActive)
+        var actionsRight = ImGui.GetCursorScreenPos().X + ImGui.GetContentRegionAvail().X;
+        void ContinueActionRow()
+        {
+            if (ImGui.GetItemRectMax().X + ImGui.GetStyle().ItemSpacing.X + actionSize.X <= actionsRight)
+                ImGui.SameLine();
+        }
+        if (RunActive || game.IsPreparingScenario)
         {
             if (DrawSemanticButton("Stop", actionSize, StopColor))
                 plugin.Runs.Reset();
+            var pause = ScenarioPauseControls.Evaluate(game, inSession);
+            if (pause.Visible)
+            {
+                ContinueActionRow();
+                ImGui.BeginDisabled(!pause.Enabled);
+                if (DrawSemanticButton(pause.Label, actionSize, SelectionColor))
+                    ScenarioPauseControls.Press(game, inSession);
+                ImGui.EndDisabled();
+                if (inSession && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
+                    ImGui.SetTooltip("Pause is available for local practice; multiplayer pause is not synchronized.");
+            }
         }
         else if (inSession)
             multiplayerUi.DrawStartButton(actionSize, Selection);
@@ -735,7 +800,7 @@ public unsafe class MainWindow : Window, IDisposable
 
         if (game.World.Map.IsInInstance)
         {
-            ImGui.SameLine();
+            ContinueActionRow();
             if (DrawSemanticButton(inSession ? "Return to inn###leave-instance" : "Leave###leave-instance", actionSize, StopColor))
                 plugin.Runs.Leave();
             if (inSession && ImGui.IsItemHovered())
@@ -744,6 +809,13 @@ public unsafe class MainWindow : Window, IDisposable
         else if (!inSession && !RunActive)
         {
             DrawMultiplayerButton(actionSize);
+        }
+        if (game.Paused)
+        {
+            ImGui.TextColored(PausedColor, $"PAUSED — {game.Events.Elapsed:F2}s");
+            ImGui.PushStyleColor(ImGuiCol.Text, StyleColor(ImGuiCol.TextDisabled));
+            ImGui.TextWrapped("Native animations/status displays may continue; simulation statuses stay frozen.");
+            ImGui.PopStyleColor();
         }
     }
 
@@ -779,7 +851,7 @@ public unsafe class MainWindow : Window, IDisposable
     }
 
     private static (string Label, Vector4 Color) Status(bool paused, bool active) =>
-        paused ? ("Paused", PausedColor)
+        paused ? ("PAUSED", PausedColor)
         : active ? ("Running", RunningColor)
         : ("Idle", StyleColor(ImGuiCol.TextDisabled));
 
@@ -897,10 +969,20 @@ public unsafe class MainWindow : Window, IDisposable
     private static void DrawRunOptions(AnoMech.Core.Game.Game game, PracticeLoop practice, bool mpActive)
     {
         ImGui.Spacing();
+        var difficulty = (int)Plugin.Config.BotDifficulty;
+        ImGui.BeginDisabled(game.IsScenarioActive);
+        if (ImGui.Combo("Bot Difficulty", ref difficulty, "Easy\0Hard\0"))
+        { Plugin.Config.BotDifficulty = (BotDifficulty)difficulty; Plugin.Config.Save(); }
+        var showParty = Plugin.Config.ShowSimulatedParty;
+        if (ImGui.Checkbox("Show Simulated Party", ref showParty))
+        { Plugin.Config.ShowSimulatedParty = showParty; Plugin.Config.Save(); }
+        ImGui.EndDisabled();
+        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) ImGui.SetTooltip("Bot settings apply on the next start. Invisible bots remove body-language cues and bot-only local markers; tethers and encounter effects remain. Hard preserves required communication and hazard escape windows.");
         if (mpActive) game.GodMode = false;
         ImGui.BeginDisabled(mpActive);
-        var god = game.GodMode;
-        if (ImGui.Checkbox("God mode", ref god)) game.GodMode = god;
+        var god = mpActive ? false : Plugin.Config.PracticeGodMode;
+        if (ImGui.Checkbox("God Mode", ref god))
+        { game.GodMode = god; Plugin.Config.PracticeGodMode = god; Plugin.Config.Save(); }
         ImGui.EndDisabled();
         if (mpActive && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
             ImGui.SetTooltip(MpDisabledReason);

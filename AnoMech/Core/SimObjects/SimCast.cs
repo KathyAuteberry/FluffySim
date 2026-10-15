@@ -18,6 +18,7 @@ public sealed class SimCast : ISimObject
     private readonly Coordinates coordinates;
 
     private float remainingAnimationLock;
+    private float remainingCastTime;
 
     public bool IsCasting => parent.Proxy?.IsCasting ?? false;
 
@@ -59,7 +60,7 @@ public sealed class SimCast : ISimObject
 
     // True while the cast bar is up or the release animation is still playing. A following boss
     // roots itself while busy so the action animation finishes in place instead of sliding.
-    public bool IsBusy => IsCasting || remainingAnimationLock > 0f;
+    public bool IsBusy => remainingCastTime > 0f || remainingAnimationLock > 0f;
 
     // Owned and ticked by its SimCharacter, never reaped by liveness.
     public bool IsActive => true;
@@ -79,6 +80,7 @@ public sealed class SimCast : ISimObject
 
         ActionId = actionId;
         Total = castTime;
+        remainingCastTime = castTime;
         OmenDelay = omenDelay;
         Rotation = castRotation;
         TargetLocation = position;
@@ -87,9 +89,10 @@ public sealed class SimCast : ISimObject
     }
 
     // Returns the global sequence the targets' EffectResults name; 0 when nothing was sent.
-    public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null)
+    public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null, GameObjectId? actionTargetId = null)
     {
         if (parent.Proxy is not { Exists: true } chara) return 0;
+        targets ??= actionTargetId is { } target ? [new ActionEffectTarget(target)] : null;
 
         var effectRotation = rotation ?? parent.Rotation;
         var sequence = chara.ReceiveActionEffect(new ActionEffectData(
@@ -98,6 +101,7 @@ public sealed class SimCast : ISimObject
             animationTargetId, targets, ballistaId));
 
         remainingAnimationLock = animationLock;
+        remainingCastTime = 0;
         RecordEffect(actionId, animationLock, animationVariation, effectRotation, position, animationTargetId,
             targets is { Count: > 0 } ? targets[0].Id : null);
         return sequence;
@@ -105,12 +109,14 @@ public sealed class SimCast : ISimObject
 
     public void Cancel(CastCancelReason reason)
     {
+        remainingCastTime = 0;
         parent.ActorControl.CancelCast(ActionId, reason);
         CancelSeq++;
     }
 
     public void Tick(float deltaSeconds)
     {
+        remainingCastTime = MathF.Max(0, remainingCastTime - deltaSeconds);
         if (remainingAnimationLock > 0f)
             remainingAnimationLock = MathF.Max(0f, remainingAnimationLock - deltaSeconds);
     }

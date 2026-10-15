@@ -1,27 +1,24 @@
-name: Release plugin
-
+name: Verify FluffySim package (Debug only)
 on:
   workflow_dispatch:
-    inputs:
-      version_bump:
-        description: Which version segment to bump
-        type: choice
-        default: patch
-        options:
-          - major
-          - minor
-          - patch
-          - revision
-
 permissions:
-  contents: write          # lets the reusable workflow create the release + push the bump commit
-
+  contents: read
 jobs:
-  build:
-    uses: anomek/MyDalamudPlugins/.github/workflows/build-plugin.yml@master
-    with:
-      internal_name: AnoMech
-      solution_name: AnoMech
-      version_bump: ${{ inputs.version_bump }}
-    secrets:
-      PAT: ${{ secrets.PAT }}
+  verify:
+    runs-on: windows-2022
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: 10.0.x
+      - name: Download Dalamud
+        shell: pwsh
+        run: |
+          Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
+          Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
+      - run: dotnet build -c Debug
+      - run: python tools/package_release.py --input AnoMech/bin/x64/Debug --output package-check
+      - uses: actions/upload-artifact@v4
+        with:
+          name: FluffySim-Debug-package-check-not-a-release
+          path: package-check/*.zip

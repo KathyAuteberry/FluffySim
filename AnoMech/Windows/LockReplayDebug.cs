@@ -326,6 +326,7 @@ internal sealed unsafe class LockReplayDebug
 
     private static void SendActorControl(uint category, uint arg1 = 0, uint arg2 = 0, uint arg3 = 0, uint arg4 = 0)
     {
+        if (!AnoMech.Core.Native.Implementations.ZoneControl.HoldsSends) return;
         var player = LocalPlayer();
         if (player == null) return;
         PacketDispatcher.HandleActorControlPacket(((GameObject*)player)->EntityId, category, arg1, arg2, arg3, arg4, 0, 0, 0, 0, NoTarget, false);

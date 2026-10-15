@@ -440,6 +440,12 @@ internal unsafe class PacketDispatcherPointers
     public delegate void HandleMapEffectSnapshotPacketDelegate(EventFramework* framework, MapEffectSnapshotPacket* packet);
     public delegate void HandleActorGaugePacketDelegate(JobGaugeManager* manager, ActorGaugePacket* packet);
 
+    // Updating only ServerWeather omits event notification and rendered-weather publication.
+    [Signature("48 89 5C 24 18 55 56 57 48 83 EC 40 48 8B F9 48 8D 0D ?? ?? ?? ?? E8 ?? ?? ?? ?? 84 C0 74 23", UseFlags = SignatureUseFlags.Pointer, ScanType = ScanType.Text)]
+    public static UpdateWeatherManagerDelegate UpdateWeatherManager { get; private set; } = null!;
+
+    public delegate void UpdateWeatherManagerDelegate(WeatherManager* manager);
+
     public static void Initialize()
     {
         Plugin.GameInterop.InitializeFromAttributes(new PacketDispatcherPointers());

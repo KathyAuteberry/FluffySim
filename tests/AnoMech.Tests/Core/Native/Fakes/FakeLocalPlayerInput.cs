@@ -10,6 +10,9 @@ internal sealed class FakeLocalPlayerInput : ILocalPlayerInput
 {
     public event Action<ActionType, uint, ulong>? ActionExecuted { add { } remove { } }
 
+    public bool PauseInput { get; set; }
+    public bool TransitionInput { get; set; }
+    public event Action? CastCancelRequested { add { } remove { } }
     public bool MovementInputActive { get; set; }
     public bool IsJumping => false;
     public bool IsAutoAttacking => false;

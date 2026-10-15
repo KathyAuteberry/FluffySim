@@ -3,12 +3,16 @@
   <PropertyGroup>
     <TargetFramework>net10.0-windows</TargetFramework>
     <PlatformTarget>x64</PlatformTarget>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- NUnit enforces the generated Windows annotation even though these tests use fakes. -->
+    <GenerateSupportedOSPlatformAttribute Condition="$([MSBuild]::IsOSPlatform('Linux'))">false</GenerateSupportedOSPlatformAttribute>
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\test.runsettings</RunSettingsFilePath>
     <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <DalamudLibPath Condition="'$(DALAMUD_HOME)' != ''">$(DALAMUD_HOME)/</DalamudLibPath>
   </PropertyGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Core/Native/Fixtures/DsrP2Layers.json" />
     <ProjectReference Include="../../AnoMech/AnoMech.csproj" />
   </ItemGroup>
 
@@ -54,4 +58,11 @@
             CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
+  <ItemGroup>
+    <None Update="Scenarios/Dsr/Sanctity1/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Scenarios/Dsr/Strength2/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Scenarios/Dsr/Strength/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Scenarios/Fru/UltimateRelativity/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="Scenarios/Fru/DiamondDust/RecordedTimelines.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>

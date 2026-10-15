@@ -50,6 +50,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
     public virtual void Tick(float deltaSeconds)
     {
         statusList.Update(deltaSeconds);
+        foreach (var effect in ownedVfx) effect.Tick(deltaSeconds);
+        ownedVfx.RemoveAll(v => !v.IsActive);
         FlushStatusList();
         Casting.Tick(deltaSeconds);
         Motion.Tick(deltaSeconds, new MotionGates(this.IsAlive(), MovementLocked, AnimationLock));
@@ -67,6 +69,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     public virtual void Despawn()
     {
+        foreach (var effect in ownedVfx) effect.Despawn();
+        ownedVfx.Clear();
         statusList.Despawn();
         Motion.Clear();
     }
@@ -77,14 +81,24 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     // What mechanics and the AI read, like the server's position; CharacterMotion says where each
     // kind of character gets it.
-    public Vector3 Position => Motion.Position;
-    public float Rotation => Motion.Rotation;
+    private Placement? pausedPose;
+    internal void FreezePausePose(Placement? pose) => pausedPose = pose;
+    public Vector3 Position => pausedPose?.Position ?? Motion.Position;
+    public float Rotation => pausedPose?.Rotation ?? Motion.Rotation;
 
     // Yalms (XZ) between Position and the model at the start of the last tick.
     public float ModelDivergence => Motion.ModelDivergence;
     public float MaxModelDivergence => Motion.MaxModelDivergence;
 
     // Teleport: an ActorSetPos.
+    internal void RestorePausePose(Placement pose, float nativeRotation)
+    {
+        if (Proxy is not { Exists: true } native) return;
+        native.SetPos(Coordinates.ToGlobal(pose.Position), MathUtil.NormalizeRotation(nativeRotation));
+        StatusListChanged();
+        FlushStatusList();
+    }
+
     public void SetPosition(Vector3 position) => Motion.SetPosition(position);
     public void SetPosition(Placement placement) => Motion.SetPlacement(placement);
     public void SetRotation(float rotation) => Motion.SetPlacement(new Placement(Position, rotation));
@@ -174,7 +188,35 @@ public abstract class SimCharacter : ISimObject, IPositioned
     internal bool WalksWith(INavigated walker) => ReferenceEquals(Motion, walker);
 
 
-    public void AttachLockonVfx(uint lockonId) => ActorControl.HeadMarker(lockonId);
+    public uint? LastLockonVfxId { get; private set; }
+    public void AttachLockonVfx(uint lockonId)
+    {
+        LastLockonVfxId = lockonId;
+        ActorControl.HeadMarker(lockonId);
+    }
+    public void AttachLockonVfx(uint lockonId, float duration = 0f, bool persistent = true)
+    {
+        LastLockonVfxId = lockonId;
+        if (Natives.Vfx.LockonIconName(lockonId) is { } icon)
+            AddVfx($"vfx/lockon/eff/{icon}.avfx", duration, persistent);
+    }
+
+    private readonly List<SimVfx> ownedVfx = [];
+    public SimVfx? FindVfx(string path) => ownedVfx.FirstOrDefault(v => v.IsActive && v.Path == path);
+    public void AddVfx(string path, float duration = 0f, bool persistent = true)
+    {
+        var existing = ownedVfx.FirstOrDefault(v => v.IsActive && v.Path == path);
+        if (persistent && existing != null) { existing.Refresh(duration); return; }
+        if (persistent) ownedVfx.Add(new SimVfx(this, path, duration));
+        else Proxy?.AttachVfx(path);
+    }
+
+    public bool ModelHidden { get; private set; }
+    public void SetModelHidden(bool hidden)
+    {
+        ModelHidden = hidden;
+        Proxy?.SetModelHidden(hidden);
+    }
 
     // FIXME: minor, keep track of tethers and slots attached to character
     public bool HasTetherInSlot0(ushort tetherId)
@@ -302,9 +344,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     public IReadOnlyList<SimStatus> ActiveStatuses => statusList.Where(s => s.IsActive).ToList();
 
-    // A status's Lock* flags don't stop anyone client-side: the local player only through the
-    // server's conditions (SimPlayer), doppels not at all, so the sheet is read here.
-    public bool MovementLocked => AnyActiveStatusRow(row => row.LockMovement || row.LockControl);
+    // Floating Fetters uses native special processing rather than the sheet's LockMovement flag.
+    public bool MovementLocked => HasStatus(2304) || AnyActiveStatusRow(row => row.LockMovement || row.LockControl);
     public bool ActionsLocked => AnyActiveStatusRow(row => row.LockActions || row.LockControl);
 
     private protected bool AnyActiveStatusRow(Func<StatusRow, bool> predicate)
@@ -383,7 +424,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
         confusedChaseHold = 0f;
         Motion.Clear();
         if (Dead) Revive();
-        else if (Proxy is { } chara) SendStatusList(chara.MaxHealth, chara.MaxMana);
+        else if (Proxy is { } chara)
+            SendStatusList(this is SimPlayer && Plugin.Game?.GodMode == true ? chara.Health : chara.MaxHealth, chara.MaxMana);
     }
 
     private ActorControl? actorControl;

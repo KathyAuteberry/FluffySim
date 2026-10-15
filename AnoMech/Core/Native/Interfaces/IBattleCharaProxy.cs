@@ -44,6 +44,8 @@ public interface IBattleCharaProxy
     // DrawObject.Visibility: SpawnVisibility.HiddenUntilShown while there is no DrawObject.
     bool HasDrawObject { get; }
     bool IsDrawObjectVisible { get; }
+    void SetModelHidden(bool hidden);
+    IActorVfxProxy? AttachVfx(string path);
 
     byte ModelState { get; }
 

@@ -1,3 +1,4 @@
+using FFXIVClientStructs.FFXIV.Client.Graphics.Vfx;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -155,6 +156,27 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
             var obj = Ptr;
             return obj != null && obj->DrawObject != null;
         }
+    }
+
+    public IActorVfxProxy? AttachVfx(string path)
+    {
+        var obj = Ptr;
+        if (string.IsNullOrEmpty(path) || obj == null) return null;
+        var bytes = System.Text.Encoding.UTF8.GetBytes(path + "\0");
+        VfxData* vfx;
+        fixed (byte* p = bytes)
+            vfx = VfxDataPointers.ActorVfxCreate(p, (GameObject*)obj, (GameObject*)obj, -1f, 0, 0, 0);
+        return vfx == null ? null : new ActorVfxProxy(vfx);
+    }
+
+    // Through the native setter: it allocates and releases the VFX at Tether+0x08, and a bare
+    // struct write leaves that VFX dangling, so the line keeps drawing.
+
+    public void SetModelHidden(bool hidden)
+    {
+        var obj = Ptr;
+        if (obj == null) return;
+        PartyModelVisibility.Reconcile(obj, Slot, hidden, Offline.OfflineSession.InWorld);
     }
 
     public bool IsDrawObjectVisible
@@ -444,7 +466,8 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         var go = (GameObject*)obj;
         var draw = obj->DrawObject;
         return $"DrawObject={(draw == null ? "null" : draw->IsVisible ? "visible" : "hidden")} "
-            + $"RenderFlags={go->RenderFlags} ModelCharaId={obj->ModelContainer.ModelCharaId} "
+            + $"Slot={Slot} Entity=0x{go->EntityId:X} ReadyToDraw={go->IsReadyToDraw()} Representation={obj->RepresentationContainer.NameType} PartyMember={obj->IsPartyMember} "
+            + $"Offline={Offline.OfflineSession.InWorld} RenderFlags={go->RenderFlags} ModelCharaId={obj->ModelContainer.ModelCharaId} "
             + $"VfxScale={go->VfxScale:F2} Height={go->Height:F2} Scale={go->Scale:F2} "
             + $"ObjectKind={obj->ObjectKind} SubKind={obj->BattleNpcSubKind} Mode={obj->Mode}/{obj->ModeParam} "
             + $"ModelSkeletonId={obj->ModelContainer.ModelSkeletonId} Race={obj->DrawData.CustomizeData.Race}";

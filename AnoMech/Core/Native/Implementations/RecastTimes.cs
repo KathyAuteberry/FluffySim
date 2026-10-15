@@ -8,6 +8,7 @@ internal static unsafe class RecastTimes
     // What the server sends at zone-in: every group 0 / 0.
     public static void ClearAll()
     {
+        if (!ZoneControl.HoldsSends) return;
         if (Plugin.ObjectTable.LocalPlayer is not { } player) return;
         var packet = new UpdateRecastTimesPacket();
         PacketDispatcherPointers.HandleUpdateRecastTimesPacket(player.EntityId, &packet);

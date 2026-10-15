@@ -13,6 +13,12 @@ namespace AnoMech.Core.SimObjects;
 public sealed class SimPartyNpc : SimNpc, ISimPartyMember
 {
     public PartyRole Role { get; set; }
+    public bool PresentationVisible { get; private set; } = true;
+    public void SetPresentationVisible(bool visible)
+    {
+        PresentationVisible = visible;
+        if (Proxy is { Exists: true } proxy) proxy.SetModelHidden(!visible);
+    }
     public byte ClassJob { get; }
     public string DisplayName { get; }
 
@@ -56,7 +62,18 @@ public sealed class SimPartyNpc : SimNpc, ISimPartyMember
         base.Despawn();
     }
 
-    protected override void OnPacketSpawned(IBattleCharaProxy chara) => ActorControl.ZoneIn();
+    protected override void OnPacketSpawned(IBattleCharaProxy chara)
+    {
+        ActorControl.ZoneIn();
+        chara.SetModelHidden(!PresentationVisible);
+    }
+
+    public override void Tick(float deltaSeconds)
+    {
+        base.Tick(deltaSeconds);
+        if (PacketSpawnFrames is 30 or 180 && Proxy is { Exists: true } proxy)
+            DiagnosticLog.Info($"[SimPartyNpc] {Role}, presentation visible={PresentationVisible}, {proxy.DescribeDrawState()}");
+    }
 
     public void OnKilled(bool byEnvironment)
     {

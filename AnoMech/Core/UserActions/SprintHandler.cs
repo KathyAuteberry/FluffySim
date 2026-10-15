@@ -22,4 +22,5 @@ internal sealed class SprintHandler : IUserActionHandler
 
     public static void Apply(SimCharacter character, float duration)
         => character.AddStatus(SprintStatusId, duration, SprintStatusParam);
+    public void OnScenarioStart() => Core.Native.Interfaces.Natives.Zone.ResetPracticeRecast(SprintActionId);
 }

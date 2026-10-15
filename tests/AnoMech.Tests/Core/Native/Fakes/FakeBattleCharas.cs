@@ -21,6 +21,10 @@ internal sealed class FakeBattleCharas : IBattleCharas
     private readonly FakeCharacter?[] slots = new FakeCharacter?[SlotCount];
     private readonly Dictionary<uint, (uint Caster, uint ActionId)> effects = new();
     private readonly HashSet<int> reserved = [];
+    public int PacketSpawnDelayFrames { get; set; }
+    private readonly List<(int Slot, FakeCharacter Actor, int Frames)> pending = [];
+    internal int OccupiedSlots => slots.Count(a => a is not null);
+    internal int PendingSpawns => pending.Count;
 
     public FakeCharacter Player { get; } = new(0x10000001u, "Player") { MaxHealth = 100_000, Health = 100_000, HitboxRadius = 0.5f, HasDrawObject = true, IsDrawObjectVisible = true };
 
@@ -48,6 +52,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
     internal void Free(int slot)
     {
         slots[slot] = null;
+        pending.RemoveAll(p => p.Slot == slot);
         reserved.Remove(slot);
     }
 
@@ -70,7 +75,12 @@ internal sealed class FakeBattleCharas : IBattleCharas
             HasDrawObject = true,
             IsDrawObjectVisible = config.Visibility == SpawnVisibility.Visible,
         };
-        slots[slot] = actor;
+        if (PacketSpawnDelayFrames == 0) slots[slot] = actor;
+        else
+        {
+            reserved.Add(slot);
+            pending.Add((slot, actor, PacketSpawnDelayFrames));
+        }
         Timeline.Add("spawn", entityId, name, config.BNpcBaseId.ToString(), "BNpcBase", position: placement.Position,
             rotation: placement.Rotation,
             detail: $"bnpcname={config.NameId} visibility={config.Visibility} display_flags=0x{config.DisplayFlags ?? (uint)config.Visibility:X} layout=0x{config.LayoutId:X} model={config.ModelCharaId} sheet_model={bnpc.ModelChara} "
@@ -87,7 +97,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
         entityId = DoppelEntityIdBase + (uint)slot;
         Timeline.Add("spawn_doppel", entityId, preset.Name, preset.ClassJob.ToString(), "ClassJob", position: placement.Position,
             rotation: placement.Rotation);
-        slots[slot] = new FakeCharacter(entityId, preset.Name)
+        var actor = new FakeCharacter(entityId, preset.Name)
         {
             ClassJob = preset.ClassJob,
             Position = placement.Position,
@@ -96,7 +106,15 @@ internal sealed class FakeBattleCharas : IBattleCharas
             MaxHealth = DoppelMaxHealth,
             Health = DoppelMaxHealth,
             TargetableStatus = IsTargetable,
+            HasDrawObject = true,
+            IsDrawObjectVisible = true,
         };
+        if (PacketSpawnDelayFrames == 0) slots[slot] = actor;
+        else
+        {
+            reserved.Add(slot);
+            pending.Add((slot, actor, PacketSpawnDelayFrames));
+        }
         return new FakeBattleChara(this, slot);
     }
 
@@ -107,6 +125,16 @@ internal sealed class FakeBattleCharas : IBattleCharas
 
     internal void Tick(float deltaSeconds)
     {
+        for (var i = pending.Count - 1; i >= 0; i--)
+        {
+            var (slot, actor, frames) = pending[i];
+            if (frames > 1) pending[i] = (slot, actor, frames - 1);
+            else
+            {
+                slots[slot] = actor;
+                pending.RemoveAt(i);
+            }
+        }
         Player.Tick(deltaSeconds);
         foreach (var actor in slots) actor?.Tick(deltaSeconds);
     }

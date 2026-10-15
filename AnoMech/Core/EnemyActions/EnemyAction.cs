@@ -22,6 +22,11 @@ public sealed record EnemyAction(uint ActionId)
 // Cast bar and animation settings the Action sheet lacks, plus overrides of the ones it has.
 public sealed record CastSpec
 {
+    // Presentation targets do not alter mechanic hit selection.
+    public bool AnimationTargetsCaster { get; init; }
+    public Func<SimEnemy, SimCharacter?, SimWorld, IReadOnlyList<SimCharacter>>? PresentationTargets { get; init; }
+    public bool TargetsPartyForPresentation { get; init; }
+    public bool TargetsCasterForPresentation { get; init; }
     // Delay from cast bar end to action effect. The in-game bar is this much shorter than the
     // sheet's cast time. Instant actions have neither.
     public const float ActionEffectOffset = 0.3f;

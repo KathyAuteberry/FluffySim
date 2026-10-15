@@ -22,6 +22,7 @@ public sealed class InstanceSession
     private float entranceBarrierOpenIn = -1f;
     private bool phaseApplied;
     private bool playerPlaced;
+    private bool barrierOpened;
 
     public IZone Zone { get; }
 
@@ -30,6 +31,7 @@ public sealed class InstanceSession
 
     // False once the native zone went away without a Leave.
     public bool IsLoaded => Natives.Zone.IsActive;
+    public bool IsReadyForRun => IsLoaded && Natives.MapEffects.IsTerritoryReady(Zone.TerritoryId) && barrierOpened;
 
     private InstanceSession(SimWorld world, IZone zone, Vector3 playerSpawnLocal, SessionMode mode)
     {
@@ -48,7 +50,7 @@ public sealed class InstanceSession
         // ZoneControl.Enter asks once more before the firewall goes up.
         refusal = Natives.Zone.StartBlockedReason(out _)
                   ?? (Natives.BattleCharas.LocalPlayer.Exists ? null : "no local player");
-        var spawn = zone.EntranceBarrier.Position;
+        var spawn = zone.PlayerSpawn;
         if (refusal is null && !Natives.Zone.IsActive && !Natives.Zone.Enter(zone.TerritoryId, zone.Origin + spawn))
             refusal = "the zone was not entered (see the log)";
         if (refusal is not null)
@@ -56,12 +58,12 @@ public sealed class InstanceSession
             Plugin.Log.Warning($"InstanceSession: not entering {zone.Name} -- {refusal}.");
             return null;
         }
+        if (!Natives.Zone.IsActive) return null;
         world.Map.Enter(zone.TerritoryId);
         var session = new InstanceSession(world, zone, spawn, mode);
         // Before any action mutates it, so Exit can restore it.
         Natives.UserActions.OnSessionStart();
         world.ScenarioOrigin = zone.Origin;
-        session.OpenEntranceBarrier(zone.EntranceBarrier);
         return session;
     }
 
@@ -129,8 +131,16 @@ public sealed class InstanceSession
     public void Tick(float deltaSeconds)
     {
         if (fallCloseIn >= 0f && (fallCloseIn -= deltaSeconds) < 0f) CloseFall();
+        if (!IsLoaded || !Natives.MapEffects.IsTerritoryReady(Zone.TerritoryId)) return;
+        if (!barrierOpened && entranceBarrier is null)
+        {
+            if (Zone.EntranceBarrier.EObjId == 0) barrierOpened = true;
+            else OpenEntranceBarrier(Zone.EntranceBarrier);
+            return;
+        }
         if (entranceBarrierOpenIn < 0 || (entranceBarrierOpenIn -= deltaSeconds) >= 0) return;
         entranceBarrier?.ActorControl(DirectorEObjModCategory, EntranceBarrierOpenState);
+        barrierOpened = true;
     }
 
     // Back to the inn.
@@ -182,6 +192,7 @@ public sealed class InstanceSession
     // SimWorld so a run's teardown doesn't despawn it.
     private void OpenEntranceBarrier(EntranceBarrier entrance)
     {
+        if (entrance.EObjId == 0) return;
         var config = new EventObjectSpawnConfig
         {
             EObjId = entrance.EObjId,
@@ -190,7 +201,7 @@ public sealed class InstanceSession
             TargetableStatus = 5,
         };
         entranceBarrier = Natives.EventObjects.Spawn(config, world.Coordinates.ToGlobal(new Placement(entrance.Position, 0f)));
-        entranceBarrierOpenIn = EntranceBarrierOpenTime;
+        if (entranceBarrier is not null) entranceBarrierOpenIn = EntranceBarrierOpenTime;
     }
 
     private ushort[] ArenaMapEffects(IPhase phase)

@@ -121,6 +121,7 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         common.Battalion = config.IsHostile ? HostileBattalion : FriendlyBattalion;
         common.Level = config.Level;
         common.ModelAttributeFlags = config.InitialModeAttributeFlags ?? 0;
+        ApplyAppearance(ref common, config.Appearance);
         return packet;
     }
 
@@ -169,6 +170,11 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         GameObjectHelper.WriteName((byte*)&packet + 0x20 + 0x232, 32, preset.Name);
 
         var id = DoppelEntityIdBase + (uint)idx;
+        if (AnoMech.Offline.OfflineSession.InWorld)
+        {
+            OfflinePartyIdentity.PrepareDoppel(ref packet, id);
+            OfflinePartyIdentity.Store(id, packet.ContentId, preset.Name, packet.HomeWorldId, common.CustomizeData.Sex);
+        }
         DiagnosticLog.Info($"[BattleCharas.SpawnDoppel] job {preset.ClassJob} level {level} -> index {idx}, entity 0x{id:X}, pos {placement.Position}, rot {placement.Rotation:F3}.");
         try
         {
@@ -183,6 +189,26 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         entityId = id;
         return BattleCharaProxy.ForSlot(idx);
     }
+
+    // Demihuman bodies and weapons are equipment, not part of ModelChara.
+    internal static void ApplyAppearance(ref CommonSpawnData common, NpcAppearance? appearance)
+    {
+        if (appearance is null) return;
+        common.EquipmentModelIds[(int)DrawDataContainer.EquipmentSlot.Body] = new LegacyEquipmentModelId
+        {
+            Id = (ushort)appearance.BodyModel, Variant = (byte)(appearance.BodyModel >> 16), Stain = (byte)(appearance.BodyModel >> 24),
+        };
+        common.MainhandWeaponModel.Value = appearance.MainhandWeaponModel;
+        if (appearance.HeadModel is { } head) common.EquipmentModelIds[0] = LegacyModel(head);
+        if (appearance.LegsModel is { } legs) common.EquipmentModelIds[3] = LegacyModel(legs);
+        if (appearance.OffhandWeaponModel is { } offhand) common.OffhandWeaponModel.Value = offhand;
+        if (appearance.AnimationState is { } animation) common.AnimationState = animation;
+    }
+
+    private static LegacyEquipmentModelId LegacyModel(uint model) => new()
+    {
+        Id = (ushort)model, Variant = (byte)(model >> 16), Stain = (byte)(model >> 24),
+    };
 
     private static void WriteCustomize(ref CustomizeData c)
     {

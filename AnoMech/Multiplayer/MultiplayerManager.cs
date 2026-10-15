@@ -836,7 +836,7 @@ public sealed partial class MultiplayerManager : IDisposable
     {
         RunEndReason = reason;
         DiagnosticLog.Warn($"[Multiplayer] Run ended: {reason}");
-        Plugin.ChatGui.PrintError($"[AnoMech] Run ended -- {reason}");
+        Plugin.ChatGui.PrintError($"[FluffySim] Run ended -- {reason}");
         LobbyChanged?.Invoke();
     }
 
@@ -910,6 +910,7 @@ public sealed partial class MultiplayerManager : IDisposable
             return;
         }
         if (IsStartCheckPending) return;
+        ZoneControl.EndSpeedBuffs();
 
         if (CheckOwnStartReadiness(out var settling) is { } ownReason)
         {
@@ -952,6 +953,7 @@ public sealed partial class MultiplayerManager : IDisposable
     {
         if (startCheckReplyWaited is not { } waited) return;
         waited += deltaSeconds;
+        ZoneControl.EndSpeedBuffs();
         var reason = CheckOwnStartReadiness(out var settling);
         if (settling != null && waited < StartCheckReplyMaxWaitSeconds)
         {

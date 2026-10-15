@@ -119,10 +119,12 @@ public sealed class ScenarioSession
 
     public void Start()
     {
+        if (!instance.IsLoaded) throw new InvalidOperationException("The simulation zone is no longer loaded.");
 #if DEBUG
         // Here rather than in scenario.Run (which peers skip).
         DiagnosticLog.Clear();
 #endif
+        world.Events.Clear();
         var phase = Scenario.Phase;
         var zone = phase.Zone;
         world.PlaceWaymarks(ResolveWaymarks(zone, run.SelectedWaymark));
@@ -131,6 +133,7 @@ public sealed class ScenarioSession
         world.Reseed(seed);
         Plugin.Log.Info($"Game: {Scenario.Name} seed {seed}");
         world.ApplyParty(roster);
+        world.Map.BeginPhase();
         // Client-asset setup a peer needs too (see IZone.RunClientSetup).
         zone.RunClientSetup(world);
         phase.RunClientSetup(world);
@@ -158,7 +161,7 @@ public sealed class ScenarioSession
         instance.PlacePlayer();
         Natives.UserActions.OnScenarioStart();
         StartMusic();
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
     }
 
     public void Tick(float deltaSeconds)
@@ -182,6 +185,7 @@ public sealed class ScenarioSession
         finishedElapsed = (finishedElapsed ?? 0f) + deltaSeconds;
         if (finishedElapsed < MechanicResultSettleSeconds) return;
         resultReported = true;
+        Natives.Bgm.Reset();
         if (deathOccurred) return;
         var clean = lastMistakeElapsed is null;
         if (clean && Plugin.Config.EnableMechanicResultMarks)
@@ -190,6 +194,13 @@ public sealed class ScenarioSession
     }
 
     // A death reported in this run, godmode or not: the first one's overlay, and the mistake mark.
+    public bool HasMistake => lastMistakeElapsed is not null;
+
+    public void RecordMistake()
+    {
+        lastMistakeElapsed = elapsed;
+    }
+
     public void OnDeathReported(string describedTarget, string cause)
     {
         if (!firstDeathShown)
@@ -209,6 +220,7 @@ public sealed class ScenarioSession
     public void OnKilled()
     {
         deathOccurred = true;
+        Natives.Bgm.Reset();
         if (freezeScheduled) return;
         freezeScheduled = true;
 #if DEBUG
@@ -230,8 +242,8 @@ public sealed class ScenarioSession
     {
         var phase = Scenario.Phase;
         DiagnosticLog.Info($"[Bgm] Suppress scenario BGM: {(Plugin.Config.SuppressBgm ? "on" : "off")}.");
-        if (!Plugin.Config.SuppressBgm && phase.Bgm != 0)
-            world.PlayBgm(phase.Bgm, Scenario.BgmSecondsAtStart);
+        if (!Plugin.Config.SuppressBgm && PhaseMusic.TrackFor(Scenario) != 0)
+            world.PlayBgm(PhaseMusic.TrackFor(Scenario), Scenario.BgmSecondsAtStart);
     }
 
     // The selected preset, or [0] as the default.

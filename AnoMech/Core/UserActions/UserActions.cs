@@ -50,6 +50,7 @@ public sealed unsafe class UserActions : IUserActions
     private uint pendingAction;
     private ulong pendingTarget;
     private float pendingTotal, pendingMax;
+    private readonly ResumedCastClock pausedCast = new();
 
     // Dedup gate: LastUsedActionSequence advances only at an action's actual execution,
     // so this skips both a queued (spammed) press carrying the PRIOR action's sequence
@@ -72,6 +73,7 @@ public sealed unsafe class UserActions : IUserActions
     {
         this.hooks = hooks;
         hooks.ActionExecuted += OnActionExecuted;
+        hooks.CastCancelRequested += OnCastCanceled;
     }
 
     private bool Runs(IUserActionHandler handler) => Enabled || handler.RunsWhenDisabled;
@@ -82,19 +84,40 @@ public sealed unsafe class UserActions : IUserActions
     // Called by Game at scenario start.
     public void OnScenarioStart()
     {
-        pendingResolve = false;
         if (!SimActive) return;
+        var am = ActionManager.Instance();
+        if (am != null) processedSeq = am->LastUsedActionSequence;
+        var world = Plugin.Game.World;
+        if (world.PracticeInvulnerability.Enabled)
+        {
+            var action = PracticeDefensiveActions.TankAction(Plugin.PlayerState.ClassJob.RowId);
+            if (action != 0) Natives.Zone.ResetPracticeRecast(action);
+        }
+        if (world.PracticeAntiKnockback.Enabled)
+        {
+            Natives.Zone.ResetPracticeRecast(7548);
+            Natives.Zone.ResetPracticeRecast(7559);
+        }
+        pendingResolve = false;
+        pausedCast.Clear();
+        if (!SimActive || hooks.PauseInput) return;
         foreach (var handler in handlers) if (Runs(handler)) handler.OnScenarioStart();
     }
 
     // Called by Game when the sim zone first loads (a true session start, not a restart within
     // an already-loaded zone). Snapshots unconditionally, so the restore stays correct even if the
     // module is enabled/disabled part-way through the session.
-    public void OnSessionStart() => gaugeSnapshot = JobGaugeEdit.Capture();
+    public void OnSessionStart()
+    {
+        var am = ActionManager.Instance();
+        if (am != null) processedSeq = am->LastUsedActionSequence;
+        gaugeSnapshot = JobGaugeEdit.Capture();
+    }
 
     // Called by Game when the player leaves the sim zone.
     public void OnSessionEnd()
     {
+        OnCastCanceled();
         if (gaugeSnapshot is { } snapshot) JobGaugeEdit.Restore(snapshot);
         gaugeSnapshot = null;
     }
@@ -102,20 +125,40 @@ public sealed unsafe class UserActions : IUserActions
     // Called each frame by Plugin.OnFrameworkUpdate.
     public void Tick(float deltaSeconds)
     {
-        if (!SimActive) return;
+        if (!SimActive || hooks.PauseInput) return;
         foreach (var handler in handlers) if (Runs(handler)) handler.OnTick(deltaSeconds);
-        ResolvePendingCast();
+        ResolvePendingCast(deltaSeconds);
+    }
+
+    public void OnPause()
+    {
+        var player = Natives.BattleCharas.LocalPlayer;
+        if (pendingResolve && player.IsCasting && player.CastActionId == pendingAction)
+            pausedCast.Preserve(pendingTotal, player.CurrentCastTime);
+        Natives.Zone.SetPracticeRecastsPaused(true);
+    }
+
+    public void OnResume() => Natives.Zone.SetPracticeRecastsPaused(false);
+
+    private void OnCastCanceled()
+    {
+        pendingResolve = false;
+        pendingMax = 0;
+        pausedCast.Clear();
+        foreach (var handler in handlers) if (Runs(handler)) handler.OnCastInterrupted(pendingType, pendingAction);
     }
 
     private void OnActionExecuted(ActionType actionType, uint actionId, ulong targetId)
     {
-        if (!SimActive) return;
+        if (!SimActive || hooks.PauseInput) return;
         var am = ActionManager.Instance();
         if (am == null) return;
         var seq = am->LastUsedActionSequence;
         if (seq == processedSeq) return; // queued press / re-entrant fire — already handled
         processedSeq = seq;
 
+        if (actionType == ActionType.Action) Natives.Zone.NotePracticeAction(actionId);
+        if (actionType == ActionType.Action && PracticeDefensiveActions.Apply(Plugin.Game?.Player, actionId)) return;
         // Effects resolve when the cast finishes. Instant (or made instant) → now; a real cast bar
         // this action started → deferred to completion (see ResolvePendingCast). The ActionId match
         // keeps oGCDs woven during another cast from being mistaken for a hard cast.
@@ -139,9 +182,17 @@ public sealed unsafe class UserActions : IUserActions
     }
 
     // Fires the deferred hard-cast effects once the cast completes; drops them if it was interrupted.
-    private void ResolvePendingCast()
+    private void ResolvePendingCast(float deltaSeconds)
     {
         if (!pendingResolve) return;
+        if (pausedCast.Remaining is not null)
+        {
+            if (!pausedCast.Tick(deltaSeconds)) return;
+            pendingResolve = false;
+            pausedCast.Clear();
+            foreach (var handler in handlers) if (Runs(handler)) handler.OnAction(pendingType, pendingAction, pendingTarget);
+            return;
+        }
         var bc = (BattleChara*)(Plugin.ObjectTable.LocalPlayer?.Address ?? 0);
         if (bc == null) { pendingResolve = false; return; }
 

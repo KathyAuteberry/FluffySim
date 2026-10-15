@@ -10,6 +10,12 @@ public interface IScenario
 {
     string Name { get; }
 
+    string MenuName => Name;
+    // Full UI label only; FullName remains the saved-selection identity.
+    string? DisplayNameOverride => null;
+    bool IsIncomplete => false;
+    bool EnablePhaseBgm => !IsIncomplete;
+
     // Its phase — usually `=> TopZone.P5`.
     IPhase Phase { get; }
 
@@ -58,12 +64,7 @@ public interface IScenario
 public static class ScenarioExtensions
 {
     // Menu label, e.g. "P5 Delta".
-    public static string DisplayName(this IScenario scenario)
-    {
-        var phase = scenario.Phase;
-        return string.IsNullOrEmpty(phase.Name) ? scenario.Name : $"{phase.Name} {scenario.Name}";
-    }
+    public static string DisplayName(this IScenario scenario) => Core.Game.Game.DisplayName(scenario);
 
-    public static string FullName(this IScenario scenario)
-        => $"{scenario.Phase.Zone.Name} — {scenario.DisplayName()}";
+    public static string FullName(this IScenario scenario) => Core.Game.Game.FullName(scenario);
 }

@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Collections.Generic;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
@@ -16,12 +18,84 @@ public sealed class Game : IDisposable
     public ScenarioCatalog Catalog { get; } = ScenarioCatalog.Create();
     public float EventTimeScale { get; set; } = 1f;
     public bool GodMode { get; set; }
+    private readonly System.Collections.Generic.Dictionary<(PartyRole, uint?, string), float> godMistakeTimes = [];
     
     public SimPlayer? Player => World.Party.Player;
     public IZone? Zone => instance?.Zone;
     public SessionMode? Mode => instance?.Mode;
     public IScenario? ActiveScenario => run?.Scenario;
-    public bool Paused => run?.Paused ?? false;
+    public float EventClockNow => Events.Elapsed;
+    public bool HasScenarioSucceeded => Status == SessionStatus.Succeeded;
+    public bool IsScenarioActive => run is not null;
+    public bool HasScenarioMistake => run?.HasMistake ?? false;
+    private bool paused;
+    private ILocalPlayerInput? pauseInputOwner;
+    private (bool Status, bool Control)? pauseConditions;
+    public IReadOnlyList<PausedCharacterStatuses> PauseStatuses { get; private set; } = [];
+    public bool CanPause => run is not null && Status is SessionStatus.Running or SessionStatus.RunningWithMistake
+        && instance?.IsLoaded == true;
+    public bool Paused
+    {
+        get => paused || (run?.Paused ?? false);
+        set
+        {
+            if (!value) { ReleasePause(true); return; }
+            if (paused || !CanPause) return;
+            try
+            {
+                Natives.UserActions.OnPause();
+                PauseStatuses = World.Party.AllMembers().Concat(World.Children.OfType<SimCharacter>())
+                    .Distinct().Select(c => new PausedCharacterStatuses(c, new(c.Position, c.Rotation),
+                        c.Proxy?.Rotation ?? c.Rotation, Array.AsReadOnly(c.ActiveStatuses.Select(s => s.Snapshot).ToArray()))).ToArray();
+                foreach (var snapshot in PauseStatuses) snapshot.Character.FreezePausePose(snapshot.Pose);
+                pauseInputOwner = Natives.PlayerInput;
+                pauseInputOwner.PauseInput = true;
+                pauseConditions = (Natives.PlayerConditions.StatusAffliction, Natives.PlayerConditions.ControlAffliction);
+                Natives.PlayerConditions.SetAfflictions(true, true);
+                World.PracticeInvulnerability.Suspended = true;
+                World.PracticeAntiKnockback.Suspended = true;
+                Events.Suspended = true;
+                paused = true;
+            }
+            catch { ReleasePause(); throw; }
+        }
+    }
+
+    public void CancelPause() => ReleasePause();
+
+    private void ReleasePause(bool restorePoses = false)
+    {
+        paused = false;
+        try
+        {
+            if (restorePoses && instance?.IsLoaded == true)
+                foreach (var snapshot in PauseStatuses)
+                    snapshot.Character.RestorePausePose(snapshot.Pose, snapshot.NativeRotation);
+        }
+        finally
+        {
+            try { Natives.UserActions.OnResume(); }
+            finally
+            {
+                if (pauseInputOwner is { } input) input.PauseInput = false;
+                pauseInputOwner = null;
+                try
+                {
+                    if (pauseConditions is { } conditions)
+                        Natives.PlayerConditions.SetAfflictions(conditions.Status, conditions.Control);
+                }
+                finally
+                {
+                    pauseConditions = null;
+                    foreach (var snapshot in PauseStatuses) snapshot.Character.FreezePausePose(null);
+                    PauseStatuses = [];
+                    World.PracticeInvulnerability.Suspended = false;
+                    World.PracticeAntiKnockback.Suspended = false;
+                    Events.Suspended = false;
+                }
+            }
+        }
+    }
     public SessionStatus Status => run?.Status ?? (instance is null ? SessionStatus.Offline : SessionStatus.InZone);
     
     // bool: a local run, not a multiplayer one.
@@ -34,29 +108,41 @@ public sealed class Game : IDisposable
     private InstanceSession? instance;
     private ScenarioSession? run;
 
+    public static string DisplayName(IScenario scenario)
+        => scenario.DisplayNameOverride ?? (string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.MenuName : $"{scenario.Phase.Name} {scenario.MenuName}");
+
+    public static string FullName(IScenario scenario)
+        => $"{scenario.Phase.Zone.Name} — {(string.IsNullOrEmpty(scenario.Phase.Name) ? scenario.Name : $"{scenario.Phase.Name} {scenario.Name}")}";
+
     public Game()
     {
         World = new SimWorld(Events);
+        Events.ActionFailed += CancelPause;
     }
 
 
     public void ZoneIn(IZone zone, SessionMode mode, Action<string?>? resolved = null)
-        => Deferred(() => ZoneInNow(zone, mode), resolved);
+    {
+        Natives.Zone.EndSpeedBuffs();
+        Deferred(() => ZoneInNow(zone, mode), resolved);
+    }
 
     public void StartScenario(RunScenarioParams p, Action<string?>? resolved = null)
         => Deferred(() => StartScenarioNow(p), resolved);
 
-    private static readonly TimeSpan ZoneInStartDelay = TimeSpan.FromSeconds(2);
+    private (RunScenarioParams Params, Action<string?>? Resolved)? pendingStart;
+    private float preparationSeconds;
+    public bool IsPreparingScenario => pendingStart is not null;
 
-    // Zones in first unless already staying in the run's zone in `mode`; a stay entered in another
-    // mode refuses the run rather than playing it there. A fresh zone-in applies the phase and
-    // seats the party at once, and waits ZoneInStartDelay before the run starts.
+    // Party packets and phase changes must follow native layout completion, or the load can
+    // erase them. The entrance barrier has its own attachment/open lifecycle after that.
     public void EnterAndStart(RunScenarioParams p, SessionMode mode, Action<string?>? resolved = null)
     {
         var zone = p.Scenario.Phase.Zone;
         if (Zone == zone && Mode == mode)
         {
-            StartScenario(p, resolved);
+            if (instance?.IsReadyForRun == true) StartScenario(p, resolved);
+            else QueueStart(p, resolved);
             return;
         }
         // Pinned so the run reseeds to the stream the party was seated from, and its bots keep
@@ -69,14 +155,44 @@ public sealed class Game : IDisposable
                 resolved?.Invoke(refusal);
                 return;
             }
-            instance?.ApplyPhase(p.Scenario.Phase);
-            SeatParty(p);
-            Plugin.Framework.RunOnTick(() => StartScenario(p, resolved), ZoneInStartDelay);
+            QueueStart(p, resolved);
         });
+    }
+
+    private void QueueStart(RunScenarioParams p, Action<string?>? resolved)
+    {
+        CancelPendingStart();
+        pendingStart = (p with { Seed = p.Seed ?? Random.Shared.Next() }, resolved);
+        preparationSeconds = 0f;
+    }
+
+    private void CancelPendingStart()
+    {
+        var canceled = pendingStart;
+        pendingStart = null;
+        canceled?.Resolved?.Invoke("scenario preparation canceled");
+    }
+
+    private void TickPreparation(float deltaSeconds)
+    {
+        if (pendingStart is not { } start) return;
+        if (instance?.IsReadyForRun != true)
+        {
+            preparationSeconds += deltaSeconds;
+            if (preparationSeconds < 60f && instance?.IsLoaded == true) return;
+            pendingStart = null;
+            start.Resolved?.Invoke("native arena preparation did not finish; leave and retry");
+            DiagnosticLog.Warn("[Game] Native arena preparation did not finish; no party or mechanic was started.");
+            return;
+        }
+        pendingStart = null;
+        SeatParty(start.Params);
+        StartScenario(start.Params, start.Resolved);
     }
 
     private void SeatParty(RunScenarioParams p)
     {
+        if (instance is null || !World.Map.IsInInstance || !Natives.Zone.IsActive) return;
         var player = Natives.BattleCharas.LocalPlayer;
         if (!player.Exists) return;
         World.Reseed(p.Seed!.Value);
@@ -85,6 +201,7 @@ public sealed class Game : IDisposable
 
     public void Reset() => Plugin.Framework.Run(() =>
     {
+        CancelPendingStart();
         if (ActiveScenario is not null)
             instance?.ReturnPlayerIfOutsideArena();
         EndRun();
@@ -96,6 +213,7 @@ public sealed class Game : IDisposable
         DiagnosticLog.RotateNow();
         Plugin.Framework.Run(() =>
         {
+            CancelPendingStart();
             EndRun();
             ExitInstance();
         });
@@ -127,6 +245,10 @@ public sealed class Game : IDisposable
         EndRun();
         run = next;
         run.Finished += OnRunFinished;
+        World.BotDifficulty = Plugin.Config.BotDifficulty;
+        World.ShowSimulatedParty = Plugin.Config.ShowSimulatedParty;
+        GodMode = Plugin.Config.PracticeGodMode;
+        godMistakeTimes.Clear();
         run.Start();
         RunStarted?.Invoke(p, instance.Mode == SessionMode.Local);
         return null;
@@ -134,6 +256,7 @@ public sealed class Game : IDisposable
     
     private void EndRun()
     {
+        CancelPause();
         if (run is { } ending)
         {
             run = null;
@@ -152,18 +275,37 @@ public sealed class Game : IDisposable
     
     public void Tick(float deltaSeconds)
     {
+        try { TickCore(deltaSeconds); }
+        catch { CancelPause(); throw; }
+    }
+
+    private void TickCore(float deltaSeconds)
+    {
+        if (Plugin.Config.SuppressBgm) Natives.Bgm.Reset();
         // The native zone can go away under a live stay.
         if (instance is { IsLoaded: false })
         {
             Plugin.Log.Warning($"Game: {instance.Zone.Name} is no longer loaded; ending the stay.");
             EndRun();
             ExitInstance();
+            return;
         }
         instance?.Tick(deltaSeconds);
+        if (pendingStart is not null)
+        {
+            TickPreparation(deltaSeconds);
+            return;
+        }
         if (instance?.CatchFall() == true && run is not null)
             World.Party.Player?.Die(SimCharacterDeathExtensions.Environment, "Fell off the arena");
-        if (Paused) return;
+        if (Paused)
+        {
+            World.RefreshPartyPresentation();
+            if (paused) Natives.PlayerConditions.SetAfflictions(true, true);
+            return;
+        }
         Events.Tick(deltaSeconds * EventTimeScale);
+        if (Paused) return;
         World.Tick(deltaSeconds * EventTimeScale);
         run?.Tick(deltaSeconds * EventTimeScale);
     }
@@ -171,14 +313,27 @@ public sealed class Game : IDisposable
     // Reports the death even in godmode, so the user learns what would have killed them; only the
     // actual kill is skipped. Returns false if nothing died (already dead or godmode), so callers
     // gate their own on-death logic on it.
+    public void RecordMechanicMistake(uint actionId, string explanation)
+    {
+        run?.RecordMistake();
+        DiagnosticLog.Warn($"[Mechanic] action={actionId}: {explanation}");
+        Plugin.ChatGui.Print($"[FluffySim] {explanation}");
+    }
+
     public bool Kill(ISimPartyMember target, string cause, uint? actionId = null)
     {
         if (target == null) return false;
         if (target.Dead) return false;
+        if (GodMode)
+        {
+            var key = (target.Role, actionId, cause);
+            if (godMistakeTimes.TryGetValue(key, out var previous) && Events.Elapsed - previous < 1f) return false;
+            godMistakeTimes[key] = Events.Elapsed;
+        }
 
         DiagnosticLog.Warn(
             $"[Game] Kill: {target.Role} died at ({(target as IPositioned)?.Position.X:F1},{(target as IPositioned)?.Position.Z:F1}) -- {cause}");
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] {DescribeName(target)} died: {cause}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] {DescribeName(target)} died: {cause}" });
         run?.OnDeathReported(DescribeName(target), cause);
 
         if (GodMode)
@@ -190,6 +345,8 @@ public sealed class Game : IDisposable
         var heldStatuses = character?.ActiveStatuses ?? [];
         target.OnKilled(byEnvironment: actionId == SimCharacterDeathExtensions.Environment);
         PartyMemberKilled?.Invoke(target.Role, cause, actionId);
+        World.PracticeInvulnerability.Clear();
+        World.PracticeAntiKnockback.Clear();
         run?.OnKilled();
         if (character != null) World.RunDeathRules(character, heldStatuses);
         return true;
@@ -200,6 +357,9 @@ public sealed class Game : IDisposable
     // Framework.Run wrapper would never fire.
     public void Dispose()
     {
+        CancelPendingStart();
+        CancelPause();
+        Events.ActionFailed -= CancelPause;
         run = null;
         Events.Clear();
         instance?.Dispose();
@@ -231,6 +391,7 @@ public sealed class Game : IDisposable
             }
             catch (Exception e)
             {
+                Natives.Bgm.Reset();
                 resolved?.Invoke($"the scenario threw {e.GetType().Name} while loading");
                 throw;
             }

@@ -25,6 +25,7 @@ internal sealed unsafe class MapEffects : IMapEffects
     // other shape at load.
     private delegate void ProcessMapEffectDelegate(ContentDirector* module, uint index, ushort state, ushort timeline);
     private readonly Hook<ProcessMapEffectDelegate> hook;
+    private string? lastReadiness;
 
     internal MapEffects()
     {
@@ -47,6 +48,22 @@ internal sealed unsafe class MapEffects : IMapEffects
 
     // Returns false when the zone/director isn't ready yet (async load still in
     // flight) so MapController can retry instead of silently losing the call.
+    public bool IsTerritoryReady(uint territoryId)
+    {
+        var game = FFXIVClientStructs.FFXIV.Client.Game.GameMain.Instance();
+        var layout = FFXIVClientStructs.FFXIV.Client.LayoutEngine.LayoutWorld.Instance();
+        var ready = game != null && layout != null && layout->ActiveLayout != null
+            && game->CurrentTerritoryTypeId == territoryId && game->TerritoryLoadState == 2
+            && layout->ActiveLayout->TerritoryTypeId == territoryId && layout->ActiveLayout->InitState == 7;
+        var status = $"requested={territoryId}, current={(game == null ? 0 : game->CurrentTerritoryTypeId)}, load={(game == null ? 0 : game->TerritoryLoadState)}, layout={(layout == null || layout->ActiveLayout == null ? 0 : layout->ActiveLayout->TerritoryTypeId)}, init={(layout == null || layout->ActiveLayout == null ? 0 : layout->ActiveLayout->InitState)}, ready={ready}";
+        if (lastReadiness != status)
+        {
+            lastReadiness = status;
+            AnoMech.Core.DiagnosticLog.Info($"[ArenaReady] {status}");
+        }
+        return ready;
+    }
+
     public bool Apply(uint packetFlags, byte index)
     {
         if (!TryGetReadyDirector(out var framework, out var module)) return false;
@@ -98,9 +115,9 @@ internal sealed unsafe class MapEffects : IMapEffects
     public void LogAllSlots(string label)
     {
         if (!Loaded) return;
-        var modulePtr = *(nint*)((nint)EventFramework.Instance() + 344);
-        if (modulePtr == 0) return;
-        var list = ((ContentDirector*)modulePtr)->MapEffects;
+        var framework = EventFramework.Instance();
+        if (framework == null || framework->DirectorModule.ActiveContentDirector == null) return;
+        var list = framework->DirectorModule.ActiveContentDirector->MapEffects;
         if (list == null) return;
         AnoMech.Core.DiagnosticLog.Info($"[MapEffect] {label}: {list->ItemCount} slots.");
         for (var i = 0; i < list->ItemCount && i < 128; i++)

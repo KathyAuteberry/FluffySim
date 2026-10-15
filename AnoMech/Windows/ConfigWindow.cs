@@ -11,7 +11,7 @@ public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
 
-    public ConfigWindow(Plugin plugin) : base("AnoMech Settings###AnoMechConfig")
+    public ConfigWindow(Plugin plugin) : base("FluffySim Settings###AnoMechConfig")
     {
         Flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar |
                 ImGuiWindowFlags.NoScrollWithMouse;
@@ -33,10 +33,10 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        var suppressBgm = configuration.SuppressBgm;
-        if (ImGui.Checkbox("Suppress scenario BGM", ref suppressBgm))
+        var enableBgm = !configuration.SuppressBgm;
+        if (ImGui.Checkbox("Enable Scenario BGM", ref enableBgm))
         {
-            configuration.SuppressBgm = suppressBgm;
+            configuration.SuppressBgm = !enableBgm;
             configuration.Save();
         }
 

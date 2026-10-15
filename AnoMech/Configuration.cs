@@ -13,8 +13,11 @@ public class Configuration : IPluginConfiguration
     public bool OpenSimMenuOnInn { get; set; } = true;
     public bool OpenSimMenuOnSupportedInstanceSolo { get; set; } = false;
     public bool EnableEventLogging { get; set; } = false;
-    public bool SuppressBgm { get; set; } = true;
+    public bool SuppressBgm { get; set; }
     public bool EnableMechanicResultMarks { get; set; } = false;
+    public Core.Game.Ai.BotDifficulty BotDifficulty { get; set; }
+    public bool ShowSimulatedParty { get; set; } = true;
+    public bool PracticeGodMode { get; set; }
     public bool AutoCollapseWhileRunning { get; set; } = false;
     public string LastSelectedScenario { get; set; } = "";
 

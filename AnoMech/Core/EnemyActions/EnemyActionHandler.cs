@@ -89,6 +89,7 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
     // CharacterManager null-derefs ApplyAll.
     private void Release(EnemyAction action, SimCharacter? target, Vector3? location, GameObjectId? castTarget, byte animationVariation, Delivery delivery)
     {
+        if (!world.Map.IsInInstance) return;
         var id = action.ActionId;
         if (target == caster) target = null;
         var aim = location ?? target?.Position;
@@ -130,9 +131,18 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
             effects.Add(ActionEffectEntry.ActionMarker(id));
             targets.Add(new ActionEffectTarget(who.GameObjectId, effects));
         }
+        IEnumerable<SimCharacter> presentation = caster is SimEnemy enemy && action.Cast.PresentationTargets is { } selectPresentation
+            ? selectPresentation(enemy, target, world).OfType<SimCharacter>().Where(m => m.IsAlive())
+            : action.Cast.TargetsPartyForPresentation
+            ? world.Party.ActiveMembers().OfType<SimCharacter>().Where(m => m.IsAlive())
+            : action.Cast.TargetsCasterForPresentation ? [caster] : [];
+        foreach (var who in presentation)
+            if (Natives.BattleCharas.IsInCharacterManager(who.GameObjectId.ObjectId)
+                && targets.All(t => t.Id != who.GameObjectId))
+                targets.Add(new ActionEffectTarget(who.GameObjectId));
         delivery.Sequence = cast.NativeActionEffect(
             id, action.Cast.AnimationLock, (ushort)id, animationVariation, ActionType.Action, 0,
-            rotation: caster.Rotation + action.Cast.Rotation, position: aim ?? caster.Position, animationTargetId: castTarget, targets: targets);
+            rotation: caster.Rotation + action.Cast.Rotation, position: aim ?? caster.Position, animationTargetId: action.Cast.AnimationTargetsCaster ? caster.GameObjectId : castTarget, targets: targets);
         delivery.Confirmations = confirmations;
         if (delivery.ImpactDue) ConfirmDamage(delivery);
     }

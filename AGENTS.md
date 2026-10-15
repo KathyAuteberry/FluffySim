@@ -11,8 +11,14 @@ inn, drives their casts and movement, and renders the real VFX, cast bars, tethe
 
 ## Build / run
 
-- Build: `dotnet build` from the repo root. The Dalamud SDK resolves from
+- Development build: `dotnet build -c Debug` from the repo root. The Dalamud SDK resolves from
   `%AppData%/XIVLauncher/addon/Hooks/dev/`.
+- Never build Release during development or copy/publish into `bin/Release`. The installed
+  Release output is watched by Dalamud; changing it hot-reloads the plugin and freezes the
+  running FFXIV client. The user alone builds Release when ready to playtest.
+- Keep development output and intermediates in Debug-specific `bin`/`obj` trees, separate
+  from Release (the solution plugin output is `AnoMech/bin/x64/Debug`; direct project builds
+  use `AnoMech/bin/Debug`). Run tests with `-c Debug`; do not introduce automatic reloads.
 - The plugin can't run standalone: it only runs inside the game, loaded by Dalamud.
 
 ## Tests
@@ -133,3 +139,16 @@ Being rewritten. Existing code doesn't follow it yet.
   them itself and reports the result through its poses.
 - **Cleanup.** Multiplayer tracks what it spawned on each peer and clears it on run end,
   disconnect or host leave.
+
+## FluffySim release identity
+
+The public plugin is FluffySim; source namespaces, solution/project paths, scenario IDs and relay
+protocol headers remain AnoMech for compatibility. `FluffySim.Version.props` is the only plugin
+release-version source. Debug builds produce `FluffySim.dll`, with separate Debug intermediates.
+Follow `RELEASING.md` for packaging an already built directory; never execute a Release build or
+write into installed output during development. Legacy `AnoMech.json` is imported only when no
+FluffySim configuration exists, without mutating the original. Never load both plugin registrations.
+
+## Integration safety tests
+
+`tests/SafetyTests` exercises the production zone/filter lifecycle against a simulated client and server. Run its Debug configuration with the plugin Debug binary; never run mutation tooling against installed files.

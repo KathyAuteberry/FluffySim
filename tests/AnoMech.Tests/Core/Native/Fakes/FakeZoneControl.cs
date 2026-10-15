@@ -10,6 +10,12 @@ internal sealed class FakeZoneControl(FakeCharacter player, SimTimeline timeline
     private float innRotation;
 
     public bool IsActive { get; private set; }
+    public bool NativePracticeReady { get; set; }
+    public string FirewallStatus => "fake transport";
+    public void EndSpeedBuffs() { }
+    public void ResetPracticeRecast(uint action) { }
+    public void NotePracticeAction(uint action) { }
+    public void SetPracticeRecastsPaused(bool paused) { }
 
     public bool IsInInn() => !IsActive;
 

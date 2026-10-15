@@ -12,6 +12,7 @@ namespace AnoMech.Scenarios;
 // zone -> phase -> scenario view for the menu.
 public interface IZone
 {
+    string DisplayName => Name;
     string Name { get; }                                    // canonical duty name
     uint TerritoryId { get; }
     Vector3 Origin { get; }
@@ -19,8 +20,9 @@ public interface IZone
     // At least one; [0] is the default.
     IReadOnlyList<WaymarkLayout> WaymarkPresets { get; }
 
-    // From the server's zone-in spawn packet for the EObj. The player spawns at its Position.
+    // From the server's zone-in spawn packet for the EObj.
     EntranceBarrier EntranceBarrier { get; }
+    Vector3 PlayerSpawn => EntranceBarrier.Position;
 
     // Resting state per MapEffect slot, copied from the server's MapEffect snapshot packet in a
     // replay (the same at zone-in and every wipe reset). Sent at the start of every scenario,

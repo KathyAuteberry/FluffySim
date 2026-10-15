@@ -5,6 +5,7 @@ using Dalamud.Game.Text;
 using System.Numerics;
 using AnoMech.Core;
 using AnoMech.Core.Game;
+using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Map;
@@ -22,6 +23,8 @@ public sealed class SimWorld : ISimObject, IDisposable
     // Ownership
     private readonly SimChildren children = new();
     private readonly EnemyList enemyList = new();
+    private readonly List<Action> cleanup = new();
+    public void OnDespawn(Action action) => cleanup.Add(action);
 
     // Zone loading and map effects entry point.
     public MapController Map { get; } = new();
@@ -30,6 +33,12 @@ public sealed class SimWorld : ISimObject, IDisposable
     // default (straight-line movement). Scenarios mutate it over their timeline
     // (Add/Remove/Clear); bots hold this one instance across runs, cleared on Despawn.
     public ObstacleField Obstacles { get; } = new();
+    public SoftMarkers SoftMarkers { get; } = new();
+    public BotDifficulty BotDifficulty { get; set; }
+    public bool ShowSimulatedParty { get; set; } = true;
+    public BotMovement BotMovement => field ??= new(this);
+    public PracticeAction PracticeAntiKnockback { get; } = new(6);
+    public PracticeInvulnerability PracticeInvulnerability { get; } = new();
 
     // No members outside a zone stay. Ticked before the children, which reference it.
     public SimParty Party { get; } = new();
@@ -88,7 +97,8 @@ public sealed class SimWorld : ISimObject, IDisposable
 
     private SimTether CreateTether(ITetherEnd from, ITetherEnd to, ushort tetherId, float duration, ushort debuffStatusId)
     {
-        var tether = new SimTether(from, to, new TetherContext(Party.Find, tetherId, Rng), debuffStatusId, duration);
+        var tether = new SimTether(from, to, new TetherContext(Party.Find, tetherId, Rng, member => children.OfType<SimTether>().Any(t =>
+            t.IsActive && t.TetherId == tetherId && (ReferenceEquals(t.A, member) || ReferenceEquals(t.B, member)))), debuffStatusId, duration);
         children.Add(tether);
         return tether;
     }
@@ -167,7 +177,7 @@ public sealed class SimWorld : ISimObject, IDisposable
 
     public void Announce(string text)
     {
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[AnoMech] {text}" });
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] {text}" });
         Announced?.Invoke(text);
     }
     
@@ -203,17 +213,37 @@ public sealed class SimWorld : ISimObject, IDisposable
     // ApplyParty without entering combat: the party standing in the zone before a run starts.
     public void SeatParty(IReadOnlyList<PartySlot?> roster) => Party.Apply(roster, this);
 
+    internal void RefreshPartyPresentation()
+    {
+        foreach (var member in Party.ActiveMembers().OfType<SimPartyNpc>()) member.SetPresentationVisible(ShowSimulatedParty);
+    }
+
     public void Tick(float deltaSeconds)
     {
+        PracticeInvulnerability.Tick(deltaSeconds);
+        PracticeAntiKnockback.Tick(deltaSeconds);
         Map.Tick();
         Party.Tick(deltaSeconds);
         children.Update(deltaSeconds);
+        RefreshPartyPresentation();
+        SoftMarkers.RemoveInactive();
         enemyList.Tick(children.OfType<SimEnemy>(), deltaSeconds);
     }
 
     // The run's teardown; the party stays.
     public void Despawn()
     {
+        var actions = cleanup.ToArray();
+        cleanup.Clear();
+        foreach (var action in actions)
+        {
+            try { action(); }
+            catch (Exception) { DiagnosticLog.Warn("[SimWorld] Scenario cleanup callback failed."); }
+        }
+        PracticeInvulnerability.Clear();
+        PracticeAntiKnockback.Clear();
+        BotMovement.Clear();
+        SoftMarkers.Clear();
         children.Despawn();
         enemyList.Clear();
         Obstacles.Clear();

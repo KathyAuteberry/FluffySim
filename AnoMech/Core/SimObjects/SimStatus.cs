@@ -3,6 +3,9 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace AnoMech.Core.SimObjects;
 
+public sealed record SimStatusSnapshot(ushort StatusId, ushort Stacks, GameObjectId SourceObject,
+    int Instance, float Duration, float Elapsed, float RemainingTime, bool IsActive, bool NativePresentation, int Slot, bool Hidden, GameObjectId? ShownSource);
+
 public sealed class SimStatus : ISimObject
 {
     private readonly SimCharacter target;
@@ -31,6 +34,8 @@ public sealed class SimStatus : ISimObject
 
     // 0 = permanent until removed, so a peer replicating it gets the same behaviour.
     public float RemainingTime => duration > 0f ? Math.Max(0f, duration - elapsed) : 0f;
+    public SimStatusSnapshot Snapshot => new(StatusId, Stacks, SourceObject, Instance,
+        duration, elapsed, RemainingTime, IsActive, Slot >= 0, Slot, Hidden, ShownSource);
 
     internal SimStatus(SimCharacter target, ushort statusId, float duration, ushort stacks, GameObjectId sourceObject, int slot, bool hidden)
     {

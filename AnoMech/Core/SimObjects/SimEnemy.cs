@@ -68,7 +68,11 @@ public record struct EnemySpawnConfig(
     uint LayoutId = 0,
     // False for an ally the duty spawns (FRU's Gaia and Ryne): it sends battalion 0, as retail
     // does, so the client treats it as friendly.
-    bool IsHostile = true);
+    bool IsHostile = true,
+    NpcAppearance? Appearance = null)
+{
+    public bool IsVisible => Visibility == SpawnVisibility.Visible;
+}
 
 public sealed class SimEnemy : SimNpc
 {

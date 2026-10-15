@@ -18,6 +18,7 @@ public interface IEnemyActionEffect
 // Authoring helpers: `using static AnoMech.Core.EnemyActions.EnemyActionEffects;`.
 public static class EnemyActionEffects
 {
+    public static IEnemyActionEffect Resolve(Action<EnemyActionContext> apply) => new CallbackEffect(apply);
     // The damage kind comes from the Action sheet's AttackType; override it only where the game's
     // own hit carries a different one.
     public static IEnemyActionEffect Damage(Severity? severity = null, Distribution? split = null, DamageKind? kindOverride = null)
@@ -229,4 +230,9 @@ internal sealed class KnockbackEffect(Func<EnemyActionContext, SimCharacter, (fl
                 ctx.Knockback(target, p.Distance, p.Speed, knockbackDelay, knockbackRow);
         }
     }
+}
+
+internal sealed class CallbackEffect(Action<EnemyActionContext> apply) : IEnemyActionEffect
+{
+    public void Apply(EnemyActionContext ctx, System.Collections.Generic.IReadOnlyList<SimCharacter> hits) => apply(ctx);
 }

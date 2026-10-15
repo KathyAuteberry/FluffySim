@@ -14,6 +14,13 @@ internal sealed record ScenarioRunOptions
 {
     // Ends the run at this scenario time, as a pass unless something already failed.
     public float? StopAt { get; init; }
+    public bool Solo { get; init; }
+    public AnoMech.Core.Game.Ai.BotDifficulty BotDifficulty { get; init; }
+    public bool ShowSimulatedParty { get; init; } = true;
+    public bool GodMode { get; init; }
+    public Func<IScenario>? ScenarioFactory { get; init; }
+    public Action<FakeGame>? ConfigureNative { get; init; }
+    public Action<Game, FakeGame>? BeforeStart { get; init; }
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
@@ -66,6 +73,7 @@ internal sealed record ScenarioRun(
     {
         options ??= new ScenarioRunOptions();
         var fake = FakeGame.Install();
+        options.ConfigureNative?.Invoke(fake);
         fake.UserActions.Enabled = options.UserActionsEnabled;
         Game? game = null;
         var log = TraceLog.Create(() => game?.World.Events.Elapsed ?? 0f);
@@ -83,6 +91,7 @@ internal sealed record ScenarioRun(
 
         void OnAoeEvaluated(AoeQuery query)
         {
+            if (query.CandidateType == typeof(SimEnemy)) return;
             var now = game?.World.Events.Elapsed ?? 0f;
             aoeChecks.RemoveAll(check => check.Time < now - AoeCheckWindowSeconds);
             var positions = game is null
@@ -98,7 +107,7 @@ internal sealed record ScenarioRun(
         }
 
         DalamudServices.Install(nameof(Plugin.Log), log);
-        var config = new Configuration();
+        var config = new Configuration { BotDifficulty = options.BotDifficulty, ShowSimulatedParty = options.ShowSimulatedParty, PracticeGodMode = options.GodMode };
         options.Configure?.Invoke(config);
         DalamudServices.Install(nameof(Plugin.Config), config);
         DebugBotControl.Enabled = true;
@@ -109,7 +118,7 @@ internal sealed record ScenarioRun(
         var probe = new ScenarioProbe(game, log, RecentAoeChecks);
         try
         {
-            scenario = game.Catalog.Scenarios.Single(s => s.GetType() == scenarioType);
+            scenario = options.ScenarioFactory?.Invoke() ?? game.Catalog.Scenarios.Single(s => s.GetType() == scenarioType);
             game.PartyMemberKilled += (r, cause, actionId) =>
             {
                 var snapshot = WorldSnapshot.Describe(game.World, RecentAoeChecks(), game.World.Party.Get(r), includeHidden: true);
@@ -119,13 +128,23 @@ internal sealed record ScenarioRun(
                 setOverrides(scenario.SettingsOverrides
                              ?? throw new InvalidOperationException($"{scenarioType.Name} has no settings overrides."));
             game.ZoneIn(scenario.Phase.Zone, SessionMode.Local);
-            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role }, strat, 0, seed));
+            if (options.BeforeStart is { } beforeStart)
+            {
+                fake.Frame(0, game.Tick);
+                beforeStart(game, fake);
+            }
+            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo }, options.Solo ? null : strat, 0, seed));
             fake.Frame(FrameSeconds, game.Tick);
             if (game.Status < SessionStatus.Running)
                 failure = "did not start";
 
             while (failure is null && game.Status is not (SessionStatus.Succeeded or SessionStatus.Frozen))
             {
+                if (game.HasScenarioMistake && game.World.Events.IsEmpty)
+                {
+                    failure = "mechanic mistake";
+                    break;
+                }
                 if (elapsed >= TimeoutSeconds)
                 {
                     failure = $"not finished after {TimeoutSeconds} s";

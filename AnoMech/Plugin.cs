@@ -1,4 +1,6 @@
 using System;
+using AnoMech.Offline;
+using System.Linq;
 using AnoMech.Core;
 using AnoMech.Core.Game;
 using AnoMech.Core.Native.Implementations;
@@ -21,9 +23,11 @@ namespace AnoMech;
 public sealed class Plugin : IDalamudPlugin
 {
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
+    [PluginService] internal static IGameGui GameGui { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static ICommandManager CommandManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static IPartyList PartyList { get; private set; } = null!;
     [PluginService] internal static IPlayerState PlayerState { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
     [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
@@ -39,9 +43,15 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ICondition Condition { get; private set; } = null!;
     [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
 
+    [PluginService] internal static ITitleScreenMenu TitleScreenMenu { get; private set; } = null!;
+    internal Offline.OfflineSession? Offline { get; private set; }
+    private Dalamud.Interface.IReadOnlyTitleScreenMenuEntry? offlineTitleEntry;
+
     private const string CommandName = "/anomech";
+    private const string FluffyCommand = "/fluffysim";
     private const string CommandAlias = "/ano";
     private bool commandsRegistered;
+    private volatile bool disposing;
 
     internal static Configuration Config { get; private set; } = null!;
     internal static Game Game { get; private set; } = null!;
@@ -55,7 +65,7 @@ public sealed class Plugin : IDalamudPlugin
     // without a Plugin reference.
     internal static LogManager LogManager { get; private set; } = null!;
     private ConfigWindow ConfigWindow { get; init; }
-    private MainWindow MainWindow { get; init; }
+    internal static MainWindow MainWindow { get; private set; } = null!;
 #if DEBUG
     private DamageDebugWindow DamageDebugWindow { get; init; }
 #endif
@@ -64,11 +74,13 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        if (PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && (p.InternalName is "AnoMech" or "FluffySim")))
+            throw new InvalidOperationException("Disable the existing AnoMech/FluffySim plugin before loading FluffySim.");
         // First, so every subsequent construction step's own logging is captured from the start.
         DiagnosticLog.Initialize();
         try
         {
-            Config = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            Config = ConfigurationMigration.Load(PluginInterface.ConfigFile, () => PluginInterface.GetPluginConfig() as Configuration);
 
             LogManager = new LogManager();
             if (Config.EnableEventLogging) LogManager.Open();
@@ -97,15 +109,18 @@ public sealed class Plugin : IDalamudPlugin
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open AnoMech. Subcommands: config, mp, start, reset, leave"
+                HelpMessage = "Open FluffySim. Subcommands: config, mp, start, reset, leave, arena-p3, arena-dsr-p2, snapshot <label>"
             });
             CommandManager.AddHandler(CommandAlias, new CommandInfo(OnCommand)
             {
                 HelpMessage = "Alias for /anomech"
             });
+            CommandManager.AddHandler(FluffyCommand, new CommandInfo(OnCommand) { HelpMessage = "Open FluffySim; /anomech and /ano remain supported." });
             commandsRegistered = true;
+            StartOffline();
 
             PluginInterface.UiBuilder.Draw += windowSystem.Draw;
+            PluginInterface.UiBuilder.Draw += SoftMarkerRenderer.Draw;
             Framework.Update += OnFrameworkUpdate;
 
             PluginInterface.UiBuilder.OpenConfigUi += ToggleConfigUi;
@@ -149,15 +164,16 @@ public sealed class Plugin : IDalamudPlugin
     // instance, where anything past the throwing step was never assigned.
     public void Dispose()
     {
+        disposing = true;
         try
         {
+            Offline?.CloseGameIfStarted();
             DisposeSubsystems();
         }
         finally
         {
-            // Dalamud disposes this plugin's hooks once Dispose returns or throws, so a sim must be
-            // reverted by then even when a step above threw. A no-op after a clean Game.Dispose.
-            ZoneControl.Current?.Dispose();
+            try { if (Game is { } game) game.CancelPause(); }
+            finally { ZoneControl.Current?.Dispose(); }
         }
 
         // Last, so it captures every other subsystem's teardown logging before the DLL unloads.
@@ -166,7 +182,10 @@ public sealed class Plugin : IDalamudPlugin
 
     private void DisposeSubsystems()
     {
+        if (offlineTitleEntry != null) TitleScreenMenu.RemoveEntry(offlineTitleEntry);
+        Offline?.Dispose();
         PluginInterface.UiBuilder.Draw -= windowSystem.Draw;
+        PluginInterface.UiBuilder.Draw -= SoftMarkerRenderer.Draw;
         Framework.Update -= OnFrameworkUpdate;
         PluginInterface.UiBuilder.OpenConfigUi -= ToggleConfigUi;
         PluginInterface.UiBuilder.OpenMainUi -= ToggleMainUi;
@@ -194,6 +213,7 @@ public sealed class Plugin : IDalamudPlugin
         {
             CommandManager.RemoveHandler(CommandName);
             CommandManager.RemoveHandler(CommandAlias);
+            CommandManager.RemoveHandler(FluffyCommand);
         }
     }
 
@@ -205,13 +225,15 @@ public sealed class Plugin : IDalamudPlugin
         var fw = CSFramework.Instance();
         if (fw == null) return;
         // First: the zone guard must run when Game.Tick is paused or throwing.
+        try { Offline?.Tick(); }
+        catch (Exception e) { if (OfflineProcessState.Tainted) OfflineSession.CloseGame($"offline guard update failed: {e.Message}"); DiagnosticLog.Warn($"[Plugin] Offline.Tick threw: {e}"); }
         Natives.Tick(fw->FrameDeltaTime);
         // Both ticks reach code driven by whatever a relay sent; neither may take the frame
         // pump down.
         try { Runs.Tick(); }
         catch (Exception e) { DiagnosticLog.Warn($"[Plugin] Runs.Tick threw: {e}"); }
         try { Game.Tick(fw->FrameDeltaTime); }
-        catch (Exception e) { DiagnosticLog.Warn($"[Plugin] Game.Tick threw: {e}"); }
+        catch (Exception e) { Game.CancelPause(); DiagnosticLog.Warn($"[Plugin] Game.Tick threw: {e}"); }
 #if DEBUG
         try { DamageDebugWindow.Instance?.Tick(fw->FrameDeltaTime); }
         catch (Exception e) { DiagnosticLog.Warn($"[Plugin] DamageDebugWindow.Tick threw: {e}"); }
@@ -228,6 +250,19 @@ public sealed class Plugin : IDalamudPlugin
             Multiplayer.Tick(fw->FrameDeltaTime);
         }
         catch (Exception e) { DiagnosticLog.Warn($"[Plugin] Multiplayer.Tick threw: {e}"); }
+
+    }
+
+    private void StartOffline()
+    {
+        try
+        {
+            Offline = new Offline.OfflineSession();
+            windowSystem.AddWindow(Offline.ConfigWindow);
+            var icon = TextureProvider.GetFromManifestResource(typeof(Plugin).Assembly, "AnoMech.OfflineIcon.png");
+            offlineTitleEntry = TitleScreenMenu.AddEntry("FluffySim offline mode", icon, Offline.OpenFromTitle);
+        }
+        catch (Exception e) { Log.Warning($"[Plugin] Offline mode is unavailable: {e.Message}"); }
     }
 
     private void OnTerritoryChanged(uint territory)
@@ -263,8 +298,40 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
+        if (args.Trim().StartsWith("snapshot ", StringComparison.Ordinal))
+        {
+            var label = args.Trim()[9..];
+            Framework.RunOnFrameworkThread(() =>
+            {
+                if (disposing) return;
+                try { ChatGui.Print($"FluffySim arena snapshot saved: {ArenaSnapshot.Save(label)}"); }
+                catch (Exception e) { ChatGui.Print($"FluffySim arena snapshot failed: {e.Message}"); }
+            });
+            return;
+        }
         switch (args.Trim())
         {
+            case "firewall":
+                ChatGui.Print($"FluffySim firewall: {Natives.Zone.FirewallStatus}");
+                break;
+            case "antikb":
+                Framework.RunOnFrameworkThread(() =>
+                {
+                    if (disposing) return;
+                    var activated = Windows.PracticeAntiKnockbackControls.Press(Game.ActiveScenario,
+                        Game.Player is { Dead: false }, Game.World.PracticeAntiKnockback);
+                    ChatGui.Print(activated ? "FluffySim: local anti-knockback active for 6 seconds." : "FluffySim: local anti-knockback unavailable (Meteors only, once per run, not while paused or KO).");
+                });
+                break;
+            case "arena-dsr-p2":
+                Game.EnterAndStart(new RunScenarioParams(new AnoMech.Scenarios.Dsr.DsrArenaDiagnosticScenario(), new Core.Game.Party.LocalPartyProvider(), null, 0), SessionMode.Local);
+                break;
+            case "arena-p3":
+                Game.EnterAndStart(new RunScenarioParams(new AnoMech.Scenarios.Fru.FruP3ArenaDiagnosticScenario(), new Core.Game.Party.LocalPartyProvider(), null, 0), SessionMode.Local);
+                break;
+            case "offline":
+                Offline?.ConfigWindow.Toggle();
+                break;
             case "config":
                 ConfigWindow.Toggle();
                 break;

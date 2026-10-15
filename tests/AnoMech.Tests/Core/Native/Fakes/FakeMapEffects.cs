@@ -5,9 +5,13 @@ namespace AnoMech.Tests;
 internal sealed class FakeMapEffects(SimTimeline timeline) : IMapEffects
 {
     public bool Loaded { get; set; }
+    public bool TerritoryReady { get; set; } = true;
+    public bool IsTerritoryReady(uint territoryId) => TerritoryReady;
+    public List<(uint Flags, byte Index)> Applied { get; } = new();
 
     public bool Apply(uint packetFlags, byte index)
     {
+        if (Loaded) Applied.Add((packetFlags, index));
         if (Loaded)
             timeline.Add("map_effect", id: index.ToString(), name: "MapEffect",
                 detail: $"state={packetFlags & 0xFFFF} timeline={packetFlags >> 16} flags=0x{packetFlags:X}");

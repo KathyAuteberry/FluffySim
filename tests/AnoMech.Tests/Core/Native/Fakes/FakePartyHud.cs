@@ -5,6 +5,13 @@ namespace AnoMech.Tests;
 
 internal sealed class FakePartyHud : IPartyHud
 {
-    public void Refresh(SimParty party) { }
-    public void Clear() { }
+    public List<(AnoMech.Core.Game.Party.PartyRole Role, uint Actor)> Members { get; } = new();
+    public void Refresh(SimParty party)
+    {
+        Members.Clear();
+        foreach (var member in party.AllMembers())
+            if (member.Proxy is { Exists: true } proxy)
+                Members.Add((((ISimPartyMember)member).Role, proxy.EntityId));
+    }
+    public void Clear() => Members.Clear();
 }

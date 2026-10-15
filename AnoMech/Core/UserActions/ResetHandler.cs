@@ -3,8 +3,7 @@ using AnoMech.Core.Native.Implementations;
 
 namespace AnoMech.Core.UserActions;
 
-// What the server resets for a fresh pull: every recast cleared, as it does at zone-in, and the
-// job gauge emptied, then seeded from JobActions.StartingResources.
+// Fresh-pull resources; defensive recasts are reset separately by the scoped practice session.
 internal sealed class ResetHandler : IUserActionHandler
 {
     private readonly Random rng = new();
@@ -13,7 +12,7 @@ internal sealed class ResetHandler : IUserActionHandler
 
     public void OnScenarioStart()
     {
-        RecastTimes.ClearAll();
+        if (ZoneControl.Current?.NativePracticeReady != true) return;
         ClearGauge();
         if (Plugin.Game?.Player is { } player) JobActions.ApplyStartingResources(player, rng);
     }

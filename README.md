@@ -1,36 +1,52 @@
 
-# ![AnoMech](images/icon.png) AnoMech
+# ![FluffySim](images/icon.png) FluffySim
 
-*Another FFXIV mechanics simulator*
+*An FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters.*
 
 ---
- 
-Simulate FFXIV raid mechanics client-side for solo practice. Go to any Inn, open the plugin with `/anomech` and start practicing!
 
-Thanks to improvemnts by [WorstAquaPlayer](https://github.com/WorstAquaPlayer) plugin is quite stable now! No more 
+Simulate FFXIV raid mechanics client-side for solo practice. Go to any Inn, open the plugin with `/fluffysim` and start practicing!
+
+
+Thanks to improvements by [WorstAquaPlayer](https://github.com/WorstAquaPlayer) plugin is quite stable now! No more
 crashes after training session.
 
 **WARNING!!!**
 
 **You are cut off from server traffic while in the sim zone.** To keep the
-fake zone stable, the plugin firewalls incoming packets from the server.  
+fake zone stable, the plugin firewalls incoming packets from the server.
 While simulating:
   * Players joining or leaving your party will not appear in the party list
   until you leave the sim zone.
   * Ready checks will not pop.
- 
+
 
 ### Beta: Advanced Simulation Resolution
 
-The simulator now includes a beta feature that properly resolves most skills, triggers, and gauges during simulation. 
+The simulator now includes a beta feature that properly resolves most skills, triggers, and gauges during simulation.
 As this feature is still in beta, some edge cases and less common interactions may not yet resolve correctly.
 
 
 ## Installation
 
-See: https://github.com/anomek/MyDalamudPlugins
+Download and extract `FluffySim-<version>.zip`, then select `FluffySim.dll` in Dalamud's Experimental settings. Follow [installation and migration instructions](INSTALLATION.md). Do not load AnoMech and FluffySim together.
 
-## Currently implemented (by default using pf NA strats):
+## Added FRU and DSR practice scenarios
+
+- FRU: P1 Fall of Faith, P2 Light Rampant, P3 Ultimate Relativity, P3 Apocalypse, P4 Darklit Dragonsong — Mana.
+- DSR: P2 Strength of the Ward Parts 1 and 2, Sanctity of the Ward Parts 1 and 2 — Elemental.
+- Sanctity Meteors remains experimental; some timings and presentation need further recording validation.
+- Shared Easy/Hard bots, invisible simulated party, God Mode, and local-only practice defensive actions.
+- Native defensive hotbar practice includes scoped local cooldown resets and exit restoration, pending client validation of the new integration. Low-level Meteors players can use `/fluffysim antikb`; see the [packet-filter audit and manual checks](PACKET-FILTER-AUDIT.md). Leave and wait for the inn before reloading the plugin.
+- Solo Pause/Resume freezes the ongoing run and status durations while restricting player movement/actions. Native animations may continue; see [Pause details](PAUSE-INVESTIGATION.md).
+
+FluffySim extends [AnoMech by Anomek and contributors](https://github.com/anomek/AnoMech). Original native simulation infrastructure and the scenarios listed below retain their upstream attribution. The existing icon is inherited from AnoMech; no new logo is implied.
+
+Experimental title-screen offline mode and Evernow's firewall/recast consistency improvements are integrated; read [usage, limitations and attribution](UPSTREAM-INTEGRATION.md) before testing. Offline config requires your character name and actual home world; local gearset files do not contain that identity metadata. Manually disable Discord Chat Bridge before offline entry until it handles invalid authenticated-world references. See the [offline repair notes and client checklist](OFFLINE-DSR-REPAIR.md) for the remaining DSR scenery and party-UI validation.
+
+See [Hard movement audit](HARD-DIFFICULTY-AUDIT.md), [release/versioning instructions](RELEASING.md), and [release notes](CHANGELOG.md).
+
+## Inherited AnoMech scenarios:
 - Dancing Mad (Ultimate)
     - P1 Tele-trouncing _by [Evernow](https://github.com/Evernow)_
     - P2 Forsaken
@@ -69,11 +85,22 @@ See: https://github.com/anomek/MyDalamudPlugins
 
 * Spawns fake party members and boss NPCs into the live game client
 * Drives their positions, cast bars, tethers, and VFX so mechanics play out visually
-* Your fake party members are full fledged bots that will do mechanics.  
+* Your fake party members are full fledged bots that will do mechanics.
   Some scanarios also have solo mode where you can practice without disctractions.
 
 
+## Development builds
+
+Use `dotnet build -c Debug` and `dotnet test -c Debug` for development. Keep output
+in Debug-specific `bin` and `obj` trees (the solution plugin uses `bin/x64/Debug`). Do not build, copy, or publish into Release output:
+Dalamud watches the installed Release files and hot-reloads them, freezing the
+running client. The user builds Release personally when ready to playtest.
+
 ## How to help
+
+FRU implementation coverage, verified encounter data and local Linux build/test
+instructions are tracked in [the FRU roadmap](FRU-ROADMAP.md).
+
 1. Please provide feedback and report any issues in scenarios: bad timing, damage, config not working at it supposed
 2. Bot AI currently only covers strategies from my region. Adding strategies for other regions requires little coding.
    Feel free to create pull request or contact me.
@@ -96,7 +123,7 @@ Thanks for contributors:
 * [RoarkGit](https://github.com/RoarkGit) - win streaks, extra scenarios
 * [Evernow](https://github.com/Evernow) - multiplayer (WIP), extra sceanrions and strategies
 
-AnoMech leans heavily on the work of other Dalamud plugins. Huge thanks to their authors!  
+AnoMech leans heavily on the work of other Dalamud plugins. Huge thanks to their authors!
 Without them, the following would not be possible:
 
 AnoMech's zone changes are built on **Hyperborea**, which served as the baseline for loading a solo duty arena.                                                                                                                                                                                   

@@ -10,6 +10,7 @@ public interface IMapEffects : IDisposable
     bool Loaded { get; set; }
 
     bool Apply(uint packetFlags, byte index);
+    bool IsTerritoryReady(uint territoryId);
 
     // Every slot's resting state at once, like the server's zone-in and reset snapshot; plays no
     // timeline. zoneIn: retail's zone-in header rather than the reset one.

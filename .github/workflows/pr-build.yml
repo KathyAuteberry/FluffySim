@@ -32,8 +32,8 @@ jobs:
         Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
 
     - name: Build with dotnet
-      run: dotnet build --configuration Release
+      run: dotnet build --configuration Debug
 
     - name: Run tests
-      run: dotnet test --configuration Release --no-build --logger GitHubActions
+      run: dotnet test --configuration Debug --no-build --logger GitHubActions
 

@@ -67,6 +67,18 @@ public sealed class MapController
     public bool IsInInstance { get; private set; }
     public uint TerritoryId { get; private set; }
 
+    private bool CanApplyMapEffects() => TerritoryId != 1238 || Natives.MapEffects.IsTerritoryReady(TerritoryId);
+
+    public void HoldLayerActive(ushort layerKey, bool active)
+    {
+        if (InSim(nameof(HoldLayerActive))) Natives.Layout.HoldLayerActive(TerritoryId, layerKey, active);
+    }
+
+    public void SuppressLayer(ushort layerKey)
+    {
+        if (InSim(nameof(SuppressLayer))) Natives.Layout.SuppressLayer(layerKey);
+    }
+
     // Apply weather after a zone load (1-second delayed to let the engine settle).
     public void ApplyWeather(byte weatherId) => Natives.Zone.ApplyWeather(weatherId);
 
@@ -74,7 +86,12 @@ public sealed class MapController
     // arena-transform lighting cues that no SimObject carries.
     public event Action<byte, float>? WeatherChanged;
 
-    // Immediately change the active weather (mid-scenario). transition = fade seconds.
+    public void HoldInstanceActive(ushort layerKey, uint instanceKey, bool active)
+    {
+        if (InSim(nameof(HoldInstanceActive))) Natives.Layout.HoldInstanceActive(TerritoryId, layerKey, instanceKey, active);
+    }
+
+    // Immediately change the weather (mid-scenario). transition = fade seconds.
     public void SetWeather(byte weatherId, float transition = 0.5f)
     {
         Natives.Zone.SetWeather(weatherId, transition);
@@ -85,6 +102,7 @@ public sealed class MapController
     public void Unload()
     {
         IsInInstance = false;
+        Natives.Layout.ClearSuppressedLayers();
         // Otherwise the native ProcessMapEffect path stays reachable from a replayed message
         // outside any sim.
         Natives.MapEffects.Loaded = false;
@@ -97,6 +115,7 @@ public sealed class MapController
     // Per-frame poll. Called from SimWorld.Tick.
     internal void Tick()
     {
+        if (IsInInstance) Natives.Layout.ReassertSuppressedLayers();
         if (IsInInstance && layerDumpFrame <= LayerDumpFrames[^1])
         {
             layerDumpFrame++;
@@ -111,7 +130,7 @@ public sealed class MapController
 
         if (pendingSnapshot != null)
         {
-            if (Natives.MapEffects.ApplySnapshot(pendingSnapshot.States, pendingSnapshot.ZoneIn))
+            if (CanApplyMapEffects() && Natives.MapEffects.ApplySnapshot(pendingSnapshot.States, pendingSnapshot.ZoneIn))
                 pendingSnapshot = null;
             else if (--pendingSnapshot.FramesLeft <= 0)
             {
@@ -123,7 +142,7 @@ public sealed class MapController
         // Insertion order: an SGB slot's State is locked in by whichever call reaches it first
         // (see MapEffects), so a later call to the same index must not win the retry. All of
         // them wait for a pending snapshot.
-        for (int i = 0; pendingSnapshot == null && i < pendingEffects.Count; i++)
+        for (int i = 0; pendingSnapshot == null && CanApplyMapEffects() && i < pendingEffects.Count; i++)
         {
             var pending = pendingEffects[i];
             if (Natives.MapEffects.Apply(pending.PacketFlags, pending.Index)) { pendingEffects.RemoveAt(i); i--; continue; }
@@ -166,11 +185,24 @@ public sealed class MapController
     // Once the zone is loaded.
     public void Enter(uint territoryId)
     {
+        pendingEffects.Clear();
+        pendingSnapshot = null;
+        pendingDirectorUpdates.Clear();
+        Natives.Layout.ClearSuppressedLayers();
         IsInInstance = true;
         TerritoryId = territoryId;
         layerDumpFrame = 0;
         Natives.MapEffects.Loaded = true;
         DiagnosticLog.Info($"[MapController] Enter: territoryId={territoryId}.");
+    }
+
+    public void BeginPhase()
+    {
+        if (!InSim(nameof(BeginPhase))) return;
+        pendingEffects.Clear();
+        pendingSnapshot = null;
+        pendingDirectorUpdates.Clear();
+        Natives.Layout.ClearSuppressedLayers();
     }
 
     // A fresh load delays the weather so the engine settles; a loaded zone takes it now.
@@ -202,7 +234,7 @@ public sealed class MapController
     {
         if (!InSim(nameof(AddEffect))) return;
         // Behind a pending call for the same slot, or it would land first and be overwritten.
-        var behind = pendingSnapshot != null || pendingEffects.Exists(p => p.Index == index);
+        var behind = !CanApplyMapEffects() || pendingSnapshot != null || pendingEffects.Exists(p => p.Index == index);
         if ((behind || !Natives.MapEffects.Apply(packetFlags, index)) && TryReserveRetrySlot(pendingEffects.Count, "MapEffect"))
         {
             DiagnosticLog.Warn($"[MapEffect] packetFlags=0x{packetFlags:X8} index=0x{index:X} {(behind ? "queued behind an earlier call for the same slot" : "not ready yet -- queued for retry")}.");
@@ -220,7 +252,7 @@ public sealed class MapController
         if (!InSim(nameof(SetEffectSnapshot))) return;
         pendingEffects.Clear();
         pendingSnapshot = null;
-        if (!Natives.MapEffects.ApplySnapshot(states, zoneIn))
+        if (!CanApplyMapEffects() || !Natives.MapEffects.ApplySnapshot(states, zoneIn))
         {
             DiagnosticLog.Warn("[MapEffect] snapshot not ready yet -- queued for retry.");
             pendingSnapshot = new PendingSnapshot { States = states, ZoneIn = zoneIn };
