@@ -198,6 +198,10 @@ BGM and offline identity. Diamond Dust remains shelved. Packet filtering must st
 client/server state differs; never bypass entry guards, move real positions outside a stay,
 or send fabricated simulation traffic to the server. Comments are not proof of behavior.
 
+Tag publication runs optimized Debug scenario tests in tests/AnoMech.Tests/bin/fast-Debug
+with obj/fast-tests-Debug intermediates per project. Keep these separate from ordinary Debug
+and optimized TRACE safety artifacts; optimizing ordinary safety input changes its IL classification.
+
 Tests: tests/AnoMech.Tests, tests/AnoMech.Relay.Tests and tests/SafetyTests. Use Debug only;
 see tests/SafetyTests/README.md for ordinary/optimized Debug artifacts and both failure models.
 Python tooling tests are under tools/tests. Native rendering/hook behavior still needs client
