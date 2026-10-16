@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AnoMech.Offline;
 
@@ -28,6 +30,31 @@ internal static class OfflineProcessState
     {
         get => Get(InWorldKey);
         set => Set(InWorldKey, value);
+    }
+
+    // Installation IDs remain readable after an assembly reload.
+    public static List<string> SuspendedPlugins
+    {
+        get
+        {
+            const string key = "AnoMech.Offline.SuspendedPlugins";
+            if (AppDomain.CurrentDomain.GetData(key) is List<string> plugins) return plugins;
+            plugins = [];
+            AppDomain.CurrentDomain.SetData(key, plugins);
+            return plugins;
+        }
+    }
+
+    public static bool RestoringPlugins
+    {
+        get => Get("AnoMech.Offline.RestoringPlugins");
+        set => Set("AnoMech.Offline.RestoringPlugins", value);
+    }
+
+    public static Task? PluginOperation
+    {
+        get => AppDomain.CurrentDomain.GetData("AnoMech.Offline.PluginOperation") as Task;
+        set => AppDomain.CurrentDomain.SetData("AnoMech.Offline.PluginOperation", value);
     }
 
     private static bool Get(string key) => AppDomain.CurrentDomain.GetData(key) is true;

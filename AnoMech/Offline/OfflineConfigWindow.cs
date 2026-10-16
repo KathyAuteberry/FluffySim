@@ -37,7 +37,7 @@ internal sealed class OfflineConfigWindow : Window
                            + "and settings as saved on this PC. Nothing can write to the game's folder while it runs, and returning to the title screen "
                            + "puts everything back, so logging in afterwards is exactly as if offline mode never ran. Anything changed offline is forgotten.");
         ImGui.TextDisabled(OfflineSession.LoginPrecaution);
-        ImGui.TextWrapped("Discord Chat Bridge currently assumes an authenticated home world and can crash during offline entry. Disable it before offline practice until its invalid-world handling is fixed.");
+        ImGui.TextWrapped("Discord Chat Bridge is temporarily unloaded during offline practice and restored when you return to the title screen.");
         if (Store.LoadProblem is { } problem) ImGui.TextColored(ImGuiColors.DalamudRed, problem);
         ImGui.PopTextWrapPos();
         ImGui.Spacing();

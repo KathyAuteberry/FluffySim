@@ -19,7 +19,7 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace AnoMech.Offline;
 
-internal enum OfflinePhase { Idle, Starting, InWorld, Leaving, Failed }
+internal enum OfflinePhase { Idle, SuspendingPlugins, Starting, InWorld, Leaving, RestoringPlugins, Failed }
 
 // Nothing here hooks or writes game memory until the user starts offline mode from the title screen.
 internal sealed unsafe class OfflineSession : IDisposable
@@ -51,7 +51,7 @@ internal sealed unsafe class OfflineSession : IDisposable
     public OfflineConfigWindow ConfigWindow { get; }
     public OfflinePhase Phase { get; private set; }
     public string Status { get; private set; } = "";
-    public bool Busy => Phase is OfflinePhase.Starting or OfflinePhase.Leaving;
+    public bool Busy => Phase is OfflinePhase.SuspendingPlugins or OfflinePhase.Starting or OfflinePhase.Leaving or OfflinePhase.RestoringPlugins;
     public OfflineLoadout? Loadout { get; private set; }
     public bool UseConfig { get; private set; }
     public IReadOnlyList<string> OtherPlugins { get; private set; } = [];
@@ -71,6 +71,11 @@ internal sealed unsafe class OfflineSession : IDisposable
     private bool ownLogout;
     private long leavingSince;
     private bool configWindowHidden;
+    private readonly OfflinePluginSuspension pluginSuspension = new(
+        () => Plugin.PluginInterface.InstalledPlugins
+            .Where(p => OfflinePluginSuspension.IsIncompatible(p.InternalName))
+            .Select(p => (IOfflinePlugin)new DalamudOfflinePlugin(p)).ToArray(),
+        OfflineProcessState.SuspendedPlugins);
 
     public OfflineSession()
     {
@@ -83,12 +88,16 @@ internal sealed unsafe class OfflineSession : IDisposable
         Plugin.ClientState.Logout += OnLogout;
 
         if (OfflineProcessState.Tainted) Resume();
+        else if (OfflineProcessState.PluginOperation != null || OfflineProcessState.SuspendedPlugins.Count > 0)
+            Phase = OfflinePhase.RestoringPlugins;
     }
 
     public void Dispose()
     {
         Plugin.ClientState.Logout -= OnLogout;
         bootstrap?.Dispose();
+        if (!OfflineProcessState.Tainted)
+            OfflineProcessState.PluginOperation = pluginSuspension.RestoreAfter(OfflineProcessState.PluginOperation);
         if (Current == this) Current = null;
     }
 
@@ -142,7 +151,8 @@ internal sealed unsafe class OfflineSession : IDisposable
         unusable = all.Count - characters.Count;
         appearances = OfflineGameFiles.ScanAppearances();
         OtherPlugins = Plugin.PluginInterface.InstalledPlugins
-                             .Where(p => p.IsLoaded && p.InternalName != Plugin.PluginInterface.InternalName)
+                             .Where(p => p.IsLoaded && p.InternalName != Plugin.PluginInterface.InternalName
+                                          && !OfflinePluginSuspension.IsIncompatible(p.InternalName))
                              .Select(p => p.Name)
                              .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                              .ToList();
@@ -196,6 +206,8 @@ internal sealed unsafe class OfflineSession : IDisposable
     public string? UnavailableReason()
     {
         if (Phase == OfflinePhase.InWorld) return null;
+        if (OfflineProcessState.SuspendedPlugins.Count > 0 && Phase != OfflinePhase.SuspendingPlugins)
+            return "Some suspended plugins could not be restored. Enable them in Dalamud's plugin installer and reload FluffySim before retrying.";
         if (OfflineProcessState.Tainted) return "Offline mode couldn't put this game session back. Restart the game to start it again.";
         if (Plugin.ClientState.IsLoggedIn || Plugin.ObjectTable.LocalPlayer != null) return "Offline mode starts from the title screen.";
         if (!AtTitleScreen()) return "Go back to the title screen to start offline mode.";
@@ -246,6 +258,77 @@ internal sealed unsafe class OfflineSession : IDisposable
         closedLastTime = null;
         exitAfterReturn = false;
         bootstrap?.Dispose();
+        bootstrap = null;
+        Phase = OfflinePhase.SuspendingPlugins;
+        Status = "Suspending incompatible plugins...";
+        OfflineProcessState.RestoringPlugins = false;
+        try { OfflineProcessState.PluginOperation = pluginSuspension.Suspend(); }
+        catch (Exception error) { RefuseBeforeEntry(error.GetBaseException().Message); }
+    }
+
+    private void RefuseBeforeEntry(string reason)
+    {
+        lastRefusal = $"Offline mode could not start: {reason}";
+        DiagnosticLog.Warn($"[Offline] {lastRefusal}");
+        BeginPluginRestore();
+    }
+
+    private void BeginPluginRestore()
+    {
+        Phase = OfflinePhase.RestoringPlugins;
+        Status = "Restoring suspended plugins...";
+        OfflineProcessState.PluginOperation = null;
+    }
+
+    private void TickPluginOperation()
+    {
+        var operation = OfflineProcessState.PluginOperation;
+        if (operation == null)
+        {
+            try
+            {
+                OfflineProcessState.RestoringPlugins = true;
+                Status = "Restoring suspended plugins...";
+                OfflineProcessState.PluginOperation = pluginSuspension.Restore();
+            }
+            catch (Exception error) { lastRefusal = error.GetBaseException().Message; Phase = OfflinePhase.Idle; }
+            return;
+        }
+        if (!operation.IsCompleted) return;
+        OfflineProcessState.PluginOperation = null;
+        if (Phase == OfflinePhase.RestoringPlugins)
+        {
+            // A reload may have inherited an unfinished suspension. Restore only after it settles.
+            if (!OfflineProcessState.RestoringPlugins)
+            {
+                _ = operation.Exception;
+                BeginPluginRestore();
+                return;
+            }
+            if (operation.IsFaulted || operation.IsCanceled)
+            {
+                lastRefusal = $"Could not restore suspended plugins: {operation.Exception?.GetBaseException().Message ?? "operation canceled"}. Enable them in Dalamud's plugin installer.";
+                DiagnosticLog.Warn($"[Offline] {lastRefusal}");
+            }
+            Phase = OfflinePhase.Idle;
+            Status = "";
+            return;
+        }
+        if (operation.IsFaulted || operation.IsCanceled)
+        {
+            RefuseBeforeEntry(operation.Exception?.GetBaseException().Message ?? "Plugin suspension was canceled.");
+            return;
+        }
+        if (UnavailableReason() is { } reason)
+        {
+            RefuseBeforeEntry(reason);
+            return;
+        }
+        if (Plugin.PluginInterface.InstalledPlugins.Any(p => p.IsLoaded && OfflinePluginSuspension.IsIncompatible(p.InternalName)))
+        {
+            RefuseBeforeEntry("An incompatible plugin was enabled again during offline entry.");
+            return;
+        }
         bootstrap = new OfflineBootstrap(this);
         Phase = OfflinePhase.Starting;
         Status = "Checking the game...";
@@ -260,6 +343,11 @@ internal sealed unsafe class OfflineSession : IDisposable
 
     public void Tick()
     {
+        if (Phase is OfflinePhase.SuspendingPlugins or OfflinePhase.RestoringPlugins)
+        {
+            TickPluginOperation();
+            return;
+        }
         if (OfflineProcessState.Tainted && bootstrap?.GuardsIntact != true)
             CloseGame("an offline guard was lost while local character state was active");
         if (OfflineProcessState.Tainted && LoginReached() is { } login)
@@ -327,8 +415,7 @@ internal sealed unsafe class OfflineSession : IDisposable
         {
             bootstrap.Dispose();
             bootstrap = null;
-            Phase = OfflinePhase.Idle;
-            Status = "";
+            BeginPluginRestore();
             lastRefusal = reason;
             DiagnosticLog.Warn($"[Offline] Start refused: {reason}");
             OfflineTrace.End();
@@ -427,8 +514,7 @@ internal sealed unsafe class OfflineSession : IDisposable
         Loadout = null;
         OfflineProcessState.InWorld = false;
         OfflineProcessState.Tainted = false;
-        Phase = OfflinePhase.Idle;
-        Status = "";
+        BeginPluginRestore();
         notice = leaveReason == null
             ? "Back at the title screen. Everything offline mode changed was put back."
             : $"Offline mode stopped: {leaveReason} Everything it changed was put back.";
@@ -533,6 +619,8 @@ internal sealed unsafe class OfflineSession : IDisposable
             case OfflinePhase.Idle:
                 DrawIdle(withSummary);
                 break;
+            case OfflinePhase.SuspendingPlugins:
+            case OfflinePhase.RestoringPlugins:
             case OfflinePhase.Starting:
             case OfflinePhase.Leaving:
                 ImGui.AlignTextToFramePadding();

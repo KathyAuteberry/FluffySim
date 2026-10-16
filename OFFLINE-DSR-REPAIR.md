@@ -112,14 +112,23 @@ The public DiscordBridgePlugin source uses unchecked HomeWorld.Value in its cons
 cache refresh, OnTerritoryChanged and async-void OnLoginEvent. An empty reference therefore
 explains the reported RowRef.Value exception; a captured live RowId at the exact crash is
 not available. This is both missing FluffySim actor metadata (fixed above) and an external
-plugin assumption (still requires its own fix). No installed plugin was patched, disabled,
-or unloaded, and no Dalamud events were suppressed.
+plugin assumption. The compatibility workaround below avoids exposing the offline
+identity to Bridge; it does not change Bridge or suppress Dalamud events.
 
-`docs/discord-bridge-offline-guard.patch` is a proposed, unpublished upstream patch: use
-ValueNullable, skip online presence without a resolvable identity, and contain exceptions
-inside async-void login. It has been checked against the fetched source text, not built as
-Discord Bridge. Until that plugin handles offline identities, **manually disable Discord
-Chat Bridge before entering offline mode**. The Offline config screen displays this warning.
+FluffySim temporarily unloads loaded incompatible plugins before bootstrap begins, using
+Dalamud's internal LocalPlugin lifecycle through reflection. Discord Chat Bridge is the
+initial allowlist entry. The full reflection contract is resolved before any unload;
+missing members or unload failures refuse entry and restore previously suspended plugins.
+The plugin's saved manifest/profile preferences are unchanged. Already disabled plugins
+remain disabled. Restoration waits until offline state is put back and guards released at
+title, and failures identify the need to enable the plugin manually. Pending operations and
+installation IDs survive FluffySim reloads in process-wide state. No external plugin binary
+is modified and no authenticated lobby identity is fabricated.
+
+Headless regression coverage exercises pending unloads, selective suspension, failed entry
+rollback and restoration failure/retry. A client check must confirm Bridge unloads before
+the first territory event, remains absent across scenario changes, and returns after title
+cleanup; then verify an ordinary login and repeat with Bridge initially disabled.
 
 Sources:
 - https://raw.githubusercontent.com/reiichi001/Dalamud.DiscordBridge/master/Dalamud.DiscordBridge/DiscordBridgePlugin.cs
