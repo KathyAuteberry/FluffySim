@@ -24,6 +24,29 @@ public class NativeEntryLifecycleTests
             yield return new TestCaseData(scenario.GetType(), offline, hard, visible, role);
     }
 
+    [TestCase(SessionMode.Host)]
+    [TestCase(SessionMode.Peer)]
+    public void MultiplayerPreparationWaitsForLayoutWithoutStartingTheScenario(SessionMode mode)
+    {
+        var fake = Install(false, false, true);
+        fake.MapEffects.TerritoryReady = false;
+        using var game = CreateGame();
+        var scenario = new AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario();
+        string? refusal = "not resolved";
+        game.ZoneIn(DsrZone.Instance, mode);
+        Frames(fake, game, 1);
+        game.PrepareRun(Parameters(scenario, PartyRole.MainTank), result => refusal = result);
+        Frames(fake, game, 120);
+        Assert.That(refusal, Is.EqualTo("not resolved"));
+        Assert.That(fake.BattleCharas.OccupiedSlots, Is.Zero);
+        fake.MapEffects.TerritoryReady = true;
+        Frames(fake, game, 180);
+        Assert.That(refusal, Is.Null);
+        Assert.That(game.ActiveScenario, Is.Null);
+        Assert.That(game.World.Party.AllMembers().Count(), Is.EqualTo(8));
+        Assert.That(game.IsPreparingScenario, Is.False);
+    }
+
     [TestCaseSource(nameof(CustomEntries))]
     public void ColdEntryWaitsForLayoutThenOpensBarrierBeforePartyAndPhase(Type type, bool offline, bool hard, bool visible, PartyRole role)
     {

@@ -10,8 +10,8 @@ namespace AnoMech.Core.SimObjects;
 
 // A caster's server-shaped cast packets: the ActorCast that raises the bar and omen, the
 // ActionEffect that plays the release, and the interrupt. Holds the animation lock that roots
-// the caster after a release. Each packet is recorded with a seq, which is what a peer replays
-// field for field. Positions in and out are scenario-local; they go world-space only at the proxy.
+// the caster after a release. Positions in and out are scenario-local; they go world-space only
+// at the proxy.
 public sealed class SimCast : ISimObject
 {
     private readonly SimCharacter parent;
@@ -32,31 +32,16 @@ public sealed class SimCast : ISimObject
         }
     }
 
-    // Bumped per NativeCast. A peer dedupes on this changing rather than on IsCasting's rising
-    // edge, which compared two independent clocks and replayed a cast twice.
     public int CastSeq { get; private set; }
+    public int EffectSeq { get; private set; }
+    public uint EffectActionId { get; private set; }
     public uint ActionId { get; private set; }
     public float Total { get; private set; }
     public float OmenDelay { get; private set; }
     // Absolute, with any omen offset already folded in.
     public float Rotation { get; private set; }
     public Vector3? TargetLocation { get; private set; }
-    // A raw GameObjectId isn't portable across the network (each client spawns its own doppels),
-    // so MultiplayerManager resolves it to a role/NetId.
     public GameObjectId? TargetId { get; private set; }
-
-    // Bumped per NativeActionEffect, release or standalone: an effect never sets IsCasting, so a
-    // level-sampled snapshot can't see it.
-    public int EffectSeq { get; private set; }
-    public uint EffectActionId { get; private set; }
-    public float EffectAnimationLock { get; private set; } = 0.6f;
-    public byte EffectAnimationVariation { get; private set; }
-    public float EffectRotation { get; private set; }
-    public Vector3? EffectPosition { get; private set; }
-    public GameObjectId? EffectAnimationTargetId { get; private set; }
-    public GameObjectId? EffectActionTargetId { get; private set; }
-
-    public int CancelSeq { get; private set; }
 
     // True while the cast bar is up or the release animation is still playing. A following boss
     // roots itself while busy so the action animation finishes in place instead of sliding.
@@ -100,10 +85,10 @@ public sealed class SimCast : ISimObject
             effectRotation, coordinates.ToGlobal(position ?? Vector3.Zero),
             animationTargetId, targets, ballistaId));
 
+        EffectActionId = actionId;
+        EffectSeq++;
         remainingAnimationLock = animationLock;
         remainingCastTime = 0;
-        RecordEffect(actionId, animationLock, animationVariation, effectRotation, position, animationTargetId,
-            targets is { Count: > 0 } ? targets[0].Id : null);
         return sequence;
     }
 
@@ -111,7 +96,6 @@ public sealed class SimCast : ISimObject
     {
         remainingCastTime = 0;
         parent.ActorControl.CancelCast(ActionId, reason);
-        CancelSeq++;
     }
 
     public void Tick(float deltaSeconds)
@@ -127,18 +111,5 @@ public sealed class SimCast : ISimObject
     {
         if (parent.Proxy is { IsCasting: true } chara)
             parent.ActorControl.CancelCast(chara.CastActionId, CastCancelReason.Silent);
-    }
-
-    private void RecordEffect(uint actionId, float animationLock, byte animationVariation, float rotation, Vector3? position,
-        GameObjectId? animationTargetId, GameObjectId? actionTargetId)
-    {
-        EffectActionId = actionId;
-        EffectAnimationLock = animationLock;
-        EffectAnimationVariation = animationVariation;
-        EffectRotation = rotation;
-        EffectPosition = position;
-        EffectAnimationTargetId = animationTargetId;
-        EffectActionTargetId = actionTargetId;
-        EffectSeq++;
     }
 }

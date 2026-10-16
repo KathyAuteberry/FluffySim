@@ -4,7 +4,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 namespace AnoMech.Core.SimObjects;
 
 public sealed record SimStatusSnapshot(ushort StatusId, ushort Stacks, GameObjectId SourceObject,
-    int Instance, float Duration, float Elapsed, float RemainingTime, bool IsActive, bool NativePresentation, int Slot, bool Hidden, GameObjectId? ShownSource);
+    float Duration, float Elapsed, float RemainingTime, bool IsActive, bool NativePresentation, int Slot, bool Hidden, GameObjectId? ShownSource);
 
 public sealed class SimStatus : ISimObject
 {
@@ -27,14 +27,9 @@ public sealed class SimStatus : ISimObject
     // only shows the client with the action's EffectResult.
     internal bool Hidden { get; private set; }
 
-    // Distinguishes a re-added status from one refreshed in place: only the add goes through
-    // the engine's gain path, which is what applies a param-driven look.
-    private static int nextInstance;
-    public int Instance { get; } = ++nextInstance;
-
-    // 0 = permanent until removed, so a peer replicating it gets the same behaviour.
+    // 0 = permanent until removed.
     public float RemainingTime => duration > 0f ? Math.Max(0f, duration - elapsed) : 0f;
-    public SimStatusSnapshot Snapshot => new(StatusId, Stacks, SourceObject, Instance,
+    public SimStatusSnapshot Snapshot => new(StatusId, Stacks, SourceObject,
         duration, elapsed, RemainingTime, IsActive, Slot >= 0, Slot, Hidden, ShownSource);
 
     internal SimStatus(SimCharacter target, ushort statusId, float duration, ushort stacks, GameObjectId sourceObject, int slot, bool hidden)

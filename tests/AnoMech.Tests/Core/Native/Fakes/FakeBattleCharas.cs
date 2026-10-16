@@ -21,10 +21,13 @@ internal sealed class FakeBattleCharas : IBattleCharas
     private readonly FakeCharacter?[] slots = new FakeCharacter?[SlotCount];
     private readonly Dictionary<uint, (uint Caster, uint ActionId)> effects = new();
     private readonly HashSet<int> reserved = [];
+    private readonly List<(int Slot, FakeCharacter Actor, int Frames)> arriving = [];
+    private readonly Random arrivals = new(17);
+    public int SlotOffset { get; set; }
+    public (int Min, int Max) PacketSpawnFrames { get; set; }
     public int PacketSpawnDelayFrames { get; set; }
-    private readonly List<(int Slot, FakeCharacter Actor, int Frames)> pending = [];
     internal int OccupiedSlots => slots.Count(a => a is not null);
-    internal int PendingSpawns => pending.Count;
+    internal int PendingSpawns => arriving.Count;
 
     public FakeCharacter Player { get; } = new(0x10000001u, "Player") { MaxHealth = 100_000, Health = 100_000, HitboxRadius = 0.5f, HasDrawObject = true, IsDrawObjectVisible = true };
 
@@ -49,11 +52,27 @@ internal sealed class FakeBattleCharas : IBattleCharas
 
     internal FakeCharacter? ActorAt(int slot) => slot < 0 ? Player : slots[slot];
 
+    // Every character in the table but the local player: doppels and NPCs.
+    internal int Live => slots.Count(s => s != null);
+
     internal void Free(int slot)
     {
         slots[slot] = null;
-        pending.RemoveAll(p => p.Slot == slot);
         reserved.Remove(slot);
+        arriving.RemoveAll(a => a.Slot == slot);
+    }
+
+    // In its slot now, or once its frames have passed; until then the slot is held.
+    private void Place(int slot, FakeCharacter actor)
+    {
+        var frames = PacketSpawnFrames.Max > 0 ? arrivals.Next(PacketSpawnFrames.Min, PacketSpawnFrames.Max + 1) : PacketSpawnDelayFrames;
+        if (frames == 0)
+        {
+            slots[slot] = actor;
+            return;
+        }
+        reserved.Add(slot);
+        arriving.Add((slot, actor, frames));
     }
 
     public IBattleCharaProxy? SpawnBattleNpcFromPacket(EnemySpawnConfig config, Placement placement, out uint entityId)
@@ -75,12 +94,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
             HasDrawObject = true,
             IsDrawObjectVisible = config.Visibility == SpawnVisibility.Visible,
         };
-        if (PacketSpawnDelayFrames == 0) slots[slot] = actor;
-        else
-        {
-            reserved.Add(slot);
-            pending.Add((slot, actor, PacketSpawnDelayFrames));
-        }
+        Place(slot, actor);
         Timeline.Add("spawn", entityId, name, config.BNpcBaseId.ToString(), "BNpcBase", position: placement.Position,
             rotation: placement.Rotation,
             detail: $"bnpcname={config.NameId} visibility={config.Visibility} display_flags=0x{config.DisplayFlags ?? (uint)config.Visibility:X} layout=0x{config.LayoutId:X} model={config.ModelCharaId} sheet_model={bnpc.ModelChara} "
@@ -109,12 +123,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
             HasDrawObject = true,
             IsDrawObjectVisible = true,
         };
-        if (PacketSpawnDelayFrames == 0) slots[slot] = actor;
-        else
-        {
-            reserved.Add(slot);
-            pending.Add((slot, actor, PacketSpawnDelayFrames));
-        }
+        Place(slot, actor);
         return new FakeBattleChara(this, slot);
     }
 
@@ -125,15 +134,16 @@ internal sealed class FakeBattleCharas : IBattleCharas
 
     internal void Tick(float deltaSeconds)
     {
-        for (var i = pending.Count - 1; i >= 0; i--)
+        for (var i = arriving.Count - 1; i >= 0; i--)
         {
-            var (slot, actor, frames) = pending[i];
-            if (frames > 1) pending[i] = (slot, actor, frames - 1);
-            else
+            var (slot, actor, frames) = arriving[i];
+            if (frames > 1)
             {
-                slots[slot] = actor;
-                pending.RemoveAt(i);
+                arriving[i] = (slot, actor, frames - 1);
+                continue;
             }
+            arriving.RemoveAt(i);
+            slots[slot] = actor;
         }
         Player.Tick(deltaSeconds);
         foreach (var actor in slots) actor?.Tick(deltaSeconds);
@@ -157,8 +167,11 @@ internal sealed class FakeBattleCharas : IBattleCharas
 
     private int FindFreeSlot()
     {
-        for (var i = 0; i < slots.Length; i++)
+        for (var k = 0; k < slots.Length; k++)
+        {
+            var i = (SlotOffset + k) % slots.Length;
             if (slots[i] == null && !reserved.Contains(i)) return i;
+        }
         return -1;
     }
 }

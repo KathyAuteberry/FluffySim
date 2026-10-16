@@ -130,7 +130,7 @@ public sealed class Game : IDisposable
     public void StartScenario(RunScenarioParams p, Action<string?>? resolved = null)
         => Deferred(() => StartScenarioNow(p), resolved);
 
-    private (RunScenarioParams Params, Action<string?>? Resolved)? pendingStart;
+    private (RunScenarioParams Params, Action<string?>? Resolved, bool Start)? pendingStart;
     private float preparationSeconds;
     public bool IsPreparingScenario => pendingStart is not null;
 
@@ -145,8 +145,6 @@ public sealed class Game : IDisposable
             else QueueStart(p, resolved);
             return;
         }
-        // Pinned so the run reseeds to the stream the party was seated from, and its bots keep
-        // their ring spots.
         p = p with { Seed = p.Seed ?? Random.Shared.Next() };
         ZoneIn(zone, mode, refusal =>
         {
@@ -159,10 +157,21 @@ public sealed class Game : IDisposable
         });
     }
 
-    private void QueueStart(RunScenarioParams p, Action<string?>? resolved)
+    public void PrepareRun(RunScenarioParams p, Action<string?>? resolved = null)
+        => Plugin.Framework.Run(() =>
+        {
+            if (instance is null || instance.Zone != p.Scenario.Phase.Zone)
+            {
+                resolved?.Invoke($"not in {p.Scenario.Phase.Zone.Name}");
+                return;
+            }
+            QueueStart(p, resolved, start: false);
+        });
+
+    private void QueueStart(RunScenarioParams p, Action<string?>? resolved, bool start = true)
     {
         CancelPendingStart();
-        pendingStart = (p with { Seed = p.Seed ?? Random.Shared.Next() }, resolved);
+        pendingStart = (p with { Seed = p.Seed ?? Random.Shared.Next() }, resolved, start);
         preparationSeconds = 0f;
     }
 
@@ -186,13 +195,17 @@ public sealed class Game : IDisposable
             return;
         }
         pendingStart = null;
-        SeatParty(start.Params);
-        StartScenario(start.Params, start.Resolved);
+        Deferred(() =>
+        {
+            PrepareRunNow(start.Params);
+            return start.Start ? StartScenarioNow(start.Params) : null;
+        }, start.Resolved);
     }
 
-    private void SeatParty(RunScenarioParams p)
+    private void PrepareRunNow(RunScenarioParams p)
     {
         if (instance is null || !World.Map.IsInInstance || !Natives.Zone.IsActive) return;
+        instance.ApplyPhase(p.Scenario.Phase);
         var player = Natives.BattleCharas.LocalPlayer;
         if (!player.Exists) return;
         World.Reseed(p.Seed!.Value);

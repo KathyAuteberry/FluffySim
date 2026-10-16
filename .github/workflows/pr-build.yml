@@ -31,8 +31,8 @@ jobs:
         Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
         Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
 
-    - name: Build with dotnet
-      run: dotnet build --configuration Debug
+    - name: Build optimized Debug binaries for headless tests
+      run: dotnet build --configuration Debug -p:Optimize=true
 
     - name: Run tests
       run: dotnet test --configuration Debug --no-build --logger GitHubActions

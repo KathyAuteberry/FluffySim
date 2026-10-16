@@ -105,14 +105,33 @@ public class ArchitectureTests
             CallersMustBeIn(il, $"{Zone}::DisableFirewall", $"{Zone}::Enter", $"{Zone}::TryLift", $"{Zone}::DisposeCore"),
             CallersMustBeIn(il, $"{Zone}::TryLift", $"{Zone}::LiftFirewallOrDie", $"{Zone}::TickSessionGuard"),
             CallersMustBeIn(il, $"{Zone}::LiftFirewallOrDie", $"{Zone}::Revert", $"{Zone}::DisposeCore"),
-            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Enter", "AnoMech.Core.Game.InstanceSession::Enter"),
-            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Revert", "AnoMech.Core.Game.InstanceSession::Exit", "AnoMech.Core.Game.InstanceSession::Dispose"),
+            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Enter", "AnoMech.Core.Game.InstanceSession::Enter", "AnoMech.Multiplayer.PacketRecorder/RecordingZone::Enter", "AnoMech.Multiplayer.PeerNatives/PeerZone::Enter"),
+            CallersMustBeIn(il, "AnoMech.Core.Native.Interfaces.IZoneControl::Revert", "AnoMech.Core.Game.InstanceSession::Exit", "AnoMech.Core.Game.InstanceSession::Dispose", "AnoMech.Multiplayer.PacketRecorder/RecordingZone::Revert", "AnoMech.Multiplayer.PeerNatives/PeerZone::Revert"),
             CallersMustBeIn(il, $"{Map}::Enter", "AnoMech.Core.Game.InstanceSession::Enter"),
             CallersMustBeIn(il, $"{Map}::Unload", "AnoMech.Core.Game.InstanceSession::Exit"),
             CallersMustBeIn(il, $"{Zone}::SetLocalPlayerPosition", $"{Zone}::LoadZoneInternal", $"{Zone}::RestoreBeforeLift", $"{Zone}::DisposeCore", $"{Zone}::HoldSendFirewall"),
             il.CallersOf($"^{Regex.Escape(Zone)}::Die$").Where(c => !c.StartsWith(Zone + "::"))
                 .Select(c => $"{c} calls the zone safety stop from outside its owner."),
         }.SelectMany(x => x));
+    }
+
+    [Fact]
+    public void MultiplayerZoneLifecycleWrappers_OnlyForwardToTheRealZone()
+    {
+        ForEachBuild(il =>
+        {
+            var failures = new List<string>();
+            foreach (var type in new[] { "AnoMech.Multiplayer.PacketRecorder/RecordingZone", "AnoMech.Multiplayer.PeerNatives/PeerZone" })
+            foreach (var name in new[] { "Enter", "Revert" })
+            {
+                var method = il.Method(type, name);
+                var calls = method.Body.Instructions.Where(i => i.Operand is MethodReference)
+                    .Select(i => PluginIL.Name((MethodReference)i.Operand)).ToArray();
+                if (!calls.SequenceEqual(new[] { type + "::get_Real", "AnoMech.Core.Native.Interfaces.IZoneControl::" + name }))
+                    failures.Add(type + "::" + name + " must only forward to the real zone.");
+            }
+            return failures;
+        });
     }
 
     // A second hook anywhere could pass traffic around the filter, or act on the character outside
@@ -663,7 +682,7 @@ public class ArchitectureTests
     // dropped, or a host could move the character with no filter up.
     private static readonly string[] PeerWorldHandlers =
     [
-        "OnWorldSnapshotReceived", "OnRolesSnapshotReceived", "OnTeleportReceived", "OnCarryReceived", "OnPushReceived",
+        "ApplyGamePackets", "OnRolesSnapshotReceived", "OnTeleportReceived", "OnCarryReceived", "OnPushReceived",
         "OnFollowReceived", "OnRoleKilledReceived", "OnKnockbackReceived",
     ];
 
@@ -673,9 +692,10 @@ public class ArchitectureTests
         ForEachBuild(il =>
         {
             var failures = new List<string>();
+            failures.AddRange(CallersMustBeIn(il, "AnoMech.Multiplayer.PacketReplay::Apply", "AnoMech.Multiplayer.MultiplayerManager::ApplyGamePackets"));
             var manager = il.Module.GetTypes().First(t => t.FullName == "AnoMech.Multiplayer.MultiplayerManager");
             var movers = new Regex(@"::(SetPosition|SetRotation|TeleportTo|CarryTo|Push|Follow|Knockback|MoveTo|Intercept)$");
-            foreach (var m in manager.Methods.Where(m => m.HasBody && Regex.IsMatch(m.Name, "^On\\w+Received$")))
+            foreach (var m in manager.Methods.Where(m => m.HasBody && Regex.IsMatch(m.Name, "^(On\\w+Received|ApplyGamePackets)$")))
             {
                 var moves = m.Body.Instructions.Any(i => i.Operand is MethodReference r && movers.IsMatch(PluginIL.Name(r)) && PluginIL.Name(r).StartsWith("AnoMech.Core."));
                 if (!moves && !PeerWorldHandlers.Contains(m.Name)) continue;

@@ -260,3 +260,22 @@ reserved IDs in offline spawn/roster data, and a typed offline party-HUD publica
 No phase holds, raw environment flags, real identities, network traffic or third-party DLL
 patches are introduced. The trace UI shows its exact active path and bounded before/after
 HUD tables. See OFFLINE-DSR-REPAIR.md; fresh native validation remains required.
+
+## 2.0.1 integration
+
+`mptttx` builds on published 2.0.0.0 and merges AnoMech `d576199a` (PR #56),
+including its original Evernow multiplayer ancestry. The original offline, safety-test and
+consistency tips remain ancestors through 2.0.0.0; redundant direct parent edges were removed
+with `jj simplify-parents -r mptttx`. No upstream commits were rebased or copied. The test-fix branch and `codex/dsr-strength-dash-telegraphs` feed this merge.
+Only unpublished integration history was changed. The published 2.0.0.0 tag is preserved.
+
+The new host/peer packet recorder and native wrappers retain FluffySim's local visibility,
+VFX, arena-readiness and practice-recast interfaces. Multiplayer's prepare-only stage waits
+for native layout and entrance readiness before seating the party, without starting mechanics.
+Packet application, including buffered entry packets, goes through `ApplyGamePackets` and
+its `PeerInRun` guard. Architecture checks verify this caller boundary and the forwarding
+zone wrappers; the fake transport still exercises the production filter lifecycle.
+
+The new upstream layout IDs and action/job validation are included. Native multiplayer,
+normal/offline arena presentation and the hidden Strength Part 1 dash telegraphs still need
+in-client verification. Headless success does not establish native rendering correctness.

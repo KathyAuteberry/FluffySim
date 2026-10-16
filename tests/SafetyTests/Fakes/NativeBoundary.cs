@@ -21,7 +21,7 @@ namespace AnoMech.Core.Native.Interfaces
         public static FakeBattleCharas BattleCharas { get; } = new();
     }
     internal class FakeInput { public bool TransitionInput { get; set; } }
-    internal class FakeData { public string ActionName(uint id) => AnoMech.Core.ActionLookup.Name(id); }
+    internal class FakeData { public ClassJob? ClassJob(uint id) => VirtualGame.Current.Sheet<ClassJob>().GetRowOrDefault(id); public string ActionName(uint id) => AnoMech.Core.ActionLookup.Name(id); }
     internal class FakeLayout
     {
         public void ClearSuppressedLayers() { }

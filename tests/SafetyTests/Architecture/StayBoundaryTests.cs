@@ -265,7 +265,7 @@ public class StayBoundaryTests
             Assert.Equal(new[] { "AnoMech.Core.SimObjects.SimParty::Apply" }, il.CallersOf(@"^AnoMech\.Core\.SimObjects\.SimPlayer::\.ctor$").ToArray());
             Assert.Equal(new[] { $"{World}::SeatParty" }, il.CallersOf(@"^AnoMech\.Core\.SimObjects\.SimParty::Apply$").ToArray());
             var callers=il.CallersOf($"^{Regex.Escape(World)}::SeatParty$");
-            Assert.Equal(new[] { $"{Game}::SeatParty", $"{World}::ApplyParty" }, callers.OrderBy(x=>x).ToArray());
+            Assert.Equal(new[] { $"{Game}::PrepareRunNow", $"{World}::ApplyParty" }, callers.OrderBy(x=>x).ToArray());
             Assert.Equal(new[] { "AnoMech.Core.Game.ScenarioSession::Start" }, il.CallersOf($"^{Regex.Escape(World)}::ApplyParty$").ToArray());
         }
     }
