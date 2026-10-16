@@ -1,3 +1,30 @@
+# FluffySim 2.1.0.0 — release prepared
+
+## DSR Sanctity Meteors reconstruction
+
+- Reconstructs Meteor impact timing and geometry from real combat-log evidence, with
+  corrected outer/inner towers, fixed Fire positions, pair-baited Ice and native knight placement.
+- Brings the seven paired comet releases forward to their observed cadence and separates
+  comet appearance from impact. Updates bot routes, Sprint, tower deadlines and knockback
+  alignment while preserving all 810 supported tower patterns and Easy/Hard practice.
+- Keeps tower presentation visible through its soak resolution. Separates puddle
+  object presence from danger so the knockback path is traversable before the objects disappear.
+- Adds repeatable, sanitized encounter analysis, source-event references and regression coverage
+  for geometry, sequence, pause, delayed initialization and Stop/Restart.
+- Renders both Meteor tower waves using the game’s native Conviction omen AVFX, resolved from
+  each action’s Omen data and explicitly owned through resolution and cleanup. The obsolete projected tower
+  overlay and diagnostic switches have been removed.
+- Sends first-wave CW/CCW tower bots along curved diagonal routes after the ice drop,
+  skirting fire puddles and reaching their towers before the soak snapshot.
+- Native tower appearance/scale, Ice primary-target category and Fire/Ice hazard frames still
+  require client testing. Native particle animation can continue during Pause even while logical
+  ownership freezes. See docs/encounters/dsr-sanctity-meteors-evidence.md.
+
+## Development workflow
+
+- Documents feature bookmarks, successor integration changes and separate release preparation
+  while preserving published Jujutsu ancestry. Publication remains a separate owner action.
+
 # FluffySim 2.0.2.0 — release prepared
 
 ## Offline plugin compatibility
