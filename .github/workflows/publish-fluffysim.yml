@@ -44,7 +44,11 @@ jobs:
       - run: python -m unittest discover -s tools/tests -p test_package_release.py
       - run: python -m unittest discover -s tools/tests -p test_release_notes.py
       - run: dotnet build -c Debug
-      - run: dotnet test tests/AnoMech.Tests -c Debug
+      - name: Run optimized Debug scenario tests
+        run: >
+          dotnet test tests/AnoMech.Tests -c Debug -p:Optimize=true
+          -p:OutputPath="${{ github.workspace }}/tests/AnoMech.Tests/bin/fast-Debug/"
+          -p:IntermediateOutputPath=obj/fast-tests-Debug/
       - run: dotnet test tests/AnoMech.Relay.Tests -c Debug
       - name: Build optimized Debug safety artifact
         run: dotnet build AnoMech/AnoMech.csproj -c Debug -p:Optimize=true -p:DefineConstants=TRACE -p:OutputPath=${{ github.workspace }}/artifacts/safety/ -p:IntermediateOutputPath=obj/safety-Debug/
