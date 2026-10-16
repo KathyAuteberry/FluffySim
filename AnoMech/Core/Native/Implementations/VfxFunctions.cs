@@ -8,9 +8,7 @@ using System.Text;
 
 namespace AnoMech.Core.Native.Implementations;
 
-// Static VFX (omens): setting CastInfo manually doesn't trigger Character::StartCast's omen spawn,
-// so this is the same StaticVfxCreate / StaticVfxRun / StaticVfxRemove trio VFXEditor and
-// FFXIV-RaidsRewritten use.
+// Validate resources before creation: a missing path can crash on the file thread.
 internal sealed unsafe class VfxFunctions : IVfxFunctions
 {
     private static readonly byte[] PoolBytes = Encoding.UTF8.GetBytes("Client.System.Scheduler.Instance.VfxObject\0");

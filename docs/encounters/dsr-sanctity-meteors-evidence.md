@@ -97,7 +97,7 @@ Bot routes now leave pairs via radial waypoints: inner players pass through cent
 
 ## Native presentation audit
 
-Persistent towers remain the **corrected local projected fallback**. The log verifies 9020 / NameId 3640 tower helpers casting 29564 and 28651, not a reproducible persistent tower EObj. All Type-7 additions are inventoried, not just known puddles: 0x1E850B and 0x1EA1A1 reappear at arena entrance positions during resets; final non-arena objects belong to the territory exit and are excluded. There is no MapEffect (257) inside the Meteor windows. None of this proves towers have no native renderable; it means this capture does not identify its binding.
+The initial reconstruction retained the corrected local projected fallback. The native-tower follow-up below supersedes that rendering choice: normal rendering now instantiates the action’s native Conviction omen AVFX directly. The log verifies 9020 / NameId 3640 tower helpers casting 29564 and 28651, not a reproducible persistent tower EObj. All Type-7 additions are inventoried, not just known puddles: 0x1E850B and 0x1EA1A1 reappear at arena entrance positions during resets; final non-arena objects belong to the territory exit and are excluded. There is no MapEffect (257) inside the Meteor windows. None of this proves towers have no native renderable; it means this capture does not identify its binding.
 
 Existing native inspection paths reviewed: `tools/replay_inspector.py`, `tools/replay_export_rsv_rsf.py`, `ArenaSnapshot`, `OfflineSnapshot`, and the DSR arena fixture. Prior DSR investigation in `DSR-ROADMAP.md` documents inert action/omen-only tower attempts. FRU Darklit has verified map-effect indices 0x2A–0x2D on its own arena; those bindings cannot be transplanted into DSR. No DSR replay/capture establishing persistent tower spawn state was available in this source. No speculative memory flags, asset injection or server traffic were added.
 
@@ -116,7 +116,7 @@ The new analyzer reuses `tools/parser.py` and leaves the previous short `dsr_met
 
 ## In-game verification required
 
-1. In inn and offline DSR P2, inspect radius-18 outer/second towers, radius-6 inner towers, correct cardinal axes and radius-12 Fire centers against arena notches. Confirm eight visible yellow fallback towers per wave; no native tower fidelity is claimed.
+1. In inn and offline DSR P2, inspect radius-18 outer/second towers, radius-6 inner towers, correct cardinal axes and radius-12 Fire centers against arena notches. Confirm eight native Conviction towers per wave, including ground graphics and pillar height; the diagnostic overlay is off by default. Native appearance still needs client confirmation.
 2. Observe fixed Fire and pair-baited Ice, their appearance relative to impacts, earliest hazardous contact and exact safe cutoff near knockback. Capture native EObj state transitions/fade; actor removal alone is insufficient.
 3. Practice each Meteor category and all seats, including forced-cursed N/S patterns, Easy/Hard and visible/hidden bots. Verify seven drops per marked player, pre-impact comet appearance, clockwise clearance, first tower departure and final assignments. Check anti-knockback after drop five and inner knockback alignment.
 4. Pause during both tower waves and during Fire/Ice. Logical windows must remain; inspect native animation tails separately. Resume, Stop mid-wave, restart after idle, repeat entry/exit and confirm no lingering objects, markers or callbacks.
@@ -198,3 +198,57 @@ tests, including other FRU/DSR scenarios. The complete Debug solution build succ
 zero errors (existing platform-analysis and NuGet vulnerability-feed warnings remain).
 The freshly rebuilt 2.1.0.0 ordinary/optimized Debug safety artifacts passed both hook models
 again: **308 passed, three platform skips each**. Release-note extraction for 2.1.0.0 succeeded.
+
+## Native tower follow-up
+
+Both Conviction actions (29564 and 28651), and Strength Conviction (25567), resolve through
+installed Action data to Omen 90: `vfx/omen/eff/d1025_sp012_bunsan01s.avfx`.
+The installed resource is 67,200 bytes, SHA-256
+`5e71aac1977beb83be77ea00b337dff72cf348d347de762e64c2402650394589`.
+It references the Rounds Diffusion Attack omen sound and native omen textures including
+`d1025_elc_line01as.atex`, `uv_hex01bs.atex`, and `maholine1s.atex`.
+The release timeline is separately verified as ActionTimeline 4470,
+`mon_sp/gimmick/round_bunsansyouhani`, whose TMB references
+`vfx/monster/d1025/eff/round_bunsanshouhani_t0s.avfx`. The release effect is not used as a
+substitute for the persistent cast omen.
+
+Code inspection found that `SimOmen` existed but had no production caller. Previous attempts
+sent native ActorCast packets to the helper; they did not explicitly instantiate a world-owned
+omen through this path. The follow-up exposes `SimWorld.SpawnOmen`, uses the Action row to
+resolve the native resource and radius, and instantiates the real game AVFX through the existing
+`IVfxFunctions` / `VfxObject` lifecycle. No EObj ID, map-effect index, asset replacement, new native
+memory binding or server packet is invented. Native cast/impact dispatch remains intact.
+
+Each tower owns a native handle at its verified world position, with radius-three X/Z scale and
+native Y scale. Both waves explicitly release their handles at the existing action-effect times,
+after their soak snapshots. Stop/Restart and world cleanup also release them, idempotently.
+Normal UI rendering no longer draws projected tower geometry. The old overlay is available only
+through an explicitly enabled diagnostic checkbox, with expected/native handle counts shown
+separately. Failed native allocation does not silently turn it on or change tower mechanics.
+
+This verifies the asset identity, action association and native instantiation path, **not a
+client screenshot proving pillar appearance**. Actual depth, height, scale, sound, duplicate
+omens from cast dispatch and long-pause behavior require a Debug in-client check. Logical
+ownership remains frozen during Pause; the native particle animation can continue in real time.
+If the client asset self-completes during a long pause, ownership alone cannot restart its
+internal animation. Do not report that animation as frozen.
+
+Read-only asset verification used installed Lumina GameData, Action/Omen/ActionTimeline rows,
+and `GetFile<FileResource>`. Extracted game assets stayed in `/tmp` and are not committed.
+Archived DSR recorder files were located; the existing strict inspector rejected the cached
+copies' chapter timestamp consistency, so no new packet-schema claim was based on them.
+
+Headless native-presentation tests check the exact sheet-derived path, scale, local-to-world
+placement, both wave windows, ownership during Pause, cleanup exactly once, repeated delayed
+starts, and native allocation failure. These tests cannot replace the client check above.
+
+The existing native bridge was also cross-checked against the primary
+[FFXIVClientStructs VfxObject API](https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Graphics/Scene/VfxObject.cs).
+Native-specific headless tests: nine passed. The initial ordinary/optimized Debug safety run
+passed 308 checks with three platform skips. Final integrated validation is reported separately.
+
+Final native-tower integrated validation: **12,234 plugin tests passed** in isolated optimized
+Debug output; Python tooling passed 75. The complete Debug solution and ordinary/optimized
+TRACE Debug plugin builds succeeded with zero errors. Both safety backends passed **308 checks
+with three platform skips each** against the integrated 2.1.0.0 binaries. Native client rendering
+remains the manual check, including pillar shape, radius, occlusion, sound, duplicates and long Pause.

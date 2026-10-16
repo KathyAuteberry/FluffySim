@@ -5,25 +5,9 @@ using AnoMech.Core.Native.Interfaces;
 
 namespace AnoMech.Core.SimObjects;
 
-// The AOE telegraph for a simulated cast (or a standalone scenario flash).
-// Manually writing CastInfo bypasses Character::StartCast, so the engine never
-// auto-spawns the omen that normally accompanies a cast bar; SimOmen replicates
-// it by spawning a StaticVfx at the target location.
-//
-// A SimOmen is an ISimObject owned by whoever creates it — SimCast for a cast
-// telegraph, SimWorld for a standalone flash — and that owner ticks and despawns
-// it. It is built either from an action id (path + scale derived from the action's
-// Omen sheet entry) or from an explicit omen path + scale. With no duration it is
-// persistent (IsActive until the owner despawns it); with a duration it reports
-// IsActive=false once the time elapses, so a list-owner (SimWorld.children)
-// reaps it automatically.
-//
-// One SimOmen owns at most two native StaticVfx pointers: `primary` plus an
-// optional `alt` — the perpendicular arm of a "+" cross, or a
-// paired shape some actions declare in OmenAlt. Despawn() frees both.
-//
-// Bad VFX paths crash on the file thread, so every candidate is validated via
-// DataManager.FileExists (ResolveOmenPath) before StaticVfxCreate is called.
+// Owns native omen AVFX independently of actor cast dispatch. Meshless helper casts are
+// insufficient to establish persistent tower graphics, so their lifetime is explicit here.
+// Local ownership freezes with the sim; the native particle animation can keep running.
 public sealed class SimOmen : ISimObject
 {
     // Like every SimObject, SimOmen works in scenario-local coordinates and converts

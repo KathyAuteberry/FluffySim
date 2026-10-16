@@ -230,9 +230,12 @@ Inspect all workspaces, existing feature bookmarks, and every revision whose des
 `chore: integration commit` before integration. Reuse the current **unpublished** shared
 integration change, preserving all concurrent feature parents. Verify incorporation with
 `jj log -r '<feature> & ancestors(<integration>)'`; descriptions and graph proximity are not
-ancestry proof. With jj 0.46, `jj rebase -r <integration> -d <existing-parent> -d <feature>`
-can add a feature parent; enumerate and preserve every existing parent first. Inspect the
-resulting diff and resolve conflicts in the integration change, then rerun Debug validation.
+ancestry proof. With jj 0.46, `jj rebase --source <integration> -d <existing-parent> -d <feature>`
+can add a feature parent while carrying its descendants; inspect all descendants and preserve
+every existing parent first. In contrast, `jj rebase -r <integration>` moves only that revision
+and reparents its former children onto its old parents. If using `-r`, explicitly rebase the
+existing release-preparation child back onto the moved integration and verify ancestry again.
+Inspect the resulting diff, resolve conflicts in the integration change, then rerun Debug validation.
 Do not rebase unrelated feature changes or discard concurrent working-copy edits.
 
 When the latest integration has already been published (for example mlyzss beneath 2.0.2.0),

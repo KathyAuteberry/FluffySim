@@ -4,5 +4,6 @@ namespace AnoMech.Tests;
 
 internal sealed class FakeVfxHandle : IActorVfxProxy, IStaticVfxProxy
 {
-    public void Remove() { }
+    public int RemoveCalls { get; private set; }
+    public void Remove() => ++RemoveCalls;
 }

@@ -31,6 +31,9 @@ public sealed class DsrSanctity2Scenario : IScenario
     private readonly List<TowerVisual> towerVisuals = [];
     public IReadOnlyList<TowerVisual> ActiveTowerVisuals => towerVisuals.Where(t => world.Events.Elapsed >= t.From && world.Events.Elapsed < t.Until).ToArray();
     public bool ShowTowerDiagnostics { get; set; }
+    public bool ShowTowerOverlay { get; set; }
+    private readonly List<(SimOmen Omen, bool SecondWave)> nativeTowerOmens = [];
+    public int ActiveNativeTowerCount => nativeTowerOmens.Count(t => t.Omen.IsActive);
 
     private bool showTowerDiagnostics;
     private SimWorld world = null!;
@@ -68,9 +71,11 @@ public sealed class DsrSanctity2Scenario : IScenario
 
     public void DrawSettings()
     {
-        ImGui.Checkbox("Tower rendering diagnostics (local ground overlay)", ref showTowerDiagnostics);
+        ImGui.Checkbox("Tower rendering diagnostics", ref showTowerDiagnostics);
+        var overlay = ShowTowerOverlay;
+        if (ImGui.Checkbox("Diagnostic tower overlay",ref overlay)) ShowTowerOverlay = overlay;
         ShowTowerDiagnostics = showTowerDiagnostics;
-        ImGui.TextWrapped("EXPERIMENTAL — log-verified Meteor impacts and geometry; native tower rendering, hazard activation and pattern distribution still need client validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
+        ImGui.TextWrapped("EXPERIMENTAL — log-verified Meteor impacts and geometry; Conviction uses native omen VFX; native appearance, hazard activation and pattern distribution still need client validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides",ref advanced)) Overrides.AdvancedMode = advanced;
         ImGui.BeginDisabled(advanced);
@@ -127,6 +132,7 @@ public sealed class DsrSanctity2Scenario : IScenario
             foreach (var puddle in puddles.Where(p => p.Action == 25575))
                 ShowPuddle(puddle.Position,0x1EB682,DsrSanctity2Timing.PuddleEnd-world.Events.Elapsed);
         });
+        world.Events.Add(DsrSanctity2Timing.FirstTowers,() => ClearTowerOmens(false));
         world.Events.Add(DsrSanctity2Timing.SecondTowerCast,() => { StartTowers(true); hermenost.Cast(DsrSanctity2Actions.SecondTowerCast); });
         for(var i=0;i<7;++i)
         {
@@ -136,6 +142,7 @@ public sealed class DsrSanctity2Scenario : IScenario
         }
         world.Events.Add(DsrSanctity2Timing.KnockbackCast,() => grinnaux.Cast(DsrSanctity2Actions.Knockback));
         world.Events.Add(23f,() => { foreach(var role in state.Targets) world.Party.Get(role)?.RemoveStatus(562); });
+        world.Events.Add(DsrSanctity2Timing.SecondTowers,() => ClearTowerOmens(true));
         world.Events.Add(DsrSanctity2Timing.Complete,() => { Cleanup(); Completed=true; });
         if(selectedAi is { } index) ((IScenarioAi<DsrSanctity2State>)AiStrats[index]).Run(state,world);
     }
@@ -165,6 +172,7 @@ public sealed class DsrSanctity2Scenario : IScenario
                 (second ? DsrSanctity2Timing.SecondTowers : DsrSanctity2Timing.FirstTowers),second));
             var actor=Helper(position,3640);
             var action=second ? DsrSanctity2Actions.SecondTower : DsrSanctity2Actions.FirstTower;
+            nativeTowerOmens.Add((world.SpawnOmen(action.ActionId,new(position,0)),second));
             actor.Cast(action with { Effects = action.Effects.Append(new ResolveEffect(ctx =>
             {
                 ++ResolvedTowers;
@@ -172,6 +180,11 @@ public sealed class DsrSanctity2Scenario : IScenario
                 ctx.AfterResolve(() => world.Events.Add(.9f,actor.Despawn));
             })).ToArray() });
         }
+    }
+    private void ClearTowerOmens(bool second)
+    {
+        foreach (var tower in nativeTowerOmens.Where(t => t.SecondWave == second)) tower.Omen.Despawn();
+        nativeTowerOmens.RemoveAll(t => t.SecondWave == second);
     }
     public static Vector3 FirePosition(int quadrant) => DsrSanctity2State.Direction((quadrant*90+45)*MathF.PI/180)*12f;
     private void ResolveStorms()
@@ -224,6 +237,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     private void Cleanup()
     {
         world.PracticeAntiKnockback.Clear();
+        ClearTowerOmens(false); ClearTowerOmens(true);
         foreach(var actor in actors) actor.Despawn(); foreach(var visual in visuals) visual.Despawn();
         actors.Clear();visuals.Clear();puddles.Clear();comets.Clear();pendingComets.Clear();towerVisuals.Clear();
         foreach(var role in DsrSanctity2State.Roles) { world.Party.Get(role)?.RemoveStatus(562); world.Party.Get(role)?.RemoveStatus(2903); }

@@ -104,6 +104,9 @@ public sealed class SimWorld : ISimObject, IDisposable
     }
 
     
+    public SimOmen SpawnOmen(uint actionId, Placement placement)
+        => children.Add(new SimOmen(Coordinates,actionId,placement.Position,placement.Rotation));
+
     public SimEnemy? SpawnEnemy(EnemySpawnConfig config)
     {
         var enemy = SimEnemy.Spawn(config, this);
