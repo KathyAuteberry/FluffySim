@@ -762,6 +762,6 @@ Installed Action/Omen data and the on-disk AVFX confirm Omen 90,
 attempts remain known-inert evidence; `SimOmen` had no production caller. Meteors now explicitly
 instantiates that native game asset through the existing world-VFX boundary, owned by SimWorld,
 and releases it at each wave’s effect time or teardown. No native EObj or map-effect binding is
-invented. The projected overlay is diagnostic-only and disabled by default. See the native
+invented. The projected overlay, diagnostic window and their settings switches have been removed. See the native
 follow-up in docs/encounters/dsr-sanctity-meteors-evidence.md for resource hashes and limits.
 Native appearance/scale and long-pause animation behavior still require in-client validation.

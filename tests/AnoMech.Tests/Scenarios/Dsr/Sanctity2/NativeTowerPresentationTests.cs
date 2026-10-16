@@ -26,7 +26,6 @@ public class NativeTowerPresentationTests
             {
                 if (p.Crossed(1) || p.Crossed(16))
                 {
-                    Assert.That(scenario.ShowTowerOverlay,Is.False);
                     Assert.That(scenario.ActiveNativeTowerCount,Is.EqualTo(8));
                     var current=fx.StaticSpawns.Where(s=>s.Handle.RemoveCalls==0).ToArray();
                     Assert.That(current,Has.Length.EqualTo(8));
@@ -84,7 +83,7 @@ public class NativeTowerPresentationTests
     }
 
     [Test]
-    public void NativeAllocationFailureDoesNotChangeMechanicsOrSilentlyEnableTheOverlay()
+    public void NativeAllocationFailureDoesNotChangeMechanics()
     {
         var scenario=new DsrSanctity2Scenario();
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,37,new()
@@ -95,7 +94,6 @@ public class NativeTowerPresentationTests
         });
         Assert.That(run.Passed,Is.True,run.ToString);
         Assert.That(scenario.ResolvedTowers,Is.EqualTo(16));
-        Assert.That(scenario.ShowTowerOverlay,Is.False);
         Assert.That(scenario.ActiveNativeTowerCount,Is.Zero);
     }
 }

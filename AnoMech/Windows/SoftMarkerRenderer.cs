@@ -7,7 +7,6 @@ internal static class SoftMarkerRenderer
 {
     internal static void Draw()
     {
-        MeteorTowerRenderer.Draw();
         ApocalypseRenderer.Draw();
         DarklitRenderer.Draw();
         FallOfFaithRenderer.Draw();

@@ -116,7 +116,7 @@ The new analyzer reuses `tools/parser.py` and leaves the previous short `dsr_met
 
 ## In-game verification required
 
-1. In inn and offline DSR P2, inspect radius-18 outer/second towers, radius-6 inner towers, correct cardinal axes and radius-12 Fire centers against arena notches. Confirm eight native Conviction towers per wave, including ground graphics and pillar height; the diagnostic overlay is off by default. Native appearance still needs client confirmation.
+1. In inn and offline DSR P2, inspect radius-18 outer/second towers, radius-6 inner towers, correct cardinal axes and radius-12 Fire centers against arena notches. Confirm eight native Conviction towers per wave, including ground graphics and pillar height; the diagnostic overlay and its settings switches have been removed. Native appearance still needs client confirmation.
 2. Observe fixed Fire and pair-baited Ice, their appearance relative to impacts, earliest hazardous contact and exact safe cutoff near knockback. Capture native EObj state transitions/fade; actor removal alone is insufficient.
 3. Practice each Meteor category and all seats, including forced-cursed N/S patterns, Easy/Hard and visible/hidden bots. Verify seven drops per marked player, pre-impact comet appearance, clockwise clearance, first tower departure and final assignments. Check anti-knockback after drop five and inner knockback alignment.
 4. Pause during both tower waves and during Fire/Ice. Logical windows must remain; inspect native animation tails separately. Resume, Stop mid-wave, restart after idle, repeat entry/exit and confirm no lingering objects, markers or callbacks.
@@ -222,9 +222,8 @@ memory binding or server packet is invented. Native cast/impact dispatch remains
 Each tower owns a native handle at its verified world position, with radius-three X/Z scale and
 native Y scale. Both waves explicitly release their handles at the existing action-effect times,
 after their soak snapshots. Stop/Restart and world cleanup also release them, idempotently.
-Normal UI rendering no longer draws projected tower geometry. The old overlay is available only
-through an explicitly enabled diagnostic checkbox, with expected/native handle counts shown
-separately. Failed native allocation does not silently turn it on or change tower mechanics.
+The projected tower renderer, diagnostic window and both settings switches have been removed.
+Native omens are the only tower presentation. Failed native allocation does not change tower mechanics.
 
 This verifies the asset identity, action association and native instantiation path, **not a
 client screenshot proving pillar appearance**. Actual depth, height, scale, sound, duplicate

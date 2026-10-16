@@ -30,12 +30,9 @@ public sealed class DsrSanctity2Scenario : IScenario
     public sealed record TowerVisual(Vector3 Position, float Radius, float From, float Until, bool SecondWave);
     private readonly List<TowerVisual> towerVisuals = [];
     public IReadOnlyList<TowerVisual> ActiveTowerVisuals => towerVisuals.Where(t => world.Events.Elapsed >= t.From && world.Events.Elapsed < t.Until).ToArray();
-    public bool ShowTowerDiagnostics { get; set; }
-    public bool ShowTowerOverlay { get; set; }
     private readonly List<(SimOmen Omen, bool SecondWave)> nativeTowerOmens = [];
     public int ActiveNativeTowerCount => nativeTowerOmens.Count(t => t.Omen.IsActive);
 
-    private bool showTowerDiagnostics;
     private SimWorld world = null!;
     private DsrSanctity2State state = null!;
     private SimEnemy hermenost = null!;
@@ -71,10 +68,6 @@ public sealed class DsrSanctity2Scenario : IScenario
 
     public void DrawSettings()
     {
-        ImGui.Checkbox("Tower rendering diagnostics", ref showTowerDiagnostics);
-        var overlay = ShowTowerOverlay;
-        if (ImGui.Checkbox("Diagnostic tower overlay",ref overlay)) ShowTowerOverlay = overlay;
-        ShowTowerDiagnostics = showTowerDiagnostics;
         ImGui.TextWrapped("EXPERIMENTAL — log-verified Meteor impacts and geometry; Conviction uses native omen VFX; native appearance, hazard activation and pattern distribution still need client validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides",ref advanced)) Overrides.AdvancedMode = advanced;
