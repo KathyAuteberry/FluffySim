@@ -1,3 +1,21 @@
+# FluffySim 2.0.2.0 — release prepared
+
+## Offline plugin compatibility
+
+- Fixes the offline-entry crash when Discord Chat Bridge is enabled. FluffySim temporarily
+  unloads Bridge before entering offline practice and reloads it after returning to the
+  title screen. Bridge itself is unchanged; plugins that were already disabled stay disabled.
+- Refuses offline entry if an incompatible plugin cannot be suspended, and attempts to restore
+  suspended plugins if startup fails. Restoration failures are reported with manual recovery
+  instructions. Discord Chat Bridge is the first entry in the incompatible-plugin list.
+- Offline entry with Discord Chat Bridge enabled has been verified in game.
+
+## Release pipeline
+
+- Runs tag-triggered scenario tests in optimized Debug builds to shorten release validation.
+  These artifacts use separate output and intermediate directories, preserving the ordinary
+  Debug and safety-test builds.
+
 # FluffySim 2.0.1.0 — release prepared
 
 ## Upstream integration

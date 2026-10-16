@@ -19,7 +19,8 @@ Local workspace setup (jj configuration is not cloned):
 
 ```sh
 jj config set --repo 'revset-aliases."trunk()"' master
-jj config set --repo revsets.log '@ | heads(::@ & merges())::@ | parents(heads(::@ & merges()))'
+jj config set --repo 'revset-aliases."immutable_heads()"' 'tags() | remote_bookmarks() | remote_tags()'
+jj config set --repo revsets.log '@ | heads(::@ & merges())::@ | parents(heads(::@ & merges())) | master | heads(::master & merges())::master | parents(heads(::master & merges()))'
 ```
 
 Everyday: edit → Debug checks → Conventional Commit on the intended branch → inspect and
@@ -43,10 +44,10 @@ Local packaging dry-run only:
 `python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check`.
 Never distribute this Debug ZIP. The packager never builds or mutates its input.
 
-## Publication setup and 2.0.1.0
+## Publication setup and 2.0.2.0
 
-Version 2.0.0.0 is already published. Do not move its tag or rewrite its ancestry.
-Prepared version: **2.0.1.0**. `FluffySim.Version.props` contains `2.0.1`; assembly/file/tag
+Versions 2.0.0.0 and 2.0.1.0 are already published. Do not move their tags or rewrite their ancestry.
+Prepared version: **2.0.2.0**. `FluffySim.Version.props` contains `2.0.2`; assembly/file/tag
 versions append `.0`. Revision stays zero.
 
 Both GitHub default branches are master. FluffySim's Actions repository secret must be named
@@ -62,12 +63,13 @@ jj log
 jj bookmark list --all-remotes
 jj git push --remote origin --bookmark master --dry-run
 jj git push --remote origin --bookmark master
-jj tag set v2.0.1.0 -r master
+jj tag set v2.0.2.0 -r master
 jj tag list
-jj git push --remote origin --tag v2.0.1.0
+jj git push --remote origin --tag v2.0.2.0
 ```
 
-Local master must point to the reviewed release-preparation commit above `mptttx`.
+Local master must point to the reviewed release-preparation commit above the merge containing
+the offline compatibility fix and release-test optimization.
 The dry-run does not authorize the following push. Never move published tags.
 No manual plogons version edit is needed: successful publication updates its manifest.
 
@@ -92,7 +94,7 @@ Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mo
 
 Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
 metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
-tag: `gh workflow run publish-fluffysim.yml --ref v2.0.1.0`. Reruns reuse the existing asset and
+tag: `gh workflow run publish-fluffysim.yml --ref v2.0.2.0`. Reruns reuse the existing asset and
 never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
 higher version, never a moved tag or replacement ZIP.
 
