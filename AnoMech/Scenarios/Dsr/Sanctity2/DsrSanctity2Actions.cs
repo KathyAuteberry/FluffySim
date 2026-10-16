@@ -13,7 +13,7 @@ public static class DsrSanctity2Actions
     public static readonly EnemyAction CometCast = new(25576);
     public static readonly EnemyAction Storm = new(25575)
     {
-        Effects = [Damage(split: Distribution.Stack(2))], Timing = new() { DamageDelay = 0 },
+        Effects = [Damage(split: Distribution.Stack(2)), ApplyStatus(2903,3)], Timing = new() { DamageDelay = 0 },
     };
     public static readonly EnemyAction Fire = new(28591)
     {
@@ -44,20 +44,31 @@ public static class DsrSanctity2Actions
     };
 }
 
-// UNVERIFIED absolute alignment; inter-resolution intervals are independently established,
-// and the comet cadence and puddle lifecycle come from the executable reference simulator.
+// T=0 is the first Meteor Prey marker. Receive times are rounded to encounter-scale precision.
 public static class DsrSanctity2Timing
 {
-    // UNVERIFIED visual lead; hazard and resolution times are unchanged.
-    public const float FirePresentation = 5.5f;
-    public const float Storm = 8.5f;
-    public const float FirstTowers = 12.7f;
-    public const float FirstMeteor = 16.1f;
+    public const float FirstTowerCast = .05f;
+    public const float CometCast = .09f;
+    public const float FireCast = .13f;
+    public const float StormCast = .18f;
+    public const float Fire = 7.63f;
+    public const float FirePresentation = 8.15f;
+    public const float IcePresentation = 8.3f;
+    public const float Storm = 7.79f;
+    public const float FirstTowers = 12.05f;
+    public const float FirstMeteor = 13.45f;
     public const float MeteorInterval = 1.43f;
-    public const float Knockback = 23.1f;
-    public const float SecondTowers = 26.1f;
-    public const float Complete = 29f;
-    public const float PuddleActivation = 3f;
-    public const float PuddleLifetime = 14f;
+    // Actor snapshots precede effects by 0.52–0.92s; exact server capture time is not recorded.
+    public const float MeteorSpawnLead = .7f;
+    public const float SecondTowerCast = 14.4f;
+    public const float KnockbackCast = 18.44f;
+    public const float Knockback = 22.44f;
+    public const float SecondTowers = 25.4f;
+    public const float PuddleEnd = 25.1f;
+    public const float Complete = 28f;
+    // UNVERIFIED activation: Frostbite is observed by T+10.09; actor presence alone is insufficient.
+    public const float IceActivation = 9.9f;
+    // UNVERIFIED exact cutoff; puddles must be traversable for the knockback.
+    public const float PuddleSafe = Knockback - .3f;
     public static float Meteor(int index) => FirstMeteor+index*MeteorInterval;
 }

@@ -108,23 +108,23 @@ public sealed class DsrSanctity2State
     }
     public static Vector3 Direction(float angle) => new(MathF.Sin(angle),0,-MathF.Cos(angle));
     public static Vector3 TowerPosition(int index) => index < 12
-        ? Direction((index/3*90+(index%3-1)*30)*MathF.PI/180)*17.5f
-        : Direction(((index-12)*90+45)*MathF.PI/180)*(3.6f*MathF.Sqrt(2));
+        ? Direction((index/3*90+(index%3-1)*30)*MathF.PI/180)*18f
+        : Direction(((index-12)*90+45)*MathF.PI/180)*6f;
     public Vector3 PairPosition(PartyRole role) => Direction(Quadrant(role)*MathF.PI/2)*10;
     public Vector3 FirstPosition(PartyRole role)
     {
         var index = FirstTowers[(int)role]; var position = TowerPosition(index);
-        if (index >= 12) return Vector3.Normalize(position)*2.4f;
+        if (index >= 12) return Vector3.Normalize(position)*3.3f;
         if (IsMeteor(role))
         {
-            var cardinal = Direction(Quadrant(role)*MathF.PI/2)*17.5f;
+            var cardinal = Direction(Quadrant(role)*MathF.PI/2)*18f;
             if (Vector3.Distance(position,cardinal) > 0.1f) position += Vector3.Normalize(cardinal-position)*2.6f;
         }
         return position;
     }
     public Vector3 CommunicationPosition(PartyRole role) => PairPosition(role)+Vector3.Normalize(FirstPosition(role)-PairPosition(role))*3;
-    public Vector3 FinalPosition(PartyRole role) => Direction((Quadrant(role)*90+(IsMeteorRole(role) ? IsMeteor(role) ? 180 : 0 : 45))*MathF.PI/180)*17.5f;
-    public Vector3 KnockbackPosition(PartyRole role) => Vector3.Normalize(FinalPosition(role))*1.5f;
+    public Vector3 FinalPosition(PartyRole role) => Direction((Quadrant(role)*90+(IsMeteorRole(role) ? IsMeteor(role) ? 180 : 0 : 45))*MathF.PI/180)*18f;
+    public Vector3 KnockbackPosition(PartyRole role) => Vector3.Normalize(FinalPosition(role))*2f;
     public bool TakesKnockback(PartyRole role) => FirstTowers[(int)role] >= 12;
     public Vector3 MeteorPosition(PartyRole role,int drop)
     {
@@ -133,7 +133,7 @@ public sealed class DsrSanctity2State
         var north = Quadrant(role)*MathF.PI/2;
         var offset = MathF.Atan2(MathF.Sin(angle-north),MathF.Cos(angle-north));
         var end = north+MathF.PI-18*MathF.PI/180;
-        return Direction(north+offset+(end-north-offset)*(drop+1)/7)*19.3f;
+        return Direction(north+offset+(end-north-offset)*(drop+1)/7)*19.8f;
     }
     private static MeteorTowerPattern[] BuildPatterns()
     {

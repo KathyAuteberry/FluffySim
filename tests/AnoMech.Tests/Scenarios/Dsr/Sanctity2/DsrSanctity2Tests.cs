@@ -12,6 +12,40 @@ namespace AnoMech.Tests;
 
 public class DsrSanctity2Tests
 {
+    [TestCase(0, -9f, -15.588f)]
+    [TestCase(1, 0f, -18f)]
+    [TestCase(2, 9f, -15.588f)]
+    [TestCase(12, 4.243f, -4.243f)]
+    [TestCase(13, 4.243f, 4.243f)]
+    public void TowerGeometryMatchesRecordedCasterCoordinates(int index, float east, float south)
+    {
+        var position = DsrSanctity2State.TowerPosition(index);
+        Assert.That(position.X, Is.EqualTo(east).Within(.01));
+        Assert.That(position.Z, Is.EqualTo(south).Within(.01));
+        Assert.That(position.Y, Is.Zero);
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void PuddlesBecomeTraversableForKnockbackWhileObjectsRemain(bool afterCutoff)
+    {
+        var scenario = new DsrSanctity2Scenario();
+        var position = DsrSanctity2Scenario.FirePosition(0);
+        var time = DsrSanctity2Timing.PuddleSafe + (afterCutoff ? .05f : -.05f);
+        var role = PartyRole.MainTank;
+        var run = ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new()
+        {
+            ScenarioFactory=()=>scenario, PlayerRole=role, StopAt=22.8f,
+            Takeovers=[new(time,new(position.X,position.Z))],
+            Probe=p=>
+            {
+                if (afterCutoff && p.Crossed(22.6f))
+                    Assert.That(p.World.Children.OfType<SimEventObject>().Count(o=>o.EObjRowId is 0x1EB682 or 0x1EB686),Is.EqualTo(8));
+            },WriteArtifactsOnFailure=false,
+        });
+        Assert.That(run.Deaths.Any(d=>d.Role==role && d.ActionId==28591),Is.EqualTo(!afterCutoff),run.ToString);
+        if (afterCutoff) Assert.That(run.Passed,Is.True,run.ToString);
+    }
+
     [Test]
     public void OuterPatternsExhaustivelyMatchTheGuideConstraints()
     {
@@ -111,13 +145,13 @@ public class DsrSanctity2Tests
                     var visuals=scenario.ActiveTowerVisuals;
                     Assert.That(visuals.Count,Is.EqualTo(8));
                     Assert.That(visuals.Select(t=>t.Position),Is.EquivalentTo(scenario.LastState!.TowerIndices.Select(DsrSanctity2State.TowerPosition)));
-                    Assert.That(visuals.All(t=>t.Radius==3 && !t.SecondWave && MathF.Abs(t.From-.7f)<.05f && MathF.Abs(t.Until-12.4f)<.001f),Is.True);
+                    Assert.That(visuals.All(t=>t.Radius==3 && !t.SecondWave && MathF.Abs(t.From-DsrSanctity2Timing.FirstTowerCast)<.05f && MathF.Abs(t.Until-DsrSanctity2Timing.FirstTowers)<.001f),Is.True);
                 }
                 if(p.Crossed(13)) Assert.That(scenario.ActiveTowerVisuals,Is.Empty);
                 if(p.Crossed(16))
                 {
-                    Assert.That(scenario.ActiveTowerVisuals.Select(t=>t.Position),Is.EquivalentTo(Enumerable.Range(0,8).Select(i=>DsrSanctity2State.Direction(i*MathF.PI/4)*17.5f)));
-                    Assert.That(scenario.ActiveTowerVisuals.All(t=>t.SecondWave && t.Radius==3 && MathF.Abs(t.Until-25.8f)<.001f),Is.True);
+                    Assert.That(scenario.ActiveTowerVisuals.Select(t=>t.Position),Is.EquivalentTo(Enumerable.Range(0,8).Select(i=>DsrSanctity2State.Direction(i*MathF.PI/4)*18f)));
+                    Assert.That(scenario.ActiveTowerVisuals.All(t=>t.SecondWave && t.Radius==3 && MathF.Abs(t.Until-DsrSanctity2Timing.SecondTowers)<.001f),Is.True);
                 }
                 if(p.Crossed(27)) Assert.That(scenario.ActiveTowerVisuals,Is.Empty);
             },WriteArtifactsOnFailure=false});
@@ -150,7 +184,7 @@ public class DsrSanctity2Tests
                 claims=(int[])s.FirstTowers.Clone();++communication;
                 foreach(var role in DsrSanctity2State.Roles)Assert.That(Vector3.Distance(p.Member(role)!.Position,s.CommunicationPosition(role)),Is.LessThan(.15f));
             }
-            if(p.Crossed(12.2f)) Assert.That(s.FirstTowers,Is.EqualTo(claims));
+            if(p.Crossed(11.6f)) Assert.That(s.FirstTowers,Is.EqualTo(claims));
         },WriteArtifactsOnFailure=false});
         Assert.That(run.Passed,run.ToString);Assert.That(communication,Is.EqualTo(1));
     }
@@ -164,8 +198,8 @@ public class DsrSanctity2Tests
             {
                 var s=((DsrSanctity2Scenario)p.Game.ActiveScenario!).LastState!;
                 if(p.Crossed(9.5f))original=(int[])s.FirstTowers.Clone();
-                if(p.Crossed(12.2f))Assert.That(s.FirstTowers,Is.EqualTo(original));
-            },Takeovers=[new(12.25f,contest ? new Vector2(StateForSeed(0).FirstPosition(PartyRole.MainTank).X,StateForSeed(0).FirstPosition(PartyRole.MainTank).Z) : Vector2.Zero)],WriteArtifactsOnFailure=false});
+                if(p.Crossed(11.6f))Assert.That(s.FirstTowers,Is.EqualTo(original));
+            },Takeovers=[new(11.7f,contest ? new Vector2(StateForSeed(0).FirstPosition(PartyRole.MainTank).X,StateForSeed(0).FirstPosition(PartyRole.MainTank).Z) : Vector2.Zero)],WriteArtifactsOnFailure=false});
             Assert.That(run.Deaths.Any(d=>d.ActionId==29564),Is.True,run.ToString);
         }
     }
@@ -179,7 +213,7 @@ public class DsrSanctity2Tests
         Assert.That(ice.Deaths.Any(d=>d.Role==role&&d.ActionId==25575),Is.True,ice.ToString);
         var pos=s.MeteorPosition(role,0);
         var link=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){PlayerRole=role,ScenarioFactory=()=>new DsrSanctity2Scenario(),
-            Takeovers=[new(16.0f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
+            Takeovers=[new(13.4f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
         Assert.That(link.Deaths.Any(d=>d.ActionId==25578),Is.True,link.ToString);
     }
     [Test]
@@ -187,7 +221,7 @@ public class DsrSanctity2Tests
     {
         var s=StateForSeed(0);var role=s.Targets[0];var pos=s.MeteorPosition(role,4);
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){PlayerRole=role,ScenarioFactory=()=>new DsrSanctity2Scenario(),
-            Takeovers=[new(22.1f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
+            Takeovers=[new(21.4f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
         Assert.That(run.Deaths.Any(d=>d.Role==role&&d.ActionId==0&&d.Time<24),Is.True,run.ToString);
     }
     [TestCase(7548u,1209)] [TestCase(7559u,160)]
@@ -203,7 +237,7 @@ public class DsrSanctity2Tests
         },WriteArtifactsOnFailure=false});
         Assert.That(run.Passed,run.ToString);Assert.That(checkedStatus,Is.True);
     }
-    [TestCase(6f)] [TestCase(18f)] [TestCase(28f)]
+    [TestCase(6f)] [TestCase(13f)] [TestCase(18f)] [TestCase(28f)]
     public void CancellationAndRepeatedExecutionReleaseActorsAndPuddles(float stop)
     {
         var reusable=new DsrSanctity2Scenario();
@@ -218,7 +252,7 @@ public class DsrSanctity2Tests
         }
     }
     [Test]
-    public void NativeReleaseScheduleMatchesTheDocumentedProvisionalTimeline()
+    public void NativeReleaseScheduleMatchesRoundedObservedReceiveTimeline()
     {
         var emitted=new Dictionary<uint,List<float>>();var seen=new Dictionary<FakeBattleChara,int>();
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){ScenarioFactory=()=>new DsrSanctity2Scenario(),Probe=p=>
@@ -232,7 +266,7 @@ public class DsrSanctity2Tests
                 }
         },WriteArtifactsOnFailure=false});
         Assert.That(run.Passed,run.ToString);
-        foreach(var (id,time,count) in new[]{(25575u,8.5f,4),(28591u,9f,4),(28592u,9f,1),(29564u,12.7f,8),(25308u,23.1f,1),(28651u,26.1f,8)})
+        foreach(var (id,time,count) in new[]{(25575u,DsrSanctity2Timing.Storm,4),(28591u,DsrSanctity2Timing.Fire,4),(28592u,DsrSanctity2Timing.Fire,1),(29564u,DsrSanctity2Timing.FirstTowers,8),(25308u,DsrSanctity2Timing.Knockback,1),(28651u,DsrSanctity2Timing.SecondTowers,8)})
         {Assert.That(emitted[id],Has.Count.EqualTo(count));Assert.That(emitted[id].All(t=>Math.Abs(t-time)<.05f),Is.True,$"release {id}");}
         Assert.That(emitted[25577],Has.Count.EqualTo(14));
         for(var i=0;i<7;++i)Assert.That(emitted[25577].Count(t=>Math.Abs(t-DsrSanctity2Timing.Meteor(i))<.05f),Is.EqualTo(2));

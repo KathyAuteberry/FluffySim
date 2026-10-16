@@ -1,7 +1,11 @@
 .vs/
 obj/
 /logs/
-/docs/
+/docs/*
+!/docs/encounters/
+/docs/encounters/*
+!/docs/encounters/dsr-sanctity-meteors-evidence.md
+!/docs/encounters/dsr-sanctity-meteors-events.json
 /Reference/
 bin/
 .idea/

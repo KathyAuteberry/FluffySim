@@ -43,6 +43,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     private readonly List<SimEnemy> actors = [];
     private readonly List<SimEventObject> visuals = [];
     private readonly List<Vector3> comets = [];
+    private readonly Dictionary<int, List<(SimEnemy Actor, bool Linked)>> pendingComets = [];
     private readonly List<(Vector3 Position,float From,float Until,uint Action)> puddles = [];
 
     public IReadOnlyList<string> SettingsConflicts
@@ -69,7 +70,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     {
         ImGui.Checkbox("Tower rendering diagnostics (local ground overlay)", ref showTowerDiagnostics);
         ShowTowerDiagnostics = showTowerDiagnostics;
-        ImGui.TextWrapped("EXPERIMENTAL — full Meteor sequence; timings, inner-pattern distribution and native visuals await recording/in-game validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
+        ImGui.TextWrapped("EXPERIMENTAL — log-verified Meteor impacts and geometry; native tower rendering, hazard activation and pattern distribution still need client validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides",ref advanced)) Overrides.AdvancedMode = advanced;
         ImGui.BeginDisabled(advanced);
@@ -99,30 +100,42 @@ public sealed class DsrSanctity2Scenario : IScenario
         actors.Clear(); visuals.Clear(); comets.Clear(); puddles.Clear(); puddlePresentation.Clear();
         world.OnDespawn(Cleanup);
         world.Events.Add(0f,SpawnOpening);
-        world.Events.Add(.7f,() => StartTowers(false));
-        world.Events.Add(1.5f,() =>
+        world.Events.Add(0f,() =>
         {
-            foreach (var role in state.Targets) { var member=world.Party.Get(role)!; member.AddStatus(562,25); member.AttachLockonVfx(285,25,persistent:false); }
-            haumeric.Cast(DsrSanctity2Actions.StormCast); charibert.Cast(DsrSanctity2Actions.FireCast);
-            foreach (var q in Enumerable.Range(0,4)) Helper(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2))).Cast(DsrSanctity2Actions.Fire);
-            Helper(Vector3.Zero).Cast(DsrSanctity2Actions.Donut);
+            foreach (var role in state.Targets) { var member=world.Party.Get(role)!; member.AddStatus(562,23); member.AttachLockonVfx(285,23,persistent:false); }
         });
-        world.Events.Add(3.5f,() => hermenost.Cast(DsrSanctity2Actions.FirstTowerCast));
-        world.Events.Add(4.1f,() => noudenet.Cast(DsrSanctity2Actions.CometCast));
-        world.Events.Add(DsrSanctity2Timing.FirePresentation, () =>
+        world.Events.Add(DsrSanctity2Timing.FirstTowerCast,() => { StartTowers(false); hermenost.Cast(DsrSanctity2Actions.FirstTowerCast); });
+        world.Events.Add(DsrSanctity2Timing.CometCast,() => noudenet.Cast(DsrSanctity2Actions.CometCast));
+        world.Events.Add(DsrSanctity2Timing.FireCast,() =>
         {
-            foreach (var q in Enumerable.Range(0,4)) ShowPuddle(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2)), 0x1EB686, 9f+DsrSanctity2Timing.PuddleLifetime-DsrSanctity2Timing.FirePresentation);
+            charibert.Cast(DsrSanctity2Actions.FireCast);
+            foreach (var q in Enumerable.Range(0,4)) Helper(FirePosition(q)).Cast(DsrSanctity2Actions.Fire);
+            Helper(Vector3.Zero,3635).Cast(DsrSanctity2Actions.Donut);
+        });
+        world.Events.Add(DsrSanctity2Timing.StormCast,() => haumeric.Cast(DsrSanctity2Actions.StormCast));
+        world.Events.Add(DsrSanctity2Timing.Fire,() =>
+        {
+            foreach (var q in Enumerable.Range(0,4)) AddPuddle(FirePosition(q),28591,false);
         });
         world.Events.Add(DsrSanctity2Timing.Storm,ResolveStorms);
-        world.Events.Add(9f,() =>
+        world.Events.Add(DsrSanctity2Timing.FirePresentation, () =>
         {
-            foreach (var q in Enumerable.Range(0,4)) AddPuddle(DsrSanctity2State.Direction((q*90+45)*MathF.PI/180)*(7.3f*MathF.Sqrt(2)),0x1EB686,28591, false);
+            foreach (var q in Enumerable.Range(0,4)) ShowPuddle(FirePosition(q), 0x1EB686, DsrSanctity2Timing.PuddleEnd-world.Events.Elapsed);
         });
-        world.Events.Add(15.1f,() => StartTowers(true));
-        world.Events.Add(17.9f,() => hermenost.Cast(DsrSanctity2Actions.SecondTowerCast));
-        for(var i=0;i<7;++i) { world.Events.Add(DsrSanctity2Timing.Meteor(i),ResolveComets); }
-        world.Events.Add(19.1f,() => grinnaux.Cast(DsrSanctity2Actions.Knockback));
-        world.Events.Add(25.3f,() => { foreach(var role in state.Targets) world.Party.Get(role)?.RemoveStatus(562); });
+        world.Events.Add(DsrSanctity2Timing.IcePresentation, () =>
+        {
+            foreach (var puddle in puddles.Where(p => p.Action == 25575))
+                ShowPuddle(puddle.Position,0x1EB682,DsrSanctity2Timing.PuddleEnd-world.Events.Elapsed);
+        });
+        world.Events.Add(DsrSanctity2Timing.SecondTowerCast,() => { StartTowers(true); hermenost.Cast(DsrSanctity2Actions.SecondTowerCast); });
+        for(var i=0;i<7;++i)
+        {
+            var drop = i;
+            world.Events.Add(DsrSanctity2Timing.Meteor(i)-DsrSanctity2Timing.MeteorSpawnLead,() => SpawnComets(drop));
+            world.Events.Add(DsrSanctity2Timing.Meteor(i),() => ResolveComets(drop));
+        }
+        world.Events.Add(DsrSanctity2Timing.KnockbackCast,() => grinnaux.Cast(DsrSanctity2Actions.Knockback));
+        world.Events.Add(23f,() => { foreach(var role in state.Targets) world.Party.Get(role)?.RemoveStatus(562); });
         world.Events.Add(DsrSanctity2Timing.Complete,() => { Cleanup(); Completed=true; });
         if(selectedAi is { } index) ((IScenarioAi<DsrSanctity2State>)AiStrats[index]).Run(state,world);
     }
@@ -131,26 +144,26 @@ public sealed class DsrSanctity2Scenario : IScenario
         var actor=world.SpawnEnemy(DsrActors.Config(id,new(position,MathF.Atan2(-position.X,-position.Z)))) ?? throw new InvalidOperationException("Could not create Meteor actor.");
         actors.Add(actor);return actor;
     }
-    private SimEnemy Helper(Vector3 position)
+    private SimEnemy Helper(Vector3 position, uint name = 3639)
     {
-        var actor=world.SpawnEnemy(new(9020,3632,Level:90,EnemyList:EnemyListMode.Never,Visibility: SpawnVisibility.InvisibleHelper,Placement:new(position,0))) ?? throw new InvalidOperationException("Could not create Meteor helper.");
+        var actor=world.SpawnEnemy(new(9020,name,Level:90,EnemyList:EnemyListMode.Never,Visibility: SpawnVisibility.InvisibleHelper,Placement:new(position,0))) ?? throw new InvalidOperationException("Could not create Meteor helper.");
         actors.Add(actor);return actor;
     }
     private void SpawnOpening()
     {
-        Spawn(12604,new(0,0,-23));
-        haumeric=Spawn(12638,new(5.09f,0,-.18f)); charibert=Spawn(12603,new(0,0,-30));
-        hermenost=Spawn(12636,new(-3.74f,0,-.18f)); noudenet=Spawn(12639,new(8.96f,0,-.18f)); grinnaux=Spawn(12602,Vector3.Zero);
+        Spawn(12604,new(0,0,-19.02f));
+        haumeric=Spawn(12638,new(-6,0,0)); charibert=Spawn(12603,new(0,0,-6));
+        hermenost=Spawn(12636,new(0,0,6)); noudenet=Spawn(12639,new(6,0,0)); grinnaux=Spawn(12602,Vector3.Zero);
     }
     private void StartTowers(bool second)
     {
         var indices=second ? Enumerable.Range(0,8) : state.TowerIndices;
         foreach(var index in indices)
         {
-            var position=second ? DsrSanctity2State.Direction(index*MathF.PI/4)*17.5f : DsrSanctity2State.TowerPosition(index);
+            var position=second ? DsrSanctity2State.Direction(index*MathF.PI/4)*18f : DsrSanctity2State.TowerPosition(index);
             towerVisuals.Add(new(position,3,world.Events.Elapsed,
-                (second ? DsrSanctity2Timing.SecondTowers : DsrSanctity2Timing.FirstTowers) - .3f,second));
-            var actor=Helper(position);
+                (second ? DsrSanctity2Timing.SecondTowers : DsrSanctity2Timing.FirstTowers),second));
+            var actor=Helper(position,3640);
             var action=second ? DsrSanctity2Actions.SecondTower : DsrSanctity2Actions.FirstTower;
             actor.Cast(action with { Effects = action.Effects.Append(new ResolveEffect(ctx =>
             {
@@ -160,18 +173,18 @@ public sealed class DsrSanctity2Scenario : IScenario
             })).ToArray() });
         }
     }
+    public static Vector3 FirePosition(int quadrant) => DsrSanctity2State.Direction((quadrant*90+45)*MathF.PI/180)*12f;
     private void ResolveStorms()
     {
         foreach(var role in DsrSanctity2State.Roles.Where(state.IsMeteorRole))
         {
             var target=world.Party.Get(role)!; Helper(target.Position).Cast(DsrSanctity2Actions.Storm,target);
-            AddPuddle(target.Position,0x1EB682,25575);
+            AddPuddle(target.Position,25575,true);
         }
     }
-    private void AddPuddle(Vector3 position,uint id,uint action, bool show = true)
+    private void AddPuddle(Vector3 position,uint action,bool ice)
     {
-        puddles.Add((position,world.Events.Elapsed+DsrSanctity2Timing.PuddleActivation,world.Events.Elapsed+DsrSanctity2Timing.PuddleLifetime,action));
-        if (show) ShowPuddle(position, id, DsrSanctity2Timing.PuddleLifetime);
+        puddles.Add((position,ice ? DsrSanctity2Timing.IceActivation : DsrSanctity2Timing.FirePresentation,DsrSanctity2Timing.PuddleSafe,action));
     }
     public IReadOnlyList<(float Time, uint Object)> PuddlePresentation => puddlePresentation;
     private readonly List<(float, uint)> puddlePresentation = [];
@@ -181,17 +194,26 @@ public sealed class DsrSanctity2Scenario : IScenario
         var visual=world.SpawnEventObject(new EventObjectSpawnConfig { EObjId=id,Placement=new(position,0),Lifetime=lifetime });
         if(visual is not null) visuals.Add(visual);
     }
-    private void ResolveComets()
+    private void SpawnComets(int drop)
     {
+        var pending = pendingComets[drop] = [];
         foreach(var role in state.Targets)
         {
             var position=world.Party.Get(role)!.Position;
             var linked=comets.Any(p => Vector3.Distance(p,position) < 5);
-            var comet=Spawn(12591,position);
+            pending.Add((Spawn(12591,position),linked));
+            comets.Add(position);
+        }
+    }
+    private void ResolveComets(int drop)
+    {
+        foreach(var (comet,linked) in pendingComets[drop])
+        {
             comet.Cast(linked ? DsrSanctity2Actions.Impact : DsrSanctity2Actions.Comet);
             if(linked) world.Party.WipeAllPlayers(25578,"Meteors linked: less than five yalms apart");
-            comets.Add(position);++ResolvedMeteors;
+            ++ResolvedMeteors;
         }
+        pendingComets.Remove(drop);
     }
     public void Tick(float delta,float elapsed)
     {
@@ -203,8 +225,8 @@ public sealed class DsrSanctity2Scenario : IScenario
     {
         world.PracticeAntiKnockback.Clear();
         foreach(var actor in actors) actor.Despawn(); foreach(var visual in visuals) visual.Despawn();
-        actors.Clear();visuals.Clear();puddles.Clear();comets.Clear();towerVisuals.Clear();
-        foreach(var role in DsrSanctity2State.Roles) { world.Party.Get(role)?.RemoveStatus(562); }
+        actors.Clear();visuals.Clear();puddles.Clear();comets.Clear();pendingComets.Clear();towerVisuals.Clear();
+        foreach(var role in DsrSanctity2State.Roles) { world.Party.Get(role)?.RemoveStatus(562); world.Party.Get(role)?.RemoveStatus(2903); }
     }
     private sealed class ResolveEffect(Action<EnemyActionContext> resolve) : IEnemyActionEffect
     { public void Apply(EnemyActionContext ctx, System.Collections.Generic.IReadOnlyList<SimCharacter> hits) => resolve(ctx); }

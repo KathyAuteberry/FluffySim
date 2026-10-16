@@ -218,3 +218,34 @@ Never push, tag, publish or update live metadata without explicit owner authoriz
 replace released assets or downgrade manifest versions. Never commit/push secrets, private
 configuration, logs, captures or game/SDK binaries; never bundle those, stale plugin DLLs,
 test hosts or Debug check ZIPs. Keep AnoMech attribution and matching source available.
+
+### Ongoing feature and integration workflow (jj 0.46)
+
+Start each task in its own change descended from the current `master@origin` development
+baseline, with a descriptive `codex/*` bookmark. Local `master` and `master@origin` are
+separate references: inspect both and their actual ancestry before choosing the baseline.
+Do not develop directly on published master or move it as part of a feature task.
+
+Inspect all workspaces, existing feature bookmarks, and every revision whose description is
+`chore: integration commit` before integration. Reuse the current **unpublished** shared
+integration change, preserving all concurrent feature parents. Verify incorporation with
+`jj log -r '<feature> & ancestors(<integration>)'`; descriptions and graph proximity are not
+ancestry proof. With jj 0.46, `jj rebase -r <integration> -d <existing-parent> -d <feature>`
+can add a feature parent; enumerate and preserve every existing parent first. Inspect the
+resulting diff and resolve conflicts in the integration change, then rerun Debug validation.
+Do not rebase unrelated feature changes or discard concurrent working-copy edits.
+
+When the latest integration has already been published (for example mlyzss beneath 2.0.2.0),
+it is immutable history. With owner authorization, start the next shared integration above
+the published baseline and completed feature tips using `jj new <baseline> <feature>`, with
+exact description `chore: integration commit`. This is the next integration generation;
+never rewrite the published integration to insert a new task. If there is already an
+unpublished integration generation, incorporate into that one instead of creating a rival.
+
+Release preparation requires explicit owner authorization. Create a separate child of the
+verified integration, change `FluffySim.Version.props` and `CHANGELOG.md` for the actual
+included work, and use `chore(release): prepare X.Y.Z.W`. Advancing local master is a separate
+explicitly authorized operation; publication, tags and plogons updates remain separate too.
+The historical plkqvn merge, its full parent set and published release descendants must remain
+intact. Use jj-native history/recovery commands and inspect `jj op log` before recovering
+specific revisions; never restore an entire old operation over concurrent work.

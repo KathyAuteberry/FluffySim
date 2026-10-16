@@ -33,9 +33,9 @@ public class MeteorClockLifecycleTests
                 {
                     firstSeen = true;
                     Assert.That(scenario.ActiveTowerVisuals, Has.Count.EqualTo(8));
-                    Assert.That(scenario.ActiveTowerVisuals.All(t => !t.SecondWave && t.Until == 12.4f), Is.True);
+                    Assert.That(scenario.ActiveTowerVisuals.All(t => !t.SecondWave && t.Until == DsrSanctity2Timing.FirstTowers), Is.True);
                 }
-                if (p.Crossed(12.3f))
+                if (p.Crossed(11.65f))
                 {
                     Assert.That(scenario.ActiveTowerVisuals, Has.Count.EqualTo(8));
                     Assert.That(scenario.ResolvedTowers, Is.Zero);
@@ -55,11 +55,23 @@ public class MeteorClockLifecycleTests
                     Assert.That(scenario.ResolvedTowers, Is.EqualTo(8));
                     Assert.That(scenario.ActiveTowerVisuals, Is.Empty);
                 }
-                if (p.Crossed(25.7f))
+                if (p.Crossed(25f))
                 {
                     secondSeen = true;
+                    var before = scenario.ActiveTowerVisuals.ToArray();
+                    var elapsed = p.Game.Events.Elapsed;
+                    var objects = native.EventObjects.OccupiedSlots;
+                    p.Game.Paused = true;
+                    try
+                    {
+                        for (var i = 0; i < 40; i++) native.Frame(.5f, p.Game.Tick);
+                        Assert.That(p.Game.Events.Elapsed, Is.EqualTo(elapsed));
+                        Assert.That(scenario.ActiveTowerVisuals, Is.EqualTo(before));
+                        Assert.That(native.EventObjects.OccupiedSlots, Is.EqualTo(objects));
+                    }
+                    finally { p.Game.Paused = false; }
                     Assert.That(scenario.ActiveTowerVisuals, Has.Count.EqualTo(8));
-                    Assert.That(scenario.ActiveTowerVisuals.All(t => t.SecondWave && Math.Abs(t.Until - 25.8f) < .001), Is.True);
+                    Assert.That(scenario.ActiveTowerVisuals.All(t => t.SecondWave && Math.Abs(t.Until - DsrSanctity2Timing.SecondTowers) < .001), Is.True);
                 }
             },
             WriteArtifactsOnFailure = false,

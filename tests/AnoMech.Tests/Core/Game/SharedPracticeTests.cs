@@ -105,15 +105,15 @@ public class SharedPracticeTests
         var scenario=new DsrSanctity2Scenario();Vector3 before=default;Vector3 after=default;
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,1,new()
         {
-            ScenarioFactory=()=>scenario,PlayerRole=PartyRole.MainTank,StopAt=23.19f,
+            ScenarioFactory=()=>scenario,PlayerRole=PartyRole.MainTank,StopAt=22.55f,
             Overrides=o=>((DsrSanctity2StateOverrides)o).PracticeAssignment=MeteorPractice.Meteor,
-            Takeovers=[new(22.16f,null)],
+            Takeovers=[new(21.4f,null)],
             Probe=p=>
             {
-                if(p.Crossed(23f)) before=p.World.Party.Player!.Position;
-                if(p.Crossed(activation==2?15f:22.3f) && activation!=0)
+                if(p.Crossed(22.2f)) before=p.World.Party.Player!.Position;
+                if(p.Crossed(activation==2?15f:21.8f) && activation!=0)
                     Assert.That(PracticeAntiKnockbackControls.Press(Plugin.Game.ActiveScenario,true,p.World.PracticeAntiKnockback),Is.True);
-                if(p.Crossed(23.18f)) after=p.World.Party.Player!.Position;
+                if(p.Crossed(22.53f)) after=p.World.Party.Player!.Position;
             },WriteArtifactsOnFailure=false,
         });
         Assert.That(Vector3.Distance(before,after),activation==1?Is.LessThan(.01f):Is.GreaterThan(1));
@@ -216,7 +216,7 @@ public class SharedPracticeTests
     }
 
     [Test]
-    public void FireVisualPrecedesIceWithoutMovingStormResolution()
+    public void PuddlePresentationUsesObservedActorArrivalWindows()
     {
         var scenario=new DsrSanctity2Scenario();var checkedOrder=false;
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new()
@@ -227,8 +227,8 @@ public class SharedPracticeTests
                 var fire=scenario.PuddlePresentation.Where(x=>x.Object==0x1EB686).ToArray();
                 var ice=scenario.PuddlePresentation.Where(x=>x.Object==0x1EB682).ToArray();
                 Assert.That(fire.Length,Is.EqualTo(4));Assert.That(ice.Length,Is.EqualTo(4));
-                Assert.That(ice.Min(x=>x.Time)-fire.Max(x=>x.Time),Is.GreaterThan(2.9f));
-                Assert.That(ice.Min(x=>x.Time),Is.EqualTo(8.5f).Within(.03f));checkedOrder=true;
+                Assert.That(ice.Min(x=>x.Time)-fire.Max(x=>x.Time),Is.EqualTo(DsrSanctity2Timing.IcePresentation-DsrSanctity2Timing.FirePresentation).Within(.03f));
+                Assert.That(ice.Min(x=>x.Time),Is.EqualTo(DsrSanctity2Timing.IcePresentation).Within(.03f));checkedOrder=true;
             }},WriteArtifactsOnFailure=false,
         });
         Assert.That(run.Passed,run.ToString);Assert.That(checkedOrder,Is.True);
