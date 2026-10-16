@@ -12,7 +12,7 @@ public static class DsrActions
     public static readonly EnemyAction MercyCast = Visual(25544, 2.1f);
     public static readonly EnemyAction Spiral = new(25556)
     {
-        Cast = new() { AnimationLock = 4.1f, AnimationTargetsCaster = true },
+        Cast = new() { AnimationLock = 4.1f, AnimationTargetsCaster = true, OmenDelay = 5.0f },
         Effects = [Damage(Severity.Lethal)], Timing = new() { DamageDelay = .3f },
     };
     public static readonly EnemyAction Lightning = new(25549)
