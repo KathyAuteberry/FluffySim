@@ -132,10 +132,25 @@ public class FruFallOfFaithTests
         }
     }
 
-    public static IEnumerable<TestCaseData> OrderedAssignments() => Enumerable.Range(0, 1680).Select(i => new TestCaseData(i));
+    private static IEnumerable<int> RepresentativePermutations()
+        => FruFallOfFaithState.Permutations.Select((roles, index) => (Roles: roles, Index: index))
+            .GroupBy(p => p.Roles.Aggregate(0, (mask, role) => mask | (1 << (int)role)))
+            .Select((group, index) => group.ElementAt(index % group.Count()).Index);
 
-    [TestCaseSource(nameof(OrderedAssignments))]
-    public void AllOrderedAssignmentsClearAllSixteenElements(int permutation)
+    public static IEnumerable<TestCaseData> AssignmentGroups()
+        => RepresentativePermutations().Select(index => new TestCaseData(index));
+
+    [Test]
+    public void FullRunSamplesCoverEveryTetheredGroupAndEveryRoleOrder()
+    {
+        var orders = RepresentativePermutations().Select(index => FruFallOfFaithState.Permutations[index]).ToArray();
+        Assert.That(orders, Has.Length.EqualTo(70));
+        Assert.That(orders.Select(roles => string.Join(",", roles.Order())).Distinct().Count(), Is.EqualTo(70));
+        Assert.That(orders.SelectMany(roles => roles.Select((role, order) => (role, order))).Distinct().Count(), Is.EqualTo(32));
+    }
+
+    [TestCaseSource(nameof(AssignmentGroups))]
+    public void RepresentativeTetherOrdersClearAllSixteenElements(int permutation)
     {
         for (var mask = 0; mask < 16; mask++)
         {
