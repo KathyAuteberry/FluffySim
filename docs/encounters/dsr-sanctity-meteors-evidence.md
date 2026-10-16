@@ -251,3 +251,14 @@ Debug output; Python tooling passed 75. The complete Debug solution and ordinary
 TRACE Debug plugin builds succeeded with zero errors. Both safety backends passed **308 checks
 with three platform skips each** against the integrated 2.1.0.0 binaries. Native client rendering
 remains the manual check, including pillar shape, radius, occlusion, sound, duplicates and long Pause.
+
+
+### First-wave side-tower bot routes
+
+CW/CCW outer-tower bots leave their pair position at T+8.05 after the observed ice
+snapshot. Their route curves outward toward the assigned tower, rather than first reaching
+the cardinal rim and then turning sideways at T+9.8. The route is strategy choreography,
+not a reconstruction of one recorded player's movement. It preserves all tower assignments
+and uses ordinary run speed. The curve stays outside the seven-yalm fire hazards and clears
+the baited ice before its existing activation deadline. Central and inner-tower routes are
+unchanged. Segment departures use scenario time, preserving Pause and Stop behavior.

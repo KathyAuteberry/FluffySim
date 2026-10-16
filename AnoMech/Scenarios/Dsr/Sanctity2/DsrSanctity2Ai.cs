@@ -1,6 +1,7 @@
 using System;
 using System.Numerics;
 using System.Linq;
+using System.Collections.Generic;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
@@ -12,16 +13,42 @@ public sealed class DsrSanctity2Ai : IScenarioAi<DsrSanctity2State>
 {
     public string Name => "Elemental cardinal pairs";
     public string Group => "JP";
+    private static bool TakesSideTower(DsrSanctity2State state, PartyRole role)
+        => state.FirstTowers[(int)role] < 12 && state.FirstTowers[(int)role]%3 != 1;
+
+    internal static IReadOnlyList<Vector3> FirstTowerRoute(DsrSanctity2State state, PartyRole role)
+    {
+        var start = state.PairPosition(role);
+        var end = state.FirstPosition(role);
+        var control = Vector3.Normalize(start)*20f;
+        return Enumerable.Range(0,9).Select(i =>
+        {
+            var t = i/8f;
+            return (1-t)*(1-t)*start+2*(1-t)*t*control+t*t*end;
+        }).ToArray();
+    }
+
     public void Run(DsrSanctity2State state, SimWorld world)
     {
         world.Events.Add(.1f, () => Each(role => Move(role,DsrSanctity2State.Direction(DsrSanctity2State.BaseQuadrants[(int)role]*MathF.PI/2)*10)));
         world.Events.Add(1.6f, () => Each(role => Move(role,state.PairPosition(role),3.4f)));
         world.Events.Add(3.7f, () => Each(role => Move(role,state.CommunicationPosition(role))));
         world.Events.Add(5.9f, () => Each(role => Move(role,state.PairPosition(role),7.5f)));
-        world.Events.Add(8.05f, () => Each(role => Move(role,
+        world.Events.Add(8.05f, () => { foreach (var role in DsrSanctity2State.Roles.Where(r => !TakesSideTower(state,r))) Move(role,
             state.TakesKnockback(role) ? Vector3.Zero : DsrSanctity2State.Direction(state.Quadrant(role)*MathF.PI/2)*18f,
-            9.75f,8.05f)));
-        world.Events.Add(9.8f, () => Each(role => Move(role,state.FirstPosition(role),11.7f)));
+            9.75f,8.05f); });
+        foreach (var role in DsrSanctity2State.Roles.Where(r => TakesSideTower(state,r)))
+        {
+            var route = FirstTowerRoute(state,role);
+            var departure = 8.05f;
+            for (var i = 1; i < route.Count; ++i)
+            {
+                var destination = route[i];
+                world.Events.Add(departure, () => Move(role,destination));
+                departure += Vector3.Distance(route[i-1],destination)/6f;
+            }
+        }
+        world.Events.Add(9.8f, () => { foreach (var role in DsrSanctity2State.Roles.Where(r => !TakesSideTower(state,r))) Move(role,state.FirstPosition(role),11.7f); });
         world.Events.Add(11.85f, () =>
         {
             foreach (var role in state.Targets)
