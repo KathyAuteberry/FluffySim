@@ -162,12 +162,13 @@ FluffySim publishes master. Origin is FluffySim, upstream is anomek/AnoMech, and
 evernow is Evernow/AnoMech. Preserve the existing SSH host alias. Local master tracks
 master@origin, not master@upstream. Repository-local `trunk()` is master.
 
-The prepared 2.0 history is: upstream plus original Evernow PR 35/38/50 tips, the complete
-FRU/DSR feature branch through xpmlyn, and the separate codex/release-engineering branch →
-plkqvn (`chore: integration commit`) → xznrxk (`chore(release): prepare 2.0.0.0`) → an empty
-`wip: Working area`. The integration intentionally has six explicit parents and no changes
-beyond their automatic merge. Master points to release preparation, so it includes every
-feature, runtime repair and CI change. Do not move it back to an infrastructure-only branch.
+Published 2.0.0.0 is the six-parent `plkqvn` integration followed by release preparation
+`xznrxk`. Preserve that history and tag. For 2.0.1.0, `mptttx` merges the latest reviewed
+upstream tip with published history, the test-fix branch and the separate
+`codex/dsr-strength-dash-telegraphs` branch. Its child prepares the version/changelog.
+Original Evernow offline/test/consistency tips are retained; already integrated remote tips
+do not need rebasing. Rebase only unpublished local changes, never remote source history.
+Integration conflict resolutions belong in the merge; version/release notes belong above it.
 
 The earlier four-parent merge and pre-merge investigations are historical integration state;
 see UPSTREAM-INTEGRATION.md and OFFLINE-DSR-REPAIR.md. Preserve original upstream/Evernow

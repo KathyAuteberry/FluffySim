@@ -1,11 +1,11 @@
 # Install FluffySim
 
-After the first public release, add this custom repository URL under Dalamud settings →
+Add this custom repository URL under Dalamud settings →
 Experimental → Custom Plugin Repositories, then find FluffySim in the plugin installer:
 
 https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json
 
-The prepared bootstrap is empty until publication. Leave the simulation and disable any
+Leave the simulation and disable any
 old developer registration or AnoMech installation before installing through the repository.
 Never load both copies. Repository-installed updates are managed by Dalamud.
 

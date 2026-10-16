@@ -1,3 +1,34 @@
+# FluffySim 2.0.1.0 — release prepared
+
+## Upstream integration
+
+- Integrates AnoMech through `d576199a` (PR #56), retaining original upstream and Evernow
+  attribution and the published 2.0.0.0 ancestry.
+- Incorporates upstream's host-driven multiplayer packet recording/replay, reset handling,
+  deterministic targeting improvements, named scenario layout IDs and refreshed game-data snapshot.
+- Reconciles multiplayer preparation with FluffySim's native arena-readiness gate and local
+  visibility/cooldown controls. Buffered and live host packets share an explicit peer-run guard.
+  Native multiplayer remains experimental and needs in-client validation.
+
+## Mechanic and test fixes
+
+- Matches the three knights' late dash telegraphs in DSR Strength of the Ward Part 1 to
+  native recordings: the omen starts 5.0 seconds into the cast, about one second before
+  the dash effect. Action animations, timing and lethal hit detection are unchanged.
+  Native appearance still needs playtesting.
+- Fixes defensive-practice UI assertions on systems that format decimals with a comma, and
+  reports scenario failures before secondary observation failures.
+- Reduces Fall of Faith's repeated full simulations by 24× while retaining all 16 element patterns,
+  all four-role target sets and every role/tether position; the inexpensive model checks still
+  cover all 1,680 ordered assignments.
+- Push/PR checks use optimized Debug builds. The simulation tests advance a fake clock;
+  they do not wait for mechanics to run in real time.
+- Extends entry-lifecycle and safety architecture checks for multiplayer preparation and
+  the new native wrappers. Local development and validation remain Debug-only.
+
+All nine existing FRU/DSR scenarios remain available. Diamond Dust remains shelved;
+Sanctity of the Ward Part 2 and title-screen offline mode remain experimental.
+
 # FluffySim 2.0.0.0 — release prepared
 
 FluffySim 2.0 brings Evernow's title-screen offline simulator, packet-filter safety work

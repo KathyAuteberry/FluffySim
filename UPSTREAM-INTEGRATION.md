@@ -277,5 +277,17 @@ its `PeerInRun` guard. Architecture checks verify this caller boundary and the f
 zone wrappers; the fake transport still exercises the production filter lifecycle.
 
 The new upstream layout IDs and action/job validation are included. Native multiplayer,
-normal/offline arena presentation and the hidden Strength Part 1 dash telegraphs still need
+normal/offline arena presentation and the late Strength Part 1 dash telegraphs still need
 in-client verification. Headless success does not establish native rendering correctness.
+
+### Strength Part 1 dash telegraph timing
+
+The preserved `Dragonsong's Reprise (Ultimate) 2024.09.26 00.42.01.zip` archive contains
+63 and 60 Spiral Thrust casts across two native recordings (game build 10710093).
+All ActorCast packets for action 25556 encode omen-delay byte 50, or 5.0 seconds,
+and cast length 5.700 seconds. One representative cast starts at replay 101.819s,
+encodes omen onset at 106.819s, ends its bar at 107.519s and releases at 107.836s.
+This establishes the packet timing; visible fade/brightness onset still needs video comparison.
+The October 10 combat log independently confirms approximately 5.974s from cast to effect,
+but does not contain the omen-delay byte. Only the omen delay changes; hit resolution and
+movement timing remain unchanged. Original recordings stay local and are not bundled.

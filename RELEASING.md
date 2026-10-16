@@ -9,8 +9,10 @@ runners build Release. Use Conventional Commit messages for every new commit.
 `master` is FluffySim's trunk/publication bookmark; plogons independently publishes master.
 The initial six-parent integration combines upstream, original Evernow PR 35/38/50 tips,
 the complete FRU/DSR feature/fix branch and a separate CI branch. `plkqvn` is an empty
-`chore: integration commit`; its child `xznrxk` prepares 2.0.0.0 and is local master.
-An empty working area follows. All features and CI are ancestors of the versioned release.
+`chore: integration commit`; its child `xznrxk` is the published 2.0.0.0 release.
+For 2.0.1.0, `mptttx` merges updated upstream, the test fix and the separate DSR dash fix
+on that published ancestry; its child prepares the new version. All features and CI are
+ancestors of the versioned release.
 The old four-parent layout is historical, not the final release topology.
 
 Local workspace setup (jj configuration is not cloned):
@@ -41,29 +43,33 @@ Local packaging dry-run only:
 `python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check`.
 Never distribute this Debug ZIP. The packager never builds or mutates its input.
 
-## First publication (explicit owner authorization required)
+## Publication setup and 2.0.1.0
 
-Prepared version: **2.0.0.0**. `FluffySim.Version.props` contains `2.0.0`; assembly/file/tag
-versions append `.0`. Increase major for breaking milestones, minor for features, patch for
-fixes; revision stays zero. No public release or live manifest update has been performed.
+Version 2.0.0.0 is already published. Do not move its tag or rewrite its ancestry.
+Prepared version: **2.0.1.0**. `FluffySim.Version.props` contains `2.0.1`; assembly/file/tag
+versions append `.0`. Revision stays zero.
 
-1. Review and publish plogons/master from its own directory with
-   `jj git push --remote origin --bookmark master`. Its bootstrap is `[]`, plus updater/tools.
-2. In FluffySim, inspect `master` and confirm its release-preparation parent is the complete
-   integration merge. Run `jj git push --remote origin --bookmark master --dry-run`, then
-   publish that bookmark only with owner authorization. It already includes the feature
-   branch and CI; no private-label override is needed for the Conventionally named merge.
-3. Inspect `jj status`, `jj log` and both bookmark lists again. Preserve the empty working area.
-4. Set GitHub default branches to master for FluffySim and master for plogons. Enable Actions.
-   Configure FluffySim's `PLOGONS_TOKEN` secret: a fine-grained token restricted to plogons
-   with Contents read/write. Its branch rules must permit the metadata update. The release
-   job requests Contents write in FluffySim; the standard GITHUB_TOKEN cannot write plogons.
-   Keep tokens out of source and shell history. GitHub App authentication is a future option,
-   not implemented here. [Token scope reference](https://docs.github.com/en/actions/concepts/security/github_token).
-5. With explicit release approval, run in FluffySim:
-   `jj tag set v2.0.0.0 -r master`, inspect `jj tag list`, then
-   `jj git push --remote origin --tag v2.0.0.0`. Installed jj 0.46 supports tags natively.
-   Never move published tags. Recheck status and bookmarks afterward.
+Both GitHub default branches are master. FluffySim's Actions repository secret must be named
+**PLOGONS_TOKEN** (plural): a fine-grained token restricted to plogons with Contents read/write.
+Metadata read permission is implicit. Store it as a secret, not a variable; the release job has
+no environment configured. Branch rules must permit its metadata push. FluffySim's own release
+uses GITHUB_TOKEN with Contents write. Keep tokens out of source and shell history.
+
+After validation and explicit owner approval, from FluffySim:
+
+```sh
+jj log
+jj bookmark list --all-remotes
+jj git push --remote origin --bookmark master --dry-run
+jj git push --remote origin --bookmark master
+jj tag set v2.0.1.0 -r master
+jj tag list
+jj git push --remote origin --tag v2.0.1.0
+```
+
+Local master must point to the reviewed release-preparation commit above `mptttx`.
+The dry-run does not authorize the following push. Never move published tags.
+No manual plogons version edit is needed: successful publication updates its manifest.
 
 ## Recurring release pipeline
 
@@ -86,7 +92,7 @@ Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mo
 
 Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
 metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
-tag: `gh workflow run publish-fluffysim.yml --ref v2.0.0.0`. Reruns reuse the existing asset and
+tag: `gh workflow run publish-fluffysim.yml --ref v2.0.1.0`. Reruns reuse the existing asset and
 never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
 higher version, never a moved tag or replacement ZIP.
 

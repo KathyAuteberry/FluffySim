@@ -29,7 +29,7 @@ As this feature is still in beta, some edge cases and less common interactions m
 
 ## Installation
 
-After publication, install through the [custom repository](https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json), or manually register the release ZIP. Follow [installation and migration instructions](INSTALLATION.md). Do not load AnoMech and FluffySim together.
+Install through the [custom repository](https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json), or manually register the release ZIP. Follow [installation and migration instructions](INSTALLATION.md). Do not load AnoMech and FluffySim together.
 
 ## Added FRU and DSR practice scenarios
 
