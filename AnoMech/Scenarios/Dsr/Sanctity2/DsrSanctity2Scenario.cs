@@ -68,7 +68,7 @@ public sealed class DsrSanctity2Scenario : IScenario
 
     public void DrawSettings()
     {
-        ImGui.TextWrapped("EXPERIMENTAL — log-verified Meteor impacts and geometry; Conviction uses native omen VFX; native appearance, hazard activation and pattern distribution still need client validation. Current Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Read the bots' fixed tower claims. Meteor players should Sprint; outside players use the local-only Practice Anti-Knockback button after meteor five. Hug the inner rim of inside towers.");
+        ImGui.TextWrapped("Elemental pairs: N MT/D3, E H2/D2, S ST/D4, W H1/D1. Resolve the ice drops, then follow the tower assignments. Meteor players should Sprint; outside players use Practice Anti-Knockback after meteor five. Hug the inner rim of inside towers.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides",ref advanced)) Overrides.AdvancedMode = advanced;
         ImGui.BeginDisabled(advanced);

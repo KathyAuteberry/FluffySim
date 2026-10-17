@@ -10,7 +10,7 @@ public sealed class FruLightRampantSettingsWindow
         FruLightRampantState.PuddlePairs.Select(p => $"{p.A} + {p.B}")).ToArray();
     public void Draw()
     {
-        ImGui.TextWrapped("Provisional: native arena/tower/orb appearance needs in-game validation. Ring starting formation only; chain cutoff uses BossMod's 25y rule. Puddle entry is a practice KO; Bleed tick damage and the precise House of Light cone edge are unverified.");
+        ImGui.TextWrapped("Start in the ring formation. Resolve chains and towers, bait puddles, then handle the orbs, Banish III and House of Light. Keep chains within 25 yalms and avoid entering active puddles.");
         var pair = (Overrides.PuddlePair ?? -1) + 1;
         if (ImGui.Combo("Puddle targets", ref pair, Pairs, Pairs.Length)) Overrides.PuddlePair = pair == 0 ? null : pair - 1;
         var banish = Overrides.Spread is { } spread ? (spread ? 2 : 1) : 0;

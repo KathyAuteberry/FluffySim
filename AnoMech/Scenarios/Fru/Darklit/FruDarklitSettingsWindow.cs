@@ -12,7 +12,7 @@ public sealed class FruDarklitSettingsWindow
         ? ["No encounter-valid combination matches your practice filters."] : [];
     public void Draw()
     {
-        ImGui.TextWrapped("Mana Nukemaru bowtie: H1 H2 MT ST north; D1 D2 D3 D4 south. Resolve D2/D3 and tether sorting, then Water adjustment BEFORE cones. Full fragment through Somber Dance; native presentation pending validation. Approximate 8–26 yalm tether practice bounds. Bait tank must activate the local-only Practice invulnerability button before Somber Dance.");
+        ImGui.TextWrapped("Mana Nukemaru bowtie: H1 H2 MT ST north; D1 D2 D3 D4 south. Resolve D2/D3 and tether sorting, then adjust Water before the cones. Keep tethers between 8 and 26 yalms. The bait tank uses Practice invulnerability before Somber Dance.");
         var advanced = Overrides.Advanced;
         if (ImGui.Checkbox("Advanced / Exact Pattern Overrides", ref advanced)) Overrides.Advanced = advanced;
         if (!Overrides.Advanced)
@@ -40,10 +40,6 @@ public sealed class FruDarklitSettingsWindow
         if (ImGui.Combo("Hallowed Wings cleave", ref wing, "Random\0East\0West\0")) Overrides.EastWing = wing == 0 ? null : wing == 1;
         var bait = Overrides.BaitTank is null ? 0 : Overrides.BaitTank == PartyRole.MainTank ? 1 : 2;
         if (ImGui.Combo("Somber Dance bait", ref bait, "Auto (MT; ST if MT is PLD)\0MT\0ST\0")) Overrides.BaitTank = bait == 0 ? null : bait == 1 ? PartyRole.MainTank : PartyRole.OffTank;
-        var diagnostics = Overrides.TowerDiagnostics;
-        if (ImGui.Checkbox("Tower diagnostics", ref diagnostics)) Overrides.TowerDiagnostics = diagnostics;
-        var pathDiagnostics = Overrides.PathDiagnostics;
-        if (ImGui.Checkbox("Path of Light runtime diagnostics", ref pathDiagnostics)) Overrides.PathDiagnostics = pathDiagnostics;
         foreach (var conflict in Conflicts) ImGui.TextWrapped(conflict);
     }
 }

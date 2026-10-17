@@ -64,7 +64,7 @@ public sealed class FruApocalypseScenario : IScenario
     private float lastExplosion=-1;
     public void DrawSettings()
     {
-        ImGui.TextWrapped("Mana Permaswap / Coloured Apocalypse — full sequence, native presentation pending playtest. Read the initial exterior lights; swaps remain permanent. Lights/trails use a local practice overlay. Use the local-only practice invulnerability button if baiting Darkest Dance.");
+        ImGui.TextWrapped("Mana Permaswap / Coloured Apocalypse. Read the initial exterior lights and follow their rotation; swaps remain permanent. Use Practice invulnerability when baiting Darkest Dance.");
         if(ImGui.Checkbox("Local Apocalypse light/trail overlay",ref practiceLightOverlay))UsePracticeLightOverlay=practiceLightOverlay;
         ImGui.Checkbox("Advanced / Exact Pattern Overrides",ref advanced);Overrides.Advanced=advanced;
         if(!advanced)

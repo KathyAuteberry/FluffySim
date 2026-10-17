@@ -15,7 +15,7 @@ namespace AnoMech.Scenarios.Fru.LightRampant;
 
 public sealed class FruLightRampantScenario : IScenario
 {
-    public string Name => "Light Rampant (provisional)";
+    public string Name => "Light Rampant";
     public string MenuName => "Light Rampant";
     public IPhase Phase => FruZone.P2;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruLightRampantAi()];

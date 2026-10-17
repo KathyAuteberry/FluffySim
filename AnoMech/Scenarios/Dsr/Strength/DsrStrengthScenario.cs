@@ -33,7 +33,7 @@ public sealed class DsrStrengthScenario : IScenario
 
     public void DrawSettings()
     {
-        ImGui.TextWrapped("Part 1 only: ends after the fifth Heavy Impact. Native knight animations and effects await in-game validation.");
+        ImGui.TextWrapped("Practice Spiral Thrust, Lightning Storm and all five Heavy Impacts. Read the knights, spread in the safe sectors, then follow the expanding impacts toward the center.");
         var axis = (Overrides.SafeAxis ?? -1) + 1;
         if (ImGui.Combo("Safe sectors", ref axis, "Random\0N / S\0NE / SW\0E / W\0SE / NW\0")) Overrides.SafeAxis = axis == 0 ? null : axis - 1;
         var heavy = (Overrides.HeavyCardinal ?? -1) + 1;

@@ -15,7 +15,6 @@ public sealed class FruFallOfFaithStateOverrides
     public int? TetherPermutation { get; set; }
     public int? FireMask { get; set; }
     public bool PracticeOutlines { get; set; }
-    public bool Diagnostics { get; set; }
 
     public void Validate()
     {

@@ -12,7 +12,7 @@ public sealed class FruUltimateRelativitySettingsWindow
     private static readonly string[] Assignments = Enum.GetNames<RelativityAssignment>();
     public void Draw()
     {
-        ImGui.TextWrapped("Full Ultimate Relativity through Shell Crusher. Core sequence playtested; Oracle appearance and the extended eight-marker display await FFXIV confirmation. Attack 1/2 = NW/NE short DPS; Bind 1/2 = SW/SE long supports; Attack 3 = S short support/Ice, Ignore 1/2 = W support/E DPS mid Fire, Bind 3 = single-yellow long DPS/Ice, relative to the single yellow tether as north. Face outward before Return.");
+        ImGui.TextWrapped("Practice Ultimate Relativity through Shell Crusher. Use the single yellow tether as north. Attack 1/2: NW/NE short DPS; Bind 1/2: SW/SE long supports; Attack 3: S short support/Ice; Ignore 1/2: W support/E DPS mid Fire; Bind 3: single-yellow long DPS/Ice. Face outward before Return.");
         var north = (Overrides.RelativeNorth ?? -1) + 1;
         if (ImGui.Combo("Single yellow tether", ref north, "Random\0N\0NE\0E\0SE\0S\0SW\0W\0NW\0")) Overrides.RelativeNorth = north == 0 ? null : north - 1;
         var ice = Overrides.DpsIce is { } dps ? dps ? 1 : 2 : 0;

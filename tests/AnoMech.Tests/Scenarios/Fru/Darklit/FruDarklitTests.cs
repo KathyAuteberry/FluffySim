@@ -89,7 +89,14 @@ public class FruDarklitTests
         {
             ScenarioFactory = () => scenario, StopAt = 11,
             Overrides = o => ((FruDarklitStateOverrides)o).TowerRendering = DarklitTowerRendering.PracticeOverlay,
-            Probe = p => { if (p.Crossed(10.9f)) Assert.That(scenario.UseTowerFallback, Is.False); },
+            Probe = p =>
+            {
+                if (!p.Crossed(10.9f)) return;
+                Assert.That(scenario.ActiveTowerPositions.Count, Is.EqualTo(2));
+                var effects = ((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied;
+                Assert.That(effects, Does.Contain((0x00020001u, (byte)0x2A)));
+                Assert.That(effects, Does.Contain((0x00020001u, (byte)0x2B)));
+            },
             WriteArtifactsOnFailure = false,
         });
         Assert.That(run.Passed, run.ToString);
@@ -349,22 +356,6 @@ public class FruDarklitTests
         var cones = scenario.Resolutions.Single(r => r.Action == 40190).Time - 2.1f;
         Assert.That(tower, Is.EqualTo(16.149).Within(.1)); Assert.That(cones, Is.EqualTo(16.995).Within(.1));
         Assert.That(scenario.SomberVulnerable, Is.Empty);
-    }
-    [Test]
-    public void TowerFallbackUsesTheSamePositionsWithoutNativeDuplicateRequests()
-    {
-        var scenario = new FruDarklitScenario();
-        var run = ScenarioRun.Execute(typeof(FruDarklitScenario), 0, 1, new()
-        {
-            ScenarioFactory = () => scenario, Overrides = o => scenario.DiagnosticTowerFallback = true,
-            Probe = p => { if (p.Crossed(11f))
-            {
-                Assert.That(scenario.UseTowerFallback, Is.True); Assert.That(scenario.ActiveTowerPositions.Count, Is.EqualTo(2));
-                Assert.That(scenario.ActiveTowerPositions.Select(v => v + p.World.ScenarioOrigin), Is.EqualTo(new[] { new Vector3(100, 0, 92), new Vector3(100, 0, 108) }));
-                Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Does.Not.Contain((0x00020001u, (byte)0x2A)));
-            } }, WriteArtifactsOnFailure = false,
-        });
-        Assert.That(run.Passed, run.ToString); Assert.That(scenario.ActiveTowerPositions, Is.Empty);
     }
     [Test]
     public void CurrentProvisionalTetherIntervalRejectsBothDistanceFailures()

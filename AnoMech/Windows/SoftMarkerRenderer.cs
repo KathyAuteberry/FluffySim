@@ -8,8 +8,6 @@ internal static class SoftMarkerRenderer
     internal static void Draw()
     {
         ApocalypseRenderer.Draw();
-        DarklitRenderer.Draw();
-        FallOfFaithRenderer.Draw();
         foreach (var marker in Plugin.Game.World.SoftMarkers.Snapshot(Plugin.Game.World.ScenarioOrigin, Plugin.Game.World.ShowSimulatedParty))
         {
             if (!Plugin.GameGui.WorldToScreen(marker.Position, out var screen)) continue;

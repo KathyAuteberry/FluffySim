@@ -19,8 +19,6 @@ public sealed class FruDarklitStateOverrides
     public PartyRole? SpiritTarget { get; set; }
     public PartyRole? BaitTank { get; set; }
     public DarklitTowerRendering TowerRendering { get; set; }
-    public bool TowerDiagnostics { get; set; }
-    public bool PathDiagnostics { get; set; }
 }
 public sealed record DarklitPattern(PartyRole Tank, PartyRole Healer, PartyRole WestDps, PartyRole EastDps,
     DarklitTetherPattern Shape, PartyRole TetherWater, PartyRole UntetherWater)

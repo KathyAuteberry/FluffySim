@@ -29,7 +29,6 @@ public sealed class FruFallOfFaithScenario : IScenario
     public int Understacks { get; private set; }
     public IReadOnlyList<FaithCone> Cones => cones;
     public bool PracticeOutlines => settings.Overrides.PracticeOutlines;
-    public bool Diagnostics => settings.Overrides.Diagnostics;
     public static readonly Vector3[] Sources = [Vector3.Zero, new(-14.1421f, 0, -14.1421f), new(0, 0, -20), new(14.1421f, 0, -14.1421f)];
     private readonly FruFallOfFaithSettingsWindow settings = new();
     private readonly List<FaithCone> cones = [];

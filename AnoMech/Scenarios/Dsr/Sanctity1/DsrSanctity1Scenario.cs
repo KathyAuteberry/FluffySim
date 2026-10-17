@@ -48,7 +48,7 @@ public sealed class DsrSanctity1Scenario : IScenario
 
     public void DrawSettings()
     {
-        ImGui.TextWrapped("Full Sacred Severs, four jumps; native presentation awaits FFXIV validation. Read the swords, role-partner swaps, knight facing and both gazes. Wait for the orb ahead before rotating. Jump damage falloff is a provisional practice model.");
+        ImGui.TextWrapped("Practice Sacred Severs through all four jumps. Read the swords, swap with your role partner when needed, and look away from both gazes. Wait for the orb ahead to explode before rotating in the direction the knights face.");
         var advanced = Overrides.AdvancedMode;
         if (ImGui.Checkbox("Use Advanced / Exact Pattern Overrides", ref advanced)) Overrides.AdvancedMode = advanced;
         var rotation = Overrides.Clockwise is { } cw ? cw ? 1 : 2 : 0;

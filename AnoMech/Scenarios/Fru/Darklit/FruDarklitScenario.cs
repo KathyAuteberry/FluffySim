@@ -47,9 +47,6 @@ public sealed class FruDarklitScenario : IScenario
     public Vector3 OraclePosition => oracle?.Position ?? new(0, 0, 5);
     public Vector3 SpiritLanding { get; private set; }
     public IReadOnlyList<Vector3> ActiveTowerPositions => towerVisible && fragment is { IsActive: true } ? TowerPositions : [];
-    public bool DiagnosticTowerFallback { get; set; }
-    public bool UseTowerFallback => DiagnosticTowerFallback;
-    public bool ShowTowerDiagnostics => settings.Overrides.TowerDiagnostics;
     public bool WingsVisible { get; private set; }
     public int ResolvedTowers { get; private set; }
     public int ResolvedCones { get; private set; }
@@ -171,7 +168,6 @@ public sealed class FruDarklitScenario : IScenario
     private void ShowTowers()
     {
         towerVisible = true;
-        if (UseTowerFallback) return;
         for (byte i = 0; i < 2; i++)
         {
             world.Map.AddEffect(0x00020001, (byte)(0x2A + i));
@@ -194,7 +190,7 @@ public sealed class FruDarklitScenario : IScenario
                     AddLight(ctx.Hits);
                 })],
             });
-            if (!UseTowerFallback) world.Map.AddEffect(0x00080004, (byte)(0x2A + i));
+            world.Map.AddEffect(0x00080004, (byte)(0x2A + i));
         }
         towerVisible = false; ResolvedTowers = 2; resolutions.Add((world.Events.Elapsed, 40213));
     }
@@ -213,7 +209,6 @@ public sealed class FruDarklitScenario : IScenario
     public IReadOnlyList<DarklitPathCandidate> PathSnapshotCandidates { get; private set; } = [];
     public IReadOnlyList<DarklitPathCone> PathCones { get; private set; } = [];
     public float PathSnapshotTime { get; private set; } = -1;
-    public bool ShowPathDiagnostics => settings.Overrides.PathDiagnostics;
     public IReadOnlyList<PartyRole> PathTargets { get; private set; } = [];
     private void ResolveCones()
     {
@@ -335,7 +330,7 @@ public sealed class FruDarklitScenario : IScenario
             Helper(Vector3.Zero).Cast(new EnemyAction(40215) { Cast = new() { TargetsPartyForPresentation = true } });
             world.Party.WipeAllPlayers(40215, "Refulgent Fate tether too close, too far, or partner lost");
         }
-        if (!towerVisible || UseTowerFallback) return;
+        if (!towerVisible) return;
         for (byte i = 0; i < 2; i++)
         {
             var flag = world.Party.Find.InsideCircle(TowerPositions[i], FruDarklitRules.TowerRadius).Count == 2 ? 0x00800040u : 0x00200010u;

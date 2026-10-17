@@ -9,7 +9,7 @@ public sealed class FruFallOfFaithSettingsWindow
     public FruFallOfFaithStateOverrides Overrides { get; } = new();
     public void Draw()
     {
-        ImGui.TextWrapped("Mana: West-to-East H1 H2 MT ST D1 D2 D3 D4. First/third tethers west; second/fourth east. Swap promptly after the first two fetters expire. Easy and Hard intentionally use the same prompt movement. Native presentation awaits in-game validation.");
+        ImGui.TextWrapped("Mana order from west to east: H1 H2 MT ST D1 D2 D3 D4. First and third tethers go west; second and fourth go east. Swap promptly after the first two fetters expire.");
         var advanced = Overrides.Advanced;
         if (ImGui.Checkbox("Advanced / Exact Pattern Overrides", ref advanced)) Overrides.Advanced = advanced;
         if (!advanced)
@@ -34,7 +34,5 @@ public sealed class FruFallOfFaithSettingsWindow
         }
         var outlines = Overrides.PracticeOutlines;
         if (ImGui.Checkbox("Local practice cone outlines (resolution only)", ref outlines)) Overrides.PracticeOutlines = outlines;
-        var diagnostics = Overrides.Diagnostics;
-        if (ImGui.Checkbox("Fall of Faith live diagnostics", ref diagnostics)) Overrides.Diagnostics = diagnostics;
     }
 }

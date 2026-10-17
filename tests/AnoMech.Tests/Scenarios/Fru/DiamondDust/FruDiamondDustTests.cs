@@ -105,7 +105,7 @@ public class FruDiamondDustTests
         Assert.That(catalog.Any(s => s is FruArenaDiagnosticScenario), Is.False);
         Assert.That(diamondDust.SettingsOverrides, Is.TypeOf<FruDiamondDustStateOverrides>());
         Assert.That(AnoMech.Core.Game.Game.DisplayName(lightRampant), Is.EqualTo("P2 Light Rampant"));
-        Assert.That(AnoMech.Core.Game.Game.FullName(lightRampant), Does.EndWith("P2 Light Rampant (provisional)"));
+        Assert.That(AnoMech.Core.Game.Game.FullName(lightRampant), Does.EndWith("P2 Light Rampant"));
     }
 
     [TestCase(false)] [TestCase(true)]
