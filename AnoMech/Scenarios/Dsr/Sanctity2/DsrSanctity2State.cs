@@ -126,15 +126,6 @@ public sealed class DsrSanctity2State
     public Vector3 FinalPosition(PartyRole role) => Direction((Quadrant(role)*90+(IsMeteorRole(role) ? IsMeteor(role) ? 180 : 0 : 45))*MathF.PI/180)*18f;
     public Vector3 KnockbackPosition(PartyRole role) => Vector3.Normalize(FinalPosition(role))*2f;
     public bool TakesKnockback(PartyRole role) => FirstTowers[(int)role] >= 12;
-    public Vector3 MeteorPosition(PartyRole role,int drop)
-    {
-        if (!IsMeteor(role) || drop is < 0 or > 6) throw new ArgumentOutOfRangeException(nameof(drop));
-        var first = FirstPosition(role); var angle = MathF.Atan2(first.X,-first.Z);
-        var north = Quadrant(role)*MathF.PI/2;
-        var offset = MathF.Atan2(MathF.Sin(angle-north),MathF.Cos(angle-north));
-        var end = north+MathF.PI-18*MathF.PI/180;
-        return Direction(north+offset+(end-north-offset)*(drop+1)/7)*19.8f;
-    }
     private static MeteorTowerPattern[] BuildPatterns()
     {
         int[] masks = [1,2,4,3,5,6];

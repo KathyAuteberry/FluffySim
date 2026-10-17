@@ -1,6 +1,7 @@
 #pragma warning disable CA1416 // Native interfaces are replaced with headless fakes.
 using System.Numerics;
 using AnoMech.Core.Game;
+using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
@@ -117,13 +118,56 @@ public class DsrSanctity2Tests
             var s=State(p,0);var drops=new List<Vector3>();
             foreach(var i in Enumerable.Range(0,7))foreach(var role in s.Targets)
             {
-                var position=s.MeteorPosition(role,i);
+                var position=DsrSanctity2Ai.MeteorPosition(s,role,i);
                 Assert.That(drops.All(prior=>Vector3.Distance(prior,position)>=5),Is.True,$"pattern {p}, drop {i}");drops.Add(position);
-                if(i>0)Assert.That(Vector3.Distance(position,s.MeteorPosition(role,i-1)),Is.LessThan(7.8f*(DsrSanctity2Timing.MeteorInterval-.08f)));
+                if(i>0)Assert.That(Vector3.Distance(position,DsrSanctity2Ai.MeteorPosition(s,role,i-1)),Is.LessThan(7.8f*(DsrSanctity2Timing.MeteorInterval-.08f)));
             }
-            foreach(var role in s.Targets)Assert.That(Vector3.Distance(s.MeteorPosition(role,6),s.FinalPosition(role)),Is.LessThan(7.8f*(DsrSanctity2Timing.SecondTowers-DsrSanctity2Timing.Meteor(6)-.08f)));
+            foreach(var role in s.Targets)Assert.That(Vector3.Distance(DsrSanctity2Ai.MeteorPosition(s,role,6),s.FinalPosition(role)),Is.LessThan(7.8f*(DsrSanctity2Timing.SecondTowers-DsrSanctity2Timing.Meteor(6)-.08f)));
         }
     }
+    [Test]
+    public void ShortMeteorLegsWeaveOutsidePuddlesAndLeaveTimeToStop()
+    {
+        var shortSweeps = new HashSet<int>();
+        for (var pattern = 0; pattern < 810; ++pattern)
+        {
+            var state = State(pattern,0);
+            foreach (var role in state.Targets)
+            {
+                var shortRoute = DsrSanctity2Ai.MeteorSweep(state,role) < MathF.PI-.001f;
+                var totalLength = 0f;
+                if (shortRoute) shortSweeps.Add((int)MathF.Round(DsrSanctity2Ai.MeteorSweep(state,role)*180/MathF.PI));
+                for (var drop = 1; drop < 7; ++drop)
+                {
+                    var route = DsrSanctity2Ai.MeteorLeg(state,role,drop);
+                    var length = 0f;
+                    for (var node = 1; node < route.Count; ++node)
+                    {
+                        length += Vector3.Distance(route[node-1],route[node]);
+                        for (var sample = 0; sample <= 8; ++sample)
+                        {
+                            var position = Vector3.Lerp(route[node-1],route[node],sample/8f);
+                            Assert.That(position.Length(),Is.LessThan(20));
+                            for (var quadrant = 0; quadrant < 4; ++quadrant)
+                            {
+                                Assert.That(Vector3.Distance(position,DsrSanctity2Scenario.FirePosition(quadrant)),Is.GreaterThan(7));
+                                Assert.That(Vector3.Distance(position,DsrSanctity2State.Direction(quadrant*MathF.PI/2)*10),Is.GreaterThan(7));
+                            }
+                        }
+                    }
+                    Assert.That(length/7.8f,Is.LessThan(DsrSanctity2Timing.MeteorInterval-.16f));
+                    totalLength += length;
+                }
+                if (shortRoute)
+                {
+                    var sweep = MathF.Min(162*MathF.PI/180,DsrSanctity2Ai.MeteorSweep(state,role)-16*MathF.PI/180);
+                    Assert.That(totalLength,Is.GreaterThan(19.8f*sweep+1));
+                }
+            }
+        }
+        Assert.That(shortSweeps.Count,Is.EqualTo(2));
+    }
+
     [TestCase(12603u,3642u,3268u,65540u)] [TestCase(12638u,3643u,3268u,131076u)] [TestCase(12639u,3644u,3268u,196612u)]
     [TestCase(12591u,0u,629u,0u)]
     public void NewActorsUseVisibleVerifiedModelsAndEquipment(uint id,uint name,uint model,uint body)
@@ -132,12 +176,12 @@ public class DsrSanctity2Tests
         Assert.That(c.NameId,Is.EqualTo(name));Assert.That(c.InitialModeAttributeFlags,body == 0 ? Is.Null : Is.Zero);
         if(body!=0)Assert.That(c.Appearance!.BodyModel,Is.EqualTo(body));
     }
-    private static IEnumerable<TestCaseData> OuterRuns() => Enumerable.Range(0,810).Select(p=>new TestCaseData(p));
+    private static IEnumerable<TestCaseData> OuterRuns() => from pattern in Enumerable.Range(0,810) from difficulty in new[]{BotDifficulty.Easy,BotDifficulty.Hard} select new TestCaseData(pattern,difficulty);
     [TestCaseSource(nameof(OuterRuns))]
-    public void FullRunClearsEveryOuterPatternIncludingAllForcedCursedCases(int pattern)
+    public void FullRunClearsEveryOuterPatternIncludingAllForcedCursedCases(int pattern, BotDifficulty difficulty)
     {
         var scenario=new DsrSanctity2Scenario();
-        var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,pattern,new(){ScenarioFactory=()=>scenario,
+        var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,pattern,new(){ScenarioFactory=()=>scenario,BotDifficulty=difficulty,
             Overrides=o=>{var s=(DsrSanctity2StateOverrides)o;s.AdvancedMode=true;s.TargetPair=pattern%12;s.TowerPattern=pattern;},Probe=p=>
             {
                 if(p.Crossed(1))
@@ -152,6 +196,19 @@ public class DsrSanctity2Tests
                 {
                     Assert.That(scenario.ActiveTowerVisuals.Select(t=>t.Position),Is.EquivalentTo(Enumerable.Range(0,8).Select(i=>DsrSanctity2State.Direction(i*MathF.PI/4)*18f)));
                     Assert.That(scenario.ActiveTowerVisuals.All(t=>t.SecondWave && t.Radius==3 && MathF.Abs(t.Until-DsrSanctity2Timing.SecondTowers)<.001f),Is.True);
+                }
+                for (var drop = 1; drop < 7; ++drop)
+                {
+                    if (!p.Crossed(DsrSanctity2Timing.Meteor(drop)-DsrSanctity2Timing.MeteorSpawnLead-.03f)) continue;
+                    foreach (var role in scenario.LastState!.Targets)
+                        Assert.That(p.Member(role)!.MoveDestination,Is.Null,$"pattern {pattern}, {difficulty}, stopped before drop {drop}");
+                }
+                for (var drop = 0; drop < 7; ++drop)
+                {
+                    if (!p.Crossed(DsrSanctity2Timing.Meteor(drop)-DsrSanctity2Timing.MeteorSpawnLead+.03f)) continue;
+                    var state = scenario.LastState!;
+                    for (var target = 0; target < 2; ++target)
+                        Assert.That(Vector3.Distance(scenario.CometPositions[drop*2+target],DsrSanctity2Ai.MeteorPosition(state,state.Targets[target],drop)),Is.LessThan(.3f),$"pattern {pattern}, {difficulty}, drop {drop}");
                 }
                 if(p.Crossed(27)) Assert.That(scenario.ActiveTowerVisuals,Is.Empty);
             },WriteArtifactsOnFailure=false});
@@ -211,7 +268,7 @@ public class DsrSanctity2Tests
         var ice=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){PlayerRole=role,ScenarioFactory=()=>new DsrSanctity2Scenario(),
             Takeovers=[new(11.7f,new(pair.X,pair.Z))],WriteArtifactsOnFailure=false});
         Assert.That(ice.Deaths.Any(d=>d.Role==role&&d.ActionId==25575),Is.True,ice.ToString);
-        var pos=s.MeteorPosition(role,0);
+        var pos=DsrSanctity2Ai.MeteorPosition(s,role,0);
         var link=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){PlayerRole=role,ScenarioFactory=()=>new DsrSanctity2Scenario(),
             Takeovers=[new(13.4f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
         Assert.That(link.Deaths.Any(d=>d.ActionId==25578),Is.True,link.ToString);
@@ -219,7 +276,7 @@ public class DsrSanctity2Tests
     [Test]
     public void OutsideHumanMustPressAntiKnockbackRatherThanReceivingBotImmunity()
     {
-        var s=StateForSeed(0);var role=s.Targets[0];var pos=s.MeteorPosition(role,4);
+        var s=StateForSeed(0);var role=s.Targets[0];var pos=DsrSanctity2Ai.MeteorPosition(s,role,4);
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){PlayerRole=role,ScenarioFactory=()=>new DsrSanctity2Scenario(),
             Takeovers=[new(21.4f,new(pos.X,pos.Z))],WriteArtifactsOnFailure=false});
         Assert.That(run.Deaths.Any(d=>d.Role==role&&d.ActionId==0&&d.Time<24),Is.True,run.ToString);
