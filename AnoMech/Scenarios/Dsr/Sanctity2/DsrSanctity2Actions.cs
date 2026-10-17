@@ -25,6 +25,13 @@ public static class DsrSanctity2Actions
     };
     public static readonly EnemyAction FirstTower = Tower(29564);
     public static readonly EnemyAction SecondTower = Tower(28651);
+    public static readonly EnemyAction TowerFailure = new(25568)
+    {
+        DeathExplanation = "Tower needs exactly one player",
+        Cast = new() { TargetsPartyForPresentation = true },
+        Area = new() { AdjustTargets = (ctx, _) => ctx.Party.Find.InsideCircle(ctx.Origin.Position,100f) },
+        Effects = [Damage(Severity.Lethal)], Timing = new() { DamageDelay = .22f },
+    };
     public static readonly EnemyAction Comet = new(25577)
     {
         Cast = new() { AnimationTargetsCaster = true }, Effects = [Damage()], Timing = new() { DamageDelay = 0 },
@@ -56,6 +63,7 @@ public static class DsrSanctity2Timing
     public const float IcePresentation = 8.3f;
     public const float Storm = 7.79f;
     public const float FirstTowers = 12.05f;
+    public const float FirstTowerFailure = 14.15f;
     public const float FirstMeteor = 13.45f;
     public const float MeteorInterval = 1.43f;
     // Actor snapshots precede effects by 0.52–0.92s; exact server capture time is not recorded.

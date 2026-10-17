@@ -1,3 +1,4 @@
+from datetime import timedelta
 import json
 import math
 from pathlib import Path
@@ -62,6 +63,20 @@ class ReconstructionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             path=Path(directory)/'fixture.log';path.write_text('\n'.join('|'.join(r) for r in records)+'\n')
             return evidence.analyze(path)
+
+    def test_failed_tower_punishment_is_retained_as_a_separate_later_action(self):
+        records=list(evidence.logs.iter_records(FIXTURE))
+        marker=next(r for r in records if r[0]=='27')
+        failure=next(r.copy() for r in records if r[0] in ('21','22') and int(r[4],16)==29564)
+        failure[1]=(evidence.logs.parse_timestamp(marker[1])+timedelta(seconds=14.117)).isoformat()
+        failure[4]='63E0';failure[5]='Eternal Conviction';failure[44]='0000FFFF'
+        records.append(failure)
+        records.sort(key=lambda r:evidence.logs.parse_timestamp(r[1]))
+        result=self.inspect_records(records)
+        failures=[e for e in result['sequences'][0]['events'] if e.get('action')==25568]
+        self.assertEqual(len(failures),1)
+        self.assertAlmostEqual(failures[0]['t'],14.117,places=3)
+        self.assertTrue(failures[0]['release'])
 
     def test_zone_exit_ends_coverage_and_does_not_import_inn_events(self):
         records=list(evidence.logs.iter_records(FIXTURE))

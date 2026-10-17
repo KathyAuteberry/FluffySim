@@ -257,7 +257,7 @@ public class DsrSanctity2Tests
                 if(p.Crossed(9.5f))original=(int[])s.FirstTowers.Clone();
                 if(p.Crossed(11.6f))Assert.That(s.FirstTowers,Is.EqualTo(original));
             },Takeovers=[new(11.7f,contest ? new Vector2(StateForSeed(0).FirstPosition(PartyRole.MainTank).X,StateForSeed(0).FirstPosition(PartyRole.MainTank).Z) : Vector2.Zero)],WriteArtifactsOnFailure=false});
-            Assert.That(run.Deaths.Any(d=>d.ActionId==29564),Is.True,run.ToString);
+            Assert.That(run.Deaths.Any(d=>d.ActionId==25568),Is.True,run.ToString);
         }
     }
     [Test]
