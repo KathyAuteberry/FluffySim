@@ -262,3 +262,29 @@ not a reconstruction of one recorded player's movement. It preserves all tower a
 and uses ordinary run speed. The curve stays outside the seven-yalm fire hazards and clears
 the baited ice before its existing activation deadline. Central and inner-tower routes are
 unchanged. Segment departures use scenario time, preserving Pause and Stop behavior.
+
+## 2.1.2 short-route practice
+
+Owner feedback identifies short meteor routes as requiring weaving and stop/start movement.
+The final assignment remains the opposite **second-wave cardinal tower** (north starter to
+south, south starter to north). First-wave tower spacing describes available meteor-drop
+space before reaching the other runner's first comet, not a different final tower.
+
+The AI now bounds its last drop before the opposite runner's first drop, using a 16-degree
+clearance at the outer rim. A route with less than 180 degrees between the runners' starting
+positions adds two inward/outward dodges between captures. Radial movement follows a
+conservative envelope outside the modeled Fire/Ice circles, with an inward cap of 1.2 yalms.
+Moves run at ordinary Sprint speed and finish before the next capture, leaving a stationary
+interval. This is a practice implementation of stagger movement, not an exact replay of the
+owner's macro or a measured retail movement cadence. Drop timing, five-yalm link validation
+and the unresolved retail thresholds above remain unchanged.
+
+The existing forced-cursed N/S filter remains available, including when the player practices
+meteors. Both runners are validated: the shorter route can belong to either the player or a
+bot. Tower-center spacing in the short configurations is 150 or 120 degrees; soaking toward
+the N/S line changes the actual starting angles.
+
+Regression coverage samples the movement segments against all eight modeled puddles,
+checks route lengths at Sprint speed, and checks actual comet capture positions across all
+810 patterns on Easy and Hard. Every player seat is also covered with forced-cursed meteor and non-meteor assignments. Native
+movement appearance and the feel of the pauses still require in-client acceptance.

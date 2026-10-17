@@ -28,6 +28,43 @@ public sealed class DsrSanctity2Ai : IScenarioAi<DsrSanctity2State>
         }).ToArray();
     }
 
+    internal static float MeteorSweep(DsrSanctity2State state, PartyRole role)
+    {
+        var other = state.Targets.Single(r => r != role);
+        var start = state.FirstPosition(role);
+        var end = state.FirstPosition(other);
+        var angle = MathF.Atan2(end.X,-end.Z)-MathF.Atan2(start.X,-start.Z);
+        return (angle+2*MathF.PI)%(2*MathF.PI);
+    }
+
+    internal static Vector3 MeteorPosition(DsrSanctity2State state, PartyRole role, int drop)
+    {
+        if (!state.IsMeteor(role) || drop is < 0 or > 6) throw new ArgumentOutOfRangeException(nameof(drop));
+        var first = state.FirstPosition(role);
+        var start = MathF.Atan2(first.X,-first.Z);
+        var sweep = MathF.Min(162*MathF.PI/180,MeteorSweep(state,role)-16*MathF.PI/180);
+        return DsrSanctity2State.Direction(start+sweep*drop/6)*19.8f;
+    }
+
+    internal static IReadOnlyList<Vector3> MeteorLeg(DsrSanctity2State state, PartyRole role, int drop)
+    {
+        var start = MeteorPosition(state,role,drop-1);
+        var end = MeteorPosition(state,role,drop);
+        var angle = MathF.Atan2(start.X,-start.Z);
+        var sweep = MathF.Atan2(start.Z*end.X-start.X*end.Z,Vector3.Dot(start,end));
+        sweep = MathF.Abs(sweep);
+        var weave = MeteorSweep(state,role) < MathF.PI-.001f;
+        return Enumerable.Range(0,17).Select(i =>
+        {
+            var t = i/16f;
+            var heading = angle+sweep*t;
+            var innerRim = 18.7f-1.1f*MathF.Cos(4*heading);
+            var dodge = MathF.Sin(2*MathF.PI*t);
+            var radius = weave ? 19.8f-MathF.Min(1.2f,19.8f-innerRim)*dodge*dodge : 19.8f;
+            return DsrSanctity2State.Direction(heading)*radius;
+        }).ToArray();
+    }
+
     public void Run(DsrSanctity2State state, SimWorld world)
     {
         world.Events.Add(.1f, () => Each(role => Move(role,DsrSanctity2State.Direction(DsrSanctity2State.BaseQuadrants[(int)role]*MathF.PI/2)*10)));
@@ -58,7 +95,7 @@ public sealed class DsrSanctity2Ai : IScenarioAi<DsrSanctity2State>
             foreach (var role in DsrSanctity2State.Roles.Where(r => !state.IsMeteor(r)))
                 Move(role,state.TakesKnockback(role) ? state.KnockbackPosition(role) : Vector3.Normalize(state.FirstPosition(role))*19.8f);
         });
-        world.Events.Add(11.85f, () => { foreach (var role in state.Targets) Move(role,state.MeteorPosition(role,0)); });
+        world.Events.Add(11.85f, () => { foreach (var role in state.Targets) Move(role,MeteorPosition(state,role,0)); });
         for (var step = 1; step <= 6; ++step)
         {
             var fraction=step/6f;
@@ -76,10 +113,17 @@ public sealed class DsrSanctity2Ai : IScenarioAi<DsrSanctity2State>
         for (var i = 1; i < 7; ++i)
         {
             var drop = i;
-            world.Events.Add(DsrSanctity2Timing.Meteor(i-1)-DsrSanctity2Timing.MeteorSpawnLead+.08f, () =>
+            foreach (var role in state.Targets)
             {
-                foreach (var role in state.Targets) Move(role,state.MeteorPosition(role,drop));
-            });
+                var route = MeteorLeg(state,role,drop);
+                var departure = DsrSanctity2Timing.Meteor(i-1)-DsrSanctity2Timing.MeteorSpawnLead+.08f;
+                for (var node = 1; node < route.Count; ++node)
+                {
+                    var destination = route[node];
+                    world.Events.Add(departure, () => Move(role,destination));
+                    departure += Vector3.Distance(route[node-1],destination)/7.8f;
+                }
+            }
         }
         world.Events.Add(21.5f, () =>
         {
