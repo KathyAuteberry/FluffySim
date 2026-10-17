@@ -1,3 +1,18 @@
+# FluffySim 2.1.3.0 — release prepared
+
+## DSR Sanctity tower fixes
+
+- Replaces the immediate wipe on a failed first-wave tower with the separate Eternal
+  Conviction punishment, released at T+14.15 with HP loss about 0.22 seconds later.
+- Preserves the T+11.75 soak check. Entering after that check cannot undo a missed tower;
+  the later punishment does not extend the entry deadline.
+- Keeps failed tower helpers alive for the punishment and cancels pending failures on
+  Stop/Restart. Adds regressions for late entry, Pause, failure timing and cleanup.
+- Includes Eternal Conviction in the combat-log analyzer so future timing audits retain
+  failed-tower punishment separately from tower soak effects.
+- Raises both Sanctity tower pillars from height scale 1 to 6 while keeping their radius
+  unchanged. The separate height feature retains native omen ownership and cleanup.
+
 # FluffySim 2.1.2.0 — release prepared
 
 ## DSR Sanctity meteor routes
