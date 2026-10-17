@@ -24,11 +24,11 @@ public sealed class SimOmen : ISimObject
     // Telegraph for `actionId` centered at `origin` (scenario-local) and oriented at
     // `rotation` (radians, already including any per-cast offset). No-ops when the
     // action has no Omen entry or its file can't be resolved.
-    internal SimOmen(Coordinates coordinates, uint actionId, Vector3 origin, float rotation, float? durationSeconds = null)
+    internal SimOmen(Coordinates coordinates, uint actionId, Vector3 origin, float rotation, float? durationSeconds = null, float heightScale = 1f)
     {
         this.coordinates = coordinates;
         remaining = durationSeconds;
-        SpawnFromAction(actionId, origin, rotation);
+        SpawnFromAction(actionId, origin, rotation, heightScale);
     }
 
     // Telegraph from an explicit omen path + scale. Used by scenarios that want a
@@ -62,7 +62,7 @@ public sealed class SimOmen : ISimObject
         alt = null;
     }
 
-    private void SpawnFromAction(uint actionId, Vector3 origin, float rotation)
+    private void SpawnFromAction(uint actionId, Vector3 origin, float rotation, float heightScale)
     {
         if (Natives.Data.Action(actionId) is not { } action)
         {
@@ -84,8 +84,8 @@ public sealed class SimOmen : ISimObject
         var halfWidth = action.XAxisModifier > 0 ? action.XAxisModifier * 0.5f : range;
         var scale = action.CastType switch
         {
-            CastType.Rectangle2 or CastType.Rectangle or CastType.Cross => new Vector3(halfWidth, 1f, range),
-            _ => new Vector3(range, 1f, range),
+            CastType.Rectangle2 or CastType.Rectangle or CastType.Cross => new Vector3(halfWidth, heightScale, range),
+            _ => new Vector3(range, heightScale, range),
         };
         var globalOrigin = coordinates.ToGlobal(origin);
         Plugin.Log.Information($"SimOmen: action {actionId:X} origin(local)=<{origin.X:F2},{origin.Y:F2},{origin.Z:F2}> rot={rotation:F3} scale=<{scale.X:F2},{scale.Y:F2},{scale.Z:F2}>");

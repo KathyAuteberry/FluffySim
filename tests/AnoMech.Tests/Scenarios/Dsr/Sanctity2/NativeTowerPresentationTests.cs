@@ -29,7 +29,7 @@ public class NativeTowerPresentationTests
                     Assert.That(scenario.ActiveNativeTowerCount,Is.EqualTo(8));
                     var current=fx.StaticSpawns.Where(s=>s.Handle.RemoveCalls==0).ToArray();
                     Assert.That(current,Has.Length.EqualTo(8));
-                    Assert.That(current.All(s=>s.Path==TowerPath && s.Scale==new Vector3(3,1,3)),Is.True);
+                    Assert.That(current.All(s=>s.Path==TowerPath && s.Scale==new Vector3(3,6,3)),Is.True);
                     Assert.That(current.Select(s=>s.Placement.Position),Is.EquivalentTo(scenario.ActiveTowerVisuals.Select(t=>t.Position+p.World.ScenarioOrigin)));
                 }
                 if (p.Crossed(DsrSanctity2Timing.FirstTowers-.1f) || p.Crossed(DsrSanctity2Timing.SecondTowers-.1f))

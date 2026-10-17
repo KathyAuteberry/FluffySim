@@ -165,7 +165,7 @@ public sealed class DsrSanctity2Scenario : IScenario
                 (second ? DsrSanctity2Timing.SecondTowers : DsrSanctity2Timing.FirstTowers),second));
             var actor=Helper(position,3640);
             var action=second ? DsrSanctity2Actions.SecondTower : DsrSanctity2Actions.FirstTower;
-            nativeTowerOmens.Add((world.SpawnOmen(action.ActionId,new(position,0)),second));
+            nativeTowerOmens.Add((world.SpawnOmen(action.ActionId,new(position,0),heightScale:6f),second));
             actor.Cast(action with { Effects = action.Effects.Append(new ResolveEffect(ctx =>
             {
                 ++ResolvedTowers;
