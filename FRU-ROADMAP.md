@@ -2759,3 +2759,11 @@ Native hotbar tank defenses and Arm's Length/Surecast resolve independently of t
 - Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
 - Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
 - Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
+
+
+### 2.1.1 command cleanup
+
+The obsolete `arena-p3` and `arena-dsr-p2` command entry points have been removed.
+Historical instructions above describe the original investigations. Use the normal scenario
+entry flow and the retained `snapshot <label>` command for current captures. Headless arena
+fixtures remain available for regression tests.

@@ -109,7 +109,7 @@ public sealed class Plugin : IDalamudPlugin
 
             CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "Open FluffySim. Subcommands: config, mp, start, reset, leave, arena-p3, arena-dsr-p2, snapshot <label>"
+                HelpMessage = "Open FluffySim. Subcommands: config, mp, start, reset, leave, snapshot <label>"
             });
             CommandManager.AddHandler(CommandAlias, new CommandInfo(OnCommand)
             {
@@ -322,12 +322,6 @@ public sealed class Plugin : IDalamudPlugin
                         Game.Player is { Dead: false }, Game.World.PracticeAntiKnockback);
                     ChatGui.Print(activated ? "FluffySim: local anti-knockback active for 6 seconds." : "FluffySim: local anti-knockback unavailable (Meteors only, once per run, not while paused or KO).");
                 });
-                break;
-            case "arena-dsr-p2":
-                Game.EnterAndStart(new RunScenarioParams(new AnoMech.Scenarios.Dsr.DsrArenaDiagnosticScenario(), new Core.Game.Party.LocalPartyProvider(), null, 0), SessionMode.Local);
-                break;
-            case "arena-p3":
-                Game.EnterAndStart(new RunScenarioParams(new AnoMech.Scenarios.Fru.FruP3ArenaDiagnosticScenario(), new Core.Game.Party.LocalPartyProvider(), null, 0), SessionMode.Local);
                 break;
             case "offline":
                 Offline?.ConfigWindow.Toggle();

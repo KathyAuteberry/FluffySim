@@ -765,3 +765,11 @@ and releases it at each wave’s effect time or teardown. No native EObj or map-
 invented. The projected overlay, diagnostic window and their settings switches have been removed. See the native
 follow-up in docs/encounters/dsr-sanctity-meteors-evidence.md for resource hashes and limits.
 Native appearance/scale and long-pause animation behavior still require in-client validation.
+
+
+### 2.1.1 command cleanup
+
+The obsolete `arena-p3` and `arena-dsr-p2` command entry points have been removed.
+Historical instructions above describe the original investigations. Use the normal scenario
+entry flow and the retained `snapshot <label>` command for current captures. Headless arena
+fixtures remain available for regression tests.
