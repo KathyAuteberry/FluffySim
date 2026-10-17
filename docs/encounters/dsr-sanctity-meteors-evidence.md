@@ -288,3 +288,26 @@ Regression coverage samples the movement segments against all eight modeled pudd
 checks route lengths at Sprint speed, and checks actual comet capture positions across all
 810 patterns on Easy and Hard. Every player seat is also covered with forced-cursed meteor and non-meteor assignments. Native
 movement appearance and the feel of the pauses still require in-client acceptance.
+
+## 2.1.3 first-wave failure punishment
+
+A direct audit found that the reconstruction action whitelist omitted **Eternal Conviction
+(25568)**, the separate raidwide punishment for failed towers. The analyzer now retains it.
+The historical typed inventory above predates this correction. The raw file audited for this
+follow-up has SHA-256 `e44dc29ebd7b61d2045ff5420949e2a48e34d6a4f55e16b22514880f674672e1`.
+
+Relative to the first Meteor Prey marker, the twelve executions have first-tower cast ends
+at T+11.744–11.751 and Conviction effects at T+12.007–12.043. Nine executions include
+Eternal Conviction effects at T+14.100–14.137, with the first corresponding HP confirmations
+at T+14.323–14.359. For example, attempt 6 records tower effects at line 488214 onward
+(T+12.007), followed by failure effects at lines 488334–488346 (T+14.105). Their sources are
+9020 / NameId 3640 tower helpers. Attempts 11 and 12 have one recipient per first-wave tower
+and no Eternal Conviction in this window. The exact server occupancy snapshot remains
+inferred from cast end; these events do not establish extra entry grace.
+
+The simulator keeps the first-wave occupancy snapshot at T+11.75, records failure there,
+and retains each failed helper for a separate Eternal Conviction at T+14.15. HP loss/death
+follows 0.22 seconds later. This replaces the immediate wipe at the snapshot. Late entry
+does not undo a recorded failure. Successful helpers still despawn on their existing schedule;
+Pause freezes pending punishment and Stop/Restart cancels it. Second-wave failure behavior
+is unchanged by this correction.

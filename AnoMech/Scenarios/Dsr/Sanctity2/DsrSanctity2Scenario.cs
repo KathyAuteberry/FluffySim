@@ -41,6 +41,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     private SimEnemy charibert = null!;
     private SimEnemy noudenet = null!;
     private readonly List<SimEnemy> actors = [];
+    private readonly List<SimEnemy> failedFirstTowers = [];
     private readonly List<SimEventObject> visuals = [];
     private readonly List<Vector3> comets = [];
     private readonly Dictionary<int, List<(SimEnemy Actor, bool Linked)>> pendingComets = [];
@@ -95,7 +96,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     {
         world=worldParam; world.PracticeAntiKnockback.Start(); state=LastState=new(world.Rng,Overrides,world.Party.PlayerRole);
         Completed=false; ResolvedTowers=0; ResolvedMeteors=0; FailedTowers=0;
-        actors.Clear(); visuals.Clear(); comets.Clear(); puddles.Clear(); puddlePresentation.Clear();
+        actors.Clear(); failedFirstTowers.Clear(); visuals.Clear(); comets.Clear(); puddles.Clear(); puddlePresentation.Clear();
         world.OnDespawn(Cleanup);
         world.Events.Add(0f,SpawnOpening);
         world.Events.Add(0f,() =>
@@ -126,6 +127,15 @@ public sealed class DsrSanctity2Scenario : IScenario
                 ShowPuddle(puddle.Position,0x1EB682,DsrSanctity2Timing.PuddleEnd-world.Events.Elapsed);
         });
         world.Events.Add(DsrSanctity2Timing.FirstTowers,() => ClearTowerOmens(false));
+        world.Events.Add(DsrSanctity2Timing.FirstTowerFailure,() =>
+        {
+            foreach (var tower in failedFirstTowers)
+            {
+                tower.Cast(DsrSanctity2Actions.TowerFailure);
+                world.Events.Add(.9f,tower.Despawn);
+            }
+            failedFirstTowers.Clear();
+        });
         world.Events.Add(DsrSanctity2Timing.SecondTowerCast,() => { StartTowers(true); hermenost.Cast(DsrSanctity2Actions.SecondTowerCast); });
         for(var i=0;i<7;++i)
         {
@@ -165,11 +175,16 @@ public sealed class DsrSanctity2Scenario : IScenario
                 (second ? DsrSanctity2Timing.SecondTowers : DsrSanctity2Timing.FirstTowers),second));
             var actor=Helper(position,3640);
             var action=second ? DsrSanctity2Actions.SecondTower : DsrSanctity2Actions.FirstTower;
-            nativeTowerOmens.Add((world.SpawnOmen(action.ActionId,new(position,0)),second));
+            nativeTowerOmens.Add((world.SpawnOmen(action.ActionId,new(position,0),heightScale:6f),second));
             actor.Cast(action with { Effects = action.Effects.Append(new ResolveEffect(ctx =>
             {
                 ++ResolvedTowers;
-                if (ctx.Hits.Count != 1) { ++FailedTowers; ctx.AfterResolve(() => world.Party.WipeAllPlayers(action.ActionId,"Tower needs exactly one player")); }
+                if (ctx.Hits.Count != 1)
+                {
+                    ++FailedTowers;
+                    if (!second) { failedFirstTowers.Add(actor); return; }
+                    ctx.AfterResolve(() => world.Party.WipeAllPlayers(action.ActionId,"Tower needs exactly one player"));
+                }
                 ctx.AfterResolve(() => world.Events.Add(.9f,actor.Despawn));
             })).ToArray() });
         }
@@ -232,7 +247,7 @@ public sealed class DsrSanctity2Scenario : IScenario
         world.PracticeAntiKnockback.Clear();
         ClearTowerOmens(false); ClearTowerOmens(true);
         foreach(var actor in actors) actor.Despawn(); foreach(var visual in visuals) visual.Despawn();
-        actors.Clear();visuals.Clear();puddles.Clear();comets.Clear();pendingComets.Clear();towerVisuals.Clear();
+        actors.Clear();failedFirstTowers.Clear();visuals.Clear();puddles.Clear();comets.Clear();pendingComets.Clear();towerVisuals.Clear();
         foreach(var role in DsrSanctity2State.Roles) { world.Party.Get(role)?.RemoveStatus(562); world.Party.Get(role)?.RemoveStatus(2903); }
     }
     private sealed class ResolveEffect(Action<EnemyActionContext> resolve) : IEnemyActionEffect
