@@ -1,3 +1,15 @@
+# FluffySim 2.1.2.0 — release prepared
+
+## DSR Sanctity meteor routes
+
+- Makes meteor bots weave and stagger their movement on short and forced-cursed routes,
+  adding travel distance around Fire/Ice edges and pausing between comet drops.
+- Spaces drops around the other runner's starting position while retaining the opposite
+  N/S second-wave tower assignments and the existing forced-cursed practice selector.
+- Checks all 810 tower patterns on Easy and Hard, including both meteor runners' capture
+  positions, stop intervals, puddle clearance and tower completion.
+- Native movement appearance and stagger pacing still require in-game verification.
+
 # FluffySim 2.1.1.0 — release prepared
 
 ## Upstream integration
