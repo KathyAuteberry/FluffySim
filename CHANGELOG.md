@@ -1,3 +1,31 @@
+# FluffySim 2.1.1.0 — release prepared
+
+## Upstream integration
+
+- Integrates AnoMech 0.5.1.0 through `6aec4a59`, retaining upstream attribution,
+  published history and both staged FluffySim feature branches.
+- Adds multiplayer session-stream recovery after dropped links and corrects peer clock
+  synchronization. Mechanic result marks now come from a helper so they do not interrupt
+  the player's cast.
+- Keeps peer status sources stable after their caster despawns, avoiding repeated
+  removal and reapplication of persistent statuses.
+- Adds TOP Party Synergy LPDU and UMAD Forsaken Yan, with Yan's sixth-tower movement
+  delayed until peers can read its markers.
+- Adds a separate Futures Rewritten (Upstream) scenario group with Light Rampant,
+  Ultimate Relativity, Apocalypse, Darklit Dragonsong, Crystallize Time, Fulgent Blade
+  and Paradise Regained. All nine existing FluffySim scenarios remain available with
+  their saved identities; Diamond Dust remains shelved.
+- Preserves native appearance support for custom DSR/FRU actors while adding upstream
+  spawn equipment, customization, statuses and model state/scale. Crystallize Time's
+  per-frame movement checks that the practice instance is active.
+- Native rendering, new mechanics and multiplayer recovery still require in-client testing.
+
+## Practice settings and commands
+
+- Streamlines DSR and FRU practice labels and settings, removing obsolete Fall of Faith
+  and Darklit overlay controls while retaining native mechanic presentation.
+- Removes the obsolete `arena-p3` and `arena-dsr-p2` diagnostic entry subcommands.
+
 # FluffySim 2.1.0.0 — release prepared
 
 ## DSR Sanctity Meteors reconstruction
