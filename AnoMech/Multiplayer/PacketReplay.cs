@@ -51,6 +51,7 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
     private readonly Queue<uint> effectOrder = new();
     // An effect waiting for its caster holds back the results that name it.
     private readonly Dictionary<uint, uint> waitingEffects = new();
+    private readonly Dictionary<uint, uint> statusSources = new();
     private readonly Dictionary<uint, (Queue<GamePacket> Packets, int Frames)> waiting = new();
     // Map effects and director updates, in the host's order, each retried until the zone takes it.
     private readonly Queue<GamePacket> arena = new();
@@ -148,6 +149,7 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
         tethers.Clear();
         waiting.Clear();
         waitingEffects.Clear();
+        statusSources.Clear();
         arena.Clear();
         effectSequences.Clear();
         effectOrder.Clear();
@@ -267,6 +269,7 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
         }
         var enemy = natives.Adopting(chara, entityId, () => world.SpawnEnemy(config));
         spawned[p.Actor] = new Spawned { LocalEntityId = entityId, Character = chara, Enemy = enemy };
+        statusSources[p.Actor] = entityId;
         Copied?.Invoke(entityId, p.Actor);
     }
 
@@ -431,7 +434,8 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
         foreach (var s in NetGuard.Cap(p.Slots, StatusSlots))
             if (s.Slot < StatusSlots)
                 slots[s.Slot] = new StatusSlot(s.StatusId, s.Param, NetGuard.Clamp(s.RemainingTime, 0f, 86_400f),
-                    s.Source == PacketActor.None ? 0 : EntityOf(s.Source) is var source and not NoTarget ? source : 0);
+                    s.Source == PacketActor.None ? 0 : statusSources.TryGetValue(s.Source, out var remembered) ? remembered
+                    : EntityOf(s.Source) is var source and not NoTarget ? source : 0);
         var health = Scale(p.Health, p.MaxHealth, chara.MaxHealth);
         if (IsOurSeat(p.Actor)) natives.LocalPlayer.ApplyHostStatuses(slots, health, p.Mana, p.Shield);
         else chara.ReceiveStatusList(slots, health, p.Mana, p.Shield);

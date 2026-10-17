@@ -1,5 +1,30 @@
 # FluffySim upstream / Evernow integration
 
+## 2.1.1.0 integration — 2026-10-17
+
+Upstream `master` is integrated through AnoMech **0.5.1.0**, commit `6aec4a59`.
+The existing unpublished `lwvlyz` integration retains feature parents `qwozup` and
+`qrmsmp` and adds the original upstream tip as its third parent. Published history
+and upstream attribution are preserved; the existing release-preparation child remains above it.
+
+- Adopts session-stream reconnect/replay and clock synchronization, the helper-cast
+  result-mark fix, TOP Party Synergy LPDU, and UMAD Forsaken Yan.
+- Retains all nine FluffySim scenarios and their saved identities. Upstream's FRU
+  implementations live under `Scenarios/Fru/Upstream` and appear in a separate
+  “Futures Rewritten (Upstream)” group, including Crystallize Time, Fulgent Blade
+  and Paradise Regained. Diamond Dust remains unregistered.
+- Unifies spawn appearance through the existing native interface, preserving DSR and
+  custom FRU equipment while supporting upstream equipment/customize arrays, spawn
+  statuses, model state and scale.
+- Delays Yan's sixth-tower movement to 66.4s so peers have received the markers.
+  Guards Crystallize Time's per-frame movement with the active-instance check.
+- Preserves status-source identities after a caster despawns so repeated status lists do not
+  remove and re-add the same status on peers. The reconnect test harness sets FluffySim
+  God Mode through configuration so it survives each run start/reset.
+- Native rendering, reconnect behavior and new mechanics still need in-client checks.
+
+## Historical integration notes
+
 This integration keeps FluffySim 1.2.0.0 and its existing configuration identity. It is a local integration, not a published release. Native behavior needs a fresh client playtest after the runtime changes below.
 
 ## Sources and graph

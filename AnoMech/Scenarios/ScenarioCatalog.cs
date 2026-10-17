@@ -1,5 +1,12 @@
 using System.Collections.Generic;
 using System.Linq;
+using AnoMech.Scenarios.Fru.Upstream.P2LightRampant;
+using AnoMech.Scenarios.Fru.Upstream.P3Apocalypse;
+using AnoMech.Scenarios.Fru.Upstream.P3UltimateRelativity;
+using AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime;
+using AnoMech.Scenarios.Fru.Upstream.P4DarklitDragonsong;
+using AnoMech.Scenarios.Fru.Upstream.P5FulgentBlade;
+using AnoMech.Scenarios.Fru.Upstream.P5ParadiseRegained;
 using AnoMech.Scenarios.Top.P2PartySynergy;
 using AnoMech.Scenarios.Top.P5Delta;
 using AnoMech.Scenarios.Top.P5Omega;
@@ -81,6 +88,13 @@ public sealed class ScenarioCatalog
         new UmadP5CelestriadScenario(),
         new UmadP5ExaflaresScenario(),
         new UmadP5ForsakenNull(),
+        new FruP2LightRampantScenario(),
+        new FruP3UltimateRelativityScenario(),
+        new FruP3ApocalypseScenario(),
+        new FruP4DarklitDragonsongScenario(),
+        new FruP4CrystallizeTimeScenario(),
+        new FruP5FulgentBladeScenario(),
+        new FruP5ParadiseRegainedScenario(),
         new TopP2PartySynergyScenario(),
         new TopP5DeltaScenario(),
         new TopP5SigmaScenario(),

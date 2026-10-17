@@ -5,6 +5,18 @@ namespace AnoMech.Tests;
 
 public class ScenarioCatalogTests
 {
+    [Test]
+    public void UpstreamScenariosHaveDistinctSavedIdentitiesAndKeepDiamondDustShelved()
+    {
+        var scenarios = ScenarioCatalog.Create().Scenarios;
+        Assert.That(scenarios.Select(s => s.FullName()), Is.Unique);
+        Assert.That(scenarios.Any(s => s.GetType().Name.Contains("DiamondDust")), Is.False);
+        Assert.That(scenarios.Count(s => s.GetType().Namespace!.Contains(".Fru.Upstream.")), Is.EqualTo(7));
+        Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Fru.")
+            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(5));
+        Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Dsr.")), Is.EqualTo(4));
+    }
+
     private static IEnumerable<TestCaseData> ScenarioStrats()
         => from scenario in ScenarioCatalog.Create().Scenarios
            from strat in scenario.AiStrats.Select((ai, index) => (ai, index))

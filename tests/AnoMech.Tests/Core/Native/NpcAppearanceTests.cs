@@ -48,4 +48,27 @@ public class NpcAppearanceTests
         Assert.That(common.MainhandWeaponModel.Value, Is.EqualTo(17183473865));
         Assert.That(common.ModelChara, Is.EqualTo(3268));
     }
+    [Test]
+    public unsafe void UpstreamAppearanceWritesBoundedEquipmentAndCustomizeWithoutChangingModel()
+    {
+        var common = new CommonSpawnData { ModelChara = 3057, AnimationState = 7 };
+        var equipment = Enumerable.Range(1, 12).Select(i => (uint)(i | 2 << 16 | 3 << 24)).ToArray();
+        var customize = Enumerable.Range(1, 30).Select(i => (byte)i).ToArray();
+        BattleCharas.ApplyAppearance(ref common, new NpcAppearance(
+            MainhandWeaponModel: 123, OffhandWeaponModel: 456, Equipment: equipment, Customize: customize));
+        for (var slot = 0; slot < 10; slot++)
+        {
+            Assert.That(common.EquipmentModelIds[slot].Id, Is.EqualTo(slot + 1));
+            Assert.That(common.EquipmentModelIds[slot].Variant, Is.EqualTo(2));
+            Assert.That(common.EquipmentModelIds[slot].Stain, Is.EqualTo(3));
+        }
+        var bytes = (byte*)&common.CustomizeData;
+        for (var index = 0; index < 26; index++)
+            Assert.That(bytes[index], Is.EqualTo(index + 1));
+        Assert.That(common.MainhandWeaponModel.Value, Is.EqualTo(123));
+        Assert.That(common.OffhandWeaponModel.Value, Is.EqualTo(456));
+        Assert.That(common.ModelChara, Is.EqualTo(3057));
+        Assert.That(common.AnimationState, Is.EqualTo(7));
+    }
+
 }

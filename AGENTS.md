@@ -221,10 +221,18 @@ test hosts or Debug check ZIPs. Keep AnoMech attribution and matching source ava
 
 ### Ongoing feature and integration workflow (jj 0.46)
 
-Start each task in its own change descended from the current `master@origin` development
-baseline, with a descriptive `codex/*` bookmark. Local `master` and `master@origin` are
-separate references: inspect both and their actual ancestry before choosing the baseline.
-Do not develop directly on published master or move it as part of a feature task.
+Develop on anonymous feature branches from `master@origin`. Follow-up commits can remain on
+an existing feature branch; do not create a bookmark for every task or commit. Use `codex/*`
+bookmarks only when a branch needs a durable name. Prefer a working change supplied by the owner.
+
+For an upcoming release, local `master` points to its release-preparation change and `master-`
+is the shared `chore: integration commit`. Feature branches from `master@origin` merge into
+`master-`; they do not form a serial stack above the release commit. The owner may pre-create
+an empty feature change as an integration parent (for example with
+`jj new -A master@origin -B <integration>`). Edit that change in place; Jujutsu carries its
+integration and release descendants forward. Verify the actual parent relationships first.
+Local `master` and published `master@origin` are separate references. Preserve this staging
+structure and every concurrent feature parent; do not move master or publish during feature work.
 
 Inspect all workspaces, existing feature bookmarks, and every revision whose description is
 `chore: integration commit` before integration. Reuse the current **unpublished** shared

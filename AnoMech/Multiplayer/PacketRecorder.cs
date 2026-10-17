@@ -30,6 +30,7 @@ internal sealed class PacketRecorder
     private readonly List<GamePacket> pending = [];
     // Host entity ids of the actors spawned while recording: the only ones peers have.
     private readonly HashSet<uint> spawned = [];
+    private readonly HashSet<uint> statusSources = [];
     private readonly Dictionary<IBattleCharaProxy, (PartyRole Role, SeatKind Kind)> seats = new();
     private readonly Dictionary<PartyRole, (bool Status, bool Control)> afflictions = new();
     private readonly RecordingBattleChara localPlayer;
@@ -255,9 +256,12 @@ internal sealed class PacketRecorder
             var slots = new List<StatusSlotPacket>();
             for (var i = 0; i < statuses.Count; i++)
                 if (statuses[i] is { StatusId: not 0 } s)
-                    slots.Add(new StatusSlotPacket((byte)i, s.StatusId, s.Param, s.RemainingTime, ActorOf(s.SourceEntityId)));
+                    slots.Add(new StatusSlotPacket((byte)i, s.StatusId, s.Param, s.RemainingTime, StatusSourceOf(s.SourceEntityId)));
             return new StatusListPacket(actor, slots, health, proxy.MaxHealth, mana, shield);
         });
+
+    private uint StatusSourceOf(uint entityId)
+        => statusSources.Contains(entityId) ? entityId : ActorOf(entityId);
 
     // A despawn always goes out: a peer's copy of an actor the host dropped before it arrived
     // would otherwise stay.
@@ -276,6 +280,7 @@ internal sealed class PacketRecorder
             SimAssets.WarnIfUnknown(SimAssetKind.ModelChara, config.ModelCharaId, "NPC spawn model");
             SimAssets.WarnIfUnknown(SimAssetKind.Layout, config.LayoutId, "NPC spawn layout");
             spawned.Add(entityId);
+            statusSources.Add(entityId);
             Add(new SpawnNpcPacket(entityId, config.BNpcBaseId, config.NameId, config.Level, config.Targetable, config.EnemyList,
                 config.Visibility, config.ModelCharaId, config.InitialModeAttributeFlags, config.DisplayFlags, config.Engaged, config.LayoutId,
                 config.IsHostile, placement.Position.X, placement.Position.Y, placement.Position.Z, placement.Rotation));
