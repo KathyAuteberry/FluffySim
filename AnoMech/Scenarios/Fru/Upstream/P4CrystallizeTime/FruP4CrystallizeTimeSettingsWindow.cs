@@ -12,6 +12,9 @@ public sealed class FruP4CrystallizeTimeSettingsWindow
         ("Red + Aero", [CrystallizeDebuff.RedAero]),
         ("Blue + Darkness", [CrystallizeDebuff.BlueDarkness]),
         ("Blue + Ice / Water / Eruption", [CrystallizeDebuff.BlueIce, CrystallizeDebuff.BlueWater, CrystallizeDebuff.BlueEruption]),
+        ("Blue + Ice", [CrystallizeDebuff.BlueIce]),
+        ("Blue + Water", [CrystallizeDebuff.BlueWater]),
+        ("Blue + Eruption", [CrystallizeDebuff.BlueEruption]),
     ];
 
     private int selected;

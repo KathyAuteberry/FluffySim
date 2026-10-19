@@ -17,10 +17,10 @@ namespace AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime;
 public sealed class FruP4CrystallizeTimeScenario : IScenario
 {
     public string Name => "Crystallize Time";
-    public IPhase Phase => FruZone.P4;
+    public IPhase Phase => global::AnoMech.Scenarios.Fru.FruZone.P4;
 
     public IReadOnlyList<IScenarioAi> AiStrats => strats;
-    private readonly IReadOnlyList<IScenarioAi> strats = [new FruP4CrystallizeTimeAi()];
+    private readonly IReadOnlyList<IScenarioAi> strats = [new FruP4CrystallizeTimeAi(), new FruP4CrystallizeTimeAi(mana: true)];
 
     public void DrawSettings() => settingsWindow.Draw();
     public object SettingsOverrides => settingsWindow.Overrides;
@@ -56,6 +56,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
     public void Run(SimWorld worldParam, int? selectedAi)
     {
         world = worldParam;
+        world.PracticeAntiKnockback.Start();
         state = new FruP4CrystallizeTimeState(world.Rng, world.Party.PlayerRole, settingsWindow.Overrides);
         Array.Clear(dragons);
         Array.Clear(dragonCatches);
@@ -133,10 +134,10 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         world.Events.Add(StunAt, () => world.Party.ActiveMembers().ToList().ForEach(m => m.AddStatus(StatusId.Stun, StunEndsAt - StunAt)));
         world.Events.Add(52.8f, Rewind);
         world.Events.Add(53.6f, () => PositionUsurperForWaves(second: false));
-        world.Events.Add(53.7f, () => usurper?.Cast(Actions.HallowedWingsKnockback));
+        world.Events.Add(53.7f, () => usurper?.Cast(FruP4CrystallizeTimeActions.HallowedWingsKnockback));
         world.Events.Add(56.3f, () => usurper?.Cast(Actions.HallowedWingsSwap));
         world.Events.Add(58.1f, () => PositionUsurperForWaves(second: true));
-        world.Events.Add(58.3f, () => usurper?.Cast(Actions.HallowedWingsKnockback));
+        world.Events.Add(58.3f, () => usurper?.Cast(FruP4CrystallizeTimeActions.HallowedWingsKnockback));
         world.Events.Add(62.5f, () => world.Map.SetWeather(WeatherId.Oracle, 0f));
         world.Events.Add(62.5f, () => world.Map.AddEffect(MapEffect.ThawFloor, MapEffect.OracleStage));
         world.Events.Add(62.5f, () => SetHourglassScenery(MapEffect.HourglassHide, 0, 1, 2, 3, 4, 5));
@@ -156,6 +157,9 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         world.Events.Add(64f, () => oracle?.Cast(ActionId.AkhMornOracle, animationLock: 4.1f));
         for (var hit = 0; hit < 4; hit++)
             world.Events.Add(69f + 1.05f * hit, AkhMorn);
+        world.Events.Add(72.9f, () => usurper?.Cast(40249, animationLock: 0.9f));
+        world.Events.Add(72.9f, () => oracle?.Cast(40304, animationLock: 0.9f));
+        world.Events.Add(79.8f, () => CastAt(tidalHelpers[0], FruP4CrystallizeTimeActions.MornAfah, world.Party.Get(PartyRole.MainTank)));
     }
 
     // TODO: the Fragment's HP bar empties when it's hit; a spawned enemy's HP can't be set.
@@ -481,8 +485,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         if (elapsed >= DragonsReachSouthAt)
         {
             dragonCatches[side] = 2;
-            // UNVERIFIED: no pull lets a head get this far, so the action the wipe shows is a guess.
-            world.Party.WipeAllPlayers(ActionId.LongingOfTheLost, "a dragon head reached the south with a catch left");
+            world.Party.WipeAllPlayers(ActionId.JoylessDragonsong, "a dragon head reached the south with a catch left");
             return;
         }
         var position = head.Position;

@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game;
 using AnoMech.Core.Map;
@@ -27,8 +26,7 @@ public sealed class FruZone : IZone
             [MapEffect.OracleFloor] = 0x1,
             [MapEffect.FragmentOfFate] = 0x1,
         });
-    public static readonly Phase P5 = new(Instance, "P5", WeatherId.Pandora, BgmId.Pandora,
-        init: world => ShowOnly(world, (MapEffect.PandoraArena, MapEffect.Show)));
+    public static readonly Phase P5 = global::AnoMech.Scenarios.Fru.FruZone.P5;
 
     public string DisplayName => "Futures Rewritten (Upstream)";
     public string Name => "Futures Rewritten (Upstream)";
@@ -48,12 +46,4 @@ public sealed class FruZone : IZone
 
     public void Run(SimWorld world) => world.EnforceArenaBoundary(Geometry.ArenaRadius);
 
-    // TODO: replace with IPhase.ArenaMapEffectOverrides read from the phase's replay. Until then
-    // P5 sets every slot by hand, once the zone's SharedGroups have loaded.
-    private static void ShowOnly(SimWorld world, params (byte Slot, uint Show)[] shown)
-        => world.Events.Add(1f, () =>
-        {
-            for (byte i = 0; i < MapEffect.SlotCount; i++)
-                world.Map.AddEffect(shown.FirstOrDefault(s => s.Slot == i) is { Show: not 0 } s ? s.Show : MapEffect.Hide, i);
-        });
 }

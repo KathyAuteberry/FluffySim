@@ -13,10 +13,10 @@ namespace AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime;
 
 internal enum CrystallizeTimeAssignment { AeroWest, IceWest, Eruption, Ice, Darkness, Water, AeroEast, IceEast }
 
-public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeState>
+public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP4CrystallizeTimeState>
 {
-    public string Name => "NA priority / 7-1 Akh Morn (MT solo)";
-    public string Group => "NA";
+    public string Name => mana ? "Nukemaru / 7-1 Akh Morn (ST solo)" : "NA priority / 7-1 Akh Morn (MT solo)";
+    public string Group => mana ? "Mana" : "NA";
 
     private const float RunSpeed = 6f;
     private const float ReferenceScale = 10f / 23.74f;
@@ -25,9 +25,13 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
     private const float StopCleansingAt = 41.1f;
     private const float ArrivalMargin = 0.25f;
 
-    private static readonly PartyRole[] Priority =
+    private static readonly PartyRole[] NaPriority =
         [PartyRole.ShieldHealer, PartyRole.RegenHealer, PartyRole.OffTank, PartyRole.MainTank,
          PartyRole.MeleeDpsA, PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps];
+
+    internal static readonly PartyRole[] ManaPriority =
+        [PartyRole.RegenHealer, PartyRole.MainTank, PartyRole.OffTank, PartyRole.MeleeDpsA,
+         PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps, PartyRole.ShieldHealer];
 
     private static readonly Vector3[] SpreadCandidates = CreateSpreadCandidates();
 
@@ -81,7 +85,13 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
         }, arriveBy: 40.5f));
         world.Events.Add(StopCleansingAt, () => MoveEveryBot(RewindSpot, arriveBy: 42.5f));
         world.Events.Add(45.9f, spreadSpots.Clear);
+        if (mana)
+            world.Events.Add(50.5f, () =>
+            {
+                foreach (var bot in Bots()) bot.AddStatus(1209, 6f);
+            });
         world.Events.Add(61.7f, () => MoveEveryBot(AkhMornSpot, arriveBy: 68.9f));
+        world.Events.Add(73f, () => MoveEveryBot(_ => Vector3.Zero, arriveBy: 79.5f));
     }
 
     public void Tick(FruP4CrystallizeTimeState stateParam, SimWorld worldParam, float delta)
@@ -94,7 +104,11 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
             ReactToFangCleansed(bot, role);
         }
         ChasePuddles();
-        if (elapsed is >= 45.9f and < 48.5f) SpreadAwayFromPlayerForSpiritTaker();
+        if (elapsed is >= 45.9f and < 48.5f)
+        {
+            if (mana) MoveEveryBot(ManaSpreadSpot, arriveBy: 48.3f);
+            else SpreadAwayFromPlayerForSpiritTaker();
+        }
     }
 
     private void AssignSidesByPriority()
@@ -112,7 +126,7 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
             };
     }
 
-    private bool IsWestOfPair(PartyRole role) => Priority.First(r => state.Debuff(r) == state.Debuff(role)) == role;
+    private bool IsWestOfPair(PartyRole role) => (mana ? ManaPriority : NaPriority).First(r => state.Debuff(r) == state.Debuff(role)) == role;
 
     private PartyRole RoleOf(CrystallizeTimeAssignment assignment) => assignments.First(a => a.Value == assignment).Key;
 
@@ -151,7 +165,8 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
     private void MoveLeavingAsLateAsPossible(SimCharacter bot, PartyRole role, Vector3 destination, float? arriveBy, float leaveNoSoonerThan = 0f)
     {
         var walk = Vector2.Distance(new Vector2(bot.Position.X, bot.Position.Z), new Vector2(destination.X, destination.Z)) / RunSpeed;
-        var leaveAt = MathF.Max(leaveNoSoonerThan, arriveBy is { } deadline ? deadline - ArrivalMargin - walk : 0f);
+        var margin = elapsed >= StopCleansingAt && world.BotDifficulty == BotDifficulty.Easy ? 0.75f : ArrivalMargin;
+        var leaveAt = MathF.Max(leaveNoSoonerThan, arriveBy is { } deadline ? deadline - margin - walk : 0f);
         var order = CancelPendingMove(role);
         if (leaveAt <= elapsed)
         {
@@ -216,6 +231,7 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
 
     private Vector3 RewindSpot(PartyRole role)
     {
+        if (mana) return ManaRewindSpot(role, state.East, state.North);
         var groupOne = role is PartyRole.MainTank or PartyRole.RegenHealer or PartyRole.MeleeDpsA or PartyRole.PhysRangedDps;
         var tank = role.IsTank();
         var leadEast = state.Corner is CrystallizeCorner.NW or CrystallizeCorner.SE ? groupOne : !groupOne;
@@ -226,7 +242,35 @@ public sealed class FruP4CrystallizeTimeAi : IScenarioAi<FruP4CrystallizeTimeSta
         return new Vector3(east * ReferenceScale, 0, -north * ReferenceScale);
     }
 
-    private static Vector3 AkhMornSpot(PartyRole role) => role == PartyRole.MainTank ? new Vector3(-9.3f, 0, 0) : Vector3.Zero;
+    private Vector3 AkhMornSpot(PartyRole role)
+        => role == (mana ? PartyRole.OffTank : PartyRole.MainTank)
+            ? new Vector3(mana ? 9.3f : -9.3f, 0, 0) : Vector3.Zero;
+
+    internal static Vector3 ManaRewindSpot(PartyRole role, bool east, bool north)
+    {
+        var relativeNorth = north ? -1f : 1f;
+        if (role.IsTank())
+            return new Vector3((role == PartyRole.MainTank ? -3f : 3f) * (north ? 1f : -1f), 0, 4.5f * relativeNorth);
+        var rank = (int)role - 2;
+        var offset = (rank - 2.5f) * 0.12f;
+        return new Vector3(offset * (east ? 1f : -1f), 0, (1.5f - offset) * relativeNorth);
+    }
+
+    private Vector3 ManaSpreadSpot(PartyRole role)
+    {
+        var spot = role switch
+        {
+            PartyRole.MainTank => new Vector3(-13, 0, -13),
+            PartyRole.OffTank => new Vector3(13, 0, -13),
+            PartyRole.RegenHealer => new Vector3(-10, 0, 0),
+            PartyRole.ShieldHealer => new Vector3(10, 0, 0),
+            PartyRole.MeleeDpsA => new Vector3(-9, 0, 9),
+            PartyRole.MeleeDpsB => new Vector3(9, 0, 9),
+            PartyRole.PhysRangedDps => new Vector3(-9, 0, -7),
+            _ => new Vector3(9, 0, -7),
+        };
+        return state.North ? spot : -spot;
+    }
 
     private static Vector3[] CreateSpreadCandidates()
     {

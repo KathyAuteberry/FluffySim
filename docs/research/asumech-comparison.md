@@ -50,7 +50,7 @@ No independently demonstrated Asu-only accuracy correction for the nine custom s
 
 ## Evidence inventory and remaining gaps
 
-Read-only local resources include `Network_30303_20261014.log` (Fall of Faith), `Network_30303_20261016.log` (Meteors), additional logs through October19, native replay inspection via `tools/replay_inspector.py` / `tools/replay_export_rsv_rsf.py`, and runtime snapshots through `AnoMech/Core/Native/Implementations/ArenaSnapshot.cs`. Raw logs, identities and replay binaries remain outside version control. This audit did not establish P4 CT/P5 event coverage in those later files; their existence is not a timing claim.
+Read-only local resources include `Network_30303_20261014.log` (Fall of Faith), `Network_30303_20261016.log` (Meteors), additional logs through October19, native replay inspection via `tools/replay_inspector.py` / `tools/replay_export_rsv_rsf.py`, and runtime snapshots through `AnoMech/Core/Native/Implementations/ArenaSnapshot.cs`. Raw logs, identities and replay binaries remain outside version control. The subsequent [complete capture inventory](fru-native-capture-inventory.md) found only interrupted CT opening casts and no P5 cast/effect records; log-file existence is not a timing claim.
 
 Existing evidence parsers include Fall of Faith, Ultimate Relativity, Apocalypse, Darklit, Strength1/2, Sanctity1 and Meteors. Read their exported fixture semantics before interpreting numbers. Historical roadmap prose includes obsolete Release-build statements; these are records of earlier work and never authorize a local Release build now.
 

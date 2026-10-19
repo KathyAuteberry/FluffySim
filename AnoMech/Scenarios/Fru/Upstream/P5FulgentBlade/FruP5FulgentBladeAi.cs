@@ -9,7 +9,8 @@ namespace AnoMech.Scenarios.Fru.Upstream.P5FulgentBlade;
 
 public sealed class FruP5FulgentBladeAi : IScenarioAi<FruP5FulgentBladeState>
 {
-    public string Name => "Standard";
+    public string Name => "Nukemaru";
+    public string Group => "Mana";
 
     private const float FruSimUnitsToYalms = 5f / 11.855f;
 

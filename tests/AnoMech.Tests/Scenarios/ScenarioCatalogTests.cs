@@ -13,7 +13,7 @@ public class ScenarioCatalogTests
         Assert.That(scenarios.Any(s => s.GetType().Name.Contains("DiamondDust")), Is.False);
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.Contains(".Fru.Upstream.")), Is.EqualTo(7));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Fru.")
-            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(5));
+            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(9));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Dsr.")), Is.EqualTo(4));
     }
 

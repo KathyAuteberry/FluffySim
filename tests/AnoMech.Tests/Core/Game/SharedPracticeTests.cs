@@ -12,8 +12,17 @@ namespace AnoMech.Tests;
 
 public class SharedPracticeTests
 {
+    // These diagnostics consume the original drills' Completed and LastState contracts.
     public static IEnumerable<TestCaseData> AllScenarios() => ScenarioCatalog.Create().Scenarios
-        .Where(s => s.Phase.Zone is AnoMech.Scenarios.Fru.FruZone or AnoMech.Scenarios.Dsr.DsrZone)
+        .Where(s => s is AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario
+            or AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario
+            or AnoMech.Scenarios.Fru.UltimateRelativity.FruUltimateRelativityScenario
+            or AnoMech.Scenarios.Fru.Apocalypse.FruApocalypseScenario
+            or AnoMech.Scenarios.Fru.Darklit.FruDarklitScenario
+            or AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario
+            or AnoMech.Scenarios.Dsr.Strength2.DsrStrength2Scenario
+            or AnoMech.Scenarios.Dsr.Sanctity1.DsrSanctity1Scenario
+            or AnoMech.Scenarios.Dsr.Sanctity2.DsrSanctity2Scenario)
         .Select(s => new TestCaseData(s.GetType()).SetName("SharedPractice_" + s.GetType().Name));
 
     public static IEnumerable<TestCaseData> DelayedMovementScenarios() => AllScenarios()

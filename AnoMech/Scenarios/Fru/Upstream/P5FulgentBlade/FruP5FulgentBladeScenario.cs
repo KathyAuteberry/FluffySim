@@ -38,6 +38,7 @@ public sealed class FruP5FulgentBladeScenario : IScenario
     private SimWorld world = null!;
     private FruP5FulgentBladeState state = null!;
     private SimEnemy? pandora;
+    internal SimEnemy? SharedPandora { get; set; }
     private readonly SimEnemy?[,,] strips = new SimEnemy?[GroupCount, SeamsPerGroup, 2];
     private readonly SimEventObject?[,] seams = new SimEventObject?[GroupCount, SeamsPerGroup];
     private readonly SimEnemy?[] targetedHelpers = new SimEnemy?[2];
@@ -97,9 +98,23 @@ public sealed class FruP5FulgentBladeScenario : IScenario
         }
     }
 
-    private void SpawnActors()
+    internal void RunAkhMorn(SimWorld worldParam, int? selectedAi)
     {
-        pandora = world.SpawnEnemy(new EnemySpawnConfig(
+        world = worldParam;
+        state = new FruP5FulgentBladeState(world.Rng, settingsWindow.Overrides);
+        if (selectedAi is not null) new global::AnoMech.Scenarios.Fru.Pandora.FruAkhMornAi().Run(world);
+        world.Events.Add(0f, () => SpawnActors(false));
+        world.Events.Add(1f, () => pandora?.SetTarget(world.Party.Get(PartyRole.MainTank), follow: false));
+        world.Events.Add(1.5f, () => pandora?.Cast(ActionId.AkhMornPandora, animationLock: 3.1f));
+        world.Events.Add(9.2f, PickAkhMornTargets);
+        world.Events.Add(9.6f, AkhMornOnLightParties);
+    }
+
+    private void SpawnActors() => SpawnActors(true);
+
+    private void SpawnActors(bool fulgent)
+    {
+        pandora = SharedPandora ?? world.SpawnEnemy(new EnemySpawnConfig(
             BNpcBaseId: BNpcBaseId.Pandora,
             NameId: BNpcNameId.Pandora,
             Level: Level,
@@ -107,10 +122,11 @@ public sealed class FruP5FulgentBladeScenario : IScenario
             EnemyList: EnemyListMode.Always,
             Placement: new Placement(Vector3.Zero, MathF.PI),
             LayoutId: LayoutId.PandoraP5));
-        for (var group = 0; group < GroupCount; group++)
-            for (var seam = 0; seam < SeamsPerGroup; seam++)
-                for (var light = 0; light < 2; light++)
-                    strips[group, seam, light] = SpawnHelper(state.Strip(group, seam, light == 1, 0)!.Value);
+        if (fulgent)
+            for (var group = 0; group < GroupCount; group++)
+                for (var seam = 0; seam < SeamsPerGroup; seam++)
+                    for (var light = 0; light < 2; light++)
+                        strips[group, seam, light] = SpawnHelper(state.Strip(group, seam, light == 1, 0)!.Value);
         for (var i = 0; i < targetedHelpers.Length; i++)
             targetedHelpers[i] = SpawnHelper(new Placement(Vector3.Zero, 0f));
     }
@@ -174,8 +190,9 @@ public sealed class FruP5FulgentBladeScenario : IScenario
             for (var light = 0; light < 2; light++)
             {
                 if (state.Strip(group, seam, light == 1, hit) is not { } placement) continue;
-                strips[group, seam, light]?.SetPosition(placement);
-                strips[group, seam, light]?.Cast(light == 1 ? Actions.PathOfLightRest : Actions.PathOfDarknessRest);
+                if (strips[group, seam, light] is not { IsActive: true } strip) continue;
+                strip.SetPosition(placement);
+                strip.Cast(light == 1 ? Actions.PathOfLightRest : Actions.PathOfDarknessRest);
             }
     }
 
