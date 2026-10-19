@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game;
+using AnoMech.Core.EnemyActions;
+using static AnoMech.Core.EnemyActions.EnemyActionEffects;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Map;
@@ -27,6 +29,8 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
     private SimWorld world = null!;
     private FruP5ParadiseRegainedState state = null!;
     private SimEnemy? pandora;
+    internal SimEnemy? SharedPandora { get; set; }
+    internal float PolarizingOffset { get; set; }
     private SimEnemy? busterHelper;
     private SimEnemy? towerHelper;
     private readonly MapEffectTower?[] towers = new MapEffectTower?[3];
@@ -36,53 +40,66 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
     private readonly SimEnemy?[,] lineHelpers = new SimEnemy?[4, 2];
     private readonly bool[] linesAimed = new bool[4];
 
-    public void Run(SimWorld worldParam, int? selectedAi)
+    public void Run(SimWorld worldParam, int? selectedAi) => Run(worldParam, selectedAi, false);
+
+    internal void Run(SimWorld worldParam, int? selectedAi, bool polarizingOnly)
     {
         world = worldParam;
+        Array.Clear(towers);
+        Array.Clear(lineHelpers);
+        Array.Clear(linesAimed);
+        wingTether = null;
+        if (!polarizingOnly && settingsWindow.Overrides.RequireInvulnerability) world.PracticeInvulnerability.Start();
+        else world.PracticeInvulnerability.Clear();
         state = new FruP5ParadiseRegainedState(world.Rng, settingsWindow.Overrides);
         if (selectedAi is { } idx && idx < AiStrats.Count)
-            ((IScenarioAi<FruP5ParadiseRegainedState>)AiStrats[idx]).Run(state, world);
+            new FruP5ParadiseRegainedAi(polarizingOnly, PolarizingOffset).Run(state, world);
 
         world.Events.Add(0f, SpawnActors);
         world.Events.Add(1f, () => pandora?.SetTarget(world.Party.Get(PartyRole.MainTank), follow: false));
-        world.Events.Add(1.3f, () => pandora?.Cast(ActionId.ParadiseRegained, animationLock: 3.1f));
-        world.Events.Add(TowerShowAt(0), () => ShowTower(0));
-        world.Events.Add(7.27f, () => BattleTalk(0x27, RyneBattleTalk));
-        world.Events.Add(8.3f, () =>
+        if (!polarizingOnly)
         {
-            pandora?.SetModelState(4);
-            TetherWingBait(0);
-            pandora?.Cast(state.DarkFirst ? ActionId.WingsDarkThenLight : ActionId.WingsLightThenDark, animationLock: 0.2f);
-        });
-        world.Events.Add(TowerShowAt(1), () => ShowTower(1));
-        world.Events.Add(12.4f, TargetWingBait);
-        world.Events.Add(12.4f, () => BattleTalk(0x28, GaiaBattleTalk));
-        world.Events.Add(TowerShowAt(2), () => ShowTower(2));
-        world.Events.Add(15.5f, () => FaceTank(PartyRole.MainTank));
-        world.Events.Add(TowerHitAt(0), () => { ResolveTower(0); WingCleave(0); });
-        world.Events.Add(16.5f, () => WingBuster(0));
-        world.Events.Add(17f, () => TetherWingBait(1));
-        world.Events.Add(TowerHitAt(1), () => ResolveTower(1));
-        world.Events.Add(19.4f, () => { FaceTank(PartyRole.OffTank); WingCleave(1); });
-        world.Events.Add(20.2f, () => { WingBuster(1); pandora?.SetModelState(0); });
-        world.Events.Add(20.7f, () => wingTether?.Despawn());
-        world.Events.Add(TowerHitAt(2), () => ResolveTower(2));
-        world.Events.Add(23.1f, () =>
-        {
-            pandora?.SetRotation(MathF.PI);
-            pandora?.SetTarget(world.Party.Get(PartyRole.MainTank), follow: false);
-        });
+            world.Events.Add(1.3f, () => pandora?.Cast(ActionId.ParadiseRegained, animationLock: 3.1f));
+            world.Events.Add(TowerShowAt(0), () => ShowTower(0));
+            world.Events.Add(7.27f, () => BattleTalk(0x27, RyneBattleTalk));
+            world.Events.Add(8.3f, () =>
+            {
+                pandora?.SetModelState(4);
+                TetherWingBait(0);
+                pandora?.Cast(state.DarkFirst ? ActionId.WingsDarkThenLight : ActionId.WingsLightThenDark, animationLock: 0.2f);
+            });
+            world.Events.Add(TowerShowAt(1), () => ShowTower(1));
+            world.Events.Add(12.4f, TargetWingBait);
+            world.Events.Add(12.4f, () => BattleTalk(0x28, GaiaBattleTalk));
+            world.Events.Add(TowerShowAt(2), () => ShowTower(2));
+            world.Events.Add(15.5f, () => FaceTank(PartyRole.MainTank));
+            world.Events.Add(TowerHitAt(0), () => { ResolveTower(0); WingCleave(0); });
+            world.Events.Add(16.5f, () => WingBuster(0));
+            world.Events.Add(17f, () => TetherWingBait(1));
+            world.Events.Add(TowerHitAt(1), () => ResolveTower(1));
+            world.Events.Add(19.4f, () => { FaceTank(PartyRole.OffTank); WingCleave(1); });
+            world.Events.Add(20.2f, () => { WingBuster(1); pandora?.SetModelState(0); });
+            world.Events.Add(20.7f, () => wingTether?.Despawn());
+            world.Events.Add(TowerHitAt(2), () => ResolveTower(2));
+            world.Events.Add(23.1f, () =>
+            {
+                world.PracticeInvulnerability.Clear();
+                pandora?.SetRotation(MathF.PI);
+                pandora?.SetTarget(world.Party.Get(PartyRole.MainTank), follow: false);
+            });
 
-        world.Events.Add(30.35f, () => pandora?.Cast(ActionId.PolarizingStrikes, animationLock: 2.1f));
+        }
+        var offset = (polarizingOnly ? -29.35f : 0f) + PolarizingOffset;
+        world.Events.Add(30.35f + offset, () => pandora?.Cast(ActionId.PolarizingStrikes, animationLock: 2.1f));
         for (var round = 0; round < 4; round++)
         {
             var r = round;
-            world.Events.Add(LinesAt(r) - 0.1f, () => AimLines(r));
-            world.Events.Add(LinesAt(r), () => CastLines(r));
-            if (r < 3) world.Events.Add(PathsCastAt(r), () => pandora?.Cast(ActionId.PolarizingPaths, animationLock: 2.1f));
-            world.Events.Add(EchoAt(r), () => Echo(r));
+            world.Events.Add(LinesAt(r) - 0.1f + offset, () => AimLines(r));
+            world.Events.Add(LinesAt(r) + offset, () => CastLines(r));
+            if (r < 3) world.Events.Add(PathsCastAt(r) + offset, () => pandora?.Cast(ActionId.PolarizingPaths, animationLock: 2.1f));
+            world.Events.Add(EchoAt(r) + offset, () => Echo(r));
         }
-        world.Events.Add(49.45f, () => BattleTalk(0x29, GaiaBattleTalk));
+        world.Events.Add(49.45f + offset, () => BattleTalk(0x29, GaiaBattleTalk));
     }
 
     public void Tick(float delta, float elapsed)
@@ -92,7 +109,7 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
 
     private void SpawnActors()
     {
-        pandora = world.SpawnEnemy(new EnemySpawnConfig(
+        pandora = SharedPandora ?? world.SpawnEnemy(new EnemySpawnConfig(
             BNpcBaseId: BNpcBaseId.Pandora,
             NameId: BNpcNameId.Pandora,
             Level: Level,
@@ -155,23 +172,38 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
         if (wingTether?.B is { } bait) pandora?.SetTarget(bait, follow: false);
     }
 
-    private void WingCleave(int wing) => pandora?.Cast(state.IsDark(wing) ? Actions.WingsCleaveDark : Actions.WingsCleaveLight);
+    private void WingCleave(int wing) => pandora?.Cast(PracticeWingAction(state.IsDark(wing) ? Actions.WingsCleaveDark : Actions.WingsCleaveLight));
 
     private void WingBuster(int wing)
     {
         if (wingTether?.B is not { } bait) return;
-        busterHelper?.Cast(state.IsDark(wing) ? Actions.WingsBusterDark : Actions.WingsBusterLight, bait);
+        busterHelper?.Cast(PracticeWingAction(state.IsDark(wing) ? Actions.WingsBusterDark : Actions.WingsBusterLight), bait);
+    }
+
+    private EnemyAction PracticeWingAction(EnemyAction action)
+    {
+        if (!settingsWindow.Overrides.RequireInvulnerability) return action;
+        return action with
+        {
+            Effects = [.. action.Effects, Resolve(ctx =>
+            {
+                var player = ctx.Party.Player;
+                if (player is not ISimPartyMember { Role: PartyRole.MainTank or PartyRole.OffTank }
+                    || ctx.Party.IsBotDriven(player) || !ctx.Hits.Contains(player) || ctx.IsKilled(player)) return;
+                if (!world.PracticeInvulnerability.Active && !new ushort[] { 82, 409, 810, 1836 }.Any(player.HasStatus))
+                    ctx.Kill(player, "invulnerability required by tank practice setting");
+            })],
+        };
     }
 
     private void AimLines(int round)
     {
         if (pandora is not { } boss) return;
-        var nearest = world.Party.ActiveMembers().OrderBy(m => Vector3.DistanceSquared(m.Position, boss.Position)).Take(2).ToList();
-        if (nearest.Count < 2) return;
+        var nearest = world.Party.ActiveMembers().OrderBy(m => Vector3.DistanceSquared(m.Position, boss.Position)).ToList();
+        if (nearest.Count == 0) return;
         var right = new Vector3(MathF.Cos(boss.Rotation), 0f, -MathF.Sin(boss.Rotation));
-        var (light, dark) = Vector3.Dot(nearest[0].Position - nearest[1].Position, right) > 0f
-            ? (nearest[0], nearest[1])
-            : (nearest[1], nearest[0]);
+        var light = nearest.FirstOrDefault(m => Vector3.Dot(m.Position - boss.Position, right) > 0f) ?? nearest[0];
+        var dark = nearest.FirstOrDefault(m => Vector3.Dot(m.Position - boss.Position, right) <= 0f) ?? nearest[0];
         linesAimed[round] = true;
         TurnTo(lineHelpers[round, 0], light);
         TurnTo(lineHelpers[round, 1], dark);

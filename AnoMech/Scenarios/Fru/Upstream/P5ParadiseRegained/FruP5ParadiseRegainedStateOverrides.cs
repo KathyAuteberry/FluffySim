@@ -3,6 +3,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P5ParadiseRegained;
 // User-forced rolls for FruP5ParadiseRegainedState; null leaves a field randomized.
 public sealed class FruP5ParadiseRegainedStateOverrides
 {
+    public bool RequireInvulnerability { get; set; }
     public int? Rotation { get; set; }
     public bool? EastSecond { get; set; }
     public bool? DarkFirst { get; set; }
