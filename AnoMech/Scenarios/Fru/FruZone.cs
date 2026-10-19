@@ -12,6 +12,7 @@ public sealed class FruZone : IZone
     public static readonly Phase P2 = new(Instance, "P2", 35, PhaseMusic.FootstepsInTheSnow, init: InitializeP2, clientSetup: HoldP2Layers);
     public static readonly Phase P3 = new(Instance, "P3", 106, PhaseMusic.TheExtreme, init: InitializeP3, clientSetup: HoldP3Layers);
     public static readonly Phase P4 = new(Instance, "P4", 105, PhaseMusic.PromisesToKeep, init: InitializeP4, clientSetup: HoldP4Layers);
+    public static readonly Phase P5 = new(Instance, "P5", 108, 20099, init: InitializeP5, clientSetup: HoldP4Layers);
     public string DisplayName => "Futures Rewritten";
     public string Name => "Futures Rewritten (Ultimate)";
     public Core.Map.EntranceBarrier EntranceBarrier => new(2007457, 0xA58C08, 0xA58C07, new(0f, 0f, 15f));
@@ -85,6 +86,12 @@ public sealed class FruZone : IZone
         for (byte index = 0; index < 54; index++) world.Map.AddEffect(0x00040004, index);
         world.Map.AddEffect(0x00020001, 0x28);
         world.Map.AddEffect(0x00020001, 0x29);
+    }
+
+    private static void InitializeP5(SimWorld world)
+    {
+        for (byte index = 0; index < 54; index++)
+            world.Map.AddEffect(index == 47 ? 0x00010001u : 0x00040004u, index);
     }
 
     private static void HoldP4Layers(SimWorld world)
