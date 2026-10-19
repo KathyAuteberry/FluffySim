@@ -305,14 +305,14 @@ public class FruUltimateRelativityTests
     }
 
     [Test]
-    public void NormalCatalogContainsManaAfterLightRampantAndKeepsDiamondDustShelved()
+    public void NormalCatalogContainsManaAfterLightRampantAndCompletedDiamondDust()
     {
         var catalog = ScenarioCatalog.Create().Scenarios;
-        Assert.That(catalog[1], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
-        Assert.That(catalog[2], Is.TypeOf<FruUltimateRelativityScenario>());
-        Assert.That(catalog.Any(s => s is AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario), Is.False);
-        Assert.That(Game.DisplayName(catalog[2]), Is.EqualTo("P3 Ultimate Relativity"));
-        Assert.That(catalog[2].SettingsOverrides, Is.TypeOf<FruUltimateRelativityStateOverrides>());
+        Assert.That(catalog[3], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
+        Assert.That(catalog[4], Is.TypeOf<FruUltimateRelativityScenario>());
+        Assert.That(catalog.Any(s => s is AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario), Is.True);
+        Assert.That(Game.DisplayName(catalog[4]), Is.EqualTo("P3 Ultimate Relativity"));
+        Assert.That(catalog[4].SettingsOverrides, Is.TypeOf<FruUltimateRelativityStateOverrides>());
     }
 
     [Test]

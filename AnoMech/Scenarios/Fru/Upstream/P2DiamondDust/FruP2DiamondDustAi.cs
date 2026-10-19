@@ -9,10 +9,10 @@ using static AnoMech.Scenarios.Fru.Upstream.P2DiamondDust.FruP2DiamondDustState;
 
 namespace AnoMech.Scenarios.Fru.Upstream.P2DiamondDust;
 
-public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
+public sealed class FruP2DiamondDustAi(bool mana = false, bool continuationOnly = false, float offset = 0f) : IScenarioAi<FruP2DiamondDustState>
 {
-    public string Name => "NA · Partner Swap";
-    public string Group => "NA";
+    public string Name => mana ? "Mana Nukemaru" : "NA · Partner Swap";
+    public string Group => mana ? "Mana" : "NA";
 
     private static readonly int[] Clocks = [0, 2, 6, 4, 5, 3, 7, 1];
     private const float SlideDistance = 32f;
@@ -33,24 +33,30 @@ public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
         world = worldParam;
         puddles.Clear();
         var ai = new AiManager(world);
-        ai.Move(15.3f, () => ByRole(KickSpot), arrivalTime: 20.6f);
-        ai.Move(20.7f, () => ByRole(StoneSpot), arrivalTime: 23.3f);
-        ai.Move(23.35f, () => ByRole(KnockbackSpot), jitter: 0f, arrivalTime: 27.4f);
-        ai.Move(29.05f, () => ByRole(NeedleSafeEdgeSpot), jitter: 0f, arrivalTime: 30.05f);
-        ai.Move(30.1f, () => ByRole(role => HolySpot(role, 0)), arrivalTime: 31.4f);
+        void Move(float at, Func<PartyRole, Vector3?> destination, float arrival)
+            => ai.Move(at + offset, () => ByRole(destination), jitter: 0f, arrivalTime: arrival + offset);
+        void At(float at, Action action) => world.Events.Add(at + offset, action);
+        if (!continuationOnly)
+        {
+            Move(15.3f, KickSpot, 20.6f);
+            Move(20.7f, StoneSpot, 23.3f);
+            Move(23.35f, KnockbackSpot, 27.4f);
+        }
+        Move(29.05f, NeedleSafeEdgeSpot, 30.05f);
+        Move(30.1f, role => HolySpot(role, 0), 31.4f);
         for (var wave = 0; wave < HolyWaves; wave++)
         {
             var w = wave;
-            world.Events.Add(HolyAt(w) - FruHolyPuddles.SnapshotBeforeHit, () => RememberHolyPuddles(w));
-            ai.Move(HolyAt(w), () => ByRole(role => HolySpot(role, w + 1)), arrivalTime: HolyAt(w + 1));
+            At(HolyAt(w) - FruHolyPuddles.SnapshotBeforeHit, () => RememberHolyPuddles(w));
+            Move(HolyAt(w), role => HolySpot(role, w + 1), HolyAt(w + 1));
         }
-        ai.Move(HolyAt(HolyWaves), () => ByRole(IceSpot), arrivalTime: 39.9f);
-        world.Events.Add(39.9f, FaceAwayFromGaze);
-        world.Events.Add(IceStart + 0.2f, () => SlideBots(behind: false, recovery: true));
-        world.Events.Add(45.05f, () => SlideBots(behind: state.Stillness));
-        world.Events.Add(47.4f, () => SlideBots(behind: !state.Stillness));
-        world.Events.Add(IceEnd, puddles.Clear);
-        ai.Move(IceEnd + 0.3f, () => ByRole(_ => new Vector3(0, 0, 4)));
+        Move(HolyAt(HolyWaves), IceSpot, 39.9f);
+        At(39.9f, FaceAwayFromGaze);
+        At(IceStart + 0.2f, () => SlideBots(behind: false, recovery: true));
+        At(45.05f, () => SlideBots(behind: state.Stillness));
+        At(47.4f, () => SlideBots(behind: !state.Stillness));
+        At(IceEnd, puddles.Clear);
+        Move(IceEnd + 0.3f, _ => new Vector3(0, 0, 4), IceEnd + 2f);
     }
 
     private bool Cursed => (state.MirrorOctant - state.FirstIcicle + 8) % 4 == 0;
@@ -71,7 +77,7 @@ public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
 
     private int KnockbackOctant(PartyRole role)
     {
-        var groupOne = state.FirstIcicle == 0 ? 0 : state.FirstIcicle + 4;
+        var groupOne = mana ? (state.FirstIcicle >= 2 ? state.FirstIcicle + 4 : state.FirstIcicle) : state.FirstIcicle == 0 ? 0 : state.FirstIcicle + 4;
         return (groupOne + (GroupOne(role) ? 0 : 4)) % 8;
     }
 
@@ -115,9 +121,21 @@ public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
     }
 
     private Vector3 HolySpot(PartyRole role, int step)
-        => Point(KnockbackOctant(role) + (Cursed ? 1f / 3 : 0) + RotationAroundRim(role) * step * 0.5f, 18);
+    {
+        var start = KnockbackOctant(role);
+        if (!mana) return Point(start + (Cursed ? 1f / 3 : 0) + RotationAroundRim(role) * step * 0.5f, 18);
+        var relative = (state.MirrorOctant - start + 8) % 8;
+        var rate = (relative % 4) switch
+        {
+            0 => 0.75f,
+            2 => 0.5f,
+            3 => 0.75f,
+            _ => relative == 1 ? -0.5f : 0.5f,
+        };
+        return Point(start + (Cursed ? 1f / 3 : 0f) + step * rate, 18);
+    }
 
-    private Vector3? IceSpot(PartyRole role) => HolySpot(role, Cursed ? 5 : 4) * (17f / 18);
+    private Vector3? IceSpot(PartyRole role) => HolySpot(role, !mana && Cursed ? 5 : 4) * (17f / 18);
 
     private void RememberHolyPuddles(int wave)
     {
@@ -126,7 +144,7 @@ public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
     }
 
     private IEnumerable<Vector3> LivePuddles()
-        => puddles.Where(p => PuddleFadesAt(p.Wave) > world.Events.Elapsed).Select(p => p.Position);
+        => puddles.Where(p => PuddleFadesAt(p.Wave) + offset > world.Events.Elapsed).Select(p => p.Position);
 
     private IEnumerable<SimCharacter> Bots()
         => world.Party.ActiveMembers().Where(world.Party.IsBotDriven).ToList();
@@ -145,7 +163,7 @@ public sealed class FruP2DiamondDustAi : IScenarioAi<FruP2DiamondDustState>
         foreach (var bot in Bots())
         {
             var skip = recovery
-                ? !Cursed || Vector3.Dot(bot.Position, state.MirrorPosition) <= 0
+                ? mana ? BehindMirror(bot.Position) || SlideDestination(bot.Position, true) != null : !Cursed || Vector3.Dot(bot.Position, state.MirrorPosition) <= 0
                 : BehindMirror(bot.Position) == behind;
             if (skip || SlideDestination(bot.Position, behind, prepareNextSlide: recovery) is not { } destination) continue;
             bot.IceSlideTo(destination, SlideSeconds);

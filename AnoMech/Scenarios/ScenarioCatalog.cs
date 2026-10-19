@@ -71,6 +71,8 @@ public sealed class ScenarioCatalog
     public static ScenarioCatalog Create() => new(
     [
         new Fru.FallOfFaith.FruFallOfFaithScenario(),
+        new Fru.DiamondDust.FruDiamondDustScenario(),
+        new Fru.MirrorMirror.FruMirrorMirrorScenario(),
         new Fru.LightRampant.FruLightRampantScenario(),
         new Fru.UltimateRelativity.FruUltimateRelativityScenario(),
         new Fru.Apocalypse.FruApocalypseScenario(),

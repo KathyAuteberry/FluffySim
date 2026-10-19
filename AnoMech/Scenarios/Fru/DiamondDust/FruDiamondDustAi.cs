@@ -9,7 +9,7 @@ namespace AnoMech.Scenarios.Fru.DiamondDust;
 
 public sealed class FruDiamondDustAi : IScenarioAi<FruDiamondDustState>
 {
-    public string Name => "Mana (development prefix)";
+    public string Name => "Mana Nukemaru";
     public string Group => "JP";
     private SimWorld world = null!;
     private FruDiamondDustState state = null!;
@@ -69,5 +69,8 @@ public sealed class FruDiamondDustAi : IScenarioAi<FruDiamondDustState>
     {
         foreach (var role in Enum.GetValues<PartyRole>()) Move(role, KnockbackPosition(state, role));
     }
-    private void Move(PartyRole role, Vector3 position) => world.Party.Get(role)?.MoveTo(position);
+    private void Move(PartyRole role, Vector3 position)
+    {
+        if (world.Party.Get(role) is { } member && world.Party.IsBotDriven(member)) member.MoveTo(position);
+    }
 }

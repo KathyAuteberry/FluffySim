@@ -194,7 +194,8 @@ Do not blindly merge every remote branch or replay old pre-release insertion ins
 Preserve all nine custom scenarios: FRU Fall of Faith, Light Rampant, Ultimate Relativity,
 Apocalypse and Darklit Dragonsong; DSR Strength 1/2 and Sanctity 1/2. Preserve Mana/Elemental,
 seven bots, native arenas/party behavior, Easy/Hard, visibility, God Mode, Pause, local actions,
-BGM and offline identity. Diamond Dust remains shelved. Packet filtering must stay armed while
+BGM and offline identity. Mana Diamond Dust and Mirror, Mirror are registered; the duplicate upstream
+Diamond Dust remains hidden. Packet filtering must stay armed while
 client/server state differs; never bypass entry guards, move real positions outside a stay,
 or send fabricated simulation traffic to the server. Comments are not proof of behavior.
 

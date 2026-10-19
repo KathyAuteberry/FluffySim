@@ -32,9 +32,11 @@ Headless completion does not establish rendering, collision or safe native clean
 
 - [ ] Existing FRU: Fall of Faith, Light Rampant, Ultimate Relativity, Apocalypse and Darklit Dragonsong. Confirm Mana routes, native arena and familiar measured impact/visual timing.
 - [ ] Existing DSR: Strength1, Strength2, Sanctity1 and Sanctity2/Meteors. Confirm Elemental routes, P2 scenery/weather, raised towers, meteor spacing and native knight first casts.
-- [ ] Diamond Dust stays hidden from the public menu.
+- [ ] Completed Mana Diamond Dust and Mirror, Mirror appear in normal P2; the duplicate upstream Diamond Dust remains hidden.
 - [ ] Run representative CT/P5 seeds on Easy and Hard with visible bots, then hidden bots. All seven bots should complete their duties without immunity shortcuts.
 - [ ] Pause immediately before snapshot/rewind/tower/line events; wait, resume and verify logical timing does not advance. Note any independently running native animation separately.
 - [ ] Verify God Mode, local invulnerability and anti-knockback behavior; switch them off and reproduce a real mechanic failure.
 
 Do not mark an unsupported mechanic or unimplemented entry point as passing. Record it as missing and retain the release gate until resolved. Packet isolation and teardown tests supplement this checklist; native visuals alone cannot prove absence of server-bound traffic.
+
+Latest CT/P2 native verification priorities: [FRU Completionist](fru-completionist.md#native-playtest-priorities).

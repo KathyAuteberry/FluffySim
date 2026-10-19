@@ -287,7 +287,7 @@ public class FruFallOfFaithTests
         Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[0]), Is.EqualTo("P1 Fall of Faith"));
         Assert.That(catalog[0].Phase.Weather, Is.EqualTo(2));
         Assert.That(PhaseMusic.TrackFor(catalog[0]), Is.EqualTo(800));
-        Assert.That(catalog[1], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
+        Assert.That(catalog[3], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
     }
 
     [Test]

@@ -9,6 +9,19 @@ namespace AnoMech.Tests;
 
 public class FruDiamondDustTests
 {
+    [Test]
+    public void CompleteManaDiamondDustSmoke()
+    {
+        for (var seed = 0; seed < 16; seed++)
+        {
+            var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, seed, new()
+            {
+                ScenarioFactory = () => new FruDiamondDustScenario(), WriteArtifactsOnFailure = false,
+            });
+            Assert.That(run.Passed, () => run + string.Join("\n", run.Deaths.Select(d => d.Snapshot)));
+        }
+    }
+
     private static IEnumerable<TestCaseData> Variants() =>
         from axe in new[] { false, true }
         from supports in new[] { false, true }
@@ -17,7 +30,7 @@ public class FruDiamondDustTests
         select new TestCaseData(axe, supports, axis, sector);
 
     [TestCaseSource(nameof(Variants))]
-    public void ManaClearsImplementedPrefix(bool axe, bool supports, int axis, int sector)
+    public void ManaClearsRecordedOpening(bool axe, bool supports, int axis, int sector)
     {
         var checks = 0;
         var beforeKnockback = new Dictionary<PartyRole, Vector3>();
@@ -55,7 +68,7 @@ public class FruDiamondDustTests
                         Assert.That(Vector3.Distance(p.Member(role)!.Position, beforeKnockback[role] + Vector3.Normalize(beforeKnockback[role]) * AnoMech.Core.Native.Interfaces.Natives.Data.Knockback(156)!.Distance), Is.LessThan(.05f));
                     checks++;
                 }
-                if (p.Crossed(32.6f))
+                if (p.Crossed(64.1f))
                 {
                     Assert.That(((FruDiamondDustScenario)p.Game.ActiveScenario!).PrefixCompleted, Is.True);
                     Assert.That(p.World.Children.OfType<SimEnemy>().Where(e => e.IsActive), Is.Empty);
@@ -94,14 +107,14 @@ public class FruDiamondDustTests
     }
 
     [Test]
-    public void PausedScenarioRetainsSettingsButIsNotSelectable()
+    public void CompletedScenarioRetainsSettingsAndHasNoIncompleteLabel()
     {
         var catalog = ScenarioCatalog.Create().Scenarios.ToList();
         var diamondDust = new FruDiamondDustScenario();
         var lightRampant = catalog.Single(s => s is AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario);
-        Assert.That(diamondDust.IsIncomplete, Is.True);
-        Assert.That(diamondDust.Name, Is.EqualTo("Diamond Dust (Incomplete)"));
-        Assert.That(catalog.Any(s => s is FruDiamondDustScenario), Is.False);
+        Assert.That(diamondDust.IsIncomplete, Is.False);
+        Assert.That(diamondDust.Name, Is.EqualTo("Diamond Dust"));
+        Assert.That(catalog.Any(s => s is FruDiamondDustScenario), Is.True);
         Assert.That(catalog.Any(s => s is FruArenaDiagnosticScenario), Is.False);
         Assert.That(diamondDust.SettingsOverrides, Is.TypeOf<FruDiamondDustStateOverrides>());
         Assert.That(AnoMech.Core.Game.Game.DisplayName(lightRampant), Is.EqualTo("P2 Light Rampant"));
@@ -234,6 +247,7 @@ public class FruDiamondDustTests
                 if (p.Crossed(1f))
                 {
                     Assert.That(actors, Has.Count.EqualTo(30));
+                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).ModelHidden, Is.True);
                     Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).SpawnConfig.EnemyList, Is.EqualTo(EnemyListMode.OnlyWhenVisible));
                     boss = (FakeBattleChara)actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.UsurperOfFrost).Proxy!;
                     oracle = (FakeBattleChara)actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).Proxy!;
@@ -244,6 +258,7 @@ public class FruDiamondDustTests
                 if (p.Crossed(17.2f))
                 {
                     Assert.That(oracle!.Timelines, Does.Contain((ushort)0x11D6));
+                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).ModelHidden, Is.False);
                     Assert.That(oracle.AnimationStates, Does.Contain((0xF9, 0)));
                     var mirror = boss!.ReceivedEffects.Single(e => e.ActionId == 40180);
                     Assert.That(mirror.Targets!.Single().Id, Is.EqualTo(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.UsurperOfFrost).GameObjectId));
@@ -276,7 +291,7 @@ public class FruDiamondDustTests
                     Assert.That(actors, Is.Not.Empty);
                     checks++;
                 }
-                if (p.Crossed(32.6f))
+                if (p.Crossed(64.1f))
                 {
                     Assert.That(actors, Is.Empty);
                     checks++;
@@ -333,7 +348,7 @@ public class FruDiamondDustTests
             {
                 var s = (FruDiamondDustStateOverrides)o;
                 s.Axe = recording.Axe; s.StonesOnSupports = recording.Supports;
-                s.FirstIcicleAxis = recording.Axis; s.OracleSector = recording.OracleSector;
+                s.FirstIcicleAxis = recording.Axis; s.OracleSector = recording.OracleSector; s.Stillness = recording.TwinStillnessFirst;
             },
             Probe = p =>
             {
@@ -347,12 +362,13 @@ public class FruDiamondDustTests
             }
         });
         Assert.That(run.Passed, run.ToString);
-        foreach (var id in new uint[] { 40180, 40197, 40198, 40199, 40206, 40207, 40200, 40201, recording.Axe ? 40202u : 40203u })
+        foreach (var id in new uint[] { 40180, 40197, 40198, 40199, 40206, 40207, 40200, 40201, recording.Axe ? 40202u : 40203u,
+            40208, 40209, 40184, 40185, recording.TwinStillnessFirst ? 40193u : 40194u, recording.TwinStillnessFirst ? 40196u : 40195u, 40210, 40211 })
         {
             Assert.That(observed.ContainsKey(id), Is.True, $"Missing {id}");
             var expected = recording.Effects[id.ToString()];
             var actual = observed[id];
-            var count = id == 40198 ? 2 : 1;
+            var count = id == 40198 ? 3 : id == 40209 ? 4 : 1;
             Assert.That(actual, Has.Count.EqualTo(count));
             for (var j = 0; j < count; j++) Assert.That(actual[j], Is.EqualTo(expected[j]).Within(0.2f), $"Pull {recording.Pull}: {id}");
         }
@@ -386,13 +402,12 @@ public class FruDiamondDustTests
         {
             ScenarioFactory = () => new FruDiamondDustScenario(), PlayerRole = PartyRole.MainTank,
             StopAt = 31.4f,
-            Probe = p =>
+            Overrides = o =>
             {
-                if (!p.Crossed(30f)) return;
-                var needle = p.World.Children.OfType<SimEnemy>().First(e => e.Casting.ActionId == FruConstants.ActionId.FrigidNeedleCircle);
-                p.Member(PartyRole.MainTank)!.StopMoving();
-                p.Member(PartyRole.MainTank)!.SetPosition(needle.Position);
-            }
+                var settings = (FruDiamondDustStateOverrides)o;
+                settings.Axe = false; settings.StonesOnSupports = true; settings.FirstIcicleAxis = 0;
+            },
+            Takeovers = [new(30f, new Vector2(5.65685f, -5.65685f))],
         });
         Assert.That(run.Deaths.Any(d => d.ActionId == FruConstants.ActionId.FrigidNeedleCircle), Is.True, run.ToString);
     }

@@ -1,5 +1,8 @@
 # FRU implementation and validation report
 
+Latest expansion: [FRU Completionist — edge Return, Diamond Dust and Mirror, Mirror](fru-completionist.md). This supersedes the earlier inward CT coordinates and hidden DD status.
+
+
 ## Native playtest corrections — 2026-10-20
 
 This section supersedes the original delivery's standalone Akh Morn entry and menu defaults. Native retesting of these corrections is still required.

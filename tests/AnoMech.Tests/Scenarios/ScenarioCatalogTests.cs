@@ -6,15 +6,15 @@ namespace AnoMech.Tests;
 public class ScenarioCatalogTests
 {
     [Test]
-    public void UpstreamScenariosHaveDistinctSavedIdentitiesAndKeepDiamondDustShelved()
+    public void ScenarioIdentitiesRemainDistinctAndOnlyCompletedDiamondDustIsRegistered()
     {
         var scenarios = ScenarioCatalog.Create().Scenarios;
         Assert.That(scenarios.Select(s => s.FullName()), Is.Unique);
-        Assert.That(scenarios.Any(s => s.GetType().Name.Contains("DiamondDust")), Is.False);
+        Assert.That(scenarios.Single(s => s.GetType().Name.Contains("DiamondDust")), Is.TypeOf<global::AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario>());
         Assert.That(scenarios.Any(s => s.Name == "Akh Morn" && s.Phase == global::AnoMech.Scenarios.Fru.FruZone.P5), Is.False);
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.Contains(".Fru.Upstream.")), Is.EqualTo(7));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Fru.")
-            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(8));
+            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(10));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Dsr.")), Is.EqualTo(4));
     }
 
