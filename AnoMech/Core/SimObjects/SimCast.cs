@@ -19,6 +19,8 @@ public sealed class SimCast : ISimObject
 
     private float remainingAnimationLock;
     private float remainingCastTime;
+    // Packet-spawned helpers have no native slot contents until a later client frame.
+    private ActorCastData? pendingCast;
 
     public bool IsCasting => parent.Proxy?.IsCasting ?? false;
 
@@ -59,9 +61,12 @@ public sealed class SimCast : ISimObject
     public void NativeCast(uint actionId, ActionType actionType, float omenDelay, float castTime, bool interruptible, float? rotation = null, Vector3? position = null, GameObjectId? targetId = null, GameObjectId? ballistaId = null)
     {
         var castRotation = rotation ?? parent.Rotation;
-        parent.Proxy?.ReceiveActorCast(new ActorCastData(
+        var cast = new ActorCastData(
             actionId, actionType, castTime, omenDelay, interruptible,
-            castRotation, coordinates.ToGlobal(position ?? parent.Position), targetId, ballistaId));
+            castRotation, coordinates.ToGlobal(position ?? parent.Position), targetId, ballistaId);
+        pendingCast = null;
+        if (parent is SimNpc { PacketSpawnPending: true }) pendingCast = cast;
+        else parent.Proxy?.ReceiveActorCast(cast);
 
         ActionId = actionId;
         Total = castTime;
@@ -76,6 +81,7 @@ public sealed class SimCast : ISimObject
     // Returns the global sequence the targets' EffectResults name; 0 when nothing was sent.
     public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null, GameObjectId? actionTargetId = null)
     {
+        pendingCast = null;
         if (parent.Proxy is not { Exists: true } chara) return 0;
         targets ??= actionTargetId is { } target ? [new ActionEffectTarget(target)] : null;
 
@@ -94,6 +100,7 @@ public sealed class SimCast : ISimObject
 
     public void Cancel(CastCancelReason reason)
     {
+        pendingCast = null;
         remainingCastTime = 0;
         parent.ActorControl.CancelCast(ActionId, reason);
     }
@@ -101,6 +108,16 @@ public sealed class SimCast : ISimObject
     public void Tick(float deltaSeconds)
     {
         remainingCastTime = MathF.Max(0, remainingCastTime - deltaSeconds);
+        if (pendingCast is { } cast && parent is not SimNpc { PacketSpawnPending: true })
+        {
+            pendingCast = null;
+            if (remainingCastTime > 0f && parent.Proxy is { Exists: true } chara)
+                chara.ReceiveActorCast(cast with
+                {
+                    CastTime = remainingCastTime,
+                    OmenDelay = MathF.Max(0f, cast.OmenDelay - (Total - remainingCastTime)),
+                });
+        }
         if (remainingAnimationLock > 0f)
             remainingAnimationLock = MathF.Max(0f, remainingAnimationLock - deltaSeconds);
     }
@@ -109,6 +126,7 @@ public sealed class SimCast : ISimObject
     // (C0000005 at TimelineGroup.PlayAction), so the cast is called off before the despawn.
     public void Despawn()
     {
+        pendingCast = null;
         if (parent.Proxy is { IsCasting: true } chara)
             parent.ActorControl.CancelCast(chara.CastActionId, CastCancelReason.Silent);
     }

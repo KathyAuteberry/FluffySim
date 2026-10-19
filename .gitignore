@@ -17,3 +17,14 @@ __pycache__
 /tools/.venv/
 TestResults/
 dist/
+
+!/docs/research/
+/docs/research/*
+!/docs/research/asumech-comparison.md
+!/docs/research/fru-crystallize-time.md
+!/docs/research/fru-native-capture-inventory.md
+!/docs/research/fru-native-playtest.md
+!/docs/research/fru-pandora-arena.md
+!/docs/research/fru-pandora-evidence.md
+!/docs/research/fru-pandora-invulnerability.md
+!/docs/research/fru-delivery.md
