@@ -12,17 +12,34 @@ public sealed class FruP5ParadiseRegainedSettingsWindow
         if (SettingsGrid.Begin("##frup5paradise"))
         {
             SettingsGrid.FightOnlyNote();
+            DrawRotation();
             DrawWings();
             DrawSecondTower();
+            SettingsGrid.Row("Tank practice:");
+            var invulnerability = Overrides.RequireInvulnerability;
+            if (ImGui.Checkbox("Require invulnerability (tank practice)", ref invulnerability)) Overrides.RequireInvulnerability = invulnerability;
             SettingsGrid.End();
         }
     }
 
     private void ResetAll()
     {
+        Overrides.RequireInvulnerability = false;
         Overrides.Rotation = null;
         Overrides.EastSecond = null;
         Overrides.DarkFirst = null;
+    }
+
+    private void DrawRotation()
+    {
+        SettingsGrid.Row("First tower:");
+        if (ImGui.RadioButton("Auto##prrotation", Overrides.Rotation == null)) Overrides.Rotation = null;
+        for (var rotation = 0; rotation < 3; rotation++)
+        {
+            ImGui.SameLine();
+            var label = rotation switch { 0 => "South", 1 => "Northwest", _ => "Northeast" };
+            if (ImGui.RadioButton($"{label}##prrotation", Overrides.Rotation == rotation)) Overrides.Rotation = rotation;
+        }
     }
 
     private void DrawWings()

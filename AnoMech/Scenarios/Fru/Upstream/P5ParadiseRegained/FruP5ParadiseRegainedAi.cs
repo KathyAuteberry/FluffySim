@@ -10,7 +10,16 @@ namespace AnoMech.Scenarios.Fru.Upstream.P5ParadiseRegained;
 
 public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedState>
 {
-    public string Name => "H first / M1-R1 NW / M2-R2 NE; lines T-M-R-H";
+    public string Name => "Nukemaru";
+    public string Group => "Mana";
+
+    private readonly bool polarizingOnly;
+    private readonly float polarizingOffset;
+    public FruP5ParadiseRegainedAi(bool polarizingOnly = false, float polarizingOffset = 0f)
+    {
+        this.polarizingOnly = polarizingOnly;
+        this.polarizingOffset = polarizingOffset;
+    }
 
     private FruP5ParadiseRegainedState state = null!;
 
@@ -18,16 +27,20 @@ public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedS
     {
         state = stateParam;
         var ai = new AiManager(world);
-        ai.Move(2f, () => ByRole(StackUnderFirstTower), jitter: 0f, arrivalTime: 8.3f);
-        ai.Move(10f, () => ByRole(role => state.Rotate(FirstWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(0));
-        ai.Move(16.5f, () => ByRole(role => state.Rotate(SecondWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(1));
-        ai.Move(25.5f, () => ByRole(PolarizingPreposition), jitter: 0f, arrivalTime: 30f);
-        ai.Move(30f, () => ByRole(role => LineSpot(role, 0, dodged: false)), jitter: 0f, arrivalTime: LinesAimedAt(0));
+        if (!polarizingOnly)
+        {
+            ai.Move(2f, () => ByRole(StackUnderFirstTower), jitter: 0f, arrivalTime: 8.3f);
+            ai.Move(10f, () => ByRole(role => state.Rotate(FirstWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(0));
+            ai.Move(16.5f, () => ByRole(role => state.Rotate(SecondWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(1));
+        }
+        var offset = (polarizingOnly ? -29.35f : 0f) + polarizingOffset;
+        ai.Move(polarizingOnly ? 0f : MathF.Max(23.4f, 25.5f + offset), () => ByRole(PolarizingPreposition), jitter: 0f, arrivalTime: 30f + offset);
+        ai.Move(30f + offset, () => ByRole(role => LineSpot(role, 0, dodged: false)), jitter: 0f, arrivalTime: LinesAimedAt(0) + offset);
         for (var round = 0; round < 4; round++)
         {
             var r = round;
-            if (r > 0) ai.Move(LinesAt(r) - 1.4f, () => ByRole(role => LineSpot(role, r, dodged: false)), jitter: 0f, arrivalTime: LinesAimedAt(r));
-            ai.Move(LinesAt(r) + 1.2f, () => ByRole(role => LineSpot(role, r, dodged: true)), jitter: 0f, arrivalTime: EchoAt(r));
+            if (r > 0) ai.Move(LinesAt(r) - 1.4f + offset, () => ByRole(role => LineSpot(role, r, dodged: false)), jitter: 0f, arrivalTime: LinesAimedAt(r) + offset);
+            ai.Move(LinesAt(r) + 1.2f + offset, () => ByRole(role => LineSpot(role, r, dodged: true)), jitter: 0f, arrivalTime: EchoAt(r) + offset);
         }
     }
 
@@ -53,10 +66,10 @@ public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedS
         PartyRole.OffTank => new(state.DarkFirst ? -6.0622f : 6.0622f, 0f, 3.5f),
         PartyRole.RegenHealer => new(-0.65f, 0f, -7.5f),
         PartyRole.ShieldHealer => new(0.65f, 0f, -7.5f),
-        PartyRole.MeleeDpsA => new(-5f, 0f, -4.5f),
-        PartyRole.PhysRangedDps => new(-5.2f, 0f, -4.7f),
-        PartyRole.MeleeDpsB => new(5f, 0f, -4.5f),
-        _ => new(5.2f, 0f, -4.7f),
+        PartyRole.MeleeDpsA => new(state.DarkFirst ? -5f : 5f, 0f, -4.5f),
+        PartyRole.MeleeDpsB => new(state.DarkFirst ? -5.2f : 5.2f, 0f, -4.7f),
+        PartyRole.PhysRangedDps => new(state.DarkFirst ? 5f : -5f, 0f, -4.5f),
+        _ => new(state.DarkFirst ? 5.2f : -5.2f, 0f, -4.7f),
     };
 
     private static int BaitOrder(PartyRole role) => role switch
