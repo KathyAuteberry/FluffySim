@@ -50,14 +50,14 @@ public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedS
 
     private Vector3 FirstWingSpot(PartyRole role) => role switch
     {
-        PartyRole.MainTank => new(state.DarkFirst ? -6.0622f : 6.0622f, 0f, -3.5f),
-        PartyRole.OffTank => state.DarkFirst ? new(0f, 0f, 1f) : new(10f, 0f, 10f),
-        PartyRole.RegenHealer => new(-0.65f, 0f, 7f),
-        PartyRole.ShieldHealer => new(0.65f, 0f, 7f),
-        PartyRole.MeleeDpsA => new(-3.5f, 0f, 9.5f),
-        PartyRole.PhysRangedDps => new(-3.8f, 0f, 9.7f),
-        PartyRole.MeleeDpsB => new(3.5f, 0f, 9.5f),
-        _ => new(3.8f, 0f, 9.7f),
+        PartyRole.MainTank => new(0f, 0f, -7f),
+        PartyRole.OffTank => state.DarkFirst ? new(-1f, 0f, 1f) : new(10f, 0f, 10f),
+        PartyRole.RegenHealer => new(state.DarkFirst ? -1f : 1f, 0f, 7f),
+        PartyRole.ShieldHealer => new(state.DarkFirst ? -2f : 2f, 0f, 7f),
+        PartyRole.MeleeDpsA => new(state.DarkFirst ? -8f : 8f, 0f, 0f),
+        PartyRole.PhysRangedDps => new(state.DarkFirst ? -8.5f : 8.5f, 0f, 0f),
+        PartyRole.MeleeDpsB => new(state.DarkFirst ? -8f : 8f, 0f, -0.5f),
+        _ => new(state.DarkFirst ? -8.5f : 8.5f, 0f, -0.5f),
     };
 
     private Vector3 SecondWingSpot(PartyRole role) => role switch

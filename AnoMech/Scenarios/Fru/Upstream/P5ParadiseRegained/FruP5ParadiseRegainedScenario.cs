@@ -162,9 +162,10 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
     private void TetherWingBait(int wing)
     {
         wingTether?.Despawn();
+        var cleaveTarget = world.Party.Get(wing == 0 ? PartyRole.MainTank : PartyRole.OffTank);
         wingTether = state.IsDark(wing)
-            ? world.Tether(pandora, End.ClosestPlayer(), TetherId.WingsDark)
-            : world.Tether(pandora, End.FarthestPlayer(), TetherId.WingsLight);
+            ? world.Tether(pandora, End.ClosestPlayer(cleaveTarget), TetherId.WingsDark)
+            : world.Tether(pandora, End.FarthestPlayer(cleaveTarget), TetherId.WingsLight);
     }
 
     private void TargetWingBait()

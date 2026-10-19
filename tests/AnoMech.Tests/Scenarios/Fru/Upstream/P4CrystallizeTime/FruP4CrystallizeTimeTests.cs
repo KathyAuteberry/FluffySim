@@ -22,10 +22,23 @@ public class FruP4CrystallizeTimeTests
     [TestCaseSource(nameof(ManaPatterns))]
     public void ManaClearsEveryRoleAndWavePattern(PartyRole role, CrystallizeCorner corner, bool slow, BotDifficulty difficulty)
     {
+        var recorded = false;
         var run = ScenarioRun.Execute(typeof(FruP4CrystallizeTimeScenario), 1, 47 + (int)role, new()
         {
             PlayerRole = role,
             BotDifficulty = difficulty,
+            Probe = p =>
+            {
+                if (!p.Crossed(FruP4CrystallizeTimeState.ReturnSavedAt)) return;
+                recorded = true;
+                foreach (var tank in new[] { PartyRole.MainTank, PartyRole.OffTank })
+                {
+                    var north = corner is CrystallizeCorner.NW or CrystallizeCorner.NE;
+                    var east = corner is CrystallizeCorner.NE or CrystallizeCorner.SE;
+                    Assert.That(Vector3.Distance(p.World.Party.Get(tank)!.Position,
+                        FruP4CrystallizeTimeAi.ManaRewindSpot(tank, east, north)), Is.LessThan(0.1f));
+                }
+            },
             Overrides = o =>
             {
                 var settings = (FruP4CrystallizeTimeStateOverrides)o;
@@ -33,6 +46,7 @@ public class FruP4CrystallizeTimeTests
                 settings.SlowNorthwest = slow;
             },
         });
+        Assert.That(recorded, Is.True);
         Assert.That(run.Passed, run.ToString);
     }
 

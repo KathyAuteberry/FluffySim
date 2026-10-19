@@ -22,7 +22,6 @@ public class FruPracticeLifecycleTests
         yield return new(typeof(FruP5ParadiseRegainedScenario), 0, 15f);
         yield return new(typeof(FruPolarizingStrikesScenario), 0, 10f);
         yield return new(typeof(FruPandorasBoxScenario), 0, 10.5f);
-        yield return new(typeof(FruAkhMornScenario), 0, 8.5f);
         yield return new(typeof(FruPandoraSequenceScenario), 0, 115f);
     }
 

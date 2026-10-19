@@ -1,5 +1,6 @@
 using Dalamud.Configuration;
 using System;
+using System.Collections.Generic;
 using AnoMech.Network;
 
 namespace AnoMech;
@@ -19,6 +20,7 @@ public class Configuration : IPluginConfiguration
     public bool ShowSimulatedParty { get; set; } = true;
     public bool PracticeGodMode { get; set; }
     public bool AutoCollapseWhileRunning { get; set; } = false;
+    public Dictionary<string, string> ScenarioStrategies { get; set; } = new();
     public string LastSelectedScenario { get; set; } = "";
 
     // Multiplayer relay address (see AnoMech.Relay.Host/README.md) -- remembered across

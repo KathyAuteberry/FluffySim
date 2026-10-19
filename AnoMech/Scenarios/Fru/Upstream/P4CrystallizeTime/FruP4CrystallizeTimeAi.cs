@@ -83,6 +83,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
             CrystallizeCorner.SE => POST_EXA_4_SE,
             _ => POST_EXA_4_SW,
         }, arriveBy: 40.5f));
+        if (mana) world.Events.Add(40.55f, MoveTanksToRecordingArms);
         world.Events.Add(StopCleansingAt, () => MoveEveryBot(RewindSpot, arriveBy: 42.5f));
         world.Events.Add(45.9f, spreadSpots.Clear);
         if (mana)
@@ -149,6 +150,18 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
                 var leaveNoSoonerThan = knockedByAero.Contains(role) ? AeroKnockbackEndsAt : 0f;
                 MoveLeavingAsLateAsPossible(bot, role, destination.Position, arriveBy, leaveNoSoonerThan);
             }
+        }
+    }
+
+    private void MoveTanksToRecordingArms()
+    {
+        foreach (var bot in Bots())
+        {
+            var role = ((ISimPartyMember)bot).Role;
+            if (!role.IsTank()) continue;
+            puddleTargets.Remove(role);
+            CancelPendingMove(role);
+            bot.MoveTo(RewindSpot(role), RunSpeed);
         }
     }
 

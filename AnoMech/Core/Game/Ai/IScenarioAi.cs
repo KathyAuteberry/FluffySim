@@ -14,10 +14,10 @@ public interface IScenarioAi
 {
     string Name { get; }
 
-    // Optional region/group this strat belongs to. Used by the main-window strat
-    // picker to bucket strats under region buttons; must match one of the scenario's
-    // IScenario.StratGroups. Null = ungrouped (scenario shows no region row).
+    // Older strategies use region codes here; newer ones may name a DC convention.
     string? Group => null;
+    string? Region => Group is "Mana" or "Elemental" ? "JP" : Group;
+    string SelectionLabel => Group is "Mana" or "Elemental" ? $"{Group} — {Name}" : Name;
 }
 
 public interface IScenarioAi<TState> : IScenarioAi

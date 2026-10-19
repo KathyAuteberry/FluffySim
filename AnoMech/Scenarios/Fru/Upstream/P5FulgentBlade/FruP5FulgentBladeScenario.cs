@@ -98,18 +98,6 @@ public sealed class FruP5FulgentBladeScenario : IScenario
         }
     }
 
-    internal void RunAkhMorn(SimWorld worldParam, int? selectedAi)
-    {
-        world = worldParam;
-        state = new FruP5FulgentBladeState(world.Rng, settingsWindow.Overrides);
-        if (selectedAi is not null) new global::AnoMech.Scenarios.Fru.Pandora.FruAkhMornAi().Run(world);
-        world.Events.Add(0f, () => SpawnActors(false));
-        world.Events.Add(1f, () => pandora?.SetTarget(world.Party.Get(PartyRole.MainTank), follow: false));
-        world.Events.Add(1.5f, () => pandora?.Cast(ActionId.AkhMornPandora, animationLock: 3.1f));
-        world.Events.Add(9.2f, PickAkhMornTargets);
-        world.Events.Add(9.6f, AkhMornOnLightParties);
-    }
-
     private void SpawnActors() => SpawnActors(true);
 
     private void SpawnActors(bool fulgent)

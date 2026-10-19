@@ -437,8 +437,18 @@ public unsafe class MainWindow : Window, IDisposable
         _selectedWaymark = _waymarkMemory.GetValueOrDefault(scenario.Phase.Zone);
         if (_selectedWaymark < 0 || _selectedWaymark >= scenario.Phase.Zone.WaymarkPresets.Count)
             _selectedWaymark = 0;
-        // Restore the last region picked for this scenario; ReconcileStrat snaps null to its first region.
+        // Persisted strategy identity takes precedence over transient region memory.
         _selectedStratGroup = _stratGroupMemory.GetValueOrDefault(scenario);
+        if (Plugin.Config.ScenarioStrategies.TryGetValue(scenario.FullName(), out var savedStrategy))
+        {
+            for (var i = 0; i < scenario.AiStrats.Count; i++)
+                if (StrategyKey(scenario.AiStrats[i]) == savedStrategy)
+                {
+                    _selectedStrat = i;
+                    _selectedStratGroup = scenario.AiStrats[i].Region;
+                    break;
+                }
+        }
         ReconcileStrat();
 
         if (persist)
@@ -448,14 +458,24 @@ public unsafe class MainWindow : Window, IDisposable
         }
     }
 
+    private static string StrategyKey(IScenarioAi ai) => $"{ai.Group}\n{ai.Name}";
+
+    private void SaveStrategy()
+    {
+        if (_selectedScenario is not { } scenario || _selectedStrat < 0 || _selectedStrat >= scenario.AiStrats.Count) return;
+        Plugin.Config.ScenarioStrategies[scenario.FullName()] = StrategyKey(scenario.AiStrats[_selectedStrat]);
+        Plugin.Config.Save();
+    }
+
     private const string MpDisabledReason = "Disabled in a multiplayer session.";
 
-    // Distinct, ordered region labels from the strats' IScenarioAi.Group; empty = ungrouped.
+    // Empty means the scenario has no region selector.
     private static IReadOnlyList<string> StratGroups(IScenario scenario)
     {
         var groups = new List<string>();
         foreach (var ai in scenario.AiStrats)
-            if (ai.Group is { } g && !groups.Contains(g)) groups.Add(g);
+            if (ai.Region is { } g && !groups.Contains(g)) groups.Add(g);
+        groups.Sort((a, b) => a == b ? 0 : a == "JP" ? -1 : b == "JP" ? 1 : string.CompareOrdinal(a, b));
         return groups;
     }
 
@@ -577,8 +597,8 @@ public unsafe class MainWindow : Window, IDisposable
     {
         var inRegion = new List<int>();
         for (var i = 0; i < strats.Count; i++)
-            if (strats[i].Group == _selectedStratGroup) inRegion.Add(i);
-        return inRegion;
+            if (strats[i].Region == _selectedStratGroup) inRegion.Add(i);
+        return inRegion.OrderBy(i => strats[i].Group == "Mana" ? 0 : 1).ThenBy(i => i).ToList();
     }
 
     // Mirrors the visibility rules of DrawStratSelector and DrawWaymarkSelector.
@@ -1048,10 +1068,10 @@ public unsafe class MainWindow : Window, IDisposable
         else
         {
             var labels = new string[strats.Count];
-            for (var i = 0; i < strats.Count; i++) labels[i] = strats[i].Name;
+            for (var i = 0; i < strats.Count; i++) labels[i] = strats[i].SelectionLabel;
             SettingsGrid.Row("Strategy:");
             ImGui.SetNextItemWidth(SetupDropdownWidth * ImGuiHelpers.GlobalScale);
-            ImGui.Combo("##strat", ref _selectedStrat, labels, labels.Length);
+            if (ImGui.Combo("##strat", ref _selectedStrat, labels, labels.Length)) SaveStrategy();
         }
         ImGui.EndDisabled();
         if (mpGuest && ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))
@@ -1074,6 +1094,7 @@ public unsafe class MainWindow : Window, IDisposable
                 _selectedStratGroup = group;
                 _stratGroupMemory[_selectedScenario!] = group; // remember across scenario switches
                 ReconcileStrat();
+                SaveStrategy();
             }
             ImGui.PopID();
             if (selected) ImGui.PopStyleColor();
@@ -1089,10 +1110,13 @@ public unsafe class MainWindow : Window, IDisposable
 
         var localIdx = filtered.IndexOf(_selectedStrat);
         var labels = new string[filtered.Count];
-        for (var i = 0; i < filtered.Count; i++) labels[i] = strats[filtered[i]].Name;
+        for (var i = 0; i < filtered.Count; i++) labels[i] = strats[filtered[i]].SelectionLabel;
         ImGui.SetNextItemWidth(SetupDropdownWidth * ImGuiHelpers.GlobalScale);
         if (ImGui.Combo("##strat", ref localIdx, labels, labels.Length))
+        {
             _selectedStrat = filtered[localIdx];
+            SaveStrategy();
+        }
     }
 
     // Grouped scenarios need a real strat in the active region.
@@ -1102,7 +1126,7 @@ public unsafe class MainWindow : Window, IDisposable
         if (StratGroups(scenario).Count == 0) return true;
         var strats = scenario.AiStrats;
         return _selectedStrat >= 0 && _selectedStrat < strats.Count
-            && strats[_selectedStrat].Group == _selectedStratGroup;
+            && strats[_selectedStrat].Region == _selectedStratGroup;
     }
 
     private static bool GroupsContain(IReadOnlyList<string> groups, string? group)

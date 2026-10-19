@@ -126,22 +126,22 @@ public sealed class PassableEnd : DynamicEnd
 }
 
 // Re-targets to the party member farthest from the anchor each tick (auto-target).
-public sealed class FarthestPlayerEnd : DynamicEnd
+public sealed class FarthestPlayerEnd(SimCharacter? excluded = null) : DynamicEnd
 {
     public override SimCharacter? Resolve(SimCharacter? self, SimCharacter? other, TetherContext ctx)
     {
         if (other is null) return self;
-        return ctx.Party.Farest(other.Position) ?? self;
+        return ctx.Party.Farest(other.Position, excluded) ?? self;
     }
 }
 
 // Re-targets to the party member closest to the anchor each tick.
-public sealed class ClosestPlayerEnd : DynamicEnd
+public sealed class ClosestPlayerEnd(SimCharacter? excluded = null) : DynamicEnd
 {
     public override SimCharacter? Resolve(SimCharacter? self, SimCharacter? other, TetherContext ctx)
     {
         if (other is null) return self;
-        return ctx.Party.Closest(other.Position) ?? self;
+        return ctx.Party.Closest(other.Position, excluded) ?? self;
     }
 }
 
@@ -153,6 +153,6 @@ public static class End
     internal static FixedEnd Fixed(SimCharacter? character) => new(character);
     // initial = null → a random alive party member is chosen on the first resolve.
     public static PassableEnd Passable(SimCharacter? initial = null, float halfWidth = 0.5f, bool exclusive = false) => new(initial, halfWidth, exclusive);
-    public static FarthestPlayerEnd FarthestPlayer() => new();
-    public static ClosestPlayerEnd ClosestPlayer() => new();
+    public static FarthestPlayerEnd FarthestPlayer(SimCharacter? excluded = null) => new(excluded);
+    public static ClosestPlayerEnd ClosestPlayer(SimCharacter? excluded = null) => new(excluded);
 }

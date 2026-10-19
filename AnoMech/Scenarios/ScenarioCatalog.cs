@@ -97,7 +97,6 @@ public sealed class ScenarioCatalog
         new FruP5ParadiseRegainedScenario(),
         new Fru.Pandora.FruPolarizingStrikesScenario(),
         new Fru.Pandora.FruPandorasBoxScenario(),
-        new Fru.Pandora.FruAkhMornScenario(),
         new Fru.Pandora.FruPandoraSequenceScenario(),
         new TopP2PartySynergyScenario(),
         new TopP5DeltaScenario(),

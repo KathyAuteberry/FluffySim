@@ -1,5 +1,51 @@
 # FRU implementation and validation report
 
+## Native playtest corrections — 2026-10-20
+
+This section supersedes the original delivery's standalone Akh Morn entry and menu defaults. Native retesting of these corrections is still required.
+
+### Paradise: reproduced cause and correction
+
+A human MT standing at relative North reproduces the reported deaths. With rotation 0 and seed 72, light-first kills H1/D1/D3 at 16.55; dark-first kills H2/D2/D4 at 16.47. Death action is the first Wings cleave (40314/40315), not tower failure. The previous all-bot MT stood diagonally NW/NE, turning the cone away from a formation that split DPS across both southern sides. That formation only worked with the bot-specific diagonal facing.
+
+The Mana formation now keeps MT relative North, places all four DPS on the wing-dependent safe flank, and puts both healers on the safe side within the South tower. Dark-first ST takes a near position on the safe flank; light-first ST remains far SE. The second wing retains its mirrored tank/tower choreography. All positions rotate with the first tower defining relative South. Nearest/farthest tether searches now exclude that wing's cleave tank; other eligible players remain able to steal the bait and fail the mechanic. Damage, vulnerabilities, tower requirements and cleave geometry were not weakened.
+
+The [Mana guide](https://ffxiv.tuufless.com/mana/fru/05_pandora/) diagrams and instructions define the strategy. The guide describes 225 degrees, while both inspected BossMod implementations and the inherited executable action use a 240-degree cone (120-degree half-angle, offset 60 degrees). This patch retains that independently corroborated geometry rather than shrinking it to fix positioning. The exact native angular boundary remains an evidence discrepancy to verify in game.
+
+The human tank matrix covers MT/ST × three rotations × both wing orders × both tower orders × Easy/Hard: 48 cases. It checks survival through both wings, actual tank physical-vulnerability recipients, absence of physical vulnerability on non-tanks, and alternating ST/MT tether ownership. Existing all-role full-mechanic runs, wrong soaks, optional invulnerability, sequence, active-tower Restart and delayed offline entry tests remain in place.
+
+### CT recording route
+
+The [Mana guide Steps 21–27](https://ffxiv.tuufless.com/mana/fru/04_gaia_and_shiva/) distinguish a near-center Y recording formation from the later far intercardinal tank spreads. The recording arms remain relative (-3,-4.5) and (+3,-4.5), rotated 180 degrees for a South-origin second wave; these are simulator placements, not measurements from a scaled diagram. They retain front-four ordering and safe second-wing knockback landings. Step 25 still uses separate far spread positions.
+
+Mana tanks now leave directly for their recording arms at 40.55, immediately after the second north/south strip's 40.5 snapshot, cancelling pending assignment-route moves. They no longer wait for the 41.1 party regroup. All attack and Return timings remain unchanged. Every role/corner/slow-pattern/difficulty matrix run now asserts both tank positions at the actual 44.8 Return snapshot and continues through Spirit Taker, both wings and final damage. Timing provenance remains inherited simulator scheduling plus pinned Action-sheet cast durations, not a newly observed native log.
+
+### Selection and practice menu
+
+Region derives separately from the strategy convention: Mana/Elemental strategies belong to JP. JP is listed first where supported; Mana strategies sort first inside their region and display their convention explicitly. Original strategy indices and multiplayer identities remain unchanged. Per-scenario strategy identities are serialized in configuration, preserving explicit NA choices through reopening and switching scenarios. Fresh and legacy configurations without this new field default to JP/Mana where available; scenarios offering only another region remain usable.
+
+The redundant standalone P5 Akh Morn catalog entry, wrapper and unused isolated entry method were removed. Akh Morn remains in full Fulgent Blade and the continuous phase; its role/difficulty and wrong-light-party tests now exercise Fulgent Blade itself.
+
+### Prioritized native retest
+
+1. Paradise first tower South: play MT at North, then ST; test both wing orders. Confirm only the intended tank takes each cleave, both healers survive the South tower, DPS stay on the safe flank, and tethers alternate ST→MT. Repeat a rotated tower pattern and both tower orders. Check boss facing and native cone edges against the simulated damage.
+2. CT North- and South-origin second Tidal patterns: watch tanks cross promptly after line two, inspect the **recorded** Y positions before spread, then verify Spirit Taker, first-wing immunity and second-wing landings in Easy/Hard.
+3. Fresh/legacy settings show JP and Mana; explicitly choose NA, switch scenarios and reopen the window/plugin to confirm it persists. Confirm standalone Akh Morn is absent while Fulgent and sequence still finish with it.
+4. Repeat Paradise Restart with towers/wings active and both new drills through inn/offline cold entry, hidden party, Pause/Resume and Leave. Native rendered effects and facing still need the owner's client check.
+
+### Correction validation and Jujutsu
+
+- Full optimized **Debug** unit/scenario regression: **14,488 passed**, 0 failed; catalog uses the checked-in 40 random seeds per strategy. `/tmp/fluffy-playtest-full.log`; `tests/AnoMech.Tests/TestResults/fru-playtest-full.trx`.
+- Final focused CT/P5/configuration/lifecycle run: **579 passed**, including the final additional negative tether-bait cases and tether-recipient assertions. `/tmp/fluffy-playtest-focused-final.log`; `tests/AnoMech.Tests/TestResults/fru-playtest-focused.trx`.
+- Relay: **44 passed**. Python tooling: **76 passed**. `/tmp/fluffy-playtest-relay.log`, `/tmp/fluffy-playtest-tooling.log`.
+- Both firewall/hook-failure models: **308 passed, 3 Windows-only native-hook skips each**, against ordinary Debug plus isolated optimized TRACE Debug. `/tmp/fluffy-playtest-safety.log`, `/tmp/fluffy-playtest-safetyhook.log`. No safety allowlists or packet guards were weakened.
+- Solution Debug build: success, 0 errors; two existing test warnings (CS8602/CS0067). Optimized TRACE Debug build: success, 0 warnings/errors. `/tmp/fluffy-playtest-build.log`, `/tmp/fluffy-playtest-safety-build.log`. No Release build, installed plugin write, version bump, publication or plogons change.
+
+Anonymous correction change **suxsukpzsnrz** is incorporated in the existing shared integration **towxunptvwlp**, retaining original parents **uwrxzomlkwxz**, **towkrqovnplv** and **yuzulstmpsqq**. Anonymous **xowlqqopmrxu** preserves the former integration's seven-file validation/registration/report delta as the correction's baseline, avoiding a cycle while retaining a reviewable correction diff. Integration conflicts were resolved explicitly by hunk: only obsolete standalone Akh Morn registration/case and the old count were removed; old report/test content was preserved alongside additions. Final integration and correction trees compare equal. Existing feature bookmarks remain; no new bookmark was necessary.
+
+Local master and master@origin remain **5d6b648b6ea6b1e4d0003494e00e2a363f4691d1**. Historical **plkqvn / 9810be4fa280ad3da2b74e214e1bd0953d2352ee** is unchanged. The operation checkpoint is `/tmp/fluffy-playtest-jj-checkpoint.log`; the preserved original integration commit is `ed7a5c7eb28d5a93c578a4a89f5a5cd64ada8a77`. No concurrent feature changes were discarded.
+
+
 This is a playable implementation candidate with native-client verification outstanding. It is not a claim of complete retail fidelity or release readiness. The original nine custom drills, their Mana/Elemental strategies and the shelved Diamond Dust registration were preserved. No public version or release metadata was changed.
 
 ## A. AsuMech comparison
@@ -21,7 +67,7 @@ The [CT evidence register](fru-crystallize-time.md) records every stage and sour
 P5 uses a shared main-zone phase with one-shot readiness-gated native platform MapEffects, known earlier-layer suppression, the existing entrance barrier lifecycle, weather108 and BGM20099. Installed sheets confirm territory/BGM assets; actual rendered P5 scenery, weather and collision require a client check. Imported P5 entries use this same phase. [Arena evidence](fru-pandora-arena.md).
 
 - Fulgent retains native seam event objects, cast-based exalines, all rotation/mirror configurations, tank autos and paired Akh Morn resolution. Its existing light-party parity already matches Mana and is labelled accordingly.
-- Isolated Akh Morn reuses the same targeting/damage actions and Mana light parties.
+- Akh Morn remains the Fulgent Blade follow-up and part of the continuous sequence, using shared targeting/damage actions and Mana light parties; the redundant standalone entry was removed after playtesting.
 - Paradise uses Mana healer-first towers, then melee together on the cleaved far side and ranged together on the near side. Tower rotation, second-tower side and wing order are forceable. Towers require exactly two occupants.
 - Polarizing has an isolated entry and the bundled transition. Each side independently selects its nearest bait, with four T→M→R→H rounds, color resistance on front baits, side swaps, overlap vulnerability and fixed-direction lethal echoes.
 - Pandora's Box has an isolated entry, native cast and existing simulation-only tank LB pathway. Each recipient must actually hold active LB3 protection at snapshot. Early, late, missing and lower-level LB fail. The local gauge is restored on teardown.

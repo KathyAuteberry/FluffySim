@@ -11,9 +11,10 @@ public class ScenarioCatalogTests
         var scenarios = ScenarioCatalog.Create().Scenarios;
         Assert.That(scenarios.Select(s => s.FullName()), Is.Unique);
         Assert.That(scenarios.Any(s => s.GetType().Name.Contains("DiamondDust")), Is.False);
+        Assert.That(scenarios.Any(s => s.Name == "Akh Morn" && s.Phase == global::AnoMech.Scenarios.Fru.FruZone.P5), Is.False);
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.Contains(".Fru.Upstream.")), Is.EqualTo(7));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Fru.")
-            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(9));
+            && !s.GetType().Namespace!.Contains(".Upstream.")), Is.EqualTo(8));
         Assert.That(scenarios.Count(s => s.GetType().Namespace!.StartsWith("AnoMech.Scenarios.Dsr.")), Is.EqualTo(4));
     }
 
