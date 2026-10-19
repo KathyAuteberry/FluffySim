@@ -1,6 +1,7 @@
 using AnoMech.Core.Game;
 using AnoMech.Scenarios;
 using AnoMech.Scenarios.Dsr.Sanctity2;
+using AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime;
 
 namespace AnoMech.Windows;
 
@@ -8,7 +9,7 @@ internal static class PracticeAntiKnockbackControls
 {
     internal static PracticeInvulnerabilityControls Evaluate(IScenario? scenario, bool alive, PracticeAction action)
     {
-        var visible = scenario is DsrSanctity2Scenario;
+        var visible = scenario is DsrSanctity2Scenario or FruP4CrystallizeTimeScenario;
         return new(visible, visible && alive && action.Ready,
             !alive ? "Unavailable — KO" : !action.Enabled ? "Used — restart to reset"
             : action.Active ? $"Active — {action.Remaining:F1}s remaining"
