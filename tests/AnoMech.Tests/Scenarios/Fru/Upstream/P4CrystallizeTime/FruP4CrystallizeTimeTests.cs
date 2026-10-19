@@ -35,8 +35,9 @@ public class FruP4CrystallizeTimeTests
                 {
                     var north = corner is CrystallizeCorner.NW or CrystallizeCorner.NE;
                     var east = corner is CrystallizeCorner.NE or CrystallizeCorner.SE;
+                    Assert.That(p.World.Party.Get(tank)!.Position.Length(), Is.InRange(18.7f, 19f));
                     Assert.That(Vector3.Distance(p.World.Party.Get(tank)!.Position,
-                        FruP4CrystallizeTimeAi.ManaRewindSpot(tank, east, north)), Is.LessThan(0.1f));
+                        new Vector3((tank == PartyRole.MainTank ? -12f : 12f) * (north ? 1f : -1f), 0, north ? -14.5f : 14.5f)), Is.LessThan(0.1f));
                 }
             },
             Overrides = o =>

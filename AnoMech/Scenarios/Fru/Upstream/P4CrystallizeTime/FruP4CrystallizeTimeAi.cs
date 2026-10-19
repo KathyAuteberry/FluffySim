@@ -263,7 +263,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
     {
         var relativeNorth = north ? -1f : 1f;
         if (role.IsTank())
-            return new Vector3((role == PartyRole.MainTank ? -3f : 3f) * (north ? 1f : -1f), 0, 4.5f * relativeNorth);
+            return new Vector3((role == PartyRole.MainTank ? -12f : 12f) * (north ? 1f : -1f), 0, 14.5f * relativeNorth);
         var rank = (int)role - 2;
         var offset = (rank - 2.5f) * 0.12f;
         return new Vector3(offset * (east ? 1f : -1f), 0, (1.5f - offset) * relativeNorth);
