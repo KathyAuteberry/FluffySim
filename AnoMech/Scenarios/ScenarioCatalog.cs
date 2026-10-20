@@ -81,6 +81,7 @@ public sealed class ScenarioCatalog
         new Dsr.Strength2.DsrStrength2Scenario(),
         new Dsr.Sanctity1.DsrSanctity1Scenario(),
         new Dsr.Sanctity2.DsrSanctity2Scenario(),
+        new Dsr.P3Nidhogg.DsrP3NidhoggScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

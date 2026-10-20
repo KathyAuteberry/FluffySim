@@ -67,6 +67,7 @@ public class SimNpc : SimCharacter
             return;
         }
         if (Position != packetSpawnPlacement.Position || Rotation != packetSpawnPlacement.Rotation) Motion.ResendTransform();
+        if (ModelHidden) chara.SetModelHidden(true);
         OnPacketSpawned(chara);
     }
 
