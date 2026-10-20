@@ -34,3 +34,13 @@ Owner checks required:
 ## Native playtest repair follow-up
 
 Demihuman knight appearance payloads restored; explicit local knockback and creation-distance-relative chains implemented. See [root causes, validation and retest checklist](dsr-native-repairs.md). Native rendering/results await owner confirmation.
+
+## Final refinement — 2026-10-21
+
+Owner playtesting confirms the previous native boss visibility, Faith Unmoving displacement and distance-based chains now work. Those paths are unchanged.
+
+Empty/Full Dimension now delay only the native floor omen beyond the cast lifetime (6s versus the sheet's 5s, adjusted to 4.7s by the shared action pipeline). Cast bars, action IDs, impact effects, collision geometry and absolute damage events remain intact. Pinned AsuMech P1 explicitly uses `CastWithoutOmen` for both casts. Current Action rows25306/25307 contain omen references360/1; that establishes available shapes, **not** whether the live encounter displays them. BossMod corroborates donut/circle damage geometry but is not proof of native floor presentation. No new native capture was available: this correction follows the reference implementation and reported behavior; precise live presentation remains an acceptance check. No other P1 telegraphs were suppressed without evidence.
+
+The prison transition previously applied imprisonment but never forced movement; bots walked in early and concealed the omission. At112.31 Grinnaux now emits Planar Prison25313 from the prison centre, consistent with AsuMech and BossMod's pull-to-Grinnaux definition. At112.71 the party receives tether0x35, one-second stun0x95 and existing imprisonment. Members beyond7y are carried to(-11,0,1). The bot pre-walk is removed. The existing local CarryTo path emits ActorControl0xF1 for the human and a bounded eased carry trajectory for simulated members; no instantaneous teleport or new server-bound movement path. The native ring/layout events and114.26 boundary activation are preserved. Exact native trajectory and inherited7y eligibility threshold remain unmeasured; this uses the existing supported carry contract, not a claim of capture-perfect motion.
+
+Retest both Dimension casts/impacts, prison pull with a stationary human outside the ring, hidden/visible party, Pause/Restart during the pull, Leave/reentry and subsequent HMRT baits in inn/title-screen modes. Working Faith Unmoving/chains require a brief regression check.

@@ -87,17 +87,8 @@ public sealed unsafe class UserActions : IUserActions
         if (!SimActive) return;
         var am = ActionManager.Instance();
         if (am != null) processedSeq = am->LastUsedActionSequence;
-        var world = Plugin.Game.World;
-        if (world.PracticeInvulnerability.Enabled)
-        {
-            var action = PracticeDefensiveActions.TankAction(Plugin.PlayerState.ClassJob.RowId);
-            if (action != 0) Natives.Zone.ResetPracticeRecast(action);
-        }
-        if (world.PracticeAntiKnockback.Enabled)
-        {
-            Natives.Zone.ResetPracticeRecast(7548);
-            Natives.Zone.ResetPracticeRecast(7559);
-        }
+        foreach (var action in PracticeDefensiveActions.RecastsForJob(Plugin.PlayerState.ClassJob.RowId))
+            Natives.Zone.ResetPracticeRecast(action);
         pendingResolve = false;
         pausedCast.Clear();
         if (!SimActive || hooks.PauseInput) return;

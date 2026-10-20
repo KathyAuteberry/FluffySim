@@ -93,6 +93,7 @@ public sealed unsafe partial class ZoneControl
         if (TimedSpeedBuffActive()) lastSpeedBuffAt = Stopwatch.GetTimestamp();
         TickZoneChangeLatch();
         TickSessionGuard();
+        FlushPracticeRecasts();
         TickSendHold();
     }
 
@@ -652,7 +653,7 @@ public sealed unsafe partial class ZoneControl
         var here = player is { } p ? Describe(p.Position, p.Rotation) : "none";
         pendingLift = null;
         liftHoldLoggedReason = null;
-        try { practiceRecasts.Restore(); }
+        try { pendingPracticeRecasts.Clear(); practiceRecasts.Restore(); }
         catch (Exception e) { Die($"local recast restoration failed: {e.Message}"); }
         var counters = RestoreClientCounters(armedCounters);
         if (armedCounters == null) Die("pre-simulation action counters unavailable at lift");

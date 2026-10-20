@@ -333,7 +333,7 @@ public class DsrSanctity2Tests
     {
         var scenarios=ScenarioCatalog.Create().Scenarios.ToList();var index=scenarios.FindIndex(s=>s is DsrSanctity2Scenario);
         Assert.That(scenarios[index-1],Is.TypeOf<AnoMech.Scenarios.Dsr.Sanctity1.DsrSanctity1Scenario>());
-        var scenario=scenarios[index];Assert.That(Game.DisplayName(scenario),Is.EqualTo("P2 Sanctity of the Ward (Part 2)"));
+        var scenario=scenarios[index];Assert.That(Game.DisplayName(scenario),Is.EqualTo("P2 Sanctity of the Ward 2"));
         Assert.That(scenario.IsIncomplete,Is.True);Assert.That(scenario.EnablePhaseBgm,Is.True);Assert.That(scenario.Phase,Is.SameAs(DsrZone.P2));
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,0,new(){ScenarioFactory=()=>new DsrSanctity2Scenario(),WriteArtifactsOnFailure=false});
         Assert.That(run.Passed,run.ToString);Assert.That(typeof(AnoMech.Core.Native.Interfaces.Natives).GetProperty("Markings"),Is.Null);

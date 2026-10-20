@@ -8,6 +8,36 @@ namespace AnoMech.SafetyTests.Firewall;
 
 public unsafe class NativePracticeIntegrationTests : FirewallTestBase
 {
+    [Xunit.Theory]
+    [InlineData(19u, 30u)]
+    [InlineData(21u, 43u)]
+    [InlineData(32u, 3638u)]
+    [InlineData(37u, 16152u)]
+    [InlineData(24u, 7559u)]
+    public void LocalPracticeResetSupportsRepeatedAttemptsAndRestoresOriginalCooldown(uint job, uint action)
+    {
+        Game.ClassJobId = job;
+        var group = ActionManager.Instance()->GetRecastGroup((int)ActionType.Action, action);
+        var recast = ActionManager.Instance()->GetRecastGroupDetail(group);
+        *recast = new RecastDetail { IsActive = true, ActionId = action, Elapsed = 5, Total = 300 };
+        Enter();
+        for (var attempt = 0; attempt < 3; attempt++)
+        {
+            Plugin.Zone.ResetPracticeRecast(action);
+            Assert.False(recast->IsActive);
+            Assert.Equal(300f, recast->Elapsed);
+            *recast = new RecastDetail { IsActive = true, ActionId = action, Total = 300 };
+            Plugin.Zone.NotePracticeAction(action);
+            Game.RunFor(.2);
+            Assert.True(recast->IsActive);
+        }
+        Leave();
+        AssertBackInTheInnWithTheFirewallDown();
+        Assert.True(recast->IsActive);
+        Assert.True(recast->Elapsed >= 5);
+        AssertNothingLeaked();
+    }
+
     [Fact]
     public void SimulationSequenceNumbersAreRestoredBeforeTheFilterDrops()
     {

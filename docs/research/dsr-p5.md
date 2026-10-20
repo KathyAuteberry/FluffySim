@@ -47,3 +47,11 @@ Recovered native feedback: Dive from Grace jump/tower presentation feels incompl
 ## Native playtest repair follow-up
 
 Both invisible Thordan spawns now share the installed Dark Thordan body/weapon appearance; other knights reuse working P2 configurations. See [root causes, validation and retest checklist](dsr-native-repairs.md). Native rendering/results await owner confirmation.
+
+## Focused assignment practice — 2026-10-21
+
+Wrath offers Random (default), Blue marker, Dragoon tether, Green marker, Thunderstruck, Eruption bait, Liquid Heaven bait and No trio assignment (no initial blue/tether; later green/Lightning remain possible). These are assignment preferences, not invented debuffs. A normal valid roll is generated first; a randomly chosen eligible holder is exchanged with the human across **all** assignments. Role symmetry in the existing encounter permits every seat. This keeps two distinct tethers, one blue/one green, two Lightning targets, Liquid Heaven restricted to plain non-Lightning players and Eruption restricted to marked/green non-Lightning players. Single selection prevents requesting incompatible late assignments. Random retains the original RNG path; forced rolls remain seed-reproducible and bots read the resulting state normally.
+
+Death offers Random (default), Doom and No Doom, independently of its existing relative-North conga slot control. A swap between eligible Doom/non-Doom roles preserves exactly four Dooms and four cleansing-puddle players. Playstation preferences are intentionally not exposed: circles depend on the farthest actual Doom pair, and forcing a marker independently would violate targeting. Both preferences persist in configuration and survive retries; per-run assignment state is rebuilt. No stable scenario IDs or names changed.
+
+Owner has confirmed both Thordans now render. Retest each preference, especially Liquid Heaven/Eruption versus Lightning, Doom cleansing and repeated practice after reopening the menu. No new native timing/appearance claim is made by headless checks.

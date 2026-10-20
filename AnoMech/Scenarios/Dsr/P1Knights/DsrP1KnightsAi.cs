@@ -57,7 +57,6 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
         ai.Move(95.4f, () => AiMove.Create(state.SecondDimension == Dimension.Empty ? TanksNorthPartySouth() : MaxMeleeAroundGrinnaux()).NaturalOrder());
         ai.Move(100.4f, () => AiMove.Create(TanksNorthPartySouth()).NaturalOrder());
 
-        ai.Move(109.5f, () => AiMove.Create(StackInPrison()).NaturalOrder());
         for (var pair = 0; pair < BrightwingBaits.Length; pair++)
         {
             var bait = BrightwingBaits[pair];
@@ -146,7 +145,6 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
 
     private static Vector2 InPrison(Vector2 offset) => Flat(DsrP1KnightsState.PrisonCentre) + offset;
 
-    private static Vector2?[] StackInPrison() => Enumerable.Repeat<Vector2?>(InPrison(PrisonStackOffset), 8).ToArray();
 
     private static Vector2?[] PairReturnsBehindCharibert(PartyRole[] pair)
     {

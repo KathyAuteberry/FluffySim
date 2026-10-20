@@ -22,7 +22,7 @@ public sealed class DsrP5WrathState
     public PartyRole LiquidHeaven { get; }
     public PartyRole Eruptions { get; }
 
-    public DsrP5WrathState(Rng rng, DsrP5WrathStateOverrides? overrides = null)
+    public DsrP5WrathState(Rng rng, DsrP5WrathStateOverrides? overrides = null, PartyRole player = PartyRole.MainTank)
     {
         overrides ??= new DsrP5WrathStateOverrides();
         DragonBearing = overrides.DragonBearing ?? 90f * rng.Next(4);
@@ -39,6 +39,28 @@ public sealed class DsrP5WrathState
         var marked = Marked.Append(Divebomb).Except(Lightning).ToList();
         var eruptions = marked[rng.Next(marked.Count)];
         Eruptions = overrides.Eruptions ?? eruptions;
+        if (overrides.PracticeAssignment != WrathPracticeAssignment.Random)
+        {
+            var eligible = overrides.PracticeAssignment switch
+            {
+                WrathPracticeAssignment.BlueMarker => new[] { Defamation },
+                WrathPracticeAssignment.DragoonTether => Tethered.ToArray(),
+                WrathPracticeAssignment.GreenMarker => new[] { Divebomb },
+                WrathPracticeAssignment.Thunderstruck => Lightning.ToArray(),
+                WrathPracticeAssignment.EruptionBait => new[] { Eruptions },
+                WrathPracticeAssignment.LiquidHeavenBait => new[] { LiquidHeaven },
+                WrathPracticeAssignment.NoEarlyMarker => Enum.GetValues<PartyRole>().Except(Marked).ToArray(),
+                _ => throw new ArgumentOutOfRangeException(nameof(overrides.PracticeAssignment)),
+            };
+            var selected = eligible[rng.Next(eligible.Length)];
+            PartyRole Swap(PartyRole role) => role == selected ? player : role == player ? selected : role;
+            Tethered = Tethered.Select(Swap).ToArray();
+            Defamation = Swap(Defamation);
+            Divebomb = Swap(Divebomb);
+            Lightning = Lightning.Select(Swap).ToArray();
+            LiquidHeaven = Swap(LiquidHeaven);
+            Eruptions = Swap(Eruptions);
+        }
     }
     public IEnumerable<PartyRole> Marked => Tethered.Append(Defamation).OrderBy(r => r);
     public IEnumerable<PartyRole> Plain => Enum.GetValues<PartyRole>().Where(r => !Tethered.Contains(r) && r != Defamation && r != Divebomb);

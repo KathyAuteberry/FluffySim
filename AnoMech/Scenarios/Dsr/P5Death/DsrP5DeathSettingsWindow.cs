@@ -7,10 +7,18 @@ public sealed class DsrP5DeathSettingsWindow
     private static readonly string[] SlotLabels =
         ["My role's spot (MT ST H1 H2 | D1 D2 D3 D4)", "1 (left end)", "2", "3", "4 (left centre)", "5 (right centre)", "6", "7", "8 (right end)"];
 
-    public DsrP5DeathStateOverrides Overrides { get; } = new();
+    public DsrP5DeathStateOverrides Overrides { get; } = new() { PlayerDoom = Plugin.Config?.DsrDeathDoom };
 
     public void Draw()
     {
+        var doom = Overrides.PlayerDoom is { } forced ? (forced ? 1 : 2) : 0;
+        string[] labels = ["Random", "Doom", "No Doom"];
+        if (ImGui.Combo("Assignment", ref doom, labels, labels.Length))
+        {
+            Overrides.PlayerDoom = doom == 0 ? null : doom == 1;
+            Plugin.Config.DsrDeathDoom = Overrides.PlayerDoom;
+            Plugin.Config.Save();
+        }
         if (ImGui.Button("Auto")) Overrides.PlayerCongaSlot = null;
 
         if (SettingsGrid.Begin("##dsrp5death"))

@@ -187,9 +187,9 @@ public class DsrStrengthTests
         var scenarios = ScenarioCatalog.Create().Scenarios;
         Assert.That(scenarios[3], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
         Assert.That(scenarios[4], Is.TypeOf<AnoMech.Scenarios.Fru.UltimateRelativity.FruUltimateRelativityScenario>());
-        Assert.That(scenarios[7], Is.TypeOf<DsrStrengthScenario>());
-        Assert.That(scenarios[7].Phase.Name, Is.EqualTo("P2 King Thordan"));
-        Assert.That(scenarios[7].SettingsOverrides, Is.TypeOf<DsrStrengthStateOverrides>());
+        var strength = scenarios.Single(s => s is DsrStrengthScenario);
+        Assert.That(strength.Phase.Name, Is.EqualTo("P2 King Thordan"));
+        Assert.That(strength.SettingsOverrides, Is.TypeOf<DsrStrengthStateOverrides>());
         Assert.That(scenarios.OfType<DsrArenaDiagnosticScenario>(), Is.Empty);
     }
 

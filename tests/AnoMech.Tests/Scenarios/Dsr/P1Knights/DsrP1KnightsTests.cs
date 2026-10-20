@@ -83,6 +83,59 @@ public class DsrP1KnightsTests
     }
 
     [Test]
+    public void RemovingTheOmenDoesNotRemoveDimensionDamage()
+    {
+        var run = ScenarioRun.Execute(typeof(DsrP1KnightsScenario), 0, 0, new()
+        {
+            StopAt = 19.28f,
+            Takeovers = [new(19f, new System.Numerics.Vector2(10, 0))],
+            WriteArtifactsOnFailure = false,
+        });
+        Assert.That(run.Deaths.Any(d => d.ActionId == 0x62DA), Is.True);
+    }
+
+    [Test]
+    public void DimensionCastRetainsCastBarWithoutAnAdvanceFloorOmen()
+    {
+        var checkedCast = false;
+        var run = ScenarioRun.Execute(typeof(DsrP1KnightsScenario), 0, 0, new()
+        {
+            StopAt = 20,
+            Probe = p =>
+            {
+                if (!p.Crossed(15)) return;
+                var actor = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Single(e => e.BNpcBaseId == 12602);
+                var cast = ((FakeBattleChara)actor.Proxy!).ReceivedCasts.Last(c => c.ActionId == 0x62DA);
+                Assert.That(cast.CastTime, Is.GreaterThan(0));
+                Assert.That(cast.OmenDelay, Is.GreaterThan(cast.CastTime));
+                checkedCast = true;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedCast, Is.True);
+    }
+
+    [TestCase(PartyRole.MainTank)] [TestCase(PartyRole.CasterDps)]
+    public void PrisonPhysicallyPullsAStationaryHumanAndBotsBeforeBoundaryActivation(PartyRole role)
+    {
+        var checkedPull = false;
+        var run = ScenarioRun.Execute(typeof(DsrP1KnightsScenario), 0, 0, new()
+        {
+            PlayerRole = role, StopAt = 115,
+            Takeovers = [new(110.2f, new System.Numerics.Vector2(0, -10))],
+            Probe = p =>
+            {
+                if (!p.Crossed(114.1f)) return;
+                foreach (var member in p.World.Party.ActiveMembers())
+                    Assert.That(System.Numerics.Vector3.Distance(member.Position, DsrP1KnightsState.PrisonCentre), Is.LessThan(7));
+                checkedPull = true;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedPull, Is.True);
+    }
+
+    [Test]
     public void HallowingUsesInterruptibleNativeCastBar()
     {
         var checkedBar = false;

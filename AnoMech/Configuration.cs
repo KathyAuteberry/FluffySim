@@ -90,6 +90,9 @@ public class Configuration : IPluginConfiguration
     public bool SafeMode { get; set; } = true;
 
     // The below exists just to make saving less cumbersome
+    public int DsrWrathAssignment { get; set; }
+    public bool? DsrDeathDoom { get; set; }
+
     public void Save()
     {
         Plugin.PluginInterface.SavePluginConfig(this);

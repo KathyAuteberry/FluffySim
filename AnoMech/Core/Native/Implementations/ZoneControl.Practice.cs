@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Collections.Generic;
+using System.Linq;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.Native.Policies;
 using AnoMech.Core.UserActions;
@@ -14,6 +16,7 @@ public sealed unsafe partial class ZoneControl
 
     private readonly PacketFilterPolicy outboundPolicy;
     private readonly PracticeRecastSession practiceRecasts;
+    private readonly HashSet<uint> pendingPracticeRecasts = [];
     private byte recastJob;
     private long? revertedAt;
     public bool NativePracticeReady => IsActive && guardArmed && tripReason == null && practiceRecasts.Captured && FirewallIntact && Plugin.Config.SafeMode;
@@ -28,6 +31,12 @@ public sealed unsafe partial class ZoneControl
 
     public void NotePracticeAction(uint action)
     {
+        var am = ActionManager.Instance();
+        if (am != null)
+        {
+            var group = am->GetRecastGroup((int)ActionType.Action, action);
+            pendingPracticeRecasts.RemoveWhere(candidate => am->GetRecastGroup((int)ActionType.Action, candidate) == group);
+        }
         if (IsActive && FirewallIntact && recastJob == Plugin.PlayerState.ClassJob.RowId) practiceRecasts.Track(action);
     }
 
@@ -39,7 +48,15 @@ public sealed unsafe partial class ZoneControl
 
     public void ResetPracticeRecast(uint action)
     {
-        if (NativePracticeReady && recastJob == Plugin.PlayerState.ClassJob.RowId) practiceRecasts.Reset(action);
+        if (!IsActive || !FirewallIntact || recastJob != Plugin.PlayerState.ClassJob.RowId) return;
+        pendingPracticeRecasts.Add(action);
+        FlushPracticeRecasts();
+    }
+    private void FlushPracticeRecasts()
+    {
+        if (!NativePracticeReady || recastJob != Plugin.PlayerState.ClassJob.RowId) return;
+        foreach (var action in pendingPracticeRecasts.ToArray())
+            if (practiceRecasts.Reset(action)) pendingPracticeRecasts.Remove(action);
     }
     private void QuiesceLocalActions()
     {

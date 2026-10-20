@@ -57,7 +57,7 @@ public sealed class DsrP5DeathScenario : IScenario
 
     public void Run(SimWorld worldParam, int? selectedAi)
     {
-        world = worldParam; state = LastState = new(world.Rng, settings.Overrides);
+        world = worldParam; state = LastState = new(world.Rng, settings.Overrides, world.Party.PlayerRole);
         actors.Clear(); carriers.Clear(); meteors.Clear(); twisters.Clear(); puddles.Clear(); chains.Clear(); chainBurned.Clear();
         failed = false; Completed = false; twistersArmed = false; puddlesOpen = false;
         world.ActionResolved += OnAction;

@@ -20,7 +20,19 @@ public sealed class DsrP5WrathScenario : IScenario
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DsrP5WrathAi()];
-    private readonly DsrP5WrathStateOverrides overrides = new();
+    private readonly DsrP5WrathStateOverrides overrides = new()
+    { PracticeAssignment = (WrathPracticeAssignment)(Plugin.Config?.DsrWrathAssignment ?? 0) };
+    public void DrawSettings()
+    {
+        var selected = (int)overrides.PracticeAssignment;
+        string[] labels = ["Random", "Blue marker", "Dragoon tether", "Green marker", "Thunderstruck", "Eruption bait", "Liquid Heaven bait", "No trio assignment"];
+        if (Dalamud.Bindings.ImGui.ImGui.Combo("Assignment", ref selected, labels, labels.Length))
+        {
+            overrides.PracticeAssignment = (WrathPracticeAssignment)selected;
+            Plugin.Config.DsrWrathAssignment = selected;
+            Plugin.Config.Save();
+        }
+    }
     public object SettingsOverrides => overrides;
     public DsrP5WrathState? LastState { get; private set; }
     public bool Completed { get; private set; }
@@ -49,7 +61,7 @@ public sealed class DsrP5WrathScenario : IScenario
 
     public void Run(SimWorld worldParam, int? selectedAi)
     {
-        world = worldParam; state = LastState = new(world.Rng, overrides);
+        world = worldParam; state = LastState = new(world.Rng, overrides, world.Party.PlayerRole);
         actors.Clear(); tethers.Clear(); twisters.Clear(); eruptionHelpers.Clear(); mercyHelpers.Clear(); liquidHelpers.Clear();
         twistersArmed = false; Completed = false;
         world.Events.Add(0, SpawnOpening);

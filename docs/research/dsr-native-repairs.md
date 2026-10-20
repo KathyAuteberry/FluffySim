@@ -65,3 +65,5 @@ Owner playtest checklist:
 - P1: human and bots physically move16y from Grinnaux; anti-knockback meaningfully fails chains; correct pair positions/outward movement break them before Heavensflame. Test multiple roles and both entry modes.
 - P6: four stacks survive together; each persistent puddle is visible before damaging; immediate escape succeeds, standing/late reentry eventually causes bleed death; no overlapping/frame-rate multiplier. Capture real tick/activation timing if available.
 - Pause/Resume, God Mode, Restart during active bleed/chains and Leave→other DSR/FRU entries; no orphaned actors/statuses/EObjs.
+
+Final integrated checks:95 passed4.92s. Fresh isolated optimized Debug build3.02s; ordinary+optimized Debug safety308 passed/3Windows-only skips per backend,18s each. No outstanding automated failures. Shared integration `xwtnow` retains repair `qvoykv`; all prior phase tips remain in ancestry after redundant-parent simplification. Published master stays2.2.0.0. No native rendering claim.

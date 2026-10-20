@@ -44,6 +44,43 @@ public class PracticeRecastSessionTests
     }
 
     [Test]
+    public void LateAvailableChargedGroupIsCapturedBeforeResetAndRestoredWithItsOwnElapsedTime()
+    {
+        var store = new Store();
+        double now = 0;
+        var session = new PracticeRecastSession(store, () => true, () => now);
+        session.Capture();
+        Assert.That(session.Reset(25754), Is.False);
+        now = 10;
+        store.Values[25754] = new(true, 25754, 5, 120);
+        Assert.That(session.Reset(25754), Is.True);
+        Assert.That(store.Values[25754], Is.EqualTo(new LocalRecast(false, 25754, 120, 120)));
+        now = 20;
+        session.Restore();
+        Assert.That(store.Values[25754], Is.EqualTo(new LocalRecast(true, 25754, 15, 120)));
+    }
+
+    [TestCase(19u, 30u)] [TestCase(21u, 43u)] [TestCase(32u, 3638u)] [TestCase(37u, 16152u)]
+    [TestCase(24u, 7559u)] [TestCase(23u, 7551u)]
+    public void RegisteredPracticeActionsRestoreOnRetryButNotBetweenSegments(uint job, uint expected)
+    {
+        var store = new Store();
+        store.Values[(int)expected] = new(true, expected, 5, 120);
+        var session = new PracticeRecastSession(store, () => true, () => 0);
+        session.Capture();
+        var actions = PracticeDefensiveActions.RecastsForJob(job);
+        Assert.That(actions, Does.Contain(expected));
+        foreach (var action in actions) session.Reset(action);
+        store.Values[(int)expected] = new(true, expected, 0, 120);
+        session.Track(expected);
+        Assert.That(store.Values[(int)expected].Active, Is.True);
+        foreach (var action in actions) session.Reset(action);
+        Assert.That(store.Values[(int)expected].Active, Is.False);
+        session.Restore();
+        Assert.That(store.Values[(int)expected], Is.EqualTo(new LocalRecast(true, expected, 5, 120)));
+    }
+
+    [Test]
     public void UnprotectedOrUncapturedSessionsNeverWriteAndCannotRestore()
     {
         var store = new Store();

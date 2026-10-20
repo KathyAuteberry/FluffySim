@@ -26,24 +26,28 @@ internal sealed class PracticeRecastSession(IPracticeRecastStore store, Func<boo
     private readonly HashSet<int> changed = new();
     private readonly Dictionary<int, LocalRecast> paused = new();
     private bool suspended;
-    private double started;
+    private readonly Dictionary<int, double> capturedAt = new();
     public bool Captured { get; private set; }
     public static readonly uint[] Actions = [3, 30, 43, 3638, 16152, 7548, 7559,
-        36920, 3540, 22, 36923, 7388, 40, 36927, 16471, 3634, 36935, 16160, 16140, 7531, 7535];
+        36920, 3540, 22, 36923, 7388, 40, 36927, 16471, 3634, 36935, 16160, 16140, 7531, 7535, 17, 44, 3636, 16148, 3542, 25746, 7382, 3551, 25751, 16464, 7393, 25754, 16161, 25758, 7538, 7551];
 
     public void Capture()
     {
         if (Captured) throw new InvalidOperationException("Recast session already captured");
         if (!isolated()) return;
         original.Clear();
+        capturedAt.Clear();
         changed.Clear();
         foreach (var action in Actions)
         {
             var group = store.Group(action);
             if (group < 0 || original.ContainsKey(group)) continue;
-            if (store.Read(group) is { } value) original.Add(group, value);
+            if (store.Read(group) is { } value)
+            {
+                original.Add(group, value);
+                capturedAt.Add(group, seconds());
+            }
         }
-        started = seconds();
         Captured = true;
     }
 
@@ -81,11 +85,16 @@ internal sealed class PracticeRecastSession(IPracticeRecastStore store, Func<boo
     {
         if (!Captured || !isolated() || Array.IndexOf(Actions, action) < 0) return false;
         var group = store.Group(action);
-        if (!original.ContainsKey(group) || store.Read(group) is not { } value) return false;
+        if (group < 0 || store.Read(group) is not { } value) return false;
+        if (!original.ContainsKey(group))
+        {
+            original.Add(group, value);
+            capturedAt.Add(group, seconds());
+        }
         // Shared groups must not clear a cooldown belonging to an unrelated action.
         if (value.ActionId != 0 && Array.IndexOf(Actions, value.ActionId) < 0) return false;
         changed.Add(group);
-        store.Write(group, value with { Active = false, Elapsed = 0 });
+        store.Write(group, value with { Active = false, Elapsed = value.Total });
         return true;
     }
 
@@ -93,9 +102,10 @@ internal sealed class PracticeRecastSession(IPracticeRecastStore store, Func<boo
     {
         if (!Captured) return;
         if (!isolated()) throw new InvalidOperationException("Cannot restore recasts without the firewall");
-        foreach (var group in changed) store.Write(group, original[group].After(seconds() - started));
+        foreach (var group in changed) store.Write(group, original[group].After(seconds() - capturedAt[group]));
         changed.Clear();
         original.Clear();
+        capturedAt.Clear();
         ForgetPause();
         Captured = false;
     }

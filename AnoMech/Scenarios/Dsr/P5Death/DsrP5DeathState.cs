@@ -32,12 +32,19 @@ public sealed class DsrP5DeathState
     public Dictionary<PartyRole, ChainSymbol> Symbols { get; } = [];
     public List<Vector3> Puddles { get; } = [];
 
-    public DsrP5DeathState(Rng rng, DsrP5DeathStateOverrides? overrides = null)
+    public DsrP5DeathState(Rng rng, DsrP5DeathStateOverrides? overrides = null, PartyRole player = PartyRole.MainTank)
     {
         overrides ??= new DsrP5DeathStateOverrides();
         WarriorBearing = overrides.WarriorBearing ?? 90f * rng.Next(4);
         var dooms = rng.Shuffle(Enum.GetValues<PartyRole>()).Take(4).ToList();
         Dooms = overrides.Dooms ?? dooms;
+        if (overrides.PlayerDoom is { } requested && Dooms.Contains(player) != requested)
+        {
+            var candidates = Enum.GetValues<PartyRole>().Where(r => Dooms.Contains(r) == requested).ToArray();
+            var selected = candidates[rng.Next(candidates.Length)];
+            Dooms = requested ? Dooms.Where(r => r != selected).Append(player).ToArray()
+                : Dooms.Where(r => r != player).Append(selected).ToArray();
+        }
         var thordan = 45f * rng.Next(8);
         ThordanBearing = overrides.ThordanBearing ?? thordan;
         var eye = (ThordanBearing + new[] { 135f, 180f, 225f }[rng.Next(3)]) % 360;

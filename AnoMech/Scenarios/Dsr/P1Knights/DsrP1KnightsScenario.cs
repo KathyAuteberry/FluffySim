@@ -43,7 +43,7 @@ public sealed class DsrP1KnightsScenario : IScenario
         world.Events.Add(0, Initialize);
         world.Events.Add(2.14f, () => adelphel.Cast(0x62D4));
         world.Events.Add(14.17f, () => state.ShieldBashTether = world.Tether(adelphel, End.Passable(world.Party.Get(state.ShieldBashSeed), exclusive: false), 0x54));
-        world.Events.Add(14.26f, () => grinnaux.Cast(0x62DA));
+        world.Events.Add(14.26f, () => grinnaux.Cast(DimensionCast(Dimension.Empty)));
         world.Events.Add(19.25f, () => DimensionHit(Dimension.Empty));
         world.Events.Add(19.29f, OpeningBash);
         world.Events.Add(19.29f, () => { heavensblazeTarget = FarthestFrom(charibert.Position); charibert.Cast(0x62DD, heavensblazeTarget); });
@@ -71,15 +71,22 @@ public sealed class DsrP1KnightsScenario : IScenario
         world.Events.Add(84.61f, Flames);
         world.Events.Add(86.22f, Hallowing);
         world.Events.Add(94.19f, () => adelphel.Cast(0x62D4));
-        world.Events.Add(95.21f, () => grinnaux.Cast(state.SecondDimension == Dimension.Empty ? 0x62DAu : 0x62DBu));
+        world.Events.Add(95.21f, () => grinnaux.Cast(DimensionCast(state.SecondDimension)));
         world.Events.Add(100.18f, () => DimensionHit(state.SecondDimension));
         world.Events.Add(105.41f, Hallowing);
         world.Events.Add(110.08f, PreparePrison);
-        world.Events.Add(112.31f, () => charibert.Cast(0x62E1));
+        world.Events.Add(112.31f, () => grinnaux.Cast(0x62E1));
         world.Events.Add(112.62f, () => prison = world.SpawnEventObject(new() { EObjId = 0x1EB681, Placement = new(DsrP1KnightsState.PrisonCentre, MathF.PI / 2) }));
         world.Events.Add(112.71f, () =>
         {
-            foreach (var member in world.Party.ActiveMembers()) member.AddStatus(0xA66, 32.61f);
+            foreach (var member in world.Party.ActiveMembers())
+            {
+                world.Tether(grinnaux, member, 0x35, duration: 2);
+                member.AddStatus(0x95, 1);
+                member.AddStatus(0xA66, 32.61f);
+                if (Vector3.Distance(member.Position, DsrP1KnightsState.PrisonCentre) > 7)
+                    member.CarryTo(DsrP1KnightsState.PrisonCentre + new Vector3(0, 0, 1));
+            }
         });
         world.Events.Add(112.84f, () => charibert.Cast(0x62E4));
         world.Events.Add(114.26f, () => imprisoned = true);
@@ -126,6 +133,8 @@ public sealed class DsrP1KnightsScenario : IScenario
         var actor = helpers.Dequeue(); actor.SetPosition(at);
         world.Events.Add(4f, () => helpers.Enqueue(actor)); return actor;
     }
+    private static EnemyAction DimensionCast(Dimension dimension) => new(dimension == Dimension.Empty ? 0x62DAu : 0x62DBu)
+    { Cast = new() { OmenDelay = 6 } };
     private static EnemyAction Instant(uint id, params IEnemyActionEffect[] effects) => new(id)
     { Cast = new() { CastSecondsOverride = 0, FaceTarget = false }, Effects = effects, Timing = new() { DamageDelay = 0 } };
     private SimCharacter? FarthestFrom(Vector3 spot) => world.Party.ActiveMembers().Where(m => m.IsAlive()).MaxBy(m => Vector3.DistanceSquared(m.Position, spot));
@@ -263,6 +272,7 @@ public sealed class DsrP1KnightsScenario : IScenario
     private void PreparePrison()
     {
         adelphel.SetTargetable(false); grinnaux.SetTargetable(false); adelphel.SetModelHidden(true); grinnaux.SetModelHidden(true);
+        grinnaux.SetPosition(DsrP1KnightsState.PrisonCentre);
         world.Map.DirectorUpdate(0x80000016, 0, 0x14);
         charibert.SetPosition(new Placement(DsrP1KnightsState.CharibertSpot, MathF.PI)); charibert.SetTargetable(true);
         zephirin = Spawn(12592, 3633, new(22, 0, 0)); zephirin.SetRotation(-MathF.PI / 2);

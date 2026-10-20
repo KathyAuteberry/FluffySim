@@ -26,7 +26,7 @@ public class ScenarioDisplayNameTests
     {
         var scenarios = ScenarioCatalog.Create().Scenarios.Where(s => s is DsrStrengthScenario or DsrStrength2Scenario or DsrSanctity1Scenario).ToArray();
         Assert.That(scenarios.Select(Game.DisplayName), Is.EqualTo(new[] {
-            "P2 Strength of the Ward (Part 1)", "P2 Strength of the Ward (Part 2)", "P2 Sanctity of the Ward (Part 1)" }));
+            "P2 Strength of the Ward 1", "P2 Strength of the Ward 2", "P2 Sanctity of the Ward 1" }));
         Assert.That(scenarios.Select(s => s.DisplayName()), Is.EqualTo(scenarios.Select(Game.DisplayName)));
         Assert.That(scenarios.Select(s => s.FullName()), Is.EqualTo(scenarios.Select(Game.FullName)));
         Assert.That(scenarios.Select(Game.FullName), Is.EqualTo(new[] {
