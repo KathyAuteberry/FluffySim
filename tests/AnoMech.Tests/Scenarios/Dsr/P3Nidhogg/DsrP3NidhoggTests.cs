@@ -8,6 +8,65 @@ namespace AnoMech.Tests;
 
 public class DsrP3NidhoggTests
 {
+    [Test]
+    public void HumanMainTankDoesNotPullBotsIntoItsCleave()
+    {
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 4, new()
+        {
+            PlayerRole = PartyRole.MainTank, StopAt = 73f,
+            Takeovers = [new(69.4f, new System.Numerics.Vector2(-6, -6))],
+        });
+        Assert.That(run.Passed, run.ToString);
+    }
+
+    [Test]
+    public void LanceTargetsRemainVariedWithinEveryPreparationPattern()
+    {
+        var states = Enumerable.Range(0, 128).Select(seed => new DsrP3NidhoggState(new Rng(seed), new(), null)).ToArray();
+        foreach (var pattern in states.GroupBy(s => s.PreparationPattern))
+            Assert.That(pattern.Select(s => s.DrachenlanceTarget).Distinct().Count(), Is.EqualTo(8));
+    }
+
+    [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+    public void TankBaitsIndependentlyAndPartyPreparesForRandomLance(int seed)
+    {
+        var checks = 0;
+        var scenario = new DsrP3NidhoggScenario();
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, seed, new()
+        {
+            ScenarioFactory = () => scenario,
+            Probe = p =>
+            {
+                if (p.Crossed(69.65f))
+                {
+                    checks++;
+                    Assert.That(p.Member(PartyRole.MainTank)!.Position.X, Is.LessThan(-5));
+                    foreach (var role in Enum.GetValues<PartyRole>().Where(r => r != PartyRole.MainTank))
+                    {
+                        Assert.That(Math.Abs(p.Member(role)!.Position.X), Is.LessThan(1));
+                        Assert.That(p.Member(role)!.Position.Z, Is.LessThan(-4));
+                    }
+                }
+                if (p.Crossed(74.02f))
+                {
+                    checks++;
+                    Assert.That(Enum.GetValues<PartyRole>().Count(r => p.Member(r)!.Position.Z > 0), Is.GreaterThanOrEqualTo(5));
+                }
+                if (p.Crossed(96.3f))
+                {
+                    checks++;
+                    Assert.That(p.Member(PartyRole.MainTank)!.Position.Z, Is.LessThan(-5));
+                    foreach (var role in Enum.GetValues<PartyRole>().Where(r => r != PartyRole.MainTank))
+                        Assert.That(p.Member(role)!.Position.Z, Is.GreaterThan(5));
+                    var boss = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Single(e => e.BNpcBaseId == 12605);
+                    Assert.That(Math.Cos(boss.Rotation), Is.LessThan(-.99));
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checks, Is.EqualTo(3));
+    }
+
     [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
     public void EasthoggClears(int seed)
     {

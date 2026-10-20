@@ -40,6 +40,7 @@ public sealed class DsrP3NidhoggState
     public IReadOnlyList<PartyRole> SoulTetherTargets { get; }
     public IReadOnlyList<PartyRole> EyeTargets { get; }
     public PartyRole DrachenlanceTarget { get; }
+    public int PreparationPattern { get; }
     public List<(PartyRole Role, System.Numerics.Vector3 Spot)>[] DiveTowers { get; } = [[], [], []];
 
     public DsrP3NidhoggState(Rng rng, DsrP3NidhoggStateOverrides? overrides = null, PartyRole? player = null)
@@ -88,6 +89,7 @@ public sealed class DsrP3NidhoggState
         SoulTetherTargets = overrides.SoulTetherTargets ?? tethered;
         EyeTargets = [StackTarget(rng, 1), StackTarget(rng, 3)];
         DrachenlanceTarget = (PartyRole)rng.Next(8);
+        PreparationPattern = rng.Next(3);
     }
 
     private static void KeepArrowsPossible(List<int> arrowedLines, int playerLine, bool wantsArrow)
