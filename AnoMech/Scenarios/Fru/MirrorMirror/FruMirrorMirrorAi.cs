@@ -39,7 +39,16 @@ public sealed class FruMirrorMirrorAi : IScenarioAi<FruMirrorMirrorState>
         var target = MeleeGroup(role) ? mirror : bossPosition;
         var direction = target - source;
         var facing = MathF.Atan2(direction.X, -direction.Z) / (MathF.PI / 4f);
-        return Pocket(source, facing - 4f, role);
+        return Pocket(source, facing - (MeleeGroup(role) ? 0f : 4f), role);
+    }
+    public static Vector3 RedPocket(FruMirrorMirrorState state, PartyRole role)
+    {
+        var source = MeleeGroup(role) ? MeleeRed(state) : RangedRed(state);
+        var other = MeleeGroup(role) ? RangedRed(state) : MeleeRed(state);
+        var first = role is PartyRole.MainTank or PartyRole.RegenHealer or PartyRole.MeleeDpsA or PartyRole.PhysRangedDps;
+        var angle = role.IsTank() || role is PartyRole.RegenHealer or PartyRole.ShieldHealer ? 72f : 22f;
+        var sign = (other - source + 8) % 8 == 2 ? 1f : -1f;
+        return FruMirrorMirrorState.Point(source, 20f) + FruMirrorMirrorState.Point(source + 4 + angle * sign * (first ? 1f : -1f) / 45f, 3f);
     }
     public static Vector3 BanishSpot(FruMirrorMirrorState state, PartyRole role)
     {
@@ -75,8 +84,8 @@ public sealed class FruMirrorMirrorAi : IScenarioAi<FruMirrorMirrorState>
             : Pocket(FruMirrorMirrorState.Point(MeleeGroup(r) ? state.Blue + 4 : state.Blue, MeleeGroup(r) ? 14f : 20f), MeleeGroup(r) ? state.Blue + 4 : state.Blue, r)), jitter: 0);
         ai.Move(12.06f, () => ByRole(r => FirstPocket(state, boss()?.Position ?? FruMirrorMirrorState.Point(state.Blue + 4, 14f), r)), jitter: 0, arrivalTime: world.BotDifficulty == BotDifficulty.Easy ? 17.3f : 17.9f);
         ai.Move(19f, () => ByRole(r => r == PartyRole.MainTank ? FruMirrorMirrorState.Point(meleeRed, 19f)
-            : Pocket(FruMirrorMirrorState.Point(MeleeGroup(r) ? meleeRed : RangedRed(state), 20f), MeleeGroup(r) ? meleeRed : RangedRed(state), r)), jitter: 0);
-        ai.Move(26.1f, () => ByRole(r => Pocket(FruMirrorMirrorState.Point(MeleeGroup(r) ? meleeRed : RangedRed(state), 20f), MeleeGroup(r) ? meleeRed : RangedRed(state), r)), jitter: 0, arrivalTime: world.BotDifficulty == BotDifficulty.Easy ? 28f : 28.5f);
+            : RedPocket(state, r)), jitter: 0);
+        ai.Move(26.1f, () => ByRole(r => RedPocket(state, r)), jitter: 0, arrivalTime: world.BotDifficulty == BotDifficulty.Easy ? 28f : 28.5f);
         ai.Move(29f, () => ByRole(r => BanishSpot(state, r)), jitter: 0, arrivalTime: world.BotDifficulty == BotDifficulty.Easy ? 33.6f : 34f);
     }
 }

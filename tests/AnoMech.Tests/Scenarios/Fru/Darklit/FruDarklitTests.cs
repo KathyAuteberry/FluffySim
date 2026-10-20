@@ -205,6 +205,7 @@ public class FruDarklitTests
     private static IEnumerable<TestCaseData> FullPatterns() => from index in Enumerable.Range(0, 1152)
         from east in new[] { false, true } select new TestCaseData(index, east);
     [TestCaseSource(nameof(FullPatterns))]
+    [Category("Extended")]
     public void EveryPatternAndWingCompletes(int index, bool east)
     {
         var scenario = new FruDarklitScenario();
@@ -332,7 +333,7 @@ public class FruDarklitTests
                 if (p.Crossed(2.2f))
                 {
                     var bosses = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Where(a => (a.SpawnConfig.Visibility == SpawnVisibility.Visible)).ToArray();
-                    Assert.That(bosses.Select(a => a.BNpcBaseId).Order(), Is.EqualTo(new uint[] { 17833, 17835, 17841 }));
+                    Assert.That(bosses.Select(a => a.BNpcBaseId).Order(), Is.EqualTo(new uint[] { 17833, 17835, 17841, 17844, 17845 }));
                     Assert.That(bosses.All(a => a.Proxy!.IsDrawObjectVisible), Is.True);
                     Assert.That(bosses.Single(a => a.BNpcBaseId == 17835).SpawnConfig.Appearance!.BodyModel, Is.EqualTo(65537));
                     Assert.That(scenario.Phase.Weather, Is.EqualTo(105)); Assert.That(scenario.Phase.Bgm, Is.EqualTo(801));

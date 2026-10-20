@@ -13,6 +13,7 @@ public class FruDiamondDustCompletionTests
            from difficulty in new[] { BotDifficulty.Easy, BotDifficulty.Hard }
            select new TestCaseData(axis, mirror, still, difficulty);
     [TestCaseSource(nameof(Patterns))]
+    [Category("Extended")]
     public void CompleteManaRoutesClear(int axis, int mirror, bool still, BotDifficulty difficulty)
     {
         var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, axis * 8 + mirror, new()

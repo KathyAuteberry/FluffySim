@@ -41,10 +41,11 @@ internal static class DamageCheck
     private static bool Survives(SimCharacter target, SimParty party, float requiredMitigation, DamageKind kind)
     {
         if (requiredMitigation <= 0f || !ChecksMitigation(target, party)) return true;
-        var effective = Mitigation.Effective(target.ActiveStatusSnapshot.Select(s => s.StatusId), kind);
+        var statuses = target.ActiveStatusSnapshot.Select(s => s.StatusId).ToArray();
+        var effective = Mitigation.Effective(statuses, kind);
         Mitigation.SpendShields(target);
         var survives = effective >= requiredMitigation - 0.0005f;
-        DiagnosticLog.Info($"[EnemyAction] Mitigation check: {(target as ISimPartyMember)?.Role} has {effective:P1} {kind}, needs {requiredMitigation:P1} -- {(survives ? "survives" : "dies")}.");
+        DiagnosticLog.Info($"[EnemyAction] Mitigation check: {(target as ISimPartyMember)?.Role} statuses=[{string.Join(",", statuses)}] has {effective:P1} {kind}, needs {requiredMitigation:P1} -- {(survives ? "survives" : "dies")}.");
         return survives;
     }
 

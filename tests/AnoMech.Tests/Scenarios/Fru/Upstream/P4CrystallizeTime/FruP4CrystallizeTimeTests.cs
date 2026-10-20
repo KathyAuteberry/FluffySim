@@ -1,5 +1,7 @@
 using System.Numerics;
 using AnoMech.Core.Game;
+using AnoMech.Core.UserActions;
+using AnoMech.Core.SimObjects;
 using AnoMech.Windows;
 using AnoMech.Scenarios;
 using AnoMech.Core.EnemyActions;
@@ -79,6 +81,17 @@ public class FruP4CrystallizeTimeTests
             PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps, PartyRole.ShieldHealer,
         }));
 
+    [Test]
+    public void H2SortsEastForEveryPossibleRedIcePartner()
+    {
+        foreach (var partner in Enum.GetValues<PartyRole>().Where(r => r != PartyRole.ShieldHealer))
+        {
+            var redIce = new[] {partner, PartyRole.ShieldHealer};
+            var west = FruP4CrystallizeTimeAi.ManaPriority.First(redIce.Contains);
+            Assert.That(west, Is.EqualTo(partner));
+        }
+    }
+
     [TestCase(false, false)] [TestCase(false, true)] [TestCase(true, false)] [TestCase(true, true)]
     public void YFormationPutsTanksFirstAndNeverDoubleHitsVulnerableNonTanks(bool east, bool north)
     {
@@ -124,6 +137,45 @@ public class FruP4CrystallizeTimeTests
         });
         Assert.That(run.Passed, run.ToString);
         Assert.That(killed, Is.EqualTo(lethal));
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void WarriorWingChecksActualActionOrderAndBotPartyMitigation(bool consumeDamnation)
+    {
+        bool? killed = null;
+        var run = ScenarioRun.Execute(typeof(FruP4CrystallizeTimeScenario), 1, 9, new()
+        {
+            PlayerRole = PartyRole.MainTank, UserActionsEnabled = true,
+            Configure = c => c.EnableTankMitigation = true,
+            StopAt = 56f, Takeovers = [new Takeover(53f, null)],
+            Probe = p =>
+            {
+                if (p.Crossed(48.7f))
+                {
+                    var player = (SimPlayer)p.Member(PartyRole.MainTank)!;
+                    void Press(uint action)
+                    {
+                        JobActions.ClearStatuses(player, action);
+                        JobActions.ApplyEffects(player, action, (ulong)player.GameObjectId, new Random(0));
+                    }
+                    if (consumeDamnation) { Press(36923); Press(7388); }
+                    else { Press(7388); Press(36923); }
+                    Assert.That(player.HasStatus(3832), Is.EqualTo(!consumeDamnation));
+                    Assert.That(player.HasStatus(1457), Is.True);
+                }
+                if (!p.Crossed(55f)) return;
+                var member = p.Member(PartyRole.MainTank)!;
+                foreach (ushort status in new ushort[] {3985, 2711, 1934})
+                    Assert.That(member.HasStatus(status), Is.True, $"missing party reduction {status}");
+                member.AddStatus(FruConstants.StatusId.MagicVulnerabilityUp, 6f);
+                var action = FruP4CrystallizeTimeActions.HallowedWingsKnockback;
+                var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0);
+                action.Effects[0].Apply(context, [member]);
+                killed = context.IsKilled(member);
+            },
+            WriteArtifactsOnFailure = false,
+        });
+        Assert.That(killed, Is.EqualTo(consumeDamnation), run.ToString);
     }
 
     [TestCase(true)] [TestCase(false)]

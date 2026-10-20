@@ -96,7 +96,7 @@ public sealed class FruMirrorMirrorScenario : IScenario
     private void BeginMirrorMirror()
     {
         var actors = helpers.Concat(red).Append(blue).Append(boss).ToArray();
-        if (actors.Any(a => a is null || a.PacketSpawnFailed || a.Proxy is not { Exists: true, HasDrawObject: true }))
+        if (!NativeActorReadiness.Check(actors, "FRU Mirror Mirror / opening cast"))
         {
             Plugin.Game.RecordMechanicMistake(40179, "Native mirror setup incomplete; leave and retry.");
             world.Events.Clear();

@@ -118,6 +118,7 @@ public sealed class FruDarklitScenario : IScenario
         oracle.SetRotation(0);
         fragment = Spawn(FruConstants.BNpcBaseId.FragmentOfFate, FruConstants.BNpcNameId.FragmentOfFate, FragmentPosition, true);
         world.Map.AddEffect(0x00020001, 0x2E);
+        actors.AddRange(FruP4Presentation.SpawnVisions(world));
         for (var i = 0; i < helpers.Length; i++) helpers[i] = Spawn(FruConstants.BNpcBaseId.Helper, 0, Vector3.Zero, false);
     }
     private SimEnemy Spawn(uint id, uint name, Vector3 position, bool visible, NpcAppearance? appearance = null)

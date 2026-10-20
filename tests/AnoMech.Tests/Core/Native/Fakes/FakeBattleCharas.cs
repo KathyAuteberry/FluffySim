@@ -29,6 +29,8 @@ internal sealed class FakeBattleCharas : IBattleCharas
     public int SlotOffset { get; set; }
     public (int Min, int Max) PacketSpawnFrames { get; set; }
     public int PacketSpawnDelayFrames { get; set; }
+    public bool VisibleActorsHaveDrawObjects { get; set; } = true;
+    public bool MeshlessHelpersHaveDrawObjects { get; set; } = true;
     internal int OccupiedSlots => slots.Count(a => a is not null);
     internal int PendingSpawns => arriving.Count;
 
@@ -94,7 +96,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
             HitboxRadius = NativeHitboxRadius(modelChara, bnpc.Scale),
             MaxHealth = EnemyMaxHealth,
             Health = EnemyMaxHealth,
-            HasDrawObject = true,
+            HasDrawObject = config.Visibility == SpawnVisibility.InvisibleHelper ? MeshlessHelpersHaveDrawObjects : VisibleActorsHaveDrawObjects,
             IsDrawObjectVisible = config.Visibility == SpawnVisibility.Visible,
         };
         Place(slot, actor);

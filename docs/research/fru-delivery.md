@@ -1,5 +1,7 @@
 # FRU implementation and validation report
 
+Latest native repair findings and validation: [Operation Unfuck FRU](fru-native-playtest.md#operation-unfuck-fru--native-retest-corrections-2026-10-20). Native retesting remains required.
+
 Latest expansion: [FRU Completionist — edge Return, Diamond Dust and Mirror, Mirror](fru-completionist.md). This supersedes the earlier inward CT coordinates and hidden DD status.
 
 

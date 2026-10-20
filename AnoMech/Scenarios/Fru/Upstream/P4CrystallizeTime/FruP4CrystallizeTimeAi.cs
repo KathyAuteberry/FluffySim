@@ -59,6 +59,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         moveOrders.Clear();
         AssignSidesByPriority();
 
+        world.Events.Add(48.6f, ApplyPartyWingMitigation);
         world.Events.Add(15.5f, () => FollowRoute(state.SlowNorthwest ? PRE_HG_1_NW : PRE_HG_1_NE, arriveBy: 22.7f));
         world.Events.Add(23.3f, () => FollowRoute(state.SlowNorthwest ? POST_HG_1_NW : POST_HG_1_NE, arriveBy: 25.9f));
         world.Events.Add(25.9f, RememberWhoAeroKnocksBack);
@@ -125,6 +126,22 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
                 CrystallizeDebuff.BlueDarkness => CrystallizeTimeAssignment.Darkness,
                 _ => CrystallizeTimeAssignment.Water,
             };
+    }
+
+    private void ApplyPartyWingMitigation()
+    {
+        foreach (var (role, status, duration) in new (PartyRole, ushort, float)[]
+        {
+            (PartyRole.RegenHealer, 3985, 20f),
+            (PartyRole.ShieldHealer, 2711, 20f),
+            (PartyRole.PhysRangedDps, 1934, 15f),
+        })
+        {
+            if (world.Party.Get(role) is not { } caster || !caster.IsAlive() || !world.Party.IsBotDriven(caster)) continue;
+            foreach (var member in world.Party.ActiveMembers())
+                if (Vector3.Distance(caster.Position, member.Position) <= 30f + member.HitboxRadius)
+                    member.AddStatus(status, duration);
+        }
     }
 
     private bool IsWestOfPair(PartyRole role) => (mana ? ManaPriority : NaPriority).First(r => state.Debuff(r) == state.Debuff(role)) == role;

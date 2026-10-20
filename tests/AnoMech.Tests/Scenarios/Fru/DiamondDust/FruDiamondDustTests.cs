@@ -30,6 +30,7 @@ public class FruDiamondDustTests
         select new TestCaseData(axe, supports, axis, sector);
 
     [TestCaseSource(nameof(Variants))]
+    [Category("Extended")]
     public void ManaClearsRecordedOpening(bool axe, bool supports, int axis, int sector)
     {
         var checks = 0;

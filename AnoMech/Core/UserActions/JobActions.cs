@@ -719,8 +719,11 @@ internal static unsafe class JobActions
     public static void ClearStatuses(SimPlayer player, uint actionId)
     {
         foreach (var (statusId, predicates) in StatusClearedOnAction)
+        {
+            if (!player.HasStatus(statusId)) continue;
             foreach (var predicate in predicates)
                 if (predicate.Matches(actionId)) { player.AddStatus(statusId, 0f, -1); break; }
+        }
     }
 
     // (job, Action-sheet PrimaryCostType) → the gauge(s) an action spends; PrimaryCostValue is

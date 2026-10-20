@@ -11,6 +11,7 @@ public class HardPatternTests
     public static IEnumerable<TestCaseData> MeteorPatterns() => Enumerable.Range(0,810).Select(i=>new TestCaseData(i));
 
     [TestCaseSource(nameof(DarklitPatterns))]
+    [Category("Extended")]
     public void HardInvisibleDarklitAllAssignmentGraphs(int index)
     {
         var run=ScenarioRun.Execute(typeof(FruDarklitScenario),0,index,new()
@@ -22,6 +23,7 @@ public class HardPatternTests
         Assert.That(run.Passed,run.ToString);
     }
     [TestCaseSource(nameof(MeteorPatterns))]
+    [Category("Extended")]
     public void HardInvisibleMeteorsAllOuterPatterns(int index)
     {
         var run=ScenarioRun.Execute(typeof(DsrSanctity2Scenario),0,index,new()

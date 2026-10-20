@@ -30,6 +30,10 @@ public readonly record struct Mitigation(
         [1191] = new(Damage: 0.20f),   // Rampart
         [1193] = new(Damage: 0.10f),   // Reprisal (on the enemy)
 
+        [3985] = new(Damage: 0.10f),   // Temperance (party)
+        [2711] = new(Damage: 0.10f),   // Desperate Measures
+        [1934] = new(Damage: 0.15f),   // Troubadour
+
         // PLD
         [82]   = new(Damage: Invulnerable),                   // Hallowed Ground
         [3829] = new(Damage: 0.40f),   // Guardian

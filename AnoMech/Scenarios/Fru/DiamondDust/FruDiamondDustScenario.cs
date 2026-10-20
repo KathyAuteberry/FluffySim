@@ -103,7 +103,7 @@ public sealed class FruDiamondDustScenario : IScenario
 
     private void BeginMirrorImage()
     {
-        if (helpers.Append(boss).Append(oracle).Any(a => a.PacketSpawnFailed || a.Proxy is not { Exists: true, HasDrawObject: true }))
+        if (!NativeActorReadiness.Check(helpers.Append(boss).Append(oracle), "FRU Diamond Dust / Mirror Image"))
         {
             DiagnosticLog.Warn("[FRU Diamond Dust] Native actors were not ready before Mirror Image; cancelling the prefix.");
             Plugin.Game.RecordMechanicMistake(ActionId.MirrorImage, "Native actor setup incomplete; leave and retry.");

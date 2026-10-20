@@ -5,12 +5,14 @@ namespace AnoMech.Tests;
 internal sealed class FakeMapEffects(SimTimeline timeline) : IMapEffects
 {
     public bool Loaded { get; set; }
+    public HashSet<byte> UnreadySlots { get; } = [];
     public bool TerritoryReady { get; set; } = true;
     public bool IsTerritoryReady(uint territoryId) => TerritoryReady;
     public List<(uint Flags, byte Index)> Applied { get; } = new();
 
     public bool Apply(uint packetFlags, byte index)
     {
+        if (UnreadySlots.Contains(index)) return false;
         if (Loaded) Applied.Add((packetFlags, index));
         if (Loaded)
             timeline.Add("map_effect", id: index.ToString(), name: "MapEffect",

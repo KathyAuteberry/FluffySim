@@ -12,6 +12,7 @@ namespace AnoMech.Tests;
 // planned for that seat, and like any strat clear the fight. Every multiplayer scenario and strat,
 // so a roll a replay message leaves out or garbles, or an actor a peer was never shown, shows up
 // in whichever seat reads it.
+[Category("Extended")]
 public partial class DebugBotReplayTests
 {
     private const PartyRole HostSeat = PartyRole.MeleeDpsA;

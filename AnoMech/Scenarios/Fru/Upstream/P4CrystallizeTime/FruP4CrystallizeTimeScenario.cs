@@ -192,34 +192,15 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
             Targetable: true,
             EnemyList: EnemyListMode.Never,
             Placement: new Placement(FragmentPosition, 0f),
-            DisplayFlags: 0x40003,
             LayoutId: LayoutId.FragmentOfFate,
             IsHostile: false,
             Statuses: [new(StatusId.Incurable)]));
-        SpawnVision(BNpcBaseId.VisionOfGaia, BNpcNameId.Gaia, Appearance.VisionOfGaia, new Placement(new Vector3(-0.71f, 0, -16), 1.22f),
-            0x4020B, LayoutId.VisionOfGaia, 0x1F);
-        SpawnVision(BNpcBaseId.VisionOfRyne, BNpcNameId.Ryne, Appearance.VisionOfRyne, new Placement(new Vector3(0.71f, 0, -16), -0.84f),
-            0x4020A, LayoutId.VisionOfRyne, 0x05);
+        FruP4Presentation.SpawnVisions(world);
+        world.Map.AddEffect(0x00020001, 0x2E);
         for (var i = 0; i < helpers.Length; i++) helpers[i] = SpawnHelper(i < 6 ? BNpcNameId.Oracle : BNpcNameId.DrachenWanderer);
         for (var i = 0; i < tidalHelpers.Length; i++) tidalHelpers[i] = SpawnHelper(BNpcNameId.Usurper);
         edgeHelper = SpawnHelper(BNpcNameId.FragmentOfFate);
     }
-
-    // Spawned as they stand once shown: retail's DisplayFlags less the hidden-until-shown bit, and
-    // the ModelState their show timeline leaves them in.
-    private void SpawnVision(uint bnpcBaseId, uint nameId, NpcAppearance appearance, Placement placement, uint displayFlags, uint layoutId,
-        byte modelState) => world.SpawnEnemy(new EnemySpawnConfig(
-        BNpcBaseId: bnpcBaseId,
-        NameId: nameId,
-        Level: Level,
-        EnemyList: EnemyListMode.Never,
-        Placement: placement,
-        DisplayFlags: displayFlags,
-        LayoutId: layoutId,
-        IsHostile: false,
-        Appearance: appearance,
-        Statuses: [new(StatusId.Levitation, 200)],
-        ModelState: modelState));
 
     private void OracleBattleTalk(uint line)
     {

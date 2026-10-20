@@ -30,6 +30,7 @@ public class FruApocalypseTests
     private static FruApocalypseState State(int water,int axis,bool cw)=>new(new Rng(0),new(){Advanced=true,WaterPermutation=water,InitialAxis=axis,Clockwise=cw},PartyRole.MainTank,PartyRole.OffTank);
     private static IEnumerable<TestCaseData> AllWaterPatterns()=>Enumerable.Range(0,2520).Select(i=>new TestCaseData(i));
     [TestCaseSource(nameof(AllWaterPatterns))]
+    [Category("Extended")]
     public void EveryWaterDistributionClearsWithPermanentManaGroups(int permutation)
         => CompleteManaRun(permutation%4,(permutation/4)%2==0,permutation);
     private static IEnumerable<TestCaseData> Patterns()=>from axis in Enumerable.Range(0,4) from cw in new[]{true,false} from water in new[]{0,37,151,900,1700,2519} select new TestCaseData(axis,cw,water);
