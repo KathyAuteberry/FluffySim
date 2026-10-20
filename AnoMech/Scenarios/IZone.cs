@@ -4,6 +4,7 @@ using System.Numerics;
 using AnoMech.Core.Game;
 using AnoMech.Core.Map;
 using AnoMech.Core.SimObjects;
+using AnoMech.Core.UserActions;
 
 namespace AnoMech.Scenarios;
 
@@ -26,6 +27,9 @@ public interface IZone
     // replay (the same at zone-in and every wipe reset). Sent at the start of every scenario,
     // merged with IPhase.ArenaMapEffectOverrides. Empty = the zone has no MapEffect slots.
     IReadOnlyList<ushort> ArenaMapEffectSnapshot => Array.Empty<ushort>();
+
+    // When a tank LB3's status lands; null: on its recipients at the press.
+    StatusLanding? TankLimitBreakLanding => null;
 
     // Zone-wide setup, first in the cascade. Default no-op. Host/solo only -- may create
     // host-only simulation state (arena boundaries, scheduled MapEffect broadcasts) that
