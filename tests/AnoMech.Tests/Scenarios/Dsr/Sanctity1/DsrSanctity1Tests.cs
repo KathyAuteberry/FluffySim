@@ -79,6 +79,44 @@ public class DsrSanctity1Tests
         var list=ScenarioCatalog.Create().Scenarios.ToList();var index=list.FindIndex(s=>s is DsrSanctity1Scenario);
         Assert.That(index,Is.GreaterThan(0));Assert.That(list[index-1],Is.TypeOf<AnoMech.Scenarios.Dsr.Strength2.DsrStrength2Scenario>());
     }
+    [TestCase(0, false)] [TestCase(0, true)]
+    [TestCase(1, false)] [TestCase(1, true)]
+    [TestCase(2, false)] [TestCase(2, true)]
+    [TestCase(3, false)] [TestCase(3, true)]
+    public void ArrivingKnightsFaceAlongTheirFirstCharge(int zephirin, bool clockwise)
+    {
+        var inspected = false;
+        var run = ScenarioRun.Execute(typeof(DsrSanctity1Scenario), 0, 0, new()
+        {
+            ScenarioFactory = () => new DsrSanctity1Scenario(), StopAt = 9f,
+            Overrides = o =>
+            {
+                var settings = (DsrSanctity1StateOverrides)o;
+                settings.AdvancedMode = true;
+                settings.ZephirinPosition = zephirin;
+                settings.Clockwise = clockwise;
+            },
+            Probe = p =>
+            {
+                if (!p.Crossed(8.5f)) return;
+                inspected = true;
+                var state = ((DsrSanctity1Scenario)p.Game.ActiveScenario!).LastState!;
+                foreach (var east in new[] { false, true })
+                {
+                    var points = state.ChargePoints(east);
+                    var knight = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>()
+                        .Single(e => System.Numerics.Vector3.Distance(e.Position, points[0]) < .01f);
+                    var direction = System.Numerics.Vector3.Normalize(points[1] - points[0]);
+                    var facing = new System.Numerics.Vector3(MathF.Sin(knight.Rotation), 0, MathF.Cos(knight.Rotation));
+                    Assert.That(System.Numerics.Vector3.Dot(facing, direction), Is.GreaterThan(.999f));
+                    Assert.That(System.Numerics.Vector3.Dot(new(MathF.Sin(knight.Proxy!.Rotation), 0, MathF.Cos(knight.Proxy!.Rotation)), direction), Is.GreaterThan(.999f));
+                }
+            },
+        });
+        Assert.That(inspected, Is.True);
+        Assert.That(run.Passed, run.ToString);
+    }
+
     private static DsrSanctity1State FixedState()=>new(new Rng(0),new(){AdvancedMode=true,ZephirinPosition=1,Clockwise=true,ThordanPosition=0,EyeSeparation=2,Sword1=PartyRole.MainTank,Sword2=PartyRole.OffTank},PartyRole.MeleeDpsB);
     private static void Fix(object o)
     {

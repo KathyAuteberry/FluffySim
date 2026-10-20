@@ -63,6 +63,14 @@ internal static unsafe class LayoutQuery
                 return (instance->Id.InstanceKey, instance->IsActive,
                     collision && instance->IsColliderLoaded(), collision && instance->IsColliderActive());
             }).ToArray()),
+        46 => AnoMech.Core.Native.Policies.DsrEnvironmentState.MatchesDarkThordan(layer =>
+            CollectLayerInstances(layer).Where(p => ((ILayoutInstance*)p)->Id.Type == InstanceType.BgPart).Select(p =>
+            {
+                var instance = (ILayoutInstance*)p;
+                var collision = layer is 65362 or 5210 or 5212 or 5644;
+                return (instance->Id.InstanceKey, instance->IsActive,
+                    collision && instance->IsColliderLoaded(), collision && instance->IsColliderActive());
+            }).ToArray()),
         _ => false,
     };
 

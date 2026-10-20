@@ -175,6 +175,17 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
     // Through the native setter: it allocates and releases the VFX at Tether+0x08, and a bare
     // struct write leaves that VFX dangling, so the line keeps drawing.
 
+    public bool HasLoadedModel
+    {
+        get
+        {
+            var actor = Ptr;
+            if (actor == null || actor->DrawObject == null) return false;
+            var draw = (CharacterBase*)actor->DrawObject;
+            return draw->HasModelInSlotLoaded != 0;
+        }
+    }
+
     public void SetModelHidden(bool hidden)
     {
         var obj = Ptr;

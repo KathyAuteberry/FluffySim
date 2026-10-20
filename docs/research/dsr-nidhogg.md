@@ -1,6 +1,6 @@
 # Nidhogg implementation and evidence
 
-2026-10-20. Feature change `zmrxpo`, from published 2.2.0.0. Headless validation is not native-client verification.
+2026-10-20. Feature change `zmrxpo`, from published 2.2.0.0, integrated alongside P2 in `xwtnow`. Headless validation is not native-client verification.
 
 ## Implemented
 
@@ -20,9 +20,9 @@ Delayed native spawning exposed a reusable defect: SetModelHidden before actor a
 
 ## Validation and gaps
 
-Initial all-seat suite exposed tank beam interference; resolved with distinct under-boss positions and passable nonexclusive endpoints. Final deterministic/all-seat/failure/lifecycle suite:32 cases passed in11s, including one bounded test running64 randomized Easy/Hard executions. Earlier native helper suite plus deferred casts:38 cases passed in11s before the final west/east soaker mapping refinement. Native-opening/catalog/visibility subset:4 passed in295ms. Two-artifact safety:308 passed, three Windows-only skips,16s (ordinary and isolated optimized Debug). Additional final west-claim/visibility result belongs in mission progress.
+Initial all-seat suite exposed tank beam interference; resolved with distinct under-boss positions and passable nonexclusive endpoints. Final deterministic/all-seat/failure/lifecycle suite:32 cases passed in11s, including one bounded test running64 randomized Easy/Hard executions. Earlier native helper suite plus deferred casts:38 cases passed in11s before the final west/east soaker mapping refinement. Native-opening/catalog/visibility subset:4 passed in295ms. Two-artifact safety:308 passed, three Windows-only skips,16s (ordinary and isolated optimized Debug). Final west-claim/visibility subset:3 passed in396ms. Integrated P2/P3/native/catalog subset:113 passed in14s. Final two-artifact safety:308 passed/three Windows skips under each modeled backend (16s/17s).
 
-No native rendering, packet capture or user playtest was performed. Native selector/layout, boss/diver models, numbered lockons, helper cast/omen visibility, animation durations, phase music and swap appearance remain provisional. Damage is qualitative practice severity, not a reproduced game HP formula. Large stress runs remain opt-in; the default new bounded matrix is64 executions.
+At the original implementation checkpoint no native rendering, packet capture or user playtest had been performed. Native selector/layout, boss/diver models, numbered lockons, helper cast/omen visibility, animation durations, phase music and swap appearance remain provisional. Damage is qualitative practice severity, not a reproduced game HP formula. Large stress runs remain opt-in; the default new bounded matrix is64 executions.
 
 ## Native playtest checklist
 
@@ -49,3 +49,15 @@ The arena-correction feature changes no Nidhogg scenario, AI, actor, cast, actio
 Focused Debug validation initially passed50 environment/mechanics cases in11s; two additional phase-handoff cases were then added. Safety passed308 checks/three Windows-only skips per modeled backend (16s each) against ordinary and isolated optimized Debug. Final integration results are recorded in the mission progress document.
 
 Native retest required: cold inn and title-screen P3 entry; P3→P2→P3 in the same territory; Restart during arrival and after towers; pause/resume during entry; Leave/reentry; walk the center/rim for collision and absence of P1 walls; confirm no scenery alternation or residual actors. Capture fresh arena snapshots in each mode if scenery/collision remains wrong. No new native snapshot could be captured from this environment.
+
+## Dive presentation follow-up (2026-10-20)
+
+Compared AsuMech's actual PlayEffect path and game Action rows. Dive actions26382/3/4 use native animation4574; tower26385 uses4562, with no independent Action VFX row. The pooled actors already exist before release; the visibility schedule matches AsuMech and is unchanged. Found an objective conversion mismatch: EnemyAction default FaceTarget turns the coincident diver toward its target and discards the captured player-facing rotation. Dive actions now preserve that pose, use Asu's1.1s animation lock, and tower casters face center as upstream does. Timings, target assignments, tower locations/occupancy, visibility schedule and Easthogg routes are unchanged.
+
+41 focused Debug checks passed14.07s, including visible/hidden-party native delivery assertions for all eight dives and eight towers, delayed actor creation, prior lifecycle/failure/role regressions. This corrects presentation-contract differences; it does NOT prove the reported missing native jump/tower visuals are fully resolved. Owner should repeat Dive from Grace in inn and title-screen offline, visible and hidden party, checking all three jump types, towers, repeated dives/Restart/Leave. If visuals remain incomplete, capture native actor-state/ActionEffect sequences before changing visibility or timing.
+
+## Owner-confirmed arena and final choreography
+
+Owner subsequently confirmed corrected P3 arena/scenery, including title-screen offline entry. This confirms the arena fix; it does not certify every mechanic or the later polish as fully native-verified.
+
+Integrated follow-up `suprns`: MT alone baits northwest, party stays north; three bounded southern preparation patterns begin after the second auto, independent of the already-rolled random lance target. Post-tether MT north/party south. Actual targeted auto line geometry remains unchanged; the later fixed-south lance is preserved. Focused P3 suite37 passed12s plus human-MT/target-variation2 passed487ms. Native playtest: final Geir avoidance, MT-only bait, varied lance rotation, four-tower transition and post-tether auto cleaves with both human/bot MT.

@@ -33,6 +33,7 @@ internal sealed class FakeCharacter(uint entityId, string name)
     public uint MaxMana { get; set; }
     public byte TargetableStatus { get; set; }
     public byte ModelState { get; set; }
+    public bool HasLoadedModel { get; set; } = true;
     public bool HasDrawObject { get; set; }
     public bool IsDrawObjectVisible { get; set; }
     public Dictionary<byte, ushort> Tethers { get; } = new();

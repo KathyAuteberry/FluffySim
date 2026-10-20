@@ -55,6 +55,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
 
     // ── Model ────────────────────────────────────────────────────────────────
 
+    public bool HasLoadedModel => Actor is { HasDrawObject: true, HasLoadedModel: true };
     public bool HasDrawObject => Actor?.HasDrawObject ?? false;
 
     public bool IsDrawObjectVisible => Actor is { HasDrawObject: true, IsDrawObjectVisible: true, ModelHidden: false };

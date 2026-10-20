@@ -14,6 +14,7 @@ namespace AnoMech.Scenarios.Dsr.P1Knights;
 
 public sealed class DsrP1KnightsScenario : IScenario
 {
+    public string DisplayNameOverride => "P1 The Holy See";
     public string Name => "The Holy See — South-first / HMRT (Elemental)";
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;
@@ -27,7 +28,7 @@ public sealed class DsrP1KnightsScenario : IScenario
     private readonly List<SimEnemy> actors = [];
     private readonly Queue<SimEnemy> helpers = [];
     private readonly List<(SimEnemy Actor, Vector3 Spot)> portals = [];
-    private readonly List<SimTether> chains = [];
+    private readonly List<(SimTether Tether, float StartingDistance)> chains = [];
     private SimEventObject? prison;
     private bool imprisoned, hallowing, interrupted;
     private float elapsed;
@@ -105,9 +106,9 @@ public sealed class DsrP1KnightsScenario : IScenario
 
     private SimEnemy Spawn(uint id, uint name, Vector3 spot, bool targetable = false)
     {
-        var actor = world.SpawnEnemy(new(id, name, Level: 90, Targetable: targetable,
+        var actor = world.SpawnEnemy(DsrActors.WithNativeAppearance(new(id, name, Level: 90, Targetable: targetable,
             EnemyList: targetable ? EnemyListMode.Always : EnemyListMode.Never,
-            IsHostile: id != 13117, Visibility: id == 9020 ? SpawnVisibility.InvisibleHelper : SpawnVisibility.Visible, Placement: new(spot, MathF.PI)))
+            IsHostile: id != 13117, Visibility: id == 9020 ? SpawnVisibility.InvisibleHelper : SpawnVisibility.Visible, Placement: new(spot, MathF.PI))))
             ?? throw new InvalidOperationException("Could not spawn Holy See actor");
         actors.Add(actor); return actor;
     }
@@ -169,7 +170,7 @@ public sealed class DsrP1KnightsScenario : IScenario
         Helper(grinnaux.Placement()).Cast(Instant(0x62DC, Resolve(ctx =>
         {
             foreach (var member in ctx.Hits)
-                if (!resist || !world.Party.IsBotDriven(member)) ctx.Knockback(member, 16, 20, 0, 169);
+                if ((!resist || !world.Party.IsBotDriven(member)) && !member.HasStatus(1209) && !member.HasStatus(160)) ctx.Knockback(member, 16, 20, 0);
         })));
     }
     private void ScheduleBlades()
@@ -241,11 +242,15 @@ public sealed class DsrP1KnightsScenario : IScenario
     }
     private void ChainParty()
     {
-        foreach (var (a, b, _) in state.ChainPairs()) chains.Add(world.Tether(world.Party.Get(a), world.Party.Get(b), 9, 15, 0x301));
+        foreach (var (a, b, _) in state.ChainPairs())
+        {
+            var first = world.Party.Get(a)!; var second = world.Party.Get(b)!;
+            chains.Add((world.Tether(first, second, 9, 15, 0x301), Vector3.Distance(first.Position, second.Position)));
+        }
     }
     private void CheckChains()
     {
-        foreach (var chain in chains.Where(c => c.IsActive))
+        foreach (var (chain, _) in chains.Where(c => c.Tether.IsActive))
         {
             chain.A?.Die(0x62E0, "Burning Chain not broken"); chain.B?.Die(0x62E0, "Burning Chain not broken"); chain.Despawn();
         }
@@ -280,7 +285,7 @@ public sealed class DsrP1KnightsScenario : IScenario
     public void Tick(float delta, float time)
     {
         elapsed = time;
-        foreach (var chain in chains.Where(c => c.IsActive && c.StretchGt(30)))
+        foreach (var (chain, _) in chains.Where(c => c.Tether.IsActive && c.Tether.StretchGt(c.StartingDistance + 30)))
         { chain.A?.RemoveStatus(0x301); chain.B?.RemoveStatus(0x301); chain.Despawn(); }
         foreach (var member in world.Party.ActiveMembers())
         {

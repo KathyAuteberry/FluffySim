@@ -30,3 +30,7 @@ Owner checks required:
 - Symbol presentation, knockback, chain breaking and no flame overlap; human ST/D3 targeted interrupts.
 - Prison geometry/environment transition, Haurchefant/spear presentation, HMRT cone/buff/puddle timing, Pure of Heart.
 - Visible/hidden party, pause, God Mode, Restart during portals/chains/prison; Leave→P2/P3/P4/P5/P6 and repeat entry. Native visuals/collision remain unverified until owner playtests.
+
+## Native playtest repair follow-up
+
+Demihuman knight appearance payloads restored; explicit local knockback and creation-distance-relative chains implemented. See [root causes, validation and retest checklist](dsr-native-repairs.md). Native rendering/results await owner confirmation.

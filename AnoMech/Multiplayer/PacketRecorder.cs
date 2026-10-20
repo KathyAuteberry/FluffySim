@@ -357,6 +357,7 @@ internal sealed class PacketRecorder
         public float Rotation => inner.Rotation;
         public float HitboxRadius => inner.HitboxRadius;
         public bool HasDrawObject => inner.HasDrawObject;
+        public bool HasLoadedModel => inner.HasLoadedModel;
         public void SetModelScale(float scale) => inner.SetModelScale(scale);
         public void SetModelHidden(bool hidden) => inner.SetModelHidden(hidden);
         public IActorVfxProxy? AttachVfx(string path) => inner.AttachVfx(path);

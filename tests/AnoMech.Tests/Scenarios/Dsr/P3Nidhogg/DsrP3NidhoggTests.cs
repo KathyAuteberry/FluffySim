@@ -8,6 +8,65 @@ namespace AnoMech.Tests;
 
 public class DsrP3NidhoggTests
 {
+    [Test]
+    public void HumanMainTankDoesNotPullBotsIntoItsCleave()
+    {
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 4, new()
+        {
+            PlayerRole = PartyRole.MainTank, StopAt = 73f,
+            Takeovers = [new(69.4f, new System.Numerics.Vector2(-6, -6))],
+        });
+        Assert.That(run.Passed, run.ToString);
+    }
+
+    [Test]
+    public void LanceTargetsRemainVariedWithinEveryPreparationPattern()
+    {
+        var states = Enumerable.Range(0, 128).Select(seed => new DsrP3NidhoggState(new Rng(seed), new(), null)).ToArray();
+        foreach (var pattern in states.GroupBy(s => s.PreparationPattern))
+            Assert.That(pattern.Select(s => s.DrachenlanceTarget).Distinct().Count(), Is.EqualTo(8));
+    }
+
+    [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+    public void TankBaitsIndependentlyAndPartyPreparesForRandomLance(int seed)
+    {
+        var checks = 0;
+        var scenario = new DsrP3NidhoggScenario();
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, seed, new()
+        {
+            ScenarioFactory = () => scenario,
+            Probe = p =>
+            {
+                if (p.Crossed(69.65f))
+                {
+                    checks++;
+                    Assert.That(p.Member(PartyRole.MainTank)!.Position.X, Is.LessThan(-5));
+                    foreach (var role in Enum.GetValues<PartyRole>().Where(r => r != PartyRole.MainTank))
+                    {
+                        Assert.That(Math.Abs(p.Member(role)!.Position.X), Is.LessThan(1));
+                        Assert.That(p.Member(role)!.Position.Z, Is.LessThan(-4));
+                    }
+                }
+                if (p.Crossed(74.02f))
+                {
+                    checks++;
+                    Assert.That(Enum.GetValues<PartyRole>().Count(r => p.Member(r)!.Position.Z > 0), Is.GreaterThanOrEqualTo(5));
+                }
+                if (p.Crossed(96.3f))
+                {
+                    checks++;
+                    Assert.That(p.Member(PartyRole.MainTank)!.Position.Z, Is.LessThan(-5));
+                    foreach (var role in Enum.GetValues<PartyRole>().Where(r => r != PartyRole.MainTank))
+                        Assert.That(p.Member(role)!.Position.Z, Is.GreaterThan(5));
+                    var boss = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Single(e => e.BNpcBaseId == 12605);
+                    Assert.That(Math.Cos(boss.Rotation), Is.LessThan(-.99));
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checks, Is.EqualTo(3));
+    }
+
     [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
     public void EasthoggClears(int seed)
     {
@@ -177,5 +236,49 @@ public class DsrP3NidhoggTests
         });
         Assert.That(run.Passed, run.ToString);
         Assert.That(checks, Is.EqualTo(2));
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void DiveEffectsPreserveCapturedTargetPoseAndNativeTowerEmitter(bool visible)
+    {
+        var scenario = new DsrP3NidhoggScenario();
+        var checks = 0;
+        var poses = new Dictionary<FFXIVClientStructs.FFXIV.Client.Game.Object.GameObjectId, (float Rotation, System.Numerics.Vector3 Position)>();
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
+        {
+            ScenarioFactory = () => scenario, ShowSimulatedParty = visible, StopAt = 70,
+            ConfigureNative = f => f.BattleCharas.PacketSpawnDelayFrames = 5,
+            Probe = p =>
+            {
+                foreach (var (at, line) in new[] { (37.25f, 1), (47.24f, 2), (58.26f, 3) })
+                    if (p.Crossed(at))
+                        foreach (var role in scenario.LastState!.Line(line))
+                        {
+                            var member = p.Member(role)!;
+                            poses[member.GameObjectId] = (member.Rotation, member.Position);
+                        }
+                if (!p.Crossed(69)) return;
+                var divers = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Where(e => e.BNpcBaseId == 12606).ToArray();
+                foreach (var diver in divers)
+                {
+                    var effects = ((FakeBattleChara)diver.Proxy!).ReceivedEffects;
+                    foreach (var effect in effects.Where(e => e.ActionId is >= 26382 and <= 26384))
+                    {
+                        checks++;
+                        var pose = poses[effect.AnimationTarget!.Value];
+                        Assert.That(effect.Rotation, Is.EqualTo(pose.Rotation).Within(.01f));
+                        Assert.That(effect.AnimationLock, Is.EqualTo(1.1f));
+                        Assert.That(effect.Targets!.Any(t => t.Id == effect.AnimationTarget), Is.True);
+                    }
+                    foreach (var effect in effects.Where(e => e.ActionId == 26385))
+                    {
+                        checks++;
+                        Assert.That(effect.AnimationTarget, Is.EqualTo(diver.GameObjectId));
+                        Assert.That(effect.AnimationLock, Is.EqualTo(1.1f));
+                    }
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString); Assert.That(checks, Is.EqualTo(16));
     }
 }

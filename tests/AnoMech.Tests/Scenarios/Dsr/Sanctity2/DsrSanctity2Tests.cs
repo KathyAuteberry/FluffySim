@@ -177,7 +177,7 @@ public class DsrSanctity2Tests
         if(body!=0)Assert.That(c.Appearance!.BodyModel,Is.EqualTo(body));
     }
     private static IEnumerable<TestCaseData> OuterRuns() => from pattern in Enumerable.Range(0,810) from difficulty in new[]{BotDifficulty.Easy,BotDifficulty.Hard} select new TestCaseData(pattern,difficulty);
-    [TestCaseSource(nameof(OuterRuns))]
+    [TestCaseSource(nameof(OuterRuns)), Category("Extended")]
     public void FullRunClearsEveryOuterPatternIncludingAllForcedCursedCases(int pattern, BotDifficulty difficulty)
     {
         var scenario=new DsrSanctity2Scenario();

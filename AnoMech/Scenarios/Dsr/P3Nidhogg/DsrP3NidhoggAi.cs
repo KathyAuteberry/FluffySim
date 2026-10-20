@@ -70,8 +70,8 @@ public sealed class DsrP3NidhoggAi : IScenarioAi<DsrP3NidhoggState>
         ai.Move(59.1f, () => AiMove.Create(WaitOnTowerBearingsForFirstWheel(1, 3)).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(62.5f, () => AiMove.Create(SoakDiveTowers(3, 1)).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(65.6f, () => AiMove.Create(BaitGeirskoguls(3)).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(67.6f, () => AiMove.Create(EveryoneButMainTankNorthWest()).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(72.5f, () => AiMove.Create(MainTankNorthPartySouth()).NaturalOrder(), sprint: true);
+        ai.Move(67.6f, () => AiMove.Create(MainTankNorthWestPartyNorth()).NaturalOrder(), jitter: 0f, sprint: true);
+        ai.Move(72.9f, () => AiMove.Create(PrepareDrachenlance()).NaturalOrder(), jitter: 0f, sprint: true);
 
         ai.Move(74.3f, () => AiMove.Create(DodgeDrachenlance()).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(77.8f, () => AiMove.Create(SoakFourTowers()).NaturalOrder(), jitter: 0f, sprint: true);
@@ -79,7 +79,7 @@ public sealed class DsrP3NidhoggAi : IScenarioAi<DsrP3NidhoggState>
         ai.Move(86.8f, () => AiMove.Create(CollapseEastOrWestAndTanksIntercept()).NaturalOrder(), jitter: 0f, sprint: true);
         foreach (var at in new[] { 87.6f, 88.6f, 89.6f, 90.2f })
             ai.Move(at, () => AiMove.Create(TankWithoutSoulTetherTakesTheFreeOne()).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(91.3f, () => AiMove.Create(MainTankSouthPartyNorth()).NaturalOrder(), sprint: true);
+        ai.Move(91.3f, () => AiMove.Create(MainTankNorthPartySouth()).NaturalOrder(), sprint: true);
         ai.Move(110.5f, () => AiMove.Create(Stacked(NorthStack)).NaturalOrder(), sprint: true);
     }
 
@@ -89,10 +89,14 @@ public sealed class DsrP3NidhoggAi : IScenarioAi<DsrP3NidhoggState>
         return Stacked(new Vector2(MathF.Cos(boss.Rotation), -MathF.Sin(boss.Rotation)) * 7f);
     }
 
-    private static Vector2?[] MainTankSouthPartyNorth()
+    private Vector2?[] PrepareDrachenlance()
     {
-        var spots = Stacked(NorthStack);
-        spots[(int)PartyRole.MainTank] = -MainTankSpot;
+        var spots = new Vector2?[8];
+        for (var i = 0; i < spots.Length; i++)
+        {
+            var angle = (i + state.PreparationPattern) % 7;
+            spots[i] = new Vector2((angle - 3) * 1.2f, angle == 6 ? -5f : 4f);
+        }
         return spots;
     }
 
@@ -250,10 +254,10 @@ public sealed class DsrP3NidhoggAi : IScenarioAi<DsrP3NidhoggState>
         return spots;
     }
 
-    private Vector2?[] EveryoneButMainTankNorthWest()
+    private Vector2?[] MainTankNorthWestPartyNorth()
     {
-        var spots = Stacked(NorthWestHold);
-        spots[(int)PartyRole.MainTank] = MainTankSpot;
+        var spots = Stacked(new Vector2(0, -5f));
+        spots[(int)PartyRole.MainTank] = NorthWestHold;
         return spots;
     }
 
