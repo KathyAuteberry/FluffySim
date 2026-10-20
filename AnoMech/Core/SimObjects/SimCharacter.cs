@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game;
+using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Motion;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.UserActions;
@@ -122,6 +123,9 @@ public abstract class SimCharacter : ISimObject, IPositioned
         if (!MovementLocked) Motion.Intercept(tether, margin);
     }
     public bool IsIntercepting => Motion.IsIntercepting;
+    // Null restores the shared world field; native manual movement is not constrained.
+    public void SetMovementObstacles(ObstacleField? obstacles) => Motion.SetMovementObstacles(obstacles);
+
     public Vector3? MoveDestination => Motion.Destination;
 
     // An AI order; a mechanic that takes control uses ForceFollow. A null or dead target releases it.

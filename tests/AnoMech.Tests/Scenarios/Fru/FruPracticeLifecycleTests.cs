@@ -20,6 +20,7 @@ public class FruPracticeLifecycleTests
         yield return new(typeof(AnoMech.Scenarios.Fru.DiamondDust.FruDiamondDustScenario), 0, 42f);
         yield return new(typeof(AnoMech.Scenarios.Fru.MirrorMirror.FruMirrorMirrorScenario), 0, 20f);
         yield return new(typeof(FruP4CrystallizeTimeScenario), 1, 12f);
+        yield return new(typeof(FruP4CrystallizeTimeScenario), 1, 35f);
         yield return new(typeof(FruP5FulgentBladeScenario), 0, 20f);
         yield return new(typeof(FruP5ParadiseRegainedScenario), 0, 15f);
         yield return new(typeof(FruPolarizingStrikesScenario), 0, 10f);

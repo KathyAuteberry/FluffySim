@@ -146,11 +146,14 @@ internal sealed class PlayerMotion : CharacterMotion, INavigated
         if (DebugBotControl.Enabled) navigator.Intercept(tether, margin);
     }
 
+    public override void SetMovementObstacles(ObstacleField? obstacles) => navigator.MovementObstacles = obstacles;
+
     public override void Stop() => navigator.Stop();
 
     public override void Clear()
     {
         navigator.Clear();
+        navigator.MovementObstacles = null;
         ForceFollow(null);
         holdRemaining = 0f;
     }

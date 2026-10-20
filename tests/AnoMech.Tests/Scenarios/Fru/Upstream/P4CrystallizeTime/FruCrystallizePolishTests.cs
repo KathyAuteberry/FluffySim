@@ -119,6 +119,10 @@ public class FruCrystallizePolishTests
                 }
                 if (p.Crossed(41f))
                     Assert.That(p.Member(role)!.HasStatus(FruIds.StatusId.Wyrmfang), Is.EqualTo(!collect));
+                if (p.Crossed(FruP4CrystallizeTimeState.ReturnSavedAt))
+                    foreach (var tank in new[] {PartyRole.MainTank, PartyRole.OffTank})
+                        Assert.That(Vector3.Distance(p.Member(tank)!.Position,
+                            FruP4CrystallizeTimeAi.ManaRewindSpot(tank, scenario.LastState.East, scenario.LastState.North)), Is.LessThan(.1f));
             },
             WriteArtifactsOnFailure = false,
         });

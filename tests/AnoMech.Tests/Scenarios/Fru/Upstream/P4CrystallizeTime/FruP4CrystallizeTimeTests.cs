@@ -25,14 +25,24 @@ public class FruP4CrystallizeTimeTests
     public void ManaClearsEveryRoleAndWavePattern(PartyRole role, CrystallizeCorner corner, bool slow, BotDifficulty difficulty)
     {
         var recorded = false;
+        var scenario = new FruP4CrystallizeTimeScenario();
         var run = ScenarioRun.Execute(typeof(FruP4CrystallizeTimeScenario), 1, 47 + (int)role, new()
         {
             PlayerRole = role,
+            ScenarioFactory = () => scenario,
             BotDifficulty = difficulty,
             Probe = p =>
             {
                 if (!p.Crossed(FruP4CrystallizeTimeState.ReturnSavedAt)) return;
                 recorded = true;
+                var state = scenario.LastState;
+                var puddles = state.AllDragonPuddles.OrderByDescending(puddle => puddle.Value.X).ToArray();
+                Assert.That(state.PuddleConsumers, Has.Count.EqualTo(4));
+                for (var i = 0; i < puddles.Length; i++)
+                {
+                    var expected = state.CleanseNumbers.Single(n => n.Value == i + 1).Key;
+                    Assert.That(state.PuddleConsumers[puddles[i].Key], Is.EqualTo(expected));
+                }
                 foreach (var tank in new[] { PartyRole.MainTank, PartyRole.OffTank })
                 {
                     var north = corner is CrystallizeCorner.NW or CrystallizeCorner.NE;

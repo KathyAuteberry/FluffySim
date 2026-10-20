@@ -1,3 +1,4 @@
+using AnoMech.Core.Game.Geometry;
 using System.Numerics;
 using AnoMech.Core.SimObjects;
 
@@ -33,6 +34,8 @@ internal abstract class CharacterMotion
 
     public abstract void TurnTo(float rotation);
     public abstract void Face(Vector3 target);
+    public virtual void SetMovementObstacles(ObstacleField? obstacles) { }
+
     public abstract void MoveTo(Vector3 target, float speed, float? finalRotation);
     public abstract void Follow(SimCharacter? target, float speed);
     public abstract void Intercept(SimTether? tether, float margin);

@@ -57,6 +57,9 @@ internal sealed class Navigator(INavigated walker)
     // cancel the tracking driving them; any external move cancels a stale Intercept/Follow.
     private bool internalReissue;
 
+    public ObstacleField? MovementObstacles { get; set; }
+    private ObstacleField Obstacles => MovementObstacles ?? walker.Obstacles;
+
     public bool IsMoving => destination != null;
     public Vector3? Destination => destination;
     public bool IsIntercepting => interceptTether != null;
@@ -131,7 +134,7 @@ internal sealed class Navigator(INavigated walker)
         // Slide the parked point along the tether line to the nearest spot clear of
         // obstacles, so the bot lands on the grab corridor instead of being parked
         // perpendicular off it when a black hole sits on the line.
-        var target = walker.Obstacles.NearestClearOnSegment(src, src + seg, t, tMin, tMax);
+        var target = Obstacles.NearestClearOnSegment(src, src + seg, t, tMin, tMax);
         if (logDetail)
             DiagnosticLog.Info(
                 $"[Navigator] RetargetIntercept: from ({position.X:F1},{position.Z:F1}) toward "
@@ -197,7 +200,7 @@ internal sealed class Navigator(INavigated walker)
         // Park-at-edge: if the destination lies inside (or within steering clearance of) an
         // obstacle, retarget just outside it so the walker stops at the edge instead of
         // orbiting an unreachable point.
-        var dest2 = walker.Obstacles.ClampForSteering(new Vector2(dest.X, dest.Z));
+        var dest2 = Obstacles.ClampForSteering(new Vector2(dest.X, dest.Z));
 
         var dx = dest2.X - cur.X;
         var dz = dest2.Y - cur.Z;
@@ -218,7 +221,7 @@ internal sealed class Navigator(INavigated walker)
             var dist = MathF.Sqrt(distSq);
             var desired = new Vector2(dx / dist, dz / dist);
             // A no-op (returns `desired`) when the field is empty or nothing blocks.
-            var heading = walker.Obstacles.Steer(new Vector2(cur.X, cur.Z), desired, dist, ref steerSide);
+            var heading = Obstacles.Steer(new Vector2(cur.X, cur.Z), desired, dist, ref steerSide);
             var next = new Vector3(cur.X + heading.X * step, cur.Y, cur.Z + heading.Y * step);
             var lead = speed * ModelSync.LeadSeconds;
             var glide = lead >= dist

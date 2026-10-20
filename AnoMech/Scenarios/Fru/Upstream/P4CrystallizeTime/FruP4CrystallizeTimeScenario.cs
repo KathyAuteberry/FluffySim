@@ -1,3 +1,4 @@
+using AnoMech.Core;
 using AnoMech.Core.Native.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -533,6 +534,11 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
             var stepper = world.Party.ActiveMembers()
                 .FirstOrDefault(m => m is ISimPartyMember slot && slot.Role != catcher && Vector3.Distance(m.Position, position) <= PuddleRadius);
             if (stepper is null) continue;
+            if (stepper is ISimPartyMember consumer)
+            {
+                state.RecordPuddleConsumption(catcher, consumer.Role);
+                DiagnosticLog.Info($"[CT puddle] catcher={catcher}, consumer={consumer.Role}, number={state.CleanseNumbers.GetValueOrDefault(consumer.Role)}, position={position}, Wyrmfang={stepper.HasStatus(StatusId.Wyrmfang)}.");
+            }
             if (stepper is ISimPartyMember cleansed && stepper.HasStatus(StatusId.Wyrmfang))
                 state.RecordCleanse(cleansed.Role, position);
             stepper.RemoveStatus(StatusId.Wyrmfang);

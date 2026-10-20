@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Scenarios.Fru.Upstream.FruConstants;
@@ -44,6 +45,8 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
     private readonly HashSet<PartyRole> holdingClaw = [];
     private readonly HashSet<PartyRole> holdingFang = [];
     private readonly Dictionary<PartyRole, int> moveOrders = new();
+    private readonly Dictionary<PartyRole, ObstacleField> puddleAvoidance = new();
+    private readonly Dictionary<(PartyRole Walker, PartyRole Catcher), CircleObstacle> puddleObstacles = new();
     private float elapsed;
 
     public void Run(FruP4CrystallizeTimeState stateParam, SimWorld worldParam)
@@ -52,6 +55,8 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         world = worldParam;
         elapsed = 0f;
         puddleTargets.Clear();
+        puddleAvoidance.Clear();
+        puddleObstacles.Clear();
         spreadSpots.Clear();
         knockedByAero.Clear();
         holdingClaw.Clear();
@@ -106,6 +111,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
             ReactToClawCaught(bot, role);
             ReactToFangCleansed(bot, role);
         }
+        RefreshPuddleAvoidance();
         ChasePuddles();
         if (elapsed is >= 45.9f and < 48.5f)
         {
@@ -264,12 +270,41 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         _ => POST_SOAK_TARGET_SW,
     };
 
+    private void RefreshPuddleAvoidance()
+    {
+        foreach (var bot in Bots())
+        {
+            var role = ((ISimPartyMember)bot).Role;
+            if (state.DragonPuddles.Count == 0)
+            {
+                bot.SetMovementObstacles(null);
+                continue;
+            }
+            if (!puddleAvoidance.TryGetValue(role, out var field))
+                puddleAvoidance[role] = field = new ObstacleField();
+            field.Clear();
+            foreach (var obstacle in world.Obstacles.All) field.Add(obstacle);
+            foreach (var (catcher, position) in state.DragonPuddles)
+            {
+                if (catcher == role) continue;
+                if (bot.HasStatus(StatusId.Wyrmfang) && puddleTargets.TryGetValue(role, out var target) && RoleOf(target) == catcher) continue;
+                var key = (role, catcher);
+                if (!puddleObstacles.TryGetValue(key, out var obstacle))
+                    puddleObstacles[key] = obstacle = new CircleObstacle(new Vector2(position.X, position.Z), 1.6f);
+                obstacle.Center = new Vector2(position.X, position.Z);
+                field.Add(obstacle);
+            }
+            bot.SetMovementObstacles(field);
+        }
+    }
+
     private void ChasePuddles()
     {
         foreach (var (role, source) in puddleTargets)
             if (world.Party.Get(role) is { } bot && bot.IsAlive()
                 && state.DragonPuddles.TryGetValue(RoleOf(source), out var puddle))
-                bot.MoveTo(puddle, RunSpeed);
+                if (bot.MoveDestination is not { } destination || Vector3.DistanceSquared(destination, puddle) > .001f)
+                    bot.MoveTo(puddle, RunSpeed);
     }
 
     private Vector3 RewindSpot(PartyRole role)

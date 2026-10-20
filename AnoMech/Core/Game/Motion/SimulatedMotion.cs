@@ -114,11 +114,14 @@ internal sealed class SimulatedMotion : CharacterMotion, INavigated
 
     public override void Intercept(SimTether? tether, float margin) => navigator.Intercept(tether, margin);
 
+    public override void SetMovementObstacles(ObstacleField? obstacles) => navigator.MovementObstacles = obstacles;
+
     public override void Stop() => navigator.Stop();
 
     public override void Clear()
     {
         navigator.Clear();
+        navigator.MovementObstacles = null;
         forcedMove = null;
     }
 

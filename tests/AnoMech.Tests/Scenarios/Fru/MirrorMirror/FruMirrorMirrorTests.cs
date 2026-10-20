@@ -46,6 +46,13 @@ public class FruMirrorMirrorTests
                 var right = FruMirrorMirrorState.Point(source + 6, 1);
                 Assert.That(Vector3.Dot(p.Member(PartyRole.MainTank)!.Position - origin, right), Is.GreaterThan(2));
                 Assert.That(Vector3.Dot(p.Member(PartyRole.OffTank)!.Position - origin, right), Is.LessThan(-2));
+                var rangedSource = FruMirrorMirrorAi.RangedRed(state);
+                var rangedOrigin = FruMirrorMirrorState.Point(rangedSource, 20);
+                var rangedRight = FruMirrorMirrorState.Point(rangedSource + 6, 1);
+                Assert.That(Vector3.Dot(p.Member(PartyRole.RegenHealer)!.Position - rangedOrigin, rangedRight), Is.LessThan(-2));
+                Assert.That(Vector3.Dot(p.Member(PartyRole.ShieldHealer)!.Position - rangedOrigin, rangedRight), Is.GreaterThan(2));
+                foreach (var ranged in new[] {PartyRole.PhysRangedDps, PartyRole.CasterDps})
+                    Assert.That(MathF.Abs(Vector3.Dot(p.Member(ranged)!.Position - rangedOrigin, rangedRight)), Is.LessThan(1.3f));
                 var offTank = p.Member(PartyRole.OffTank)!.Position;
                 Assert.That(Vector3.Distance(offTank, p.Member(PartyRole.MeleeDpsA)!.Position),
                     Is.LessThan(Vector3.Distance(offTank, p.Member(PartyRole.MeleeDpsB)!.Position)),

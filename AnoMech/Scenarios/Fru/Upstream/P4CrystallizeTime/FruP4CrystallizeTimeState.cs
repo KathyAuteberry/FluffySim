@@ -39,6 +39,9 @@ public sealed class FruP4CrystallizeTimeState
     private readonly Dictionary<PartyRole, Vector3> cleansedAt = new();
     public IReadOnlyDictionary<PartyRole, Vector3> AllDragonPuddles => allDragonPuddles;
     public IReadOnlyDictionary<PartyRole, Vector3> CleansedAt => cleansedAt;
+    private readonly Dictionary<PartyRole, PartyRole> puddleConsumers = new();
+    public IReadOnlyDictionary<PartyRole, PartyRole> PuddleConsumers => puddleConsumers;
+    internal void RecordPuddleConsumption(PartyRole catcher, PartyRole consumer) => puddleConsumers[catcher] = consumer;
     internal void RecordCleanse(PartyRole role, Vector3 position) => cleansedAt[role] = position;
 
     public bool SlowNorthwest { get; }
