@@ -182,6 +182,14 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         PartyModelVisibility.Reconcile(obj, Slot, hidden, Offline.OfflineSession.InWorld);
     }
 
+    public void SetModelScale(float scale)
+    {
+        var obj = Ptr;
+        if (obj == null || scale <= 0 || !float.IsFinite(scale)) return;
+        obj->Scale = scale;
+        if (obj->DrawObject != null) obj->DrawObject->Scale = new Vector3(scale);
+    }
+
     public bool IsDrawObjectVisible
     {
         get

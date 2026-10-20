@@ -20,6 +20,10 @@ namespace AnoMech.Core.SimObjects;
 // and register it for teardown. Zone loading and map effects go through world.Map.
 public sealed class SimWorld : ISimObject, IDisposable
 {
+    public event Action<SimCharacter, uint, ulong>? ActionResolved;
+    internal void NotifyActionResolved(SimCharacter actor, uint actionId, ulong targetId)
+        => ActionResolved?.Invoke(actor, actionId, targetId);
+
     // Ownership
     private readonly SimChildren children = new();
     private readonly EnemyList enemyList = new();

@@ -15,8 +15,10 @@ public class SimNpcTests
         var actor = world.SpawnEnemy(new EnemySpawnConfig(12606))!;
         actor.SetModelHidden(!hidden);
         actor.SetModelHidden(hidden);
+        actor.SetModelScale(1.525f);
         for (var i = 0; i < 5; i++) fake.Frame(.1f, actor.Tick);
         Assert.That(((FakeBattleChara)actor.Proxy!).ModelHidden, Is.EqualTo(hidden));
+        Assert.That(((FakeBattleChara)actor.Proxy!).ModelScale, Is.EqualTo(1.525f));
         actor.SetModelHidden(!hidden);
         Assert.That(((FakeBattleChara)actor.Proxy!).ModelHidden, Is.EqualTo(!hidden));
     }

@@ -19,12 +19,26 @@ public class DsrP3EnvironmentTests
             }).ToArray());
     }
 
+    [Test]
+    public void RewindRequiresHolySeeSceneryAndNativeCollision()
+    {
+        var state = Read(true);
+        foreach (var layer in state.Keys.ToArray())
+        {
+            var active = layer is 5210 or 65362 or 62172;
+            state[layer] = state[layer].Select(o => (o.Id, active, o.ColliderLoaded, o.ColliderLoaded && active)).ToArray();
+        }
+        Assert.That(DsrEnvironmentState.MatchesHolySee(key => state[key]), Is.True);
+        Assert.That(DsrEnvironmentState.MatchesNidhogg(key => state[key]), Is.False);
+        Assert.That(DsrEnvironmentState.MatchesHolySee(key => Read(true)[key]), Is.False);
+    }
+
     [TestCase(false)] [TestCase(true)]
     public void DirectP3EntryUsesNativeFinalizationInInnAndOffline(bool offline)
     {
         Assert.That(DsrEnvironmentState.NeedsFinalization(968, 3, offline), Is.True);
         Assert.That(DsrEnvironmentState.NeedsFinalization(968, 45, offline), Is.EqualTo(offline));
-        Assert.That(DsrEnvironmentState.NeedsFinalization(968, 2, offline), Is.False);
+        Assert.That(DsrEnvironmentState.NeedsFinalization(968, 2, offline), Is.True);
         Assert.That(DsrEnvironmentState.NeedsFinalization(1238, 3, offline), Is.False);
     }
 
@@ -106,6 +120,6 @@ public class DsrP3EnvironmentTests
         Assert.That(writes.Last(), Is.EqualTo(3));
         Select(2);
         Tick();
-        Assert.That(writes.Last(), Is.EqualTo(3));
+        Assert.That(writes.Last(), Is.EqualTo(2));
     }
 }

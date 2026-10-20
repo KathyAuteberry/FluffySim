@@ -23,5 +23,6 @@ internal sealed class JobActionHandler : IUserActionHandler
         JobActions.ApplyCost(actionId);   // generic spender pass (sheet PrimaryCost)
 
         JobActions.ApplyEffects(player, actionId, targetId, rng);
+        Plugin.Game?.World.NotifyActionResolved(player, actionId, targetId);
     }
 }

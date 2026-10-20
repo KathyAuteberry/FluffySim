@@ -45,6 +45,7 @@ public interface IBattleCharaProxy
     bool HasDrawObject { get; }
     bool IsDrawObjectVisible { get; }
     void SetModelHidden(bool hidden);
+    void SetModelScale(float scale);
     IActorVfxProxy? AttachVfx(string path);
 
     byte ModelState { get; }

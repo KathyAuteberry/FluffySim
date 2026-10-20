@@ -40,6 +40,7 @@ public class SimNpc : SimCharacter
         PacketSpawnPending = true;
         Motion.Seed(placement);
         ProbePacketSpawn();
+        ApplyModelScale();
     }
 
     // The sim-side settings a spawn packet doesn't carry go on here.
@@ -68,6 +69,7 @@ public class SimNpc : SimCharacter
         }
         if (Position != packetSpawnPlacement.Position || Rotation != packetSpawnPlacement.Rotation) Motion.ResendTransform();
         if (ModelHidden) chara.SetModelHidden(true);
+        ApplyModelScale();
         OnPacketSpawned(chara);
     }
 
@@ -75,6 +77,29 @@ public class SimNpc : SimCharacter
         : base(coordinates, createMotion)
     {
         this.proxy = proxy;
+    }
+
+    public void SetHealthFraction(float fraction)
+    {
+        if (float.IsFinite(fraction) && Proxy is { } native)
+            SendStatusList((uint)(native.MaxHealth * Math.Clamp(fraction, 0, 1)), native.Mana);
+    }
+
+    private float? modelScale;
+    private bool modelScaleApplied;
+    public void SetModelScale(float scale)
+    {
+        if (scale <= 0 || !float.IsFinite(scale)) return;
+        modelScale = scale;
+        modelScaleApplied = false;
+        ApplyModelScale();
+    }
+
+    private void ApplyModelScale()
+    {
+        if (modelScaleApplied || modelScale is not { } scale || Proxy is not { Exists: true } native) return;
+        native.SetModelScale(scale);
+        modelScaleApplied = native.HasDrawObject;
     }
 
     public void SetModelState(byte value) => ActorControl.SetModelState(value);
@@ -98,6 +123,7 @@ public class SimNpc : SimCharacter
         base.Tick(deltaSeconds);
         PacketSpawnFrames++;
         ProbePacketSpawn();
+        ApplyModelScale();
     }
 
     public override void Despawn()

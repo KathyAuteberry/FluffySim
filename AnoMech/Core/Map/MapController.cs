@@ -67,7 +67,7 @@ public sealed class MapController
     public bool IsInInstance { get; private set; }
     public uint TerritoryId { get; private set; }
 
-    private bool CanApplyMapEffects() => TerritoryId != 1238 || Natives.MapEffects.IsTerritoryReady(TerritoryId);
+    private bool CanApplyMapEffects() => TerritoryId is not (1238 or 968) || Natives.MapEffects.IsTerritoryReady(TerritoryId);
 
     public void HoldLayerActive(ushort layerKey, bool active)
     {
@@ -150,7 +150,7 @@ public sealed class MapController
             }
         }
 
-        for (int i = 0; i < pendingDirectorUpdates.Count; i++)
+        for (int i = 0; (TerritoryId != 968 || CanApplyMapEffects()) && i < pendingDirectorUpdates.Count; i++)
         {
             var pending = pendingDirectorUpdates[i];
             if (Natives.Director.ProcessDirectorUpdate(pending.Category, pending.Arg1, pending.Arg2, pending.Arg3, pending.Arg4, pending.Arg5, pending.Arg6))
@@ -248,7 +248,7 @@ public sealed class MapController
     public void DirectorUpdate(uint category, uint arg1 = 0, uint arg2 = 0, uint arg3 = 0, uint arg4 = 0, uint arg5 = 0, uint arg6 = 0)
     {
         if (!InSim(nameof(DirectorUpdate))) return;
-        if (!Natives.Director.ProcessDirectorUpdate(category, arg1, arg2, arg3, arg4, arg5, arg6)
+        if ((TerritoryId == 968 && !CanApplyMapEffects() || !Natives.Director.ProcessDirectorUpdate(category, arg1, arg2, arg3, arg4, arg5, arg6))
             && TryReserveRetrySlot(pendingDirectorUpdates.Count, "DirectorUpdate"))
         {
             DiagnosticLog.Warn($"[MapEffect] DirectorUpdate category=0x{category:X8} not ready yet -- queued for retry.");

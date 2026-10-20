@@ -312,7 +312,7 @@ public abstract class SimCharacter : ISimObject, IPositioned
         unannouncedGains.Clear();
     }
 
-    private void SendStatusList(uint health, uint mana)
+    protected void SendStatusList(uint health, uint mana)
     {
         statusListChanged = false;
         if (Proxy is not { } chara) return;
