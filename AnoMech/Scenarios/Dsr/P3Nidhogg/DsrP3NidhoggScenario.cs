@@ -157,6 +157,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
 
     private EnemyAction Tower(uint id, int needed) => new(id)
     {
+        Cast = new() { AnimationLock = 1.1f, FaceTarget = false },
         Effects = [Resolve(ctx =>
             {
                 if (ctx.Hits.Count != needed) helper.Cast(TowerFailure);
@@ -169,7 +170,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
         for (var i = 0; i < divers[line - 1].Count; i++)
         {
             var actor = divers[line - 1][i];
-            actor.SetPosition(state.DiveTowers[line - 1][i].Spot);
+            actor.SetPosition(new Placement(state.DiveTowers[line - 1][i].Spot, 0).Face(Vector3.Zero));
             actor.Cast(Tower(26385, 1));
             world.Events.Add(2.85f, () => actor.SetModelHidden(false));
         }

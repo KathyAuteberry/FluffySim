@@ -237,4 +237,48 @@ public class DsrP3NidhoggTests
         Assert.That(run.Passed, run.ToString);
         Assert.That(checks, Is.EqualTo(2));
     }
+
+    [TestCase(false)] [TestCase(true)]
+    public void DiveEffectsPreserveCapturedTargetPoseAndNativeTowerEmitter(bool visible)
+    {
+        var scenario = new DsrP3NidhoggScenario();
+        var checks = 0;
+        var poses = new Dictionary<FFXIVClientStructs.FFXIV.Client.Game.Object.GameObjectId, (float Rotation, System.Numerics.Vector3 Position)>();
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
+        {
+            ScenarioFactory = () => scenario, ShowSimulatedParty = visible, StopAt = 70,
+            ConfigureNative = f => f.BattleCharas.PacketSpawnDelayFrames = 5,
+            Probe = p =>
+            {
+                foreach (var (at, line) in new[] { (37.25f, 1), (47.24f, 2), (58.26f, 3) })
+                    if (p.Crossed(at))
+                        foreach (var role in scenario.LastState!.Line(line))
+                        {
+                            var member = p.Member(role)!;
+                            poses[member.GameObjectId] = (member.Rotation, member.Position);
+                        }
+                if (!p.Crossed(69)) return;
+                var divers = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>().Where(e => e.BNpcBaseId == 12606).ToArray();
+                foreach (var diver in divers)
+                {
+                    var effects = ((FakeBattleChara)diver.Proxy!).ReceivedEffects;
+                    foreach (var effect in effects.Where(e => e.ActionId is >= 26382 and <= 26384))
+                    {
+                        checks++;
+                        var pose = poses[effect.AnimationTarget!.Value];
+                        Assert.That(effect.Rotation, Is.EqualTo(pose.Rotation).Within(.01f));
+                        Assert.That(effect.AnimationLock, Is.EqualTo(1.1f));
+                        Assert.That(effect.Targets!.Any(t => t.Id == effect.AnimationTarget), Is.True);
+                    }
+                    foreach (var effect in effects.Where(e => e.ActionId == 26385))
+                    {
+                        checks++;
+                        Assert.That(effect.AnimationTarget, Is.EqualTo(diver.GameObjectId));
+                        Assert.That(effect.AnimationLock, Is.EqualTo(1.1f));
+                    }
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString); Assert.That(checks, Is.EqualTo(16));
+    }
 }
