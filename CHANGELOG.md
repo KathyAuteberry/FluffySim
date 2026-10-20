@@ -1,3 +1,42 @@
+# FluffySim 2.2.0.0 — release prepared
+
+## More Futures Rewritten practice
+
+- Adds Mana Diamond Dust and Mirror, Mirror to the standard FRU practice menu,
+  including Banish III pairs/spreads, role assignments and seven strategy-aware bots.
+- Expands Crystallize Time with Mana/Nukemaru movement, dragon catches, cleansing,
+  Tidal Light, Return, Spirit Taker, Hallowed Wings and the ending sequence.
+- Gives the four blue Wyrmfang players unique local 1–4 cleansing markers, ordered
+  East to West. Bots follow their numbered assignments and avoid other players' puddles.
+- Corrects tank crossings and outer-edge Return recording positions while preserving
+  the later spreads and knockbacks.
+- Adds Mana Fulgent Blade with its Akh Morn follow-up, Paradise Regained,
+  standalone Polarizing Strikes, Pandora's Box and continuous P5 sequence practice.
+- Corrects Paradise wing-facing, tank/tether handling and rotating tower formations,
+  and keeps Mirror supports on their proper flanks while DPS adjust for reflections.
+
+## Smoother local practice
+
+- Defaults new configurations to JP region and Mana strategy, with Mana listed first;
+  saved explicit strategy choices remain respected.
+- Adds optional Crystallize Time tank-mitigation checks, disabled by default. Strict
+  practice uses an approximate mitigation model and restores supported local tank
+  defensive recasts at Start/Restart, without changing server cooldowns.
+- Improves native P2/P5 arena and actor initialization, helper casts, and shared P4
+  Crystal of Fate presentation. Startup diagnostics identify missing native dependencies.
+- Strengthens Pause, Restart and Leave cleanup, deterministic bot/failure regressions
+  and packet-isolation checks. Extensive stress tests remain available separately from
+  the bounded routine suite. Existing FRU and DSR drills are preserved.
+
+## Practice limitations
+
+- Some CT/P5 timings and damage models remain inferred or inherited rather than
+  combat-log measured. Strict mitigation is a training approximation.
+- Continuous P5 practice joins mechanic fragments; a full threat table, DPS/enrage
+  damage race and exact retail transitions are not simulated. Diamond Dust bot slides
+  are simulated locally; human Thin Ice behavior and native presentation depend on
+  the game client.
+
 # FluffySim 2.1.3.0 — release prepared
 
 ## DSR Sanctity tower fixes

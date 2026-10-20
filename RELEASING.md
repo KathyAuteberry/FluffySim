@@ -44,10 +44,10 @@ Local packaging dry-run only:
 `python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check`.
 Never distribute this Debug ZIP. The packager never builds or mutates its input.
 
-## Publication setup and 2.0.2.0
+## Publication setup
 
 Versions 2.0.0.0 and 2.0.1.0 are already published. Do not move their tags or rewrite their ancestry.
-Prepared version: **2.0.2.0**. `FluffySim.Version.props` contains `2.0.2`; assembly/file/tag
+Prepared version: **2.2.0.0**. `FluffySim.Version.props` contains `2.2.0`; assembly/file/tag
 versions append `.0`. Revision stays zero.
 
 Both GitHub default branches are master. FluffySim's Actions repository secret must be named
@@ -63,9 +63,10 @@ jj log
 jj bookmark list --all-remotes
 jj git push --remote origin --bookmark master --dry-run
 jj git push --remote origin --bookmark master
-jj tag set v2.0.2.0 -r master
+# Verify all master CI jobs succeeded for this exact commit before tagging.
+jj tag set v2.2.0.0 -r master
 jj tag list
-jj git push --remote origin --tag v2.0.2.0
+jj git push --remote origin --tag v2.2.0.0
 ```
 
 Local master must point to the reviewed release-preparation commit above the merge containing
@@ -94,7 +95,7 @@ Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mo
 
 Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
 metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
-tag: `gh workflow run publish-fluffysim.yml --ref v2.0.2.0`. Reruns reuse the existing asset and
+tag: `gh workflow run publish-fluffysim.yml --ref v2.2.0.0`. Reruns reuse the existing asset and
 never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
 higher version, never a moved tag or replacement ZIP.
 
