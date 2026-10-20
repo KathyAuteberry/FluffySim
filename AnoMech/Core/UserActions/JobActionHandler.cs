@@ -15,6 +15,7 @@ internal sealed class JobActionHandler : IUserActionHandler
     public void OnAction(ActionType actionType, uint actionId, ulong targetId)
     {
         if (actionType != ActionType.Action) return;
+        if (actionId == 7533) return;
         var player = Plugin.Game?.Player;
         if (player == null) return;
 

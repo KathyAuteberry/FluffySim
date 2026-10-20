@@ -33,6 +33,7 @@ public sealed class DsrP5DeathScenario : IScenario
     private SimWorld world = null!;
     private DsrP5DeathState state = null!;
     private SimEnemy boss = null!;
+    public TankSwapSequence? TankSwap { get; private set; }
     private SimEnemy warrior = null!;
     private SimEnemy quake = null!;
     private SimEnemy spear = null!;
@@ -57,12 +58,17 @@ public sealed class DsrP5DeathScenario : IScenario
 
     public void Run(SimWorld worldParam, int? selectedAi)
     {
+        TankSwap = null;
         world = worldParam; state = LastState = new(world.Rng, settings.Overrides, world.Party.PlayerRole);
         actors.Clear(); carriers.Clear(); meteors.Clear(); twisters.Clear(); puddles.Clear(); chains.Clear(); chainBurned.Clear();
         failed = false; Completed = false; twistersArmed = false; puddlesOpen = false;
         world.ActionResolved += OnAction;
         world.OnDespawn(() => { world.ActionResolved -= OnAction; world.Map.AddEffect(0x00040004, state.EyeSlot); });
-        world.Events.Add(0, () => boss = Spawn(BNpcBaseId.DarkThordan, BNpcNameId.Thordan, Vector3.Zero, true));
+        world.Events.Add(0, () =>
+        {
+            boss = Spawn(BNpcBaseId.DarkThordan, BNpcNameId.Thordan, Vector3.Zero, true);
+            TankSwap = new(world, boss, ActionId.HeavenlyHeel, ActionId.AscalonsMight, StatusId.SlashingResistanceDown);
+        });
         world.Events.Add(.5f, () => boss.SetTargetable(true));
         world.Events.Add(3f, () => boss.Cast(ActionId.DeathOfTheHeavens));
         world.Events.Add(10.04f, () =>
@@ -111,9 +117,9 @@ public sealed class DsrP5DeathScenario : IScenario
         for (var at = 43f; at <= 47; at++) world.Events.Add(at, BotMeteorDamage);
         world.Events.Add(49f, ResolveMeteors);
         world.Events.Add(50f, () => { boss.SetPosition(Vector3.Zero); boss.SetTargetable(true); boss.Cast(Instant(ActionId.AncientQuaga, Damage()) with { Cast = new() { CastSecondsOverride = 5.7f } }); });
-        world.Events.Add(61f, () => boss.Cast(new EnemyAction(ActionId.HeavenlyHeel) { Effects = [Damage(Severity.TankBuster), ApplyStatus(StatusId.SlashingResistanceDown, 15)], Timing = new() { DamageDelay = 0 } }, world.Party.Get(PartyRole.MainTank)));
-        foreach (var at in new[] { 68f, 69.65f, 71.30f }) world.Events.Add(at, () => boss.Cast(Instant(ActionId.AscalonsMight, Damage(VulnerableTo(StatusId.SlashingResistanceDown, 1), Severity.TankBuster with { ForceMitigation = true })), world.Party.Get(PartyRole.MainTank)));
-        world.Events.Add(74.4f, () => boss.Cast(Instant(ActionId.ThordanAttack, OnTarget(Damage()), OnOthers(Damage(Severity.Lethal))) with { Area = new() { Size = MathF.PI / 4 } }, world.Party.Get(PartyRole.MainTank)));
+        world.Events.Add(61f, () => TankSwap!.Heel());
+        foreach (var at in new[] { 68f, 69.65f, 71.30f }) world.Events.Add(at, () => TankSwap!.Cleave());
+        world.Events.Add(74.4f, () => boss.Cast(Instant(ActionId.ThordanAttack, OnTarget(Damage()), OnOthers(Damage(Severity.Lethal))) with { Area = new() { Size = MathF.PI / 4 } }, world.Party.Get(TankSwap!.Holder)));
         world.Events.Add(78f, () => boss.Cast(27528));
         world.Events.Add(81f, () => { boss.CancelCast(CastCancelReason.Interrupted); boss.SetHealthFraction(.029f); boss.SetTargetable(false); });
         world.Events.Add(84f, () => { ClearTwisters(); foreach (var actor in actors) actor.Despawn(); foreach (var p in puddles) p.Obj?.Despawn(); Completed = !failed; });

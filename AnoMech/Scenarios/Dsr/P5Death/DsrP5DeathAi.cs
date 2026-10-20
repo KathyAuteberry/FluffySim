@@ -50,7 +50,8 @@ public sealed class DsrP5DeathAi : IScenarioAi<DsrP5DeathState>
         world.Events.Add(DsrP5DeathScenario.Knockback - 0.15f, FaceAwayFromBothGazes);
         ai.Move(DsrP5DeathScenario.Knockback + 0.9f, () => AiMove.Create(DoomsIntoPuddles()).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(D + 38.5f, () => AiMove.Create(Stacked(Vector2.Zero)).NaturalOrder());
-        ai.Move(59f, () => AiMove.Create(MainTankSouthPartyNorth()).NaturalOrder());
+        ai.Move(59f, () => AiMove.Create(TankbusterPositions(false)).NaturalOrder(), jitter: 0, sprint: true);
+        ai.Move(66.8f, () => AiMove.Create(TankbusterPositions(true)).NaturalOrder(), jitter: 0, sprint: true);
     }
 
     public static PartyRole[] CongaLineWithThePlayerAt(int? slot, PartyRole player)
@@ -59,6 +60,14 @@ public sealed class DsrP5DeathAi : IScenarioAi<DsrP5DeathState>
         var line = RoleCongaLine.Where(r => r != player).ToList();
         line.Insert(at, player);
         return line.ToArray();
+    }
+
+    private static Vector2?[] TankbusterPositions(bool afterHeel)
+    {
+        var spots = Stacked(new Vector2(0, -4));
+        spots[(int)PartyRole.MainTank] = afterHeel ? new(-6, 0) : new(-2, 4);
+        spots[(int)PartyRole.OffTank] = new(2, 4);
+        return spots;
     }
 
     private static Vector2?[] MainTankSouthPartyNorth()

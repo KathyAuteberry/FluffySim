@@ -77,14 +77,14 @@ public class DsrP5WrathTests
     }
 
     [Test]
-    public void HumanTankNeedsInvulnerabilityForHeelCombo()
+    public void HumanTankNeedsMitigationForHeavenlyHeel()
     {
         var run = ScenarioRun.Execute(typeof(DsrP5WrathScenario), 0, 0, new()
         {
             PlayerRole = PartyRole.MainTank, UserActionsEnabled = true,
-            Takeovers = [new(77f, null)], WriteArtifactsOnFailure = false,
+            Takeovers = [new(72f, null)], WriteArtifactsOnFailure = false,
         });
-        Assert.That(run.Deaths.Any(d => d.Role == PartyRole.MainTank && d.ActionId == AnoMech.Scenarios.Dsr.DsrP5Constants.ActionId.AscalonsMight), Is.True, run.ToString);
+        Assert.That(run.Deaths.Any(d => d.Role == PartyRole.MainTank && d.ActionId == AnoMech.Scenarios.Dsr.DsrP5Constants.ActionId.HeavenlyHeel), Is.True, run.ToString);
     }
 
     [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]

@@ -67,7 +67,8 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         }
         ai.Move(W + 27.0f, () => AiMove.Create(UnbaitedUnderWarrior()).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(DsrP5WrathScenario.ThunderstruckEnds + 0.3f, () => AiMove.Create(LightningBackUnderWarrior()).NaturalOrder(), jitter: 0f);
-        ai.Move(W + 37.0f, () => AiMove.Create(MainTankAcrossFromParty()).NaturalOrder(), jitter: 0f);
+        ai.Move(W + 37.0f, () => AiMove.Create(TankbusterPositions(false)).NaturalOrder(), jitter: 0, sprint: true);
+        ai.Move(77.6f, () => AiMove.Create(TankbusterPositions(true)).NaturalOrder(), jitter: 0, sprint: true);
     }
 
     private float DragonFromWarrior => state.MageOnDragonSide ? 180f : 0f;
@@ -84,6 +85,14 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         foreach (var (role, i) in state.Plain.OrderBy(r => r).Select((r, i) => (r, i)))
             proteanAngle[role] = PlainWall + PlainWallOffsets[i];
         proteanAngle[state.Divebomb] = DivebombAngle;
+    }
+
+    private static Vector2?[] TankbusterPositions(bool afterHeel)
+    {
+        var spots = Stacked(new Vector2(0, -4));
+        spots[(int)PartyRole.MainTank] = afterHeel ? new(-6, 0) : new(-2, 4);
+        spots[(int)PartyRole.OffTank] = new(2, 4);
+        return spots;
     }
 
     private static Vector2?[] MainTankSouthPartyNorth()

@@ -82,7 +82,6 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
 
     private const float AzureWaitDistance = 3.1f;
     private const float AzurePopDistance = 2.6f;
-    private const float PassOffset = 1f;
 
     private DsrP4EyesState state = null!;
     private SimWorld world = null!;
@@ -95,6 +94,10 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         world = worldParam;
         foreach (var plan in swapPlans) plan.Clear();
         firstDiveCorners.Clear();
+        foreach (var (role, spot) in GildedOrbSpot)
+            AnoMech.Core.DiagnosticLog.Info($"[Eyes assignment] {role} yellow pair at={spot}; centre handoff to={PassPartner[role]}");
+        foreach (var (role, spot) in AzureOrb)
+            AnoMech.Core.DiagnosticLog.Info($"[Eyes assignment] {role} blue orb at={spot}");
         var ai = new AiManager(world);
 
         ScheduleRescue(ai);
@@ -173,8 +176,8 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         foreach (var (melee, ranged) in PassPartner)
         {
             if (!state.HoldsRed(melee)) spots[(int)melee] = BlueEyeHuddle[melee];
-            else if (Popped(melee)) spots[(int)melee] = PassSpot(ranged);
-            spots[(int)ranged] = state.HoldsRed(ranged) ? AzurePop(ranged) : AzureWait(ranged);
+            else if (Popped(melee)) spots[(int)melee] = Estinien;
+            spots[(int)ranged] = state.HoldsRed(ranged) ? AzurePop(ranged) : Estinien;
         }
         return spots;
     }
@@ -184,8 +187,8 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         var spots = new Vector2?[8];
         foreach (var (melee, ranged) in PassPartner)
         {
-            spots[(int)melee] = BlueEyeHuddle[melee];
-            if (!state.HoldsRed(ranged)) spots[(int)ranged] = AzureWait(ranged);
+            spots[(int)melee] = state.HoldsRed(melee) ? Estinien : BlueEyeHuddle[melee];
+            if (!state.HoldsRed(ranged)) spots[(int)ranged] = Estinien;
             else spots[(int)ranged] = Popped(ranged) ? CornerSpot(HomeCorner[ranged]) : AzurePop(ranged);
         }
         return spots;
@@ -257,7 +260,6 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
 
     private static Vector2 AzurePop(PartyRole role) => TowardsCentreLine(AzureOrb[role], AzurePopDistance);
 
-    private static Vector2 PassSpot(PartyRole ranged) => TowardsCentreLine(AzureOrb[ranged], AzureWaitDistance + PassOffset);
 
     private static Vector2?[] Stacked(Vector2 centre) =>
         Enumerable.Range(0, 8).Select(i => (Vector2?)(centre + new Vector2(0.5f * (i % 3 - 1), 0.5f * (i / 3 - 1)))).ToArray();

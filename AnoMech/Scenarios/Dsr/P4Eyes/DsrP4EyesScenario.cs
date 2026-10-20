@@ -66,6 +66,10 @@ public sealed class DsrP4EyesScenario : IScenario
     private readonly List<SimEnemy> extras = [];
     private readonly Queue<SimEnemy> waitingDivers = new();
     private readonly List<Orb> orbs = [];
+    public sealed record OrbHit(float Time, Vector3 Position, bool Yellow, PartyRole Role, bool Red, bool Resistance);
+    public List<OrbHit> OrbHits { get; } = [];
+    public sealed record Transfer(float Time, PartyRole From, PartyRole To);
+    public List<Transfer> Transfers { get; } = [];
     private readonly Dictionary<PartyRole, SimTether> boundTethers = [];
     private bool tethersPass;
     private float nextHealthUpdate;
@@ -92,7 +96,7 @@ public sealed class DsrP4EyesScenario : IScenario
         BlueHealingHits = 0; RedDamageHits = 0;
         extras.Clear();
         waitingDivers.Clear();
-        orbs.Clear();
+        orbs.Clear(); OrbHits.Clear(); Transfers.Clear();
         boundTethers.Clear();
         tethersPass = false;
 
@@ -248,6 +252,7 @@ public sealed class DsrP4EyesScenario : IScenario
         if (boundTethers.Remove(role, out var old)) old.Despawn();
         member.RemoveStatus(red ? StatusId.Fangbound : StatusId.Clawbound);
         member.AddStatus(red ? StatusId.Clawbound : StatusId.Fangbound);
+        AnoMech.Core.DiagnosticLog.Info($"[Eyes colour] t={world.Events.Elapsed:F2} {role} red={red}");
         if (red) state.Red.Add(role);
         else state.Red.Remove(role);
         if ((red ? leftEye : rightEye) is { } eye)
@@ -272,6 +277,8 @@ public sealed class DsrP4EyesScenario : IScenario
             if (blue.Member == null) continue;
             traded.Add(red.Role);
             traded.Add(blue.Role);
+            Transfers.Add(new(world.Events.Elapsed, red.Role, blue.Role));
+            AnoMech.Core.DiagnosticLog.Info($"[Eyes transfer] t={world.Events.Elapsed:F2} {red.Role}@{red.Member!.Position} red→blue; {blue.Role}@{blue.Member.Position} blue→red; lockout={BoundAndDeterminedSeconds}");
             Bind(red.Role, red.Member!, red: false);
             Bind(blue.Role, blue.Member, red: true);
             red.Member!.AddStatus(StatusId.BoundAndDetermined, BoundAndDeterminedSeconds);
@@ -299,6 +306,7 @@ public sealed class DsrP4EyesScenario : IScenario
         if (enemy == null) return;
         extras.Add(enemy);
         orbs.Add(new Orb(enemy, at, gilded));
+        AnoMech.Core.DiagnosticLog.Info($"[Eyes spawn] t={world.Events.Elapsed:F2} player={party.PlayerRole} orb={baseId}@{at} yellow={gilded}");
     }
     private void TouchOrbs(float elapsed)
     {
@@ -310,6 +318,7 @@ public sealed class DsrP4EyesScenario : IScenario
             {
                 orb.Scale = radius;
                 orb.Enemy.SetModelScale(radius);
+                AnoMech.Core.DiagnosticLog.Info($"[Eyes growth] t={elapsed:F2} at={orb.At} yellow={orb.Gilded} radius={radius}");
 
             }
             var touchers = AliveMembers().Where(m => FlatDistance(m.Position, orb.At) <= radius + OrbTouchMargin).ToList();
@@ -319,15 +328,25 @@ public sealed class DsrP4EyesScenario : IScenario
     private void Pop(Orb orb, List<SimCharacter> touchers, bool ripe)
     {
         orb.Popped = true;
+        AnoMech.Core.DiagnosticLog.Info($"[Eyes orb] t={world.Events.Elapsed:F2} at={orb.At} yellow={orb.Gilded} radius={orb.Scale} ripe={ripe} touchers={string.Join(",", touchers.Select(m => ((ISimPartyMember)m).Role))}");
         var actionId = orb.Gilded ? ActionId.FlareNova : ActionId.FlareStar;
         var hits = AliveMembers().Where(m => FlatDistance(m.Position, orb.At) <= OrbBlastRadius).ToArray();
         Hit(orb.Enemy, actionId, hits, (ctx, hit) =>
         {
+            if (hit is ISimPartyMember recipient)
+            {
+                OrbHits.Add(new(world.Events.Elapsed, orb.At, orb.Gilded, recipient.Role, state.HoldsRed(recipient.Role), hit.HasStatus(StatusId.FireResistanceDownII)));
+                AnoMech.Core.DiagnosticLog.Info($"[Eyes hit] t={world.Events.Elapsed:F2} {recipient.Role}@{hit.Position} red={state.HoldsRed(recipient.Role)} fireDown={hit.HasStatus(StatusId.FireResistanceDownII)}");
+            }
             RecordColourHit(hit);
             if (!ripe || (orb.Gilded && hits.Length < 2)) ctx.Kill(hit, "orb popped early or understacked");
             else if (hit is ISimPartyMember member && !state.HoldsRed(member.Role)) ctx.Kill(hit, "orb hit without red tether");
             else if (hit.HasStatus(StatusId.FireResistanceDownII)) ctx.Kill(hit, "second orb with Fire Resistance Down");
-            else ctx.AddStatus(hit, StatusId.FireResistanceDownII, FireResistanceDownSeconds);
+            else
+            {
+                ctx.AddStatus(hit, StatusId.FireResistanceDownII, FireResistanceDownSeconds);
+                AnoMech.Core.DiagnosticLog.Info($"[Eyes resistance] {((ISimPartyMember)hit).Role} until={world.Events.Elapsed + FireResistanceDownSeconds:F2}");
+            }
         });
         world.Events.Add(EffectCarrierLinger, orb.Enemy.FadeOut);
     }

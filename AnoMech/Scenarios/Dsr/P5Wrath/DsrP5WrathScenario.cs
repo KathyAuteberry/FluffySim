@@ -44,6 +44,7 @@ public sealed class DsrP5WrathScenario : IScenario
     private SimWorld world = null!;
     private DsrP5WrathState state = null!;
     private SimEnemy boss = null!;
+    public TankSwapSequence? TankSwap { get; private set; }
     private SimEnemy dragon = null!;
     private SimEnemy dark = null!;
     private SimEnemy white = null!;
@@ -61,6 +62,7 @@ public sealed class DsrP5WrathScenario : IScenario
 
     public void Run(SimWorld worldParam, int? selectedAi)
     {
+        TankSwap = null;
         world = worldParam; state = LastState = new(world.Rng, overrides, world.Party.PlayerRole);
         actors.Clear(); tethers.Clear(); twisters.Clear(); eruptionHelpers.Clear(); mercyHelpers.Clear(); liquidHelpers.Clear();
         twistersArmed = false; Completed = false;
@@ -99,10 +101,7 @@ public sealed class DsrP5WrathScenario : IScenario
         world.Events.Add(59.43f, () => boss.Cast(Hit(ActionId.AncientQuaga)));
         world.Events.Add(62.10f, () => { dragon.FadeOut(); dark.FadeOut(); white.FadeOut(); mage.FadeOut(); warrior.FadeOut(); });
         world.Events.Add(69.79f, Auto);
-        world.Events.Add(71.84f, () => boss.Cast(new EnemyAction(ActionId.HeavenlyHeel)
-        {
-            Effects = [Damage(Severity.TankBuster), ApplyStatus(StatusId.SlashingResistanceDown, 15)], Timing = new() { DamageDelay = 0 },
-        }, world.Party.Get(PartyRole.MainTank)));
+        world.Events.Add(71.84f, () => TankSwap!.Heel());
         foreach (var at in new[] { 78.94f, 80.58f, 82.24f }) world.Events.Add(at, Might);
         world.Events.Add(86.20f, () => boss.Cast(ActionId.KnightsOfTheRound));
         world.Events.Add(88.10f, () => { ClearTwisters(); foreach (var actor in actors) actor.Despawn(); Completed = true; });
@@ -143,6 +142,7 @@ public sealed class DsrP5WrathScenario : IScenario
     private void SpawnOpening()
     {
         boss = Spawn(BNpcBaseId.DarkThordan, BNpcNameId.Thordan, Vector3.Zero, true); boss.SetRotation(0);
+        TankSwap = new(world, boss, ActionId.HeavenlyHeel, ActionId.AscalonsMight, StatusId.SlashingResistanceDown);
         dark = Spawn(BNpcBaseId.Darkscale, BNpcNameId.Darkscale, new(-15, 0, 0));
         white = Spawn(BNpcBaseId.Vidofnir, BNpcNameId.Vidofnir, new(11, 0, 0));
         dragon = Spawn(BNpcBaseId.Vedrfolnir, BNpcNameId.Vedrfolnir, new(0, 0, 14));
@@ -258,6 +258,5 @@ public sealed class DsrP5WrathScenario : IScenario
             struck.RemoveStatus(StatusId.Thunderstruck);
         }
     }
-    private void Might() => boss.Cast(Instant(ActionId.AscalonsMight,
-        Damage(VulnerableTo(StatusId.SlashingResistanceDown, 1), Severity.TankBuster with { ForceMitigation = true })), world.Party.Get(PartyRole.MainTank));
+    private void Might() => TankSwap!.Cleave();
 }

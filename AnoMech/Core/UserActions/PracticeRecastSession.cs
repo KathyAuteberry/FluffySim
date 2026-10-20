@@ -29,7 +29,7 @@ internal sealed class PracticeRecastSession(IPracticeRecastStore store, Func<boo
     private readonly Dictionary<int, double> capturedAt = new();
     public bool Captured { get; private set; }
     public static readonly uint[] Actions = [3, 30, 43, 3638, 16152, 7548, 7559,
-        36920, 3540, 22, 36923, 7388, 40, 36927, 16471, 3634, 36935, 16160, 16140, 7531, 7535, 17, 44, 3636, 16148, 3542, 25746, 7382, 3551, 25751, 16464, 7393, 25754, 16161, 25758, 7538, 7551];
+        36920, 3540, 22, 36923, 7388, 40, 36927, 16471, 3634, 36935, 16160, 16140, 7531, 7535, 17, 44, 3636, 16148, 3542, 25746, 7382, 3551, 25751, 16464, 7393, 25754, 16161, 25758, 7538, 7551, 7533];
 
     public void Capture()
     {
