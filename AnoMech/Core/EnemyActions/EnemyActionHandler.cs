@@ -52,7 +52,7 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
         {
             casting = handle;
             releasing = handle;
-            cast.NativeCast(id, ActionType.Action, action.Cast.OmenDelay, castTime, interruptible: false,
+            cast.NativeCast(id, ActionType.Action, action.Cast.OmenDelay, castTime, interruptible: action.Cast.Interruptible,
                 rotation: CastRotation(action, target, location), position: location, targetId: castTarget);
         }
 

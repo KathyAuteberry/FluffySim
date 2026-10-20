@@ -19,6 +19,14 @@ public sealed class DsrZone : IZone
         var map = world.Map;
         world.OnDespawn(() => map.AddEffect(0x00040004, 8));
     });
+    public static readonly Phase P1 = new(Instance, "P1 The Holy See", 2, 920, init: world =>
+    {
+        world.EnforceSquareArenaBoundary(22f);
+        world.PlaceWaymarks(DsrP1Constants.Phase1Waymarks);
+        for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
+        world.Map.DirectorUpdate(0x80000016, 0, 1);
+        world.Map.DirectorUpdate(0x8000001F, 758);
+    });
     public string DisplayName => "Dragonsong's Reprise";
     public string Name => "Dragonsong's Reprise (Ultimate)";
     public Core.Map.EntranceBarrier EntranceBarrier => new(2007457, 0x875BE2, 0x875BE0, new(0f, 0f, 18f));

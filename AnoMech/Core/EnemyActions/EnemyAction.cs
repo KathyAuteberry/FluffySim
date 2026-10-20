@@ -23,6 +23,7 @@ public sealed record EnemyAction(uint ActionId)
 public sealed record CastSpec
 {
     // Presentation targets do not alter mechanic hit selection.
+    public bool Interruptible { get; init; }
     public bool AnimationTargetsCaster { get; init; }
     public Func<SimEnemy, SimCharacter?, SimWorld, IReadOnlyList<SimCharacter>>? PresentationTargets { get; init; }
     public bool TargetsPartyForPresentation { get; init; }
