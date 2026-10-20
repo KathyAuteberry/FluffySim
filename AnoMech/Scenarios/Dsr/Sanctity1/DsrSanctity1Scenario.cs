@@ -146,7 +146,7 @@ public sealed class DsrSanctity1Scenario : IScenario
             var east=side==1;
             var id = east == state.Clockwise ? 12601u : 12632u;
             var p=state.ChargePoints(east);
-            knights[side]=Spawn(id,p[0],MathF.Atan2(p[1].X,p[1].Z));
+            knights[side]=Spawn(id,p[0],MathF.Atan2(p[1].X-p[0].X,p[1].Z-p[0].Z));
         }
         glory=Helper(state.EyeSpawn);
         world.Map.AddEffect(0x00020001,(byte)state.EyePosition);
