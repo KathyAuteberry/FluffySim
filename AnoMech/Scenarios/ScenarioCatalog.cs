@@ -82,6 +82,8 @@ public sealed class ScenarioCatalog
         new Dsr.Sanctity1.DsrSanctity1Scenario(),
         new Dsr.Sanctity2.DsrSanctity2Scenario(),
         new Dsr.P3Nidhogg.DsrP3NidhoggScenario(),
+        new Dsr.P6DoubleDragons.DsrP6DoubleDragonsScenario(),
+        new Dsr.P6DoubleDragons.DsrP6CauterizeScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),
