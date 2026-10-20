@@ -1,5 +1,5 @@
 
-# ![FluffySim](images/icon.png) FluffySim
+# <img src="images/icon.png" alt="FluffySim" width="64" height="64" /> FluffySim
 
 *An FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters.*
 

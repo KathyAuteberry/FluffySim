@@ -16,7 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../AnoMech.Relay/AnoMech.Relay.csproj" />
-    <EmbeddedResource Include="../images/icon.png" LogicalName="AnoMech.OfflineIcon.png" Visible="false" />
+    <EmbeddedResource Include="../images/offline-icon.png" LogicalName="AnoMech.OfflineIcon.png" Visible="false" />
     <InternalsVisibleTo Include="AnoMech.Tests" />
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
