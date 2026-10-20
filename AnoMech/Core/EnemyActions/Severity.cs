@@ -11,6 +11,8 @@ public enum SeverityKind
 // How big a hit is, coarsely: who can live through it, and on how much mitigation.
 public sealed record Severity(SeverityKind Kind, float MinMitigation = 0f)
 {
+    public bool ForceMitigation { get; init; }
+
     public static readonly Severity Normal = new(SeverityKind.Normal);
     public static readonly Severity TankBuster = new(SeverityKind.TankBuster);
     public static readonly Severity Lethal = new(SeverityKind.Lethal);

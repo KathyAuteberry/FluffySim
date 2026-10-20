@@ -13,7 +13,8 @@ internal sealed class FakeZoneControl(FakeCharacter player, SimTimeline timeline
     public bool NativePracticeReady { get; set; }
     public string FirewallStatus => "fake transport";
     public void EndSpeedBuffs() { }
-    public void ResetPracticeRecast(uint action) { }
+    public List<uint> ResetRecasts { get; } = [];
+    public void ResetPracticeRecast(uint action) => ResetRecasts.Add(action);
     public void NotePracticeAction(uint action) { }
     public void SetPracticeRecastsPaused(bool paused) { }
 

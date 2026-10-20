@@ -10,6 +10,7 @@ public class SoftMarkersTests
     [TestCase(Sign.Attack1, 61201u)]
     [TestCase(Sign.Attack2, 61202u)]
     [TestCase(Sign.Attack3, 61203u)]
+    [TestCase(Sign.Attack4, 61204u)]
     [TestCase(Sign.Ignore1, 61221u)]
     [TestCase(Sign.Ignore2, 61222u)]
     [TestCase(Sign.Bind3, 61213u)]

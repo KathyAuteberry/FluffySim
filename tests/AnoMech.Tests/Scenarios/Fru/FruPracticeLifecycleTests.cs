@@ -79,12 +79,14 @@ public class FruPracticeLifecycleTests
                 }
                 if (!p.Crossed(resetAt)) return;
                 restarted = true;
+                if (type == typeof(FruP4CrystallizeTimeScenario)) Assert.That(p.World.SoftMarkers.Count, Is.EqualTo(4));
                 for (var repeat = 0; repeat < 2; repeat++)
                 {
                     p.Game.Reset();
                     native.Frame(0f, p.Game.Tick);
                     Assert.That(p.World.Children.OfType<SimEnemy>().Any(e => e.IsActive), Is.False);
                     Assert.That(p.World.Party.AllMembers().SelectMany(m => m.ActiveStatuses), Is.Empty);
+                    Assert.That(p.World.SoftMarkers.Count, Is.Zero);
                     Frames(native, p.Game, 180);
                     var mapEffectStart = native.MapEffects.Applied.Count;
                     p.Game.EnterAndStart(new RunScenarioParams(scenario,
@@ -102,6 +104,11 @@ public class FruPracticeLifecycleTests
                         Assert.That(native.MapEffects.Applied.Skip(mapEffectStart)
                             .Where(effect => effect.Index >= 51 && effect.Index <= 53 && effect.Flags != 0x00040004), Is.Empty,
                             "Old tower occupancy must not be emitted before new towers spawn");
+                    }
+                    if (type == typeof(FruP4CrystallizeTimeScenario))
+                    {
+                        while (p.Game.EventClockNow < 12f) native.Frame(ScenarioRun.FrameSeconds, p.Game.Tick);
+                        Assert.That(p.World.SoftMarkers.Count, Is.EqualTo(4));
                     }
                     if (repeat == 0)
                         while (p.Game.EventClockNow < resetAt) native.Frame(ScenarioRun.FrameSeconds, p.Game.Tick);

@@ -66,6 +66,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         world.Events.Add(26f, () => FollowRoute(PUDDLE_DODGE));
         world.Events.Add(26.7f, () => FollowRoute(state.SlowNorthwest ? POST_KB_NW : POST_KB_NE, arriveBy: 28.2f));
         world.Events.Add(28.5f, () => FollowRoute(state.SlowNorthwest ? POST_HG_2_NW : POST_HG_2_NE, arriveBy: 28.8f));
+        world.Events.Add(29.7f, AssignNumberedCleansingRoutes);
         world.Events.Add(29.8f, () => FollowRoute(state.East ? POST_UD_E : POST_UD_W, arriveBy: 31.5f));
         world.Events.Add(31.5f, () => FollowRoute(state.East ? POST_EARLY_SOAK_E : POST_EARLY_SOAK_W, arriveBy: 32f));
         world.Events.Add(33.6f, () => FollowRoute(state.East ? POST_HG_3_E : POST_HG_3_W, arriveBy: 34.1f));
@@ -125,6 +126,18 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
                 CrystallizeDebuff.BlueIce => CrystallizeTimeAssignment.Ice,
                 CrystallizeDebuff.BlueDarkness => CrystallizeTimeAssignment.Darkness,
                 _ => CrystallizeTimeAssignment.Water,
+            };
+    }
+
+    private void AssignNumberedCleansingRoutes()
+    {
+        foreach (var (role, number) in state.CleanseNumbers)
+            assignments[role] = number switch
+            {
+                1 => CrystallizeTimeAssignment.Darkness,
+                2 => CrystallizeTimeAssignment.Water,
+                3 => CrystallizeTimeAssignment.Ice,
+                _ => CrystallizeTimeAssignment.Eruption,
             };
     }
 

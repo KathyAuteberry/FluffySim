@@ -48,6 +48,10 @@ public sealed class FruP4CrystallizeTimeSettingsWindow
                 ImGui.SameLine();
                 if (ImGui.RadioButton($"{choice}##ctcorner", corner == choice)) Overrides.Corner = choice;
             }
+            SettingsGrid.Row("Require Tank Mitigation:");
+            var strict = Overrides.RequireTankMitigation;
+            if (ImGui.Checkbox("##ctmitigation", ref strict)) Overrides.RequireTankMitigation = strict;
+            if (ImGui.IsItemHovered()) ImGui.SetTooltip("Optional approximate Hallowed Wings mitigation check. Movement, debuffs and knockbacks always apply. Local actions must be enabled. Tank defensive recasts reset on Start/Restart.");
             SettingsGrid.End();
         }
     }
@@ -63,5 +67,6 @@ public sealed class FruP4CrystallizeTimeSettingsWindow
         Select(0);
         Overrides.SlowNorthwest = null;
         Overrides.Corner = null;
+        Overrides.RequireTankMitigation = false;
     }
 }

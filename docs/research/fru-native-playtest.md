@@ -87,3 +87,60 @@ Anonymous repair change `wsrwyk` is a child of the completed P2 change `qkqvln`.
 The explicit Extended P2 hard/invisible loops also passed: 2 test cases execute 8 roles × 8 seeds for each P2 drill (128 full runs), 2s. The default settings filter combines with command-line filters; `extended.runsettings` is required to opt in and was verified by this run.
 
 Last production adjustment: corrected the level-100 Bard contribution to 15% using the official job guide's level-98 trait. The 21 affected mitigation/startup/presentation tests passed afterward (`/tmp/fluffy-unfuck-mitigation-final.log`, 971ms). The 7,835-case routine run above precedes that numeric correction; its broad coverage was not repeated for this localized value change. Both final Debug artifacts were rebuilt afterward for the safety rerun.
+
+## Final FRU polish — numbered cleansing and optional mitigation (2026-10-20)
+
+The owner confirms native Diamond Dust and Mirror, Mirror now start and are playable. This pass preserves those fixes, the verified CT tank crossing/outer Return positions, P5 formations and JP/Mana defaults. No encounters were added.
+
+### Wyrmfang 1–4
+
+The [Mana guide's opening assignments and Step 20](https://ffxiv.tuufless.com/mana/fru/04_gaia_and_shiva/) and its `crystallize_time_07.jpg` diagram specify four blue-only numbers, ordered **1 East ice puddle, 2 SE Aero puddle, 3 SW Aero puddle, 4 West ice puddle**. These are absolute East/West, independent of the second Tidal orientation.
+
+The per-run state shuffles 1–4 using the scenario RNG and assigns that permutation only to the four Wyrmfang holders. The roll follows the existing encounter rolls, preserving their seeded results. Neither role priority nor human/bot identity selects a number. Numbers appear with debuffs at 11.8 through the same local overlay `SoftMarkers` used by Ultimate Relativity; Attack4/icon 61204 completes its existing Attack1–3 support. No native party marking or network requests are used. The human's marker remains visible with simulated party hidden. Markers clear after the cleansing window at 41.1, and on world reset/Leave; active-marker Restart tests verify no accumulation.
+
+Opening movement continues to follow each debuff's requirements. At 29.7, after the last spell resolves, blue cleansing routes are reassigned by number instead of debuff subtype. The existing hazard-aware route tables then wait for their own dragon catcher's puddle. They do not search for a nearest or alternate puddle. The same numbering remains consistent for the alternative AI strategy. Three bots never take over the missing human's assignment.
+
+Tests check seeded four-number permutations, red exclusion, every human role, human numbers 1–4, actual cleanse coordinates sorted East-to-West, both Tidal orientations, hidden-party human marker visibility, active marker Restart and Leave. Reservation tests replay a valid human route while staying outside the assigned puddle, with **God Mode disabled**; all three other blue players cleanse, the human's puddle remains available, and contact cleanses it. Never collecting it produces the existing Wyrmfang expiry death. An incorrect early detour to another numbered puddle still dies to the existing Maelstrom hazard. Numbers are a strategy assignment, not a new native debuff: taking another puddle is not assigned an invented instant-kill rule.
+
+### Require Tank Mitigation (default OFF)
+
+The CT setting snapshots into each run and defaults to false. OFF sets only Hallowed Wings' approximate vulnerable-tank mitigation requirement to zero. It does not change attack areas, target selection, front order, non-tank failure, statuses, damage snapshots, knockback, anti-knockback or later mechanics. It is not God Mode.
+
+ON uses the existing **UNVERIFIED 56% practice threshold** and the timed healer/ranged mitigation added in the preceding repair. It requests mitigation validation even if the global mitigation preference is off; local actions must be enabled. Existing diagnostics list active status IDs, effective mitigation and required mitigation at impact, before shields are consumed. An absent effect still requires action/cooldown inspection to distinguish a button that never applied from one that expired or was consumed. No newly measured native damage amount is claimed.
+
+A scheduled-wing regression has the human tank use anti-knockback at the correct time but no personal mitigation: OFF survives both wings; ON reports insufficient mitigation. Existing missed-immunity and non-tank-leading failure cases remain. The now-verified tank recording/crossing coordinates and all mechanic times are unchanged.
+
+### Local recast restoration
+
+Strict CT Start/Restart requests only the current job's relevant defensives through `IZoneControl.ResetPracticeRecast`. The existing `PracticeRecastSession` now captures/tracks these allowed actions as well as its previous actions. Native guard, firewall, job identity, shared-group ownership checks, pause handling and exit restoration are unchanged. There is no periodic or mid-resolution reset. Leave restores the pre-session local cooldown record aged by elapsed wall time; no server cooldown is changed or server-bound action generated.
+
+Pinned Action data: `d9582a624eaec69d45649366dee801c2f3a6e9b3`. Groups below are **sheet CooldownGroup values**; runtime code asks `ActionManager.GetRecastGroup` rather than assuming the sheet's indexing matches native storage.
+
+| Job | 40% action / seconds / sheet group | Party action / seconds / sheet group | Other restored defensives |
+|---|---|---|---|
+| PLD | Guardian 36920 / 120 / 20 | Divine Veil 3540 / 90 / 15 | Bulwark 22 (90s, group16) |
+| WAR | Damnation 36923 / 120 / 22 | Shake It Off 7388 / 90 / 15 | Thrill of Battle 40 (90s, group16) |
+| DRK | Shadowed Vigil 36927 / 120 / 21 | Dark Missionary 16471 / 90 / 15 | Dark Mind 3634 (60s, group9) |
+| GNB | Great Nebula 36935 / 120 / 22 | Heart of Light 16160 / 90 / 15 | Camouflage 16140 (90s, group16) |
+
+Each job also restores Rampart 7531 (90s, group47) and Reprisal 7535 (60s, group45). These are explicit defensive actions, not a blanket action-manager reset. Eight additional recast-session cases exercise the 40% and party actions through capture/reset/elapsed-time restoration; per-job scenario tests verify the correct reset requests on initial Start and Restart and exclude other jobs' actions. Native hotbar recast behavior remains a client test.
+
+### Mirror staging
+
+The initial 6.05 waypoint used the old inward-facing melee fan, then corrected it at 12.06. It now uses the corrected first-spread formation immediately. The final 12.06 adjustment still follows the boss's actual stop position. MT's separate drag point remains necessary to reposition the boss; its later transition to the spread is retained. A subsequent native report for seed **592545838** exposed a separate red-mirror role swap: the same handedness sign was applied to supports and DPS, so changing the other mirror's side exchanged MT/ST destinations. Tank and healer outside-looking-in flanks are now fixed; only the inner DPS assignments use the other mirror to choose their handedness. The reported seed explicitly checks ST on the Dragoon flank rather than the Monk flank and then completes the encounter. A pure geometry test covers support flanks across all valid orientations, and all 192 damage/survival patterns pass. Cone geometry, targeting, timestamps and Banish were not changed.
+
+### Native retest
+
+1. Blue CT: read 1–4 (including 4), verify red players are unmarked; delay your own cleanse and confirm three bots leave your puddle available. Repeat North/South second Tidal and hidden party. Restart while numbers are visible, then Leave.
+2. CT OFF: correctly execute Return and anti-knockback without tank mitigation; insufficient mitigation alone must not kill. ON: time the supported defensives, inspect active effects at impact, then Restart and check their hotbar recasts restore immediately. Repeat all four tank jobs where available; Leave must restore normal local recasts.
+3. Mirror: confirm direct initial melee/ranged routes, necessary MT boss drag, both reflections and both Banish variants. Existing native P2 arena/playability fixes should remain intact.
+
+No native verification of this new overlay/recast behavior is claimed from headless tests.
+
+### Polish validation and integration
+
+- Final bounded routine optimized **Debug**: **7,873 passed, 0 failed, 2m22** (`/tmp/fluffy-polish-delivery.log`, `fru-polish-delivery.trx`), including the reported Mirror seed and final strict trailing-tank correction. Existing Extended settings/categories were not changed.
+- Focused CT/Mirror/recast/marker/lifecycle suite: **416 passed, 31s**. The final Mirror matrix and flank tests passed **194 cases in 6s**, and the screenshot-specific ST/Dragoon assertion passed (350ms). Additional scheduled-wing ON/OFF checks passed (761ms); strengthened eight reservation/expiry cases passed with God Mode disabled (2s). All these cases are included in the final routine run.
+- Solution Debug build: **0 errors**, two existing test warnings. Isolated optimized TRACE Debug build: **0 warnings/errors**. No Release build or installed-output write.
+- Final ordinary and alternate hook failure safety models: **308 passed, 3 Windows-only skips each, 18s/17s** (`/tmp/fluffy-polish-safety-final.log`, `/tmp/fluffy-polish-safetyhook-final.log`). Relay **44 passed, 1s**. Packet guards and native recast isolation gates were not weakened.
+- Anonymous follow-up `zxmprt` is based on the preceding repair `wsrwyk`. It is incorporated into the existing unpublished `towxun` integration, preserving all six previous parents. No new bookmarks, master movements, publication, historical merge edits or plogons changes.

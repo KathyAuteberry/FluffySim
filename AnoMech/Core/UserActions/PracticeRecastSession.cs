@@ -28,7 +28,8 @@ internal sealed class PracticeRecastSession(IPracticeRecastStore store, Func<boo
     private bool suspended;
     private double started;
     public bool Captured { get; private set; }
-    public static readonly uint[] Actions = [3, 30, 43, 3638, 16152, 7548, 7559];
+    public static readonly uint[] Actions = [3, 30, 43, 3638, 16152, 7548, 7559,
+        36920, 3540, 22, 36923, 7388, 40, 36927, 16471, 3634, 36935, 16160, 16140, 7531, 7535];
 
     public void Capture()
     {

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
+using AnoMech.Core.UserActions;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
@@ -40,6 +41,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
 
     private SimWorld world = null!;
     private FruP4CrystallizeTimeState state = null!;
+    public FruP4CrystallizeTimeState LastState => state;
     private IScenarioAi<FruP4CrystallizeTimeState>? ai;
     private SimEnemy? usurper, oracle, fragment, edgeHelper;
     private readonly SimEnemy?[] hourglasses = new SimEnemy?[6];
@@ -57,7 +59,11 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
     {
         world = worldParam;
         world.PracticeAntiKnockback.Start();
+        world.SoftMarkers.Clear();
         state = new FruP4CrystallizeTimeState(world.Rng, world.Party.PlayerRole, settingsWindow.Overrides);
+        if (state.RequireTankMitigation)
+            foreach (var action in TankMitigationPractice.ActionsForJob(Natives.BattleCharas.LocalPlayer.ClassJob))
+                Natives.Zone.ResetPracticeRecast(action);
         Array.Clear(dragons);
         Array.Clear(dragonCatches);
         Array.Clear(lastCatcher);
@@ -131,13 +137,14 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         world.Events.Add(47.5f, () => usurper?.Cast(ActionId.HallowedWingsCast, animationLock: 1.4f));
         world.Events.Add(48.5f, SpiritTaker);
         world.Events.Add(CleanseBy, () => Enum.GetValues<CrystallizeDebuff>().ToList().ForEach(CheckCleansed));
+        world.Events.Add(41.1f, world.SoftMarkers.Clear);
         world.Events.Add(StunAt, () => world.Party.ActiveMembers().ToList().ForEach(m => m.AddStatus(StatusId.Stun, StunEndsAt - StunAt)));
         world.Events.Add(52.8f, Rewind);
         world.Events.Add(53.6f, () => PositionUsurperForWaves(second: false));
-        world.Events.Add(53.7f, () => usurper?.Cast(FruP4CrystallizeTimeActions.HallowedWingsKnockback));
+        world.Events.Add(53.7f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation)));
         world.Events.Add(56.3f, () => usurper?.Cast(Actions.HallowedWingsSwap));
         world.Events.Add(58.1f, () => PositionUsurperForWaves(second: true));
-        world.Events.Add(58.3f, () => usurper?.Cast(FruP4CrystallizeTimeActions.HallowedWingsKnockback));
+        world.Events.Add(58.3f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation)));
         world.Events.Add(62.5f, () => world.Map.SetWeather(WeatherId.Oracle, 0f));
         world.Events.Add(62.5f, () => world.Map.AddEffect(MapEffect.ThawFloor, MapEffect.OracleStage));
         world.Events.Add(62.5f, () => SetHourglassScenery(MapEffect.HourglassHide, 0, 1, 2, 3, 4, 5));
@@ -242,6 +249,8 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
                 _ => (StatusId.DarkBlizzardWaiting, 25.9f),
             };
             member.AddStatus(spell, at - DebuffsAt);
+            if (state.CleanseNumbers.TryGetValue(role, out var number))
+                world.SoftMarkers.Set((Sign)(number - 1), member);
             member.AddStatus(StatusId.CrystallizeReturnWaiting, ReturnSavedAt - DebuffsAt);
             member.AddStatus(StatusId.RelativityClock, 37f);
         }
@@ -524,6 +533,8 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
             var stepper = world.Party.ActiveMembers()
                 .FirstOrDefault(m => m is ISimPartyMember slot && slot.Role != catcher && Vector3.Distance(m.Position, position) <= PuddleRadius);
             if (stepper is null) continue;
+            if (stepper is ISimPartyMember cleansed && stepper.HasStatus(StatusId.Wyrmfang))
+                state.RecordCleanse(cleansed.Role, position);
             stepper.RemoveStatus(StatusId.Wyrmfang);
             puddle.Visual?.DirectorEObjMod(7);
             world.Events.Add(PuddleFadeOut, () => puddle.Visual?.Despawn());

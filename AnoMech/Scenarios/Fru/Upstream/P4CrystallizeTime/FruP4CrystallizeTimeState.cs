@@ -32,6 +32,14 @@ public sealed class FruP4CrystallizeTimeState
 
     private readonly Dictionary<PartyRole, CrystallizeDebuff> debuffs = new();
     private readonly Dictionary<PartyRole, Vector3> dragonPuddles = new();
+    private readonly Dictionary<PartyRole, int> cleanseNumbers = new();
+    public IReadOnlyDictionary<PartyRole, int> CleanseNumbers => cleanseNumbers;
+    public bool RequireTankMitigation { get; }
+    private readonly Dictionary<PartyRole, Vector3> allDragonPuddles = new();
+    private readonly Dictionary<PartyRole, Vector3> cleansedAt = new();
+    public IReadOnlyDictionary<PartyRole, Vector3> AllDragonPuddles => allDragonPuddles;
+    public IReadOnlyDictionary<PartyRole, Vector3> CleansedAt => cleansedAt;
+    internal void RecordCleanse(PartyRole role, Vector3 position) => cleansedAt[role] = position;
 
     public bool SlowNorthwest { get; }
     public CrystallizeCorner Corner { get; }
@@ -55,6 +63,10 @@ public sealed class FruP4CrystallizeTimeState
         if (overrides.Corner is { } corner) Corner = corner;
         Quietus = rng.Shuffle(Enum.GetValues<PartyRole>()).Take(3).ToList();
         SpiritTakerTarget = rng.NextRole();
+        RequireTankMitigation = overrides.RequireTankMitigation;
+        var numbers = rng.Shuffle(1, 2, 3, 4).ToArray();
+        var blues = debuffs.Where(d => !IsRed(d.Value)).Select(d => d.Key).ToArray();
+        for (var i = 0; i < blues.Length; i++) cleanseNumbers[blues[i]] = numbers[i];
     }
 
     public CrystallizeDebuff Debuff(PartyRole role) => debuffs[role];
@@ -94,6 +106,10 @@ public sealed class FruP4CrystallizeTimeState
 
     // Live: where each head dropped the puddle of the player it caught, as the scenario spawns them.
     public IReadOnlyDictionary<PartyRole, Vector3> DragonPuddles => dragonPuddles;
-    internal void AddDragonPuddle(PartyRole catcher, Vector3 position) => dragonPuddles[catcher] = position;
+    internal void AddDragonPuddle(PartyRole catcher, Vector3 position)
+    {
+        dragonPuddles[catcher] = position;
+        allDragonPuddles[catcher] = position;
+    }
     internal void RemoveDragonPuddle(PartyRole catcher) => dragonPuddles.Remove(catcher);
 }

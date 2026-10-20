@@ -17,22 +17,24 @@ internal static class FruP4CrystallizeTimeActions
         Timing = new() { DamageDelay = 0.6f },
     };
 
-    public static readonly EnemyAction HallowedWingsKnockback = FruActions.HallowedWingsKnockback with
+    public static readonly EnemyAction HallowedWingsKnockback = Wings(true);
+
+    public static EnemyAction Wings(bool requireMitigation) => FruActions.HallowedWingsKnockback with
     {
         Effects =
         [
-            OnFront(4, new WingsDamage(), ApplyStatus(StatusId.MagicVulnerabilityUp, 6f, delayToEffectResult: true)),
+            OnFront(4, new WingsDamage(requireMitigation), ApplyStatus(StatusId.MagicVulnerabilityUp, 6f, delayToEffectResult: true)),
             OnBehindFront(4, Damage()),
             new WingsKnockback(),
         ],
     };
 
-    private sealed class WingsDamage : IEnemyActionEffect
+    private sealed class WingsDamage(bool requireMitigation) : IEnemyActionEffect
     {
         public void Apply(EnemyActionContext ctx, IReadOnlyList<SimCharacter> hits)
         {
-            // Tanks can survive the overlapping wing with heavy mitigation; a non-tank's vulnerable hit remains lethal.
-            Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, requiredMitigation: 0.56f), split: WildCharge(front: 1, frontHit: TankBuster))
+            // UNVERIFIED: the vulnerable-tank threshold is a practice approximation.
+            Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, requiredMitigation: requireMitigation ? 0.56f : 0f), severity: Normal with { ForceMitigation = requireMitigation }, split: WildCharge(front: 1, frontHit: TankBuster with { ForceMitigation = requireMitigation }))
                 .Apply(ctx, hits.Where(DamageCheck.IsTank).ToList());
             Damage(VulnerableTo(StatusId.MagicVulnerabilityUp)).Apply(ctx, hits.Where(h => !DamageCheck.IsTank(h)).ToList());
             if (hits.FirstOrDefault() is { } first && !DamageCheck.IsTank(first)) ctx.Kill(first, "tank must lead Hallowed Wings");

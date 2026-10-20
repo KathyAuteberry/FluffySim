@@ -17,7 +17,7 @@ internal static class DamageCheck
         var vuln = CarriedVulnerability(target, spec);
         if (vuln is { RequiredMitigation: null }) return "had vuln up debuff";
         if (severity.Kind == SeverityKind.TankBuster && !IsTank(target)) return "tank buster";
-        if (Survives(target, party, MathF.Max(severity.MinMitigation, vuln?.RequiredMitigation ?? 0f), kind)) return null;
+        if (Survives(target, party, MathF.Max(severity.MinMitigation, vuln?.RequiredMitigation ?? 0f), kind, severity.ForceMitigation)) return null;
         return vuln != null ? "not enough mitigation for a hit with vuln up" : "not enough mitigation";
     }
 
@@ -38,9 +38,9 @@ internal static class DamageCheck
     }
 
     // Only a human's own statuses are ever checked: a bot always passes. Spends the target's shields.
-    private static bool Survives(SimCharacter target, SimParty party, float requiredMitigation, DamageKind kind)
+    private static bool Survives(SimCharacter target, SimParty party, float requiredMitigation, DamageKind kind, bool force)
     {
-        if (requiredMitigation <= 0f || !ChecksMitigation(target, party)) return true;
+        if (requiredMitigation <= 0f || !ChecksMitigation(target, party, force)) return true;
         var statuses = target.ActiveStatusSnapshot.Select(s => s.StatusId).ToArray();
         var effective = Mitigation.Effective(statuses, kind);
         Mitigation.SpendShields(target);
@@ -49,6 +49,6 @@ internal static class DamageCheck
         return survives;
     }
 
-    private static bool ChecksMitigation(SimCharacter target, SimParty party)
-        => Mitigation.Required && target is ISimPartyMember && !party.IsBotDriven(target);
+    private static bool ChecksMitigation(SimCharacter target, SimParty party, bool force)
+        => (Mitigation.Required || force && Natives.UserActions.Enabled) && target is ISimPartyMember && !party.IsBotDriven(target);
 }

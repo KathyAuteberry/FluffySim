@@ -108,6 +108,8 @@ public class FruP4CrystallizeTimeTests
         Assert.That(roles.Where(r => !r.IsTank()).All(r => FruP4CrystallizeTimeAi.ManaRewindSpot(r, east, north).Length() < 2), Is.True);
     }
 
+    [TestCase(PartyRole.OffTank, true, false, true)]
+    [TestCase(PartyRole.OffTank, false, false, false)]
     [TestCase(PartyRole.MainTank, true, false, true)]
     [TestCase(PartyRole.MainTank, true, true, false)]
     [TestCase(PartyRole.MainTank, false, false, false)]
@@ -119,7 +121,7 @@ public class FruP4CrystallizeTimeTests
         {
             PlayerRole = role,
             UserActionsEnabled = true,
-            Configure = c => c.EnableTankMitigation = checks,
+            Configure = c => c.EnableTankMitigation = !checks,
             StopAt = 1f,
             Takeovers = [new Takeover(0f, null)],
             Probe = p =>
@@ -129,9 +131,9 @@ public class FruP4CrystallizeTimeTests
                 member.AddStatus(FruConstants.StatusId.MagicVulnerabilityUp, 6f);
                 if (mitigated)
                     foreach (ushort status in new ushort[] { 3829, 1191, 1193 }) member.AddStatus(status, 6f);
-                var action = FruP4CrystallizeTimeActions.HallowedWingsKnockback;
+                var action = FruP4CrystallizeTimeActions.Wings(checks);
                 var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0);
-                action.Effects[0].Apply(context, [member]);
+                action.Effects[0].Apply(context, role == PartyRole.OffTank ? [p.Member(PartyRole.MainTank)!, member] : [member]);
                 killed = context.IsKilled(member);
             },
         });

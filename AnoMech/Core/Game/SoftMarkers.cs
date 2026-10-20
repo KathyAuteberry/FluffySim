@@ -28,7 +28,7 @@ public sealed class SoftMarkers
         .Select(m => new SoftMarkerView(m.Key, IconId(m.Key), origin + m.Value.Position + new Vector3(0f, 2.8f, 0f))).ToArray();
     public static uint IconId(Sign sign) => sign switch
     {
-        Sign.Attack1 => 61201, Sign.Attack2 => 61202, Sign.Attack3 => 61203,
+        Sign.Attack1 => 61201, Sign.Attack2 => 61202, Sign.Attack3 => 61203, Sign.Attack4 => 61204,
         Sign.Bind1 => 61211, Sign.Bind2 => 61212, Sign.Bind3 => 61213,
         Sign.Ignore1 => 61221, Sign.Ignore2 => 61222,
         _ => throw new ArgumentOutOfRangeException(nameof(sign)),
