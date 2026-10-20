@@ -19,6 +19,12 @@ public sealed class DsrZone : IZone
         var map = world.Map;
         world.OnDespawn(() => map.AddEffect(0x00040004, 8));
     });
+    public static readonly Phase P5 = new(Instance, "P5 Alternate Thordan", 46, 925, init: world =>
+    {
+        for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
+        world.Map.DirectorUpdate(0x80000016, 0, 0x64);
+        world.Map.DirectorUpdate(0x8000001F, 765);
+    });
     public string DisplayName => "Dragonsong's Reprise";
     public string Name => "Dragonsong's Reprise (Ultimate)";
     public Core.Map.EntranceBarrier EntranceBarrier => new(2007457, 0x875BE2, 0x875BE0, new(0f, 0f, 18f));

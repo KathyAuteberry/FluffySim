@@ -7,7 +7,7 @@ namespace AnoMech.Core.Native.Policies;
 internal static class DsrEnvironmentState
 {
     internal static bool NeedsFinalization(uint territory, byte weather, bool offline)
-        => territory == 968 && (weather is 2 or 3 || offline && weather == 45);
+        => territory == 968 && (weather is 2 or 3 or 46 || offline && weather == 45);
 
     private static readonly (ushort Layer, int Count, ulong State)[] Nidhogg =
     [
@@ -42,6 +42,34 @@ internal static class DsrEnvironmentState
         (62172, 39, 0xDE50A87C75B9C74CUL),
         (65362, 1, 0xB2A3364E3E86927AUL),
     ];
+
+    private static readonly (ushort Layer, int Count, ulong State)[] DarkThordan =
+    [
+        (5210, 1, 0xC64FA84E5FF49830UL),
+        (5212, 1, 0xC64FAB4E5FF49D49UL),
+        (5607, 4, 0xF1623BD72C3383D7UL),
+        (5644, 1, 0xC70EC74E613959DDUL),
+        (61049, 262, 0xB93E75F36A7E5B4FUL),
+        (61060, 53, 0xA6B50EB054E3752BUL),
+        (61063, 47, 0x87959A3FEF5424C5UL),
+        (61064, 2, 0x8D4672F2F6263BF3UL),
+        (61065, 351, 0x8323BA56AD598221UL),
+        (61068, 6, 0xA8DC9A53BFE9D157UL),
+        (61083, 142, 0x44F49E8FAAC36B1BUL),
+        (61084, 12, 0x5A4E37ADAB9A9DD7UL),
+        (61085, 19, 0x2AA1B89029FE9AFAUL),
+        (61086, 38, 0x3E86B68484C9D92FUL),
+        (61087, 5, 0x4CAB5BE308234A34UL),
+        (61090, 0, 0xCBF29CE484222325UL),
+        (61091, 1, 0xB1C5204E3D0D3318UL),
+        (61379, 13, 0xFDBE3F28A381C525UL),
+        (61380, 6, 0xDD0E766EA735B793UL),
+        (62172, 39, 0x1C72BD5CEDBD6BF1UL),
+        (65362, 1, 0xB2A3364E3E86927AUL),
+    ];
+
+    internal static bool MatchesDarkThordan(Func<ushort, IReadOnlyList<(uint Id, bool Active, bool ColliderLoaded, bool ColliderActive)>> read)
+        => Matches(DarkThordan, read);
 
     internal static bool MatchesHolySee(Func<ushort, IReadOnlyList<(uint Id, bool Active, bool ColliderLoaded, bool ColliderActive)>> read)
         => Matches(HolySee, read);

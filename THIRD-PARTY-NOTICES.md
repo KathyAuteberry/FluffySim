@@ -53,3 +53,7 @@ SOFTWARE.
 ## AsuMech DSR P3 adaptation
 
 Nidhogg assignment state, practice controls and the initial bot routing structure were adapted from Asunnya/AsuMech, commit b7a31b630ebae5e1076f65ed069f3a50dda64272, under the existing AGPL license. Elemental routes, EnemyAction mechanics and local lifecycle integration are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr/P3Nidhogg . Preserve AnoMech and AsuMech attribution and the accompanying LICENSE.md when distributing corresponding source.
+
+## AsuMech DSR P5 adaptation
+
+P5 assignment state and bot-routing structure were adapted from Asunnya/AsuMech commit b7a31b630ebae5e1076f65ed069f3a50dda64272, P5Wrath/P5Death, under AGPL-3.0-or-later. Elemental assignments, modern EnemyAction mechanics, native lifecycle integration and practice final resolution are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr . Preserve original attribution, LICENSE.md and matching modified source when distributing.
