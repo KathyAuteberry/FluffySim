@@ -9,11 +9,19 @@ public sealed class DsrZone : IZone
 {
     public static readonly DsrZone Instance = new();
     public static readonly Phase P2 = new(Instance, "P2 King Thordan", 45, PhaseMusic.Heroes, init: InitializeP2);
-    // UNVERIFIED: P3 weather and director layout need native-client confirmation.
     public static readonly Phase P3 = new(Instance, "P3 Nidhogg", 3, 922, init: world =>
     {
         for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
         world.Map.DirectorUpdate(0x80000016, 0, 0x48);
+        world.Map.DirectorUpdate(0x8000001F, 758);
+        world.Map.AddEffect(0x00020001, 8);
+        var map = world.Map;
+        world.OnDespawn(() => map.AddEffect(0x00040004, 8));
+    });
+    public static readonly Phase P4 = new(Instance, "P4 Eyes", 3, 923, init: world =>
+    {
+        for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
+        world.Map.DirectorUpdate(0x80000016, 0, 0x5A);
         world.Map.DirectorUpdate(0x8000001F, 758);
         world.Map.AddEffect(0x00020001, 8);
         var map = world.Map;

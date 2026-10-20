@@ -238,7 +238,7 @@ public class NativeEntryLifecycleTests
     {
         if (scenario.Phase.Zone is DsrZone)
         {
-            for (byte i = 0; i < 9; i++) Assert.That(fake.MapEffects.Applied.Last(e => e.Index == i).Flags, Is.EqualTo(0x00040004));
+            for (byte i = 0; i < 9; i++) Assert.That(fake.MapEffects.Applied.Last(e => e.Index == i).Flags, Is.EqualTo(i == 8 && (scenario.Phase == DsrZone.P3 || scenario.Phase == DsrZone.P4) ? 0x00020001u : 0x00040004u));
             Assert.That(((FakeLayoutFunctions)Natives.Layout).HeldLayerStates, Is.Empty);
             Assert.That(((FakeLayoutFunctions)Natives.Layout).HeldInstanceStates, Is.Empty);
             return;
