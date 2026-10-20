@@ -5,6 +5,7 @@ using AnoMech.Core.Native.Implementations.Interop;
 using AnoMech.Core.Native.Interfaces;
 using FFXIVClientStructs.FFXIV.Client.LayoutEngine;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Graphics.Environment;
 
 namespace AnoMech.Core.Native.Implementations;
 
@@ -76,8 +77,10 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
         var world = LayoutWorld.Instance();
         var layout = world == null ? null : world->ActiveLayout;
         if (game == null || game->CurrentTerritoryTypeId != 968 || layout == null) return;
-        var state = $"layout=0x{(nint)layout:X} init={layout->InitState} load={game->TerritoryLoadState} requested=P2 verified={LayoutQuery.MatchesDsrP2()}";
-        foreach (ushort key in new ushort[] {60988, 61049, 61050, 60991, 62172})
+        var environment = EnvManager.Instance();
+        var weather = environment == null ? (byte)0 : environment->ActiveWeather;
+        var state = $"layout=0x{(nint)layout:X} init={layout->InitState} load={game->TerritoryLoadState} renderedWeather={weather} verified={LayoutQuery.MatchesDsrEnvironment(weather)}";
+        foreach (ushort key in new ushort[] {60988, 61049, 61050, 60991, 62172, 61060, 61065, 65362, 5210, 5212, 5644})
         {
             var instances = LayoutQuery.CollectLayerInstances(key);
             var active = 0;

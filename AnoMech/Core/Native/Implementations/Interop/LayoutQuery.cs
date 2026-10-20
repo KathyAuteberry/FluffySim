@@ -44,6 +44,20 @@ internal static unsafe class LayoutQuery
     internal static bool MatchesDsrP2() => AnoMech.Core.Native.Policies.DsrP2LayoutState.Matches(layer =>
         CollectLayerInstances(layer).Select(p => (((ILayoutInstance*)p)->Id.InstanceKey, ((ILayoutInstance*)p)->IsActive)).ToArray());
 
+    internal static bool MatchesDsrEnvironment(byte weather) => weather switch
+    {
+        45 => MatchesDsrP2(),
+        3 => AnoMech.Core.Native.Policies.DsrEnvironmentState.MatchesNidhogg(layer =>
+            CollectLayerInstances(layer).Select(p =>
+            {
+                var instance = (ILayoutInstance*)p;
+                var collision = layer is 65362 or 5210 or 5212 or 5644;
+                return (instance->Id.InstanceKey, instance->IsActive,
+                    collision && instance->IsColliderLoaded(), collision && instance->IsColliderActive());
+            }).ToArray()),
+        _ => false,
+    };
+
     public static List<nint> CollectLayerInstances(ushort layerKey)
     {
         var lw = LayoutWorld.Instance();

@@ -140,6 +140,7 @@ namespace AnoMech.Core.Native.Implementations
     internal static class LayoutQuery
     {
         internal static bool MatchesDsrP2() => true;
+        internal static bool MatchesDsrEnvironment(byte weather) => weather is 3 or 45;
         public static List<nint> CollectLayerInstances(ushort layerKey) => new();
         public static string DescribeActiveLayers() => "(fake layout)";
         public static string DescribeLiveEffects() => "(fake effects)";

@@ -255,7 +255,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
         SaveOriginalWeather();
         ReceiveWeatherChange(weatherId, true, transition);
         var game = GameMain.Instance();
-        if (AnoMech.Offline.OfflineSession.InWorld && game != null && game->CurrentTerritoryTypeId == 968 && weatherId == 45)
+        if (game != null && DsrEnvironmentState.NeedsFinalization(game->CurrentTerritoryTypeId, weatherId, AnoMech.Offline.OfflineSession.InWorld))
             offlineWeatherTransition.Request(weatherId);
         StartWeatherDiagnostic(weatherId);
     }
@@ -333,33 +333,7 @@ public sealed unsafe partial class ZoneControl : IZoneControl
     {
         if (!IsActive) return;
         SendPendingWeather();
-        if (AnoMech.Offline.OfflineSession.InWorld)
-        {
-            var world = LayoutWorld.Instance();
-            var game = GameMain.Instance();
-            var layout = world == null ? null : world->ActiveLayout;
-            var ready = layout != null && layout->InitState == 7 && layout->TerritoryTypeId == 968
-                && game != null && game->CurrentTerritoryTypeId == 968 && game->TerritoryLoadState == 2;
-            var manager = WeatherManager.Instance();
-            if (manager != null)
-                offlineWeatherTransition.Tick(ready ? (nint)layout : 0,
-                    () => EnvManager.Instance() != null && EnvManager.Instance()->ActiveWeather == 45 && LayoutQuery.MatchesDsrP2() ? (byte)45 : (byte)0,
-                    wanted =>
-                    {
-                        var previous = manager->Weathers[ServerWeatherSlot];
-                        ReceiveWeatherChange(wanted, true, 0f);
-                        AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=ready-layout before={previous.CurrentWeatherId}/{previous.NextWeatherId} requested={wanted} actual={manager->Weathers[ServerWeatherSlot].CurrentWeatherId}/{manager->Weathers[ServerWeatherSlot].NextWeatherId}");
-                    },
-                    () =>
-                    {
-                        ref var weather = ref manager->Weathers[ServerWeatherSlot];
-                        var before = weather.CurrentWeatherId;
-                        var environment = EnvManager.Instance();
-                        var previousEnvironment = environment == null ? 0 : environment->ActiveWeather;
-                        PacketDispatcherPointers.UpdateWeatherManager(manager);
-                        AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=WeatherManager.Update server={before}->{weather.CurrentWeatherId} environment={previousEnvironment}->{(environment == null ? 0 : environment->ActiveWeather)} cached={manager->WeatherId} selector={manager->WeatherIndex}");
-                    });
-        }
+        TickDsrEnvironment();
 
         if (weatherDiagStartMs is not { } start) return;
         var elapsedMs = Environment.TickCount64 - start;
@@ -369,6 +343,40 @@ public sealed unsafe partial class ZoneControl : IZoneControl
             weatherDiagNextIndex++;
         }
         if (weatherDiagNextIndex >= WeatherDiagCheckpointsMs.Length) weatherDiagStartMs = null;
+    }
+
+    private void TickDsrEnvironment()
+    {
+        var world = LayoutWorld.Instance();
+        var game = GameMain.Instance();
+        var layout = world == null ? null : world->ActiveLayout;
+        var ready = layout != null && layout->InitState == 7 && layout->TerritoryTypeId == 968
+            && game != null && game->CurrentTerritoryTypeId == 968 && game->TerritoryLoadState == 2
+            && EnvManager.Instance() != null && EnvManager.Instance()->EnvScene != null;
+        var manager = WeatherManager.Instance();
+        if (manager != null)
+            offlineWeatherTransition.Tick(ready ? (nint)layout : 0,
+                () =>
+                {
+                    var environment = EnvManager.Instance();
+                    return environment != null && LayoutQuery.MatchesDsrEnvironment(environment->ActiveWeather)
+                        ? environment->ActiveWeather : (byte)0;
+                },
+                wanted =>
+                {
+                    var previous = manager->Weathers[ServerWeatherSlot];
+                    ReceiveWeatherChange(wanted, true, 0f);
+                    AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=ready-layout before={previous.CurrentWeatherId}/{previous.NextWeatherId} requested={wanted} actual={manager->Weathers[ServerWeatherSlot].CurrentWeatherId}/{manager->Weathers[ServerWeatherSlot].NextWeatherId}");
+                },
+                () =>
+                {
+                    ref var weather = ref manager->Weathers[ServerWeatherSlot];
+                    var before = weather.CurrentWeatherId;
+                    var environment = EnvManager.Instance();
+                    var previousEnvironment = environment == null ? 0 : environment->ActiveWeather;
+                    PacketDispatcherPointers.UpdateWeatherManager(manager);
+                    AnoMech.Core.DiagnosticLog.Info($"[OfflineWeather] monotonic={Stopwatch.GetTimestamp()} epoch={offlineWeatherTransition.Epoch} layout=0x{(nint)layout:X} source=WeatherManager.Update server={before}->{weather.CurrentWeatherId} environment={previousEnvironment}->{(environment == null ? 0 : environment->ActiveWeather)} cached={manager->WeatherId} selector={manager->WeatherIndex}");
+                });
     }
 
     private void LogWeatherDiagnostic(int checkpointMs)

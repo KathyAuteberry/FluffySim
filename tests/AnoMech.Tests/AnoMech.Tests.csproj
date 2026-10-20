@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Core/Native/Fixtures/DsrP2Layers.json" />
+    <EmbeddedResource Include="Core/Native/Fixtures/DsrP3Layers.json" />
     <ProjectReference Include="../../AnoMech/AnoMech.csproj" />
   </ItemGroup>
 
