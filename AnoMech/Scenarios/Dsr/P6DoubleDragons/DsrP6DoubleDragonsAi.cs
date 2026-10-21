@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Native.Interfaces;
+using AnoMech.Core;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Core.Game.Party.PartyRole;
@@ -16,7 +18,6 @@ public sealed class DsrP6DoubleDragonsAi : IScenarioAi<DsrP6DoubleDragonsState>
 
     private static readonly PartyRole[] GroupOne = [MainTank, RegenHealer, MeleeDpsA, PhysRangedDps];
     private static readonly PartyRole[] GroupTwo = [OffTank, ShieldHealer, MeleeDpsB, CasterDps];
-    private static readonly PartyRole[] LineupPriority = [MainTank, OffTank, RegenHealer, ShieldHealer, MeleeDpsA, MeleeDpsB, PhysRangedDps, CasterDps];
     private static readonly Vector2 FrontPairSpot = new(0f, 7.7f);
     private static readonly Vector2 WestPairSpot = new(-5.5f, 18.3f);
     private static readonly Vector2 EastPairSpot = new(5f, 18.3f);
@@ -26,7 +27,6 @@ public sealed class DsrP6DoubleDragonsAi : IScenarioAi<DsrP6DoubleDragonsState>
     private static readonly Vector2 SharedBusterSpot = new(0f, -9f);
     private const float VowSpreadRadius = 8f;
     private static readonly PartyRole[] VowSpreadClockwiseFromNorthNorthEast = [MainTank, RegenHealer, ShieldHealer, OffTank, MeleeDpsB, CasterDps, PhysRangedDps, MeleeDpsA];
-    private static readonly float[] SpreadLineX = [-0.5f, -7f, -13.5f, -20f];
     private const float NearStackX = 7.5f;
     private const float WallStackX = 17f;
     private const float HotTailLineZ = 13f;
@@ -42,11 +42,13 @@ public sealed class DsrP6DoubleDragonsAi : IScenarioAi<DsrP6DoubleDragonsState>
 
     private DsrP6DoubleDragonsState state = null!;
     private SimWorld world = null!;
+    private DsrWrothMarkers markers = null!;
 
     public void Run(DsrP6DoubleDragonsState stateParam, SimWorld worldParam)
     {
         state = stateParam;
         world = worldParam;
+        markers = new DsrWrothMarkers(state.Spreads, state.Stacks);
         var ai = new AiManager(world);
 
         Move(ai, 0.3f, () => AiMove.Create(PrePositionForTethers()).NaturalOrder());
@@ -58,6 +60,9 @@ public sealed class DsrP6DoubleDragonsAi : IScenarioAi<DsrP6DoubleDragonsState>
         Move(ai, DsrP6DoubleDragonsScenario.NidhoggCauterizeCast + 0.3f, () => AiMove.Create(HallowedWingsSpots()).NaturalOrder(), jitter: 0f, sprint: true);
         Move(ai, DsrP6DoubleDragonsScenario.HallowedWingsLands + 0.8f, () => AiMove.Create(VowHolderMeetsTank(state.VowTarget, MainTank, new Vector2(0f, 0f), new Vector2(0f, 9f))).NaturalOrder(), jitter: 0f);
         Move(ai, DsrP6DoubleDragonsScenario.VowPasses[0] + 0.4f, () => AiMove.Create(Cluster(Vector2.Zero, Enum.GetValues<PartyRole>())).NaturalOrder(), jitter: 0f);
+        if (state.StartTime == 0) world.Events.Add(DsrP6DoubleDragonsScenario.HraesvelgrCauterizeCast, () => DiagnosticLog.Info($"[Wroth] L-route start={AkhMornPath()[0]}, safe side={(StartCorner().X > 0 ? "East" : "West")}, corner={StartCorner()}"));
+        if (state.StartTime == 0)
+            world.Events.Add(DsrP6DoubleDragonsScenario.AkhMornHits[2] + .05f, () => DiagnosticLog.Info("[Wroth] Third hit dropped; turn toward the interior"));
         Move(ai, DsrP6DoubleDragonsScenario.HraesvelgrCauterizeCast + 0.25f, () => AiMove.Create(Cluster(AkhMornPath()[0], Enum.GetValues<PartyRole>())).NaturalOrder(), jitter: 0f, sprint: true);
         for (var i = 0; i < DsrP6DoubleDragonsScenario.AkhMornHits.Length; i++)
         {
@@ -248,20 +253,28 @@ public sealed class DsrP6DoubleDragonsAi : IScenarioAi<DsrP6DoubleDragonsState>
     {
         var (cx, cz) = StartCorner();
         Vector2 At(float x, float z) => new(cx * x, cz * z);
-        return [At(19.5f, 18.5f), At(11f, 18.5f), At(11.5f, 10f), At(3f, 12.5f), Vector2.Zero];
+        return [At(21f, 18.5f), At(14f, 18.5f), At(10.5f, 18.5f), At(3f, 12.5f), Vector2.Zero];
     }
 
     private Vector2?[] LineUpForWrothFlames()
     {
         var z = state.HotWing ? 0f : -StartCorner().Z * HotTailLineZ;
         var spots = new Vector2?[8];
-        var spreads = LineupPriority.Where(state.Spreads.Contains).ToList();
-        for (var i = 0; i < spreads.Count; i++) spots[(int)spreads[i]] = new Vector2(SpreadLineX[i], z);
-        var stacks = LineupPriority.Where(state.Stacks.Contains).ToList();
-        var partners = LineupPriority.Where(r => !state.Spreads.Contains(r) && !state.Stacks.Contains(r)).ToList();
-        var stackX = new[] { NearStackX, WallStackX };
-        for (var i = 0; i < stacks.Count; i++) spots[(int)stacks[i]] = new Vector2(stackX[i], z);
-        for (var i = 0; i < partners.Count && i < stackX.Length; i++) spots[(int)partners[i]] = new Vector2(stackX[i] + 0.5f, z);
+        foreach (var (role, sign) in markers.Assignments)
+        {
+            var x = sign switch
+            {
+                Sign.Attack1 => -20f,
+                Sign.Attack2 => -13.5f,
+                Sign.Attack3 => -7f,
+                Sign.Attack4 => -0.5f,
+                Sign.Bind1 or Sign.Bind2 => NearStackX,
+                Sign.Ignore1 or Sign.Ignore2 => WallStackX,
+                _ => throw new InvalidOperationException("Unexpected Wroth marker"),
+            };
+            spots[(int)role] = new Vector2(x, z);
+        }
+        DiagnosticLog.Info($"[Wroth] Marker destinations: {string.Join(", ", markers.Assignments.Select(m => $"{m.Key}={m.Value}@{spots[(int)m.Key]}"))}");
         return spots;
     }
 
