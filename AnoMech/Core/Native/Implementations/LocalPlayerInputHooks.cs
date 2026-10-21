@@ -24,6 +24,14 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 {
     public event Action<ActionType, uint, ulong>? ActionExecuted;
     public event Action? CastCancelRequested;
+    public ushort? LastUsedActionSequence
+    {
+        get
+        {
+            var manager = ActionManager.Instance();
+            return manager != null ? manager->LastUsedActionSequence : null;
+        }
+    }
     public bool PauseInput { get; set; }
     public bool TransitionInput { get; set; }
 
@@ -198,12 +206,26 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
         ScanAndLogActiveStatuses();
     }
 
+    private void LogProvokeInput(ActionType type, uint action, ulong rawTarget, ulong? selectedTarget, string entry, bool? result, string reason)
+    {
+        if (type != ActionType.Action || action != 7533) return;
+        var selection = selectedTarget is { } selected ? $"0x{selected:X}" : "unavailable";
+        Core.DiagnosticLog.Info($"[ProvokeInput] event=observed entry={entry} offline={AnoMech.Offline.OfflineSession.InWorld} action={action} rawTarget=0x{rawTarget:X} selectedTarget={selection} nativeResult={result} reason={reason} sequence={LastUsedActionSequence} pause={PauseInput} transition={TransitionInput}");
+    }
+
     private bool UseActionDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* outOptAreaTargeted)
     {
-        if (PauseInput || TransitionInput) return false;
+        if (PauseInput || TransitionInput)
+        {
+            LogProvokeInput(actionType, actionId, targetId, null, "UseAction", false, "input-locked");
+            return false;
+        }
         RecordRecentAction(actionId, actionType);
+        var selectedTarget = actionType == ActionType.Action && actionId == 7533 ? Plugin.TargetManager.Target?.GameObjectId ?? 0 : 0;
+        LogProvokeInput(actionType, actionId, targetId, selectedTarget, "UseAction", null, "button");
         ZoneControl.VerifyActionIsolation();
         var result = useActionHook.Original(self, actionType, actionId, targetId, extraParam, mode, comboRouteId, outOptAreaTargeted);
+        LogProvokeInput(actionType, actionId, targetId, selectedTarget, "UseAction", result, "native-result");
         if (result)
         {
             actionUsedSincePoll = true;
@@ -214,9 +236,16 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     private bool UseActionLocationDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam, byte a7)
     {
-        if (PauseInput || TransitionInput) return false;
+        if (PauseInput || TransitionInput)
+        {
+            LogProvokeInput(actionType, actionId, targetId, null, "UseActionLocation", false, "input-locked");
+            return false;
+        }
+        var selectedTarget = actionType == ActionType.Action && actionId == 7533 ? Plugin.TargetManager.Target?.GameObjectId ?? 0 : 0;
+        LogProvokeInput(actionType, actionId, targetId, selectedTarget, "UseActionLocation", null, "button");
         ZoneControl.VerifyActionIsolation();
         var result = useActionLocationHook.Original(self, actionType, actionId, targetId, location, extraParam, a7);
+        LogProvokeInput(actionType, actionId, targetId, selectedTarget, "UseActionLocation", result, "native-result");
         if (result)
         {
             actionUsedSincePoll = true;

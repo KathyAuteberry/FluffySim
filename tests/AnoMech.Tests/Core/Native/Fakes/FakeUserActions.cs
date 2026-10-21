@@ -9,7 +9,8 @@ internal sealed class FakeUserActions : IUserActions
     public void Enable() => Enabled = true;
     public void Disable() => Enabled = false;
     public void OnSessionStart() { }
-    public void OnScenarioStart() { }
+    public Action? ScenarioStarting { get; set; }
+    public void OnScenarioStart() => ScenarioStarting?.Invoke();
     public void OnSessionEnd() { }
     public int Pauses { get; private set; }
     public int Resumes { get; private set; }

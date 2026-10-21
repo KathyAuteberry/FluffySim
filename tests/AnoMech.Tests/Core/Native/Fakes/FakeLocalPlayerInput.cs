@@ -8,7 +8,15 @@ namespace AnoMech.Tests;
 // Nobody at the keyboard, unless a test holds a movement key.
 internal sealed class FakeLocalPlayerInput : ILocalPlayerInput
 {
-    public event Action<ActionType, uint, ulong>? ActionExecuted { add { } remove { } }
+    public event Action<ActionType, uint, ulong>? ActionExecuted;
+    public ushort? LastUsedActionSequence { get; set; } = 0;
+
+    public void ReportNativeExecution(ActionType type, uint action, ulong target, ushort sequence, bool nativeResult = true)
+    {
+        LastUsedActionSequence = sequence;
+        if (nativeResult && !PauseInput && !TransitionInput)
+            ActionExecuted?.Invoke(type, action, target);
+    }
 
     public bool PauseInput { get; set; }
     public bool TransitionInput { get; set; }

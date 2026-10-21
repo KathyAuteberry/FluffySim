@@ -27,7 +27,6 @@ public sealed unsafe class UserActions : IUserActions
         new ResetHandler(),
         new SprintHandler(),
         new CastTimeHandler(),
-        new LocalProvokeHandler(),
         new JobActionHandler(),
         new LimitBreakHandler(),
         new SamuraiStateHandler(),
@@ -86,9 +85,8 @@ public sealed unsafe class UserActions : IUserActions
     public void OnScenarioStart()
     {
         if (!SimActive) return;
-        var am = ActionManager.Instance();
-        if (am != null) processedSeq = am->LastUsedActionSequence;
-        foreach (var action in PracticeDefensiveActions.RecastsForJob(Plugin.PlayerState.ClassJob.RowId))
+        if (hooks.LastUsedActionSequence is { } seq) processedSeq = seq;
+        foreach (var action in PracticeDefensiveActions.RecastsForJob(Natives.BattleCharas.LocalPlayer.ClassJob))
             Natives.Zone.ResetPracticeRecast(action);
         pendingResolve = false;
         pausedCast.Clear();
@@ -142,14 +140,22 @@ public sealed unsafe class UserActions : IUserActions
 
     private void OnActionExecuted(ActionType actionType, uint actionId, ulong targetId)
     {
-        if (!SimActive || hooks.PauseInput) return;
-        var am = ActionManager.Instance();
-        if (am == null) return;
-        var seq = am->LastUsedActionSequence;
-        if (seq == processedSeq) return; // queued press / re-entrant fire — already handled
+        var provoke = actionType == ActionType.Action && actionId == 7533;
+        void Rejected(string reason)
+        {
+            if (provoke) Core.DiagnosticLog.Info($"[ProvokeInput] event=dispatch-rejected reason={reason} target=0x{targetId:X}");
+        }
+        if (!SimActive || hooks.PauseInput || hooks.TransitionInput) { Rejected("inactive-or-input-locked"); return; }
+        if (hooks.LastUsedActionSequence is not { } seq) { Rejected("action-manager-unavailable"); return; }
+        if (seq == processedSeq) { Rejected("unchanged-execution-sequence"); return; }
         processedSeq = seq;
 
         if (actionType == ActionType.Action) Natives.Zone.NotePracticeAction(actionId);
+        if (provoke)
+        {
+            new LocalProvokeHandler().OnAction(actionType, actionId, targetId);
+            return;
+        }
         if (actionType == ActionType.Action && PracticeDefensiveActions.Apply(Plugin.Game?.Player, actionId)) return;
         // Effects resolve when the cast finishes. Instant (or made instant) → now; a real cast bar
         // this action started → deferred to completion (see ResolvePendingCast). The ActionId match
@@ -209,5 +215,9 @@ public sealed unsafe class UserActions : IUserActions
         pendingMax = 0;
     }
 
-    public void Dispose() => hooks.ActionExecuted -= OnActionExecuted;
+    public void Dispose()
+    {
+        hooks.ActionExecuted -= OnActionExecuted;
+        hooks.CastCancelRequested -= OnCastCanceled;
+    }
 }

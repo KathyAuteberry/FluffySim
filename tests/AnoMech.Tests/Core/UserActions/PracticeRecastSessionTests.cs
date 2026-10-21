@@ -17,7 +17,7 @@ public class PracticeRecastSessionTests
 
     [TestCase(36920u)] [TestCase(36923u)] [TestCase(36927u)] [TestCase(36935u)]
     [TestCase(3540u)] [TestCase(7388u)] [TestCase(16471u)] [TestCase(16160u)]
-    [TestCase(3u)] [TestCase(30u)] [TestCase(43u)] [TestCase(3638u)] [TestCase(16152u)] [TestCase(7548u)] [TestCase(7559u)]
+    [TestCase(7533u)] [TestCase(3u)] [TestCase(30u)] [TestCase(43u)] [TestCase(3638u)] [TestCase(16152u)] [TestCase(7548u)] [TestCase(7559u)]
     public void ResetIsLocalAndRestoresPreexistingCooldownWithWallTimeElapsed(uint action)
     {
         var store = new Store();
