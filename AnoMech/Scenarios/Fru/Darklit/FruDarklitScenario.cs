@@ -88,7 +88,6 @@ public sealed class FruDarklitScenario : IScenario
         FragmentHealth = FragmentMaximumHealth;
         Array.Clear(towerStates);
         world.Events.Add(0, SpawnActors);
-        world.Events.Add(2.01f, ShowInitialWaterIndicators);
         world.Events.Add(2.1f, () => { shiva.Cast(FruDarklitActions.Darklit); oracle.Cast(FruDarklitActions.OracleDarklit); });
         world.Events.Add(7.083f, AssignWater);
         world.Events.Add(7.928f, AssignChains);
@@ -130,16 +129,13 @@ public sealed class FruDarklitScenario : IScenario
     }
     private SimEnemy Helper(Vector3 position)
     { var actor = helpers[helperIndex++]; actor.SetPosition(position); return actor; }
-    private void ShowInitialWaterIndicators()
-    {
-        foreach (var role in new[] { state.Pattern.TetherWater, state.Pattern.UntetherWater }) world.Party.Get(role)!.AttachLockonVfx(62, 5.1f, persistent: false);
-    }
     private void AssignWater()
     {
         foreach (var role in new[] { state.Pattern.TetherWater, state.Pattern.UntetherWater })
         {
-            world.Party.Get(role)!.AddStatus(2461, 19);
-            
+            var target = world.Party.Get(role)!;
+            target.AddStatus(2461, 19);
+            target.AddStatus(2458, 14);
         }
     }
     private void AssignChains()
@@ -346,7 +342,7 @@ public sealed class FruDarklitScenario : IScenario
         ClearFate(); somberVulnerable.Clear(); towerVisible = WingsVisible = false;
         ClearPathPresentation();
         foreach (var actor in actors) actor.Despawn(); actors.Clear();
-        foreach (var member in world.Party.ActiveMembers()) foreach (var id in new ushort[] { 2253, 2255, 2257, 2461 }) member.RemoveStatus(id);
+        foreach (var member in world.Party.ActiveMembers()) foreach (var id in new ushort[] { 2253, 2255, 2257, 2458, 2461 }) member.RemoveStatus(id);
         foreach (var index in new byte[] { 0x2A, 0x2B, 0x2E }) world.Map.AddEffect(0x00040004, index);
     }
     private void ClearPathPresentation()
