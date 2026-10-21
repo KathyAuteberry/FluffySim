@@ -1,3 +1,17 @@
+# FluffySim 3.0.1.0 — release prepared
+
+## Fixed
+
+- FRU Paradise Regained now uses the correct Mana DPS tower assignments: D1/D2 cross to the far tower that was just cleaved, while D3/D4 take the near tower. Both wing orders, rotating tower patterns and continuous P5 use the corrected assignment; H1/H2 retain the first tower.
+- DSR Wroth Flames now follows the primary Elemental L-shaped dodge: three horizontal Akh Morn drops, then an inward curve for the fourth, mirrored for the safe side and Sable Price pattern.
+- Wroth Flames now assigns all eight players local-only automarkers using the existing practice marker renderer. Purple spreads use Attack 1–4 West; Bind 1/2 form the inner East stack pair, and Ignore 1/2 form the East-wall pair. Bots follow those marker identities while encounter debuffs remain randomized.
+- Wroth markers clear on completion, failure, Restart and Leave. Overlapping Flames stacks now enforce Fire Resistance Down, while persistent puddles, bleed punishment and the quick Mortal Vow handoff remain intact.
+
+## Verification and practice limitations
+
+- Added deterministic tower occupancy/recipient checks, complete mirrored Wroth clears, all 420 valid marker configurations, and human movement checks with reaction delay and position slack. Thanks to Adodo [DOZY] for reporting the strategy discrepancies.
+- Wroth event timings and puddle exposure behavior remain provisional. Native marker rendering and movement readability still need in-game confirmation; headless clears do not replace those client checks.
+
 # FluffySim 3.0.0.0 — release prepared
 
 ## Added
