@@ -37,6 +37,7 @@ public sealed class DsrP4RescueSequence(SimWorld world)
         world.Events.Add(at, PrepareArena);
         world.Events.Add(at + 19.9f, SpawnCharibert);
         world.Events.Add(at + 20.3f, SpawnPrison);
+        world.Events.Add(at + 21.85f, () => prisonActive = true);
         world.Events.Add(at + 55.6f, ReleasePrison);
         world.Events.Add(at + 20f, () => charibert.Cast(25316));
         world.Events.Add(at + 26.6f, SpawnFriend);
@@ -72,8 +73,16 @@ public sealed class DsrP4RescueSequence(SimWorld world)
     {
         prison = world.SpawnEventObject(new() { EObjId = 0x1EB681, Placement = new(new(-11, 0, 0), MathF.PI / 2) });
         prison?.EObjSetState(1, 0);
-        prisonActive = true;
-        foreach (var member in world.Party.ActiveMembers()) member.AddStatus(2662);
+        var grinnaux = Spawn(12602, 3639, new(-11, 0, 0));
+        grinnaux.Cast(25313);
+        foreach (var member in world.Party.ActiveMembers())
+        {
+            world.Tether(grinnaux, member, 0x35, duration: 2);
+            member.AddStatus(0x95, 1);
+            member.AddStatus(2662);
+            if (Vector3.Distance(member.Position, new Vector3(-11, 0, 0)) > 7)
+                member.CarryTo(new(-11, 0, 1));
+        }
     }
 
     private void ReleasePrison()

@@ -140,7 +140,6 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
             new[] { PartyRole.PhysRangedDps, PartyRole.CasterDps },
             new[] { PartyRole.MainTank, PartyRole.OffTank },
         };
-        ai.Move(110f, () => AiMove.Create(Stacked(new(-11, 1))).NaturalOrder(), jitter: 0, sprint: true);
         for (var i = 0; i < pairs.Length; i++)
         {
             var pair = pairs[i];

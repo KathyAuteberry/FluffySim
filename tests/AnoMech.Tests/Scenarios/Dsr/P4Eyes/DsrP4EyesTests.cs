@@ -12,6 +12,33 @@ public class DsrP4EyesTests
         from difficulty in new[] { BotDifficulty.Easy, BotDifficulty.Hard }
         select new TestCaseData(role, difficulty);
 
+    [TestCase(PartyRole.MainTank)]
+    [TestCase(PartyRole.CasterDps)]
+    public void PrisonCarriesStationaryHumanAndBotsBeforeRestrictingArena(PartyRole role)
+    {
+        FakeGame? native = null;
+        var checkedPull = false;
+        var run = ScenarioRun.Execute(typeof(DsrP4EyesScenario), 0, 100, new()
+        {
+            PlayerRole = role, StopAt = 114.2f,
+            ConfigureNative = f => native = f,
+            Takeovers = [new(111f, new System.Numerics.Vector2(10, -10)),
+                new(111f, new System.Numerics.Vector2(10, 10), Bot: PartyRole.OffTank)],
+            Probe = p =>
+            {
+                if (!p.Crossed(113.9f)) return;
+                Assert.That(native!.Timeline.Rows.Any(r => r["kind"] == "ac_self" && r["id"] == "0xF1"), Is.True);
+                foreach (var member in p.World.Party.ActiveMembers())
+                    Assert.That(System.Numerics.Vector3.Distance(member.Position, new(-11, 0, 0)), Is.LessThan(7));
+                checkedPull = true;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedPull, Is.True);
+        Assert.That(native!.BattleCharas.OccupiedSlots, Is.Zero);
+        Assert.That(native.EventObjects.OccupiedSlots, Is.Zero);
+    }
+
     [TestCaseSource(nameof(Seats))]
     public void EverySeatTradesColoursAndUsesNorthRelativeMirageSwaps(PartyRole role, BotDifficulty difficulty)
     {
@@ -58,7 +85,7 @@ public class DsrP4EyesTests
         Assert.That(native.EventObjects.OccupiedSlots, Is.Zero);
     }
 
-    [TestCase(0f)] [TestCase(34f)] [TestCase(42f)] [TestCase(61f)] [TestCase(92f)] [TestCase(119f)] [TestCase(143f)] [TestCase(165f)]
+    [TestCase(0f)] [TestCase(34f)] [TestCase(42f)] [TestCase(61f)] [TestCase(92f)] [TestCase(112.5f)] [TestCase(113.3f)] [TestCase(119f)] [TestCase(143f)] [TestCase(165f)]
     public void ReusedScenarioReleasesActorsStatusesAndTethers(float stop)
     {
         var scenario = new DsrP4EyesScenario();
@@ -123,7 +150,7 @@ public class DsrP4EyesTests
         if (useLb) Assert.That(run.Passed, run.ToString);
     }
 
-    [TestCase(42f)] [TestCase(61f)] [TestCase(131f)]
+    [TestCase(42f)] [TestCase(61f)] [TestCase(112.5f)] [TestCase(131f)]
     public void PauseFreezesEyesAndRescueThenBotsFinish(float at)
     {
         FakeGame native = null!;

@@ -118,14 +118,17 @@ public class DsrP1KnightsTests
     [TestCase(PartyRole.MainTank)] [TestCase(PartyRole.CasterDps)]
     public void PrisonPhysicallyPullsAStationaryHumanAndBotsBeforeBoundaryActivation(PartyRole role)
     {
+        FakeGame? native = null;
         var checkedPull = false;
         var run = ScenarioRun.Execute(typeof(DsrP1KnightsScenario), 0, 0, new()
         {
             PlayerRole = role, StopAt = 115,
+            ConfigureNative = f => native = f,
             Takeovers = [new(110.2f, new System.Numerics.Vector2(0, -10))],
             Probe = p =>
             {
                 if (!p.Crossed(114.1f)) return;
+                Assert.That(native!.Timeline.Rows.Any(r => r["kind"] == "ac_self" && r["id"] == "0xF1"), Is.True);
                 foreach (var member in p.World.Party.ActiveMembers())
                     Assert.That(System.Numerics.Vector3.Distance(member.Position, DsrP1KnightsState.PrisonCentre), Is.LessThan(7));
                 checkedPull = true;
