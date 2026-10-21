@@ -1,3 +1,21 @@
+# FluffySim 3.0.2.0 — release prepared
+
+## Fixed
+
+- FRU Darklit Dragonsong now shows native overhead Dark Water indicators on both assigned players, including bots, with cleanup on resolution, Restart and Leave.
+- FRU Crystallize Time now calculates Hallowed Wings damage by actual hit order, including Magic Vulnerability Up, active mitigation, shields and remaining HP. The full simulated Mana party-support plan covers both Wings; correctly positioned DPS and healers do not need extra personal mitigation. The reported D3 fourth-to-third hit order no longer causes an automatic vulnerability death, while genuinely lethal damage and mechanic failures remain punishable.
+- DSR Wrath and Death of the Heavens now show Vedrfolnir's Twisting Dive cast in the native Enemy List while preserving the dragon's untargetability and existing attack timing.
+- Both P5 tankbuster sequences accept local human Provoke during Heavenly Heel without requiring tank stance. MT takes Heavenly Heel and a valid ST swap controls all three Ascalon's Might hits; missed swaps, cleave positioning and mitigation requirements remain meaningful.
+- Wrath's former Skyward Leap and Spiral Pierce targets now follow a clockwise Twister dodge relative to the white dragon, starting after their attacks resolve and continuing into their spreads. Human-controlled assignments retain responsibility for their own movement.
+
+## Improved
+
+- Integrates upstream multiplayer improvements for action, cast, interruption and auto-attack presentation; remote walking and jumps; spawn appearance; status-source retention; shared limit-break gauge; and party result marks.
+- Improves peer startup ordering, connection-lag handling and delayed Black Hole tether acquisition.
+- Registers upstream duty text before zone loading, preserving FluffySim's native environment readiness, FRU arena setup and JP Mana/Elemental defaults.
+
+Thanks to Adodo [DOZY] and the community testers for the reports and native retesting. Damage budgets and some presentation remain simulation approximations. Multiplayer participants should use matching plugin builds.
+
 # FluffySim 3.0.1.0 — release prepared
 
 ## Fixed
