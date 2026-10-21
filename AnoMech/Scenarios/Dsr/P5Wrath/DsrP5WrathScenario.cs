@@ -151,7 +151,7 @@ public sealed class DsrP5WrathScenario : IScenario
         { Area = new() { Size = MathF.PI / 4 } }, world.Party.Get(PartyRole.MainTank));
     private void SpawnTrio()
     {
-        dragon = Spawn(BNpcBaseId.Vedrfolnir, BNpcNameId.Vedrfolnir, state.DragonSpot);
+        dragon = Spawn(BNpcBaseId.Vedrfolnir, BNpcNameId.Vedrfolnir, state.DragonSpot, true);
         dragoons[0] = Spawn(BNpcBaseId.Ignasse, BNpcNameId.Ignasse, state.DragoonSpot(0));
         dragoons[1] = Spawn(BNpcBaseId.Vellguine, BNpcNameId.Vellguine, state.DragoonSpot(1));
         leap = Spawn(BNpcBaseId.Paulecrain, BNpcNameId.Paulecrain, AtBearing(state.DragonBearing + 180, 23));

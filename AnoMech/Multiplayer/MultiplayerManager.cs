@@ -57,6 +57,10 @@ public sealed partial class MultiplayerManager : IDisposable
     private bool peerEnteredInstance;
     private bool peerEntryQueued;
     private bool peerRunStarted;
+    // From our run's start until it is up, nothing more is taken from the host: the host set its
+    // own run up before sending any of it, and its packets need that setup here too (the run's
+    // strings and files, its preloads).
+    private bool peerRunStartPending;
     private RunScenarioParams? peerRunParams;
     // The host's packets that came before our entry completed.
     private readonly List<GamePacket> earlyPackets = new();
@@ -95,6 +99,9 @@ public sealed partial class MultiplayerManager : IDisposable
     // Leaves held back by that grace: confirmed unless the peer is heard from again.
     private readonly Dictionary<Guid, long> deferredLeaveMs = new();
     private readonly Dictionary<Guid, float> peerLatencyMs = new();
+    // Host: when the recent pings went out, and the newest each peer has answered (PingClockMs).
+    private readonly Queue<long> pingsSentMs = new();
+    private readonly Dictionary<Guid, long> answeredPingMs = new();
     private readonly HashSet<Guid> warnedStalePeers = new();
     // Rebuilt by the host each ping cycle and broadcast (PeerStatusMessage).
     private readonly Dictionary<Guid, PeerStatusEntry> peerStatuses = new();
@@ -142,11 +149,31 @@ public sealed partial class MultiplayerManager : IDisposable
     private object? debugShadowStateGeneric;
     private bool debugBotReplayStarted;
 
+    // Every client judges a seat its debug bot plays as a bot (SimParty.IsBotDriven), so the roster
+    // carries it: a peer's Hello goes again until a lobby state shows it.
     public bool SetDebugBotControlled(bool value)
     {
         if (running) return false;
+        if (debugBotControlled == value) return true;
         debugBotControlled = value;
+        if (IsHost)
+        {
+            SetDebugBot(MyPeerId, value);
+            if (relay != null) BroadcastLobbyState();
+        }
+        else if (SessionCode != null)
+        {
+            helloAcknowledged = false;
+            helloRetryTimer = 0f;
+            Transmit(NewHello(LocalClassJob));
+        }
         return true;
+    }
+
+    private void SetDebugBot(Guid peerId, bool debugBot)
+    {
+        if (debugBot) Session.DebugBots.Add(peerId);
+        else Session.DebugBots.Remove(peerId);
     }
 
     // ---- Reconnection --------------------------------------------------------
@@ -405,11 +432,14 @@ public sealed partial class MultiplayerManager : IDisposable
         peerRunParams = null;
         peerEnteredInstance = false;
         peerRunStarted = false;
+        peerRunStartPending = false;
         earlyPackets.Clear();
         peerLastSeenMs.Clear();
         peerLastHelloMs.Clear();
         deferredLeaveMs.Clear();
         peerLatencyMs.Clear();
+        pingsSentMs.Clear();
+        answeredPingMs.Clear();
         peerStatuses.Clear();
         warnedStalePeers.Clear();
         pingTimer = 0f;
@@ -516,9 +546,17 @@ public sealed partial class MultiplayerManager : IDisposable
         DiagnosticLog.Info($"[Multiplayer] Reconnected to session {SessionCode}.");
         lastHostMessageMs = NowMs;
         ConnectionError = null;
+        // The poses sent meanwhile went with the link.
+        lastSelfPose = null;
+        lastRoles = null;
         // Re-registering with the host resumes a running scenario the same way a late join does.
         if (!IsHost) _ = SendHelloAsync(relay);
-        else foreach (var peerId in pendingRelayUnbans) _ = relay.ModerateAsync("unban", peerId);
+        else
+        {
+            foreach (var peerId in pendingRelayUnbans) _ = relay.ModerateAsync("unban", peerId);
+            // The drop lost the pings in flight; nobody fell behind on those.
+            foreach (var peerId in answeredPingMs.Keys.ToList()) answeredPingMs[peerId] = PingClockMs();
+        }
         pendingRelayUnbans.Clear();
         LobbyChanged?.Invoke();
     }
@@ -718,11 +756,13 @@ public sealed partial class MultiplayerManager : IDisposable
         Session.Names.Remove(peerId);
         stream?.Forget(peerId);
         Session.Builds.Remove(peerId);
+        Session.DebugBots.Remove(peerId);
         peerConnectionIds.Remove(peerId);
         peerLastSeenMs.Remove(peerId);
         peerLastHelloMs.Remove(peerId);
         deferredLeaveMs.Remove(peerId);
         peerLatencyMs.Remove(peerId);
+        answeredPingMs.Remove(peerId);
         peerStatuses.Remove(peerId);
         warnedStalePeers.Remove(peerId);
         startCheckFailures.Remove(peerId);
@@ -767,20 +807,22 @@ public sealed partial class MultiplayerManager : IDisposable
         helloRetryTimer += deltaSeconds;
         if (helloRetryTimer < HelloRetrySeconds) return;
         helloRetryTimer = 0f;
-        DiagnosticLog.Info($"[Multiplayer] No lobby state naming us yet -- re-sending Hello to session {SessionCode}.");
+        DiagnosticLog.Info($"[Multiplayer] No lobby state with our Hello yet -- re-sending Hello to session {SessionCode}.");
         Transmit(NewHello(LocalClassJob));
     }
 
-    // The host only learns our name from a Hello, so being in the roster is the acknowledgement.
+    // The host only learns our name and debug-bot mode from a Hello, so a roster with both is the
+    // acknowledgement.
     private void NoteHelloAcknowledged()
     {
-        if (helloAcknowledged || !Session.Names.ContainsKey(MyPeerId)) return;
+        if (helloAcknowledged || !Session.Names.ContainsKey(MyPeerId) || Session.DebugBots.Contains(MyPeerId) != debugBotControlled) return;
         helloAcknowledged = true;
         DiagnosticLog.Info("[Multiplayer] Host's lobby state now names us -- Hello acknowledged.");
     }
 
     private void BroadcastLobbyState()
     {
+        TagBotSeats();
         LobbyChanged?.Invoke();
         _ = Send(LobbyMessage());
     }
@@ -1024,10 +1066,11 @@ public sealed partial class MultiplayerManager : IDisposable
             return;
         }
         recorder?.TagSeats(Plugin.Game.World.Party);
+        TagBotSeats();
         hostStageSetFor = 0f;
     }
 
-    // Peers only hear Start once the host's own run exists, after its first packets.
+    // Peers only hear Start once the host's own run exists.
     private void OnHostStartResolved(string? refusal)
     {
         // Ended while the start was queued.
@@ -1042,14 +1085,17 @@ public sealed partial class MultiplayerManager : IDisposable
             return;
         }
         recorder?.TagSeats(Plugin.Game.World.Party);
+        TagBotSeats();
     }
 
-    // On the run's first tick, when its clock reads what a peer syncs to.
+    // On the run's first tick, when its clock reads what a peer syncs to. Ahead of the run's
+    // packets: a peer sets its own run up first, as this host did before sending them.
     private void AnnounceStart()
     {
-        FlushPackets(force: true);
+        lastRoles = null;
         _ = Send(LobbyMessage());
         _ = Send(new StartMessage(HostRunClock()));
+        FlushPackets(force: true);
     }
 
     // Starting from zero would leave this run behind the host's by the host's load time plus the
@@ -1104,6 +1150,15 @@ public sealed partial class MultiplayerManager : IDisposable
     internal Dictionary<PartyRole, NetworkSeat> ClaimedRoleSeats() =>
         Session.ClaimedBy.Where(kv => kv.Value != MyPeerId)
             .ToDictionary(kv => kv.Key, kv => new NetworkSeat(Session.NameOf(kv.Value), Session.JobOf(kv.Value)));
+
+    // After every seating and roster change. A seat nobody claimed is the host's bot.
+    private void TagBotSeats()
+    {
+        var party = Plugin.Game.World.Party;
+        foreach (var role in Enum.GetValues<PartyRole>())
+            if (party.Get(role) is SimNetworkPuppet puppet)
+                puppet.BotDriven = Session.ClaimedBy.TryGetValue(role, out var player) ? Session.DebugBots.Contains(player) : !IsHost;
+    }
 
     private static byte LocalClassJob => Natives.BattleCharas.LocalPlayer.ClassJob;
 

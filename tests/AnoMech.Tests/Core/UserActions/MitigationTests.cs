@@ -78,6 +78,6 @@ public class MitigationTests
     {
         foreach (var (id, m) in Mitigation.ByStatusId)
             if (m.IsShield)
-                Assert.That(m with { ShieldHp = 0f, ShieldPotency = 0f }, Is.EqualTo(default(Mitigation)), $"status {id}");
+                Assert.That(m with { ShieldHp = 0f, ShieldPotency = 0f, ShieldAmount = 0f }, Is.EqualTo(default(Mitigation)), $"status {id}");
     }
 }

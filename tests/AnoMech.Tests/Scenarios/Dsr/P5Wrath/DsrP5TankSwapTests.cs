@@ -37,9 +37,16 @@ public class DsrP5TankSwapTests
     public void CorrectSwapStillRequiresUnexpiredHumanStMitigation(bool wrath)
         => Run(wrath, PartyRole.OffTank, true, false);
 
-    private static void Run(bool wrath, PartyRole human, bool provoke, bool mitigate, int job = 19, bool reclaim = false)
+    [TestCase(PartyRole.MainTank)] [TestCase(PartyRole.OffTank)]
+    public void RepeatedWrathEntryRebuildsAggroThroughCompletion(PartyRole human)
     {
-        IScenario scenario = wrath ? new DsrP5WrathScenario() : new DsrP5DeathScenario();
+        var scenario = new DsrP5WrathScenario();
+        for (var repeat = 0; repeat < 2; repeat++) Run(true, human, true, true, previous: scenario);
+    }
+
+    private static void Run(bool wrath, PartyRole human, bool provoke, bool mitigate, int job = 19, bool reclaim = false, IScenario? previous = null)
+    {
+        IScenario scenario = previous ?? (wrath ? new DsrP5WrathScenario() : new DsrP5DeathScenario());
         TankSwapSequence Sequence() => (wrath ? ((DsrP5WrathScenario)scenario).TankSwap : ((DsrP5DeathScenario)scenario).TankSwap)!;
         var begin = wrath ? 72f : 61.1f;
         var swap = wrath ? 77f : 66f;
@@ -47,7 +54,7 @@ public class DsrP5TankSwapTests
         var run = ScenarioRun.Execute(scenario.GetType(), 0, 0, new()
         {
             PlayerRole = human, UserActionsEnabled = true, ScenarioFactory = () => scenario,
-            StopAt = wrath ? 83 : 72,
+            StopAt = wrath ? 89 : 72,
             ConfigureNative = f => f.BattleCharas.Player.ClassJob = (byte)job,
             Takeovers = human == PartyRole.MainTank
                 ? [new(begin, new Vector2(-2, 4)), new(swap, new Vector2(-6, 0))]
@@ -69,6 +76,7 @@ public class DsrP5TankSwapTests
             }, WriteArtifactsOnFailure = false,
         });
         var snapshots = Sequence().Snapshots;
+        foreach (var hit in snapshots) TestContext.WriteLine($"t={hit.Time:F2} action={hit.Action} holder={hit.Target} recipients=[{string.Join(",", hit.Recipients)}] statuses=[{string.Join(",", hit.TargetStatuses)}]");
         Assert.That(snapshots.First().Target, Is.EqualTo(PartyRole.MainTank));
         Assert.That(snapshots.First().Recipients, Is.EqualTo(new[] { PartyRole.MainTank }));
         Assert.That(snapshots.First().TargetStatuses, Does.Contain(DsrP5Constants.StatusId.SlashingResistanceDown));
@@ -92,6 +100,7 @@ public class DsrP5TankSwapTests
             return;
         }
         Assert.That(run.Passed, run.ToString);
+        if (wrath) Assert.That(((DsrP5WrathScenario)scenario).Completed, Is.True);
         Assert.That(snapshots, Has.Count.EqualTo(4));
         foreach (var hit in snapshots.Skip(1))
         {

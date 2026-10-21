@@ -50,6 +50,11 @@ public sealed class InstanceSession
         // ZoneControl.Enter asks once more before the firewall goes up.
         refusal = Natives.Zone.StartBlockedReason(out _)
                   ?? (Natives.BattleCharas.LocalPlayer.Exists ? null : "no local player");
+        if (refusal is null && !Natives.Zone.IsActive && zone.DutyInitData is { } init)
+        {
+            foreach (var record in init.Rsv) Natives.Rsv.Add(record);
+            foreach (var record in init.Rsf) Natives.Rsf.Add(record);
+        }
         var spawn = zone.PlayerSpawn;
         if (refusal is null && !Natives.Zone.IsActive && !Natives.Zone.Enter(zone.TerritoryId, zone.Origin + spawn))
             refusal = "the zone was not entered (see the log)";
@@ -200,7 +205,7 @@ public sealed class InstanceSession
             GimmickId = entrance.WallLayoutId,
             TargetableStatus = 5,
         };
-        entranceBarrier = Natives.EventObjects.Spawn(config, world.Coordinates.ToGlobal(new Placement(entrance.Position, 0f)));
+        entranceBarrier = Natives.EventObjects.Spawn(config, world.Coordinates.ToGlobal(new Placement(entrance.Position, entrance.Rotation)));
         if (entranceBarrier is not null) entranceBarrierOpenIn = EntranceBarrierOpenTime;
     }
 

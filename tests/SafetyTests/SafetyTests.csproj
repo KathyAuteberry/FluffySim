@@ -41,6 +41,7 @@
     <Compile Include="../../AnoMech/Core/UserActions/PracticeRecastSession.cs" Link="Plugin/PracticeRecastSession.cs" />
     <Compile Include="../../AnoMech/Core/UserActions/NativePracticeRecastStore.cs" Link="Plugin/NativePracticeRecastStore.cs" />
     <Compile Include="../../AnoMech/Multiplayer/NetGuard.cs" Link="Plugin/NetGuard.cs" />
+    <Compile Include="../../AnoMech/Multiplayer/PacketRules.cs" Link="Plugin/PacketRules.cs" />
   </ItemGroup>
 
   <ItemGroup>

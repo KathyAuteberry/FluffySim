@@ -40,6 +40,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
     private const byte DragonSpawnScale = 8;
     private const uint DragonShrunkState = 4;
 
+    private DamageBudget wingBudget = new();
     private SimWorld world = null!;
     private FruP4CrystallizeTimeState state = null!;
     public FruP4CrystallizeTimeState LastState => state;
@@ -72,6 +73,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         speedTethers.Clear();
         puddles.Clear();
         returns.Clear();
+        wingBudget = new();
         ai = selectedAi is { } idx && idx < AiStrats.Count ? (IScenarioAi<FruP4CrystallizeTimeState>)AiStrats[idx] : null;
         ai?.Run(state, world);
 
@@ -142,10 +144,10 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         world.Events.Add(StunAt, () => world.Party.ActiveMembers().ToList().ForEach(m => m.AddStatus(StatusId.Stun, StunEndsAt - StunAt)));
         world.Events.Add(52.8f, Rewind);
         world.Events.Add(53.6f, () => PositionUsurperForWaves(second: false));
-        world.Events.Add(53.7f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation)));
+        world.Events.Add(53.7f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation, wingBudget)));
         world.Events.Add(56.3f, () => usurper?.Cast(Actions.HallowedWingsSwap));
         world.Events.Add(58.1f, () => PositionUsurperForWaves(second: true));
-        world.Events.Add(58.3f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation)));
+        world.Events.Add(58.3f, () => usurper?.Cast(FruP4CrystallizeTimeActions.Wings(state.RequireTankMitigation, wingBudget)));
         world.Events.Add(62.5f, () => world.Map.SetWeather(WeatherId.Oracle, 0f));
         world.Events.Add(62.5f, () => world.Map.AddEffect(MapEffect.ThawFloor, MapEffect.OracleStage));
         world.Events.Add(62.5f, () => SetHourglassScenery(MapEffect.HourglassHide, 0, 1, 2, 3, 4, 5));
@@ -413,6 +415,7 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         {
             if (member is not ISimPartyMember slot) continue;
             returns[slot.Role] = member.Position;
+            DiagnosticLog.Info($"[CT Return] record role={slot.Role} position={member.Position}.");
             member.AddStatus(StatusId.Return, StunAt - ReturnSavedAt);
             world.PlaceGroundVfx(VfxId.ReturnMarker, member.Position);
         }
@@ -432,7 +435,10 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
     {
         foreach (var (role, position) in returns)
             if (world.Party.Get(role) is { } member && member.IsAlive())
+            {
+                DiagnosticLog.Info($"[CT Return] restore role={role} from={member.Position} recorded={position}.");
                 member.CarryTo(position, TimelineId.Rewind);
+            }
     }
 
     private void AkhMorn()

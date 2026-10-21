@@ -51,6 +51,9 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         ai.Move(W + 0.3f, () => AiMove.Create(Stacked(new Vector2(0f, -2f))).NaturalOrder());
         ai.Move(W + 10.0f, () => AiMove.Create(SpreadForTethersDefamationAndTwisters()).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(W + 16.05f, () => AiMove.Create(ProteanSpots()).NaturalOrder(), jitter: 0f, sprint: true);
+        ai.Move(W + 16.05f, () => AiMove.Create(ClockwiseMarkedSpots(1)).NaturalOrder(), jitter: 0f, sprint: true);
+        ai.Move(W + 16.95f, () => AiMove.Create(ClockwiseMarkedSpots(2)).NaturalOrder(), jitter: 0f, sprint: true);
+        ai.Move(W + 17.85f, () => AiMove.Create(ClockwiseMarkedSpots(3)).NaturalOrder(), jitter: 0f, sprint: true);
         ai.Move(W + 22.3f, () => AiMove.Create(UnbaitedToCentre()).NaturalOrder(), jitter: 0f);
         ai.Move(DsrP5WrathScenario.CauterizeCast + 0.15f, () => AiMove.Create(DivebombToCentre()).NaturalOrder(), jitter: 0f);
         var eruption = EruptionDrops();
@@ -80,8 +83,8 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
     private void AssignProteanAngles()
     {
         proteanAngle[state.Defamation] = Signed(state.DragonBearing + 330f - state.WarriorBearing);
-        proteanAngle[state.Tethered[0]] = Signed(state.DragonBearing + 220f - state.WarriorBearing);
-        proteanAngle[state.Tethered[1]] = Signed(state.DragonBearing + 270f - state.WarriorBearing);
+        proteanAngle[state.Tethered[0]] = Signed(state.DragonBearing + 270f - state.WarriorBearing);
+        proteanAngle[state.Tethered[1]] = Signed(state.DragonBearing + 220f - state.WarriorBearing);
         foreach (var (role, i) in state.Plain.OrderBy(r => r).Select((r, i) => (r, i)))
             proteanAngle[role] = PlainWall + PlainWallOffsets[i];
         proteanAngle[state.Divebomb] = DivebombAngle;
@@ -118,7 +121,16 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
     {
         var spots = new Vector2?[8];
         foreach (var (role, angle) in proteanAngle)
-            spots[(int)role] = ProteanSpot(role, angle);
+            if (!state.Marked.Contains(role)) spots[(int)role] = ProteanSpot(role, angle);
+        return spots;
+    }
+
+    private Vector2?[] ClockwiseMarkedSpots(int step)
+    {
+        var spots = new Vector2?[8];
+        spots[(int)state.Defamation] = DragonFrame(300f + 30f * step / 3f, step == 3 ? ProteanRadius : PlainWallRadius);
+        spots[(int)state.Tethered[0]] = DragonFrame(210f + 60f * step / 3f, step == 3 ? ProteanRadius : PlainWallRadius);
+        spots[(int)state.Tethered[1]] = DragonFrame(150f + 70f * step / 3f, step == 3 ? ProteanRadius : PlainWallRadius);
         return spots;
     }
 

@@ -147,7 +147,7 @@ public sealed class DsrP5DeathScenario : IScenario
     {
         warrior = Spawn(BNpcBaseId.Guerrique, BNpcNameId.Guerrique, state.WarriorSpot);
         spear = Spawn(BNpcBaseId.Zephirin, BNpcNameId.Zephirin, state.Outside(60, 23));
-        twisterDragon = Spawn(BNpcBaseId.Vedrfolnir, BNpcNameId.Vedrfolnir, state.Outside(120, 23));
+        twisterDragon = Spawn(BNpcBaseId.Vedrfolnir, BNpcNameId.Vedrfolnir, state.Outside(120, 23), listed: true);
         diveDragon = Spawn(BNpcBaseId.DarkscaleDiver, BNpcNameId.Darkscale, state.Outside(0, 23));
         wings = Spawn(BNpcBaseId.VidofnirDiver, BNpcNameId.Vidofnir, state.Outside(270, 23));
         quake = Helper(state.WarriorSpot); gaze = Helper(state.ThordanSpot); eye = Helper(state.EyeSpot);

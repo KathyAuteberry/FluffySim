@@ -6,11 +6,10 @@ using AnoMech.Core.SimObjects;
 namespace AnoMech.Core.UserActions;
 
 // What one status contributes to surviving a hit. Everything is a fraction (0.20f = 20%)
-// except ShieldPotency; a status sets only what it grants. ShieldHp and MaxHp are fractions
-// of the target's max HP.
+// except ShieldPotency and ShieldAmount (HP). ShieldHp and MaxHp are fractions of max HP.
 public readonly record struct Mitigation(
     float Damage = 0f, float Magic = 0f, float Physical = 0f,
-    float ShieldHp = 0f, float ShieldPotency = 0f, float MaxHp = 0f)
+    float ShieldHp = 0f, float ShieldPotency = 0f, float MaxHp = 0f, float ShieldAmount = 0f)
 {
     // Rough: fitted to a tank's own shields. A healer's potency is worth more HP per point.
     public const float ShieldHpPerPotency = 0.00015f;
@@ -20,9 +19,9 @@ public readonly record struct Mitigation(
     // Off, no hit checks mitigation, so nothing a bot could press would change the outcome.
     public static bool Required => Plugin.Config.EnableTankMitigation && Natives.UserActions.Enabled;
 
-    public bool IsShield => ShieldHp > 0f || ShieldPotency > 0f;
+    public bool IsShield => ShieldHp > 0f || ShieldPotency > 0f || ShieldAmount > 0f;
 
-    private float ShieldFractionOfMaxHp => ShieldHp + ShieldPotency * ShieldHpPerPotency;
+    private float ShieldFractionOfMaxHp(float maxHp) => ShieldHp + ShieldPotency * ShieldHpPerPotency + (maxHp > 0 ? ShieldAmount / maxHp : 0f);
 
     public static readonly IReadOnlyDictionary<ushort, Mitigation> ByStatusId = new Dictionary<ushort, Mitigation>
     {
@@ -32,7 +31,12 @@ public readonly record struct Mitigation(
 
         [3985] = new(Damage: 0.10f),   // Temperance (party)
         [2711] = new(Damage: 0.10f),   // Desperate Measures
+        [1951] = new(Damage: 0.15f),   // Tactician
+        [1826] = new(Damage: 0.15f),   // Shield Samba
         [1934] = new(Damage: 0.15f),   // Troubadour
+
+        // Prepared healer shield approximation; healer potency and gear are not simulated.
+        [297] = new(ShieldAmount: 20_000f),
 
         // PLD
         [82]   = new(Damage: Invulnerable),                   // Hallowed Ground
@@ -75,10 +79,19 @@ public readonly record struct Mitigation(
         [1931] = new(Damage: 0.80f),   // Gunmetal Soul
     };
 
+    public static float DamageTaken(IEnumerable<ushort> statusIds, DamageKind kind)
+    {
+        var taken = 1f;
+        foreach (var id in statusIds)
+            if (ByStatusId.TryGetValue(id, out var m))
+                taken *= (1f - m.Damage) * (1f - (kind switch { DamageKind.Magic => m.Magic, DamageKind.Physical => m.Physical, _ => 0f }));
+        return taken;
+    }
+
     // The single damage reduction that would let a full-HP target survive the same hit, 0..1:
     // 0.5 means a hit of twice its max HP is survivable. Percentage reductions stack
     // multiplicatively and shrink the hit; shields and bonus max HP add to the pool it lands on.
-    public static float Effective(IEnumerable<ushort> statusIds, DamageKind kind)
+    public static float Effective(IEnumerable<ushort> statusIds, DamageKind kind, float maxHp = 100_000f)
     {
         var taken = 1f;
         var pool = 1f;
@@ -86,18 +99,18 @@ public readonly record struct Mitigation(
         {
             if (!ByStatusId.TryGetValue(id, out var m)) continue;
             taken *= (1f - m.Damage) * (1f - kind switch { DamageKind.Magic => m.Magic, DamageKind.Physical => m.Physical, _ => 0f });
-            pool += m.ShieldFractionOfMaxHp + m.MaxHp;
+            pool += m.ShieldFractionOfMaxHp(maxHp) + m.MaxHp;
         }
         return 1f - taken / pool;
     }
 
     // Banked shield as a fraction of max HP: what the gold overlay on the HP bar shows.
-    public static float ShieldFraction(IEnumerable<ushort> statusIds)
+    public static float ShieldFraction(IEnumerable<ushort> statusIds, float maxHp = 100_000f)
     {
         var shield = 0f;
         foreach (var id in statusIds)
             if (ByStatusId.TryGetValue(id, out var m))
-                shield += m.ShieldFractionOfMaxHp;
+                shield += m.ShieldFractionOfMaxHp(maxHp);
         return shield;
     }
 

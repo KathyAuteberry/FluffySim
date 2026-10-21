@@ -132,12 +132,14 @@ public class FruP4CrystallizeTimeTests
             PlayerRole = role,
             UserActionsEnabled = true,
             Configure = c => c.EnableTankMitigation = !checks,
+            ConfigureNative = f => f.BattleCharas.Player.Health = f.BattleCharas.Player.MaxHealth = 200_000,
             StopAt = 1f,
             Takeovers = [new Takeover(0f, null)],
             Probe = p =>
             {
                 if (!p.Crossed(0.5f)) return;
                 var member = p.Member(role)!;
+                foreach (ushort status in new ushort[] {3985, 2711, 1934}) member.AddStatus(status, 6f);
                 member.AddStatus(FruConstants.StatusId.MagicVulnerabilityUp, 6f);
                 if (mitigated)
                     foreach (ushort status in new ushort[] { 3829, 1191, 1193 }) member.AddStatus(status, 6f);
@@ -159,6 +161,7 @@ public class FruP4CrystallizeTimeTests
         {
             PlayerRole = PartyRole.MainTank, UserActionsEnabled = true,
             Configure = c => c.EnableTankMitigation = true,
+            ConfigureNative = f => f.BattleCharas.Player.Health = f.BattleCharas.Player.MaxHealth = 200_000,
             StopAt = 56f, Takeovers = [new Takeover(53f, null)],
             Probe = p =>
             {

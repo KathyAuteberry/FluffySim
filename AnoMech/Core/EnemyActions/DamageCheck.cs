@@ -42,7 +42,7 @@ internal static class DamageCheck
     {
         if (requiredMitigation <= 0f || !ChecksMitigation(target, party, force)) return true;
         var statuses = target.ActiveStatusSnapshot.Select(s => s.StatusId).ToArray();
-        var effective = Mitigation.Effective(statuses, kind);
+        var effective = Mitigation.Effective(statuses, kind, target.Proxy?.MaxHealth ?? 0);
         Mitigation.SpendShields(target);
         var survives = effective >= requiredMitigation - 0.0005f;
         DiagnosticLog.Info($"[EnemyAction] Mitigation check: {(target as ISimPartyMember)?.Role} statuses=[{string.Join(",", statuses)}] has {effective:P1} {kind}, needs {requiredMitigation:P1} -- {(survives ? "survives" : "dies")}.");

@@ -202,6 +202,7 @@ public class FruCrystallizePolishTests
         {
             PlayerRole = PartyRole.MainTank, UserActionsEnabled = true, StopAt = 61f,
             Configure = c => c.EnableTankMitigation = true,
+            ConfigureNative = f => f.BattleCharas.Player.Health = f.BattleCharas.Player.MaxHealth = 225_000,
             Takeovers = [new Takeover(50f, null)],
             Overrides = o =>
             {

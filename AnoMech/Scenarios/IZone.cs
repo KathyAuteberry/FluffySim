@@ -21,13 +21,16 @@ public interface IZone
     IReadOnlyList<WaymarkLayout> WaymarkPresets { get; }
 
     // From the server's zone-in spawn packet for the EObj.
-    EntranceBarrier EntranceBarrier { get; }
+    DutyInitData? DutyInitData => null;
+    EntranceBarrier EntranceBarrier => DutyInitData is { } data
+        ? data.EntranceBarrier with { Position = data.EntranceBarrier.Position - Origin }
+        : throw new InvalidOperationException("Zone must provide an entrance barrier or duty initialization data.");
     Vector3 PlayerSpawn => EntranceBarrier.Position;
 
     // Resting state per MapEffect slot, copied from the server's MapEffect snapshot packet in a
     // replay (the same at zone-in and every wipe reset). Sent at the start of every scenario,
     // merged with IPhase.ArenaMapEffectOverrides. Empty = the zone has no MapEffect slots.
-    IReadOnlyList<ushort> ArenaMapEffectSnapshot => Array.Empty<ushort>();
+    IReadOnlyList<ushort> ArenaMapEffectSnapshot => DutyInitData?.MapEffectSnapshot ?? Array.Empty<ushort>();
 
     // Zone-wide setup, first in the cascade. Default no-op. Host/solo only -- may create
     // host-only simulation state (arena boundaries, scheduled MapEffect broadcasts) that

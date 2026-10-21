@@ -24,6 +24,30 @@ public class NativeEntryLifecycleTests
             yield return new TestCaseData(scenario.GetType(), offline, hard, visible, role);
     }
 
+    [TestCase(false)] [TestCase(true)]
+    public void UpstreamDutyRegistersTextBeforeLayoutReadiness(bool offline)
+    {
+        var fake = Install(offline, false, true);
+        fake.MapEffects.TerritoryReady = false;
+        using var game = CreateGame();
+        IZone zone = AnoMech.Scenarios.Umad.UmadZone.Instance;
+        var data = zone.DutyInitData!;
+        var record = data.Rsv.First();
+        var key = System.Text.Encoding.ASCII.GetString(record, 4, 0x30).Split('\0')[0];
+        var text = System.Text.Encoding.UTF8.GetString(record, 4 + 0x30, BitConverter.ToInt32(record, 0));
+        Assert.That(((FakeRsvFunctions)Natives.Rsv).Resolve(key), Is.EqualTo(key));
+        game.ZoneIn(zone, SessionMode.Local);
+        Frames(fake, game, 2);
+        Assert.That(((FakeRsvFunctions)Natives.Rsv).Resolve(key), Is.EqualTo(text));
+        Assert.That(fake.BattleCharas.Player.Position, Is.EqualTo(data.EntranceBarrier.Position));
+        Frames(fake, game, 2);
+        Assert.That(game.ActiveScenario, Is.Null);
+        Assert.That(fake.EventObjects.OccupiedSlots, Is.Zero);
+        game.Leave();
+        Frames(fake, game, 2);
+        Assert.That(fake.Zone.IsActive, Is.False);
+    }
+
     [TestCase(SessionMode.Host)]
     [TestCase(SessionMode.Peer)]
     public void MultiplayerPreparationWaitsForLayoutWithoutStartingTheScenario(SessionMode mode)

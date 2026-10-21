@@ -16,10 +16,13 @@ class PauseSafety(unittest.TestCase):
     def test_direct_and_ground_actions_are_rejected_before_original_or_bookkeeping(self):
         hooks = source('Core/Native/Implementations/LocalPlayerInputHooks.cs')
         direct = section(hooks, 'private bool UseActionDetour(', 'private bool UseActionLocationDetour(')
-        self.assertLess(direct.index('if (PauseInput || TransitionInput) return false;'), direct.index('RecordRecentAction'))
-        self.assertLess(direct.index('if (PauseInput || TransitionInput) return false;'), direct.index('useActionHook.Original'))
+        self.assertLess(direct.index('if (PauseInput || TransitionInput)'), direct.index('RecordRecentAction'))
+        self.assertLess(direct.index('if (PauseInput || TransitionInput)'), direct.index('useActionHook.Original'))
         ground = section(hooks, 'private bool UseActionLocationDetour(', '\n}')
         self.assertLess(ground.index('if (PauseInput ||'), ground.index('useActionLocationHook.Original'))
+        for body in [direct, ground]:
+            gate = section(body, 'if (PauseInput || TransitionInput)', 'var selectedTarget')
+            self.assertIn('return false;', gate)
 
     def test_auto_cancel_is_not_invoked_under_the_pause_gate(self):
         hooks = source('Core/Native/Implementations/LocalPlayerInputHooks.cs')
@@ -45,7 +48,10 @@ class PauseSafety(unittest.TestCase):
         tick = section(actions, 'public void Tick(float deltaSeconds)', 'public void OnPause()')
         pressed = section(actions, 'private void OnActionExecuted(', 'private void ResolvePendingCast(')
         self.assertIn('if (!SimActive || hooks.PauseInput) return;', tick)
-        self.assertIn('if (!SimActive || hooks.PauseInput) return;', pressed)
+        self.assertIn('if (!SimActive || hooks.PauseInput || hooks.TransitionInput)', pressed)
+        gate = section(pressed, 'if (!SimActive || hooks.PauseInput || hooks.TransitionInput)', 'if (hooks.LastUsedActionSequence')
+        self.assertIn('return;', gate)
+        self.assertLess(pressed.index(gate), pressed.index('NotePracticeAction'))
         hooks = source('Core/Native/Implementations/LocalPlayerInputHooks.cs')
         cancel = section(hooks, 'private void CancelCastDetour(', 'private void RMIWalkDetour(')
         self.assertLess(cancel.index('if (PauseInput || TransitionInput) return;'), cancel.index('cancelCastHook.Original'))

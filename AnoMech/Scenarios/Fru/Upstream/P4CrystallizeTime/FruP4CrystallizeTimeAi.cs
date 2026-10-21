@@ -6,6 +6,7 @@ using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
+using AnoMech.Core.UserActions;
 using static AnoMech.Scenarios.Fru.Upstream.FruConstants;
 using static AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime.FruP4CrystallizeTimeRoutes;
 using static AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime.FruP4CrystallizeTimeState;
@@ -65,6 +66,8 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         AssignSidesByPriority();
 
         world.Events.Add(48.6f, ApplyPartyWingMitigation);
+        world.Events.Add(53.3f, HealAndShieldWings);
+        world.Events.Add(57.3f, HealAndShieldWings);
         world.Events.Add(15.5f, () => FollowRoute(state.SlowNorthwest ? PRE_HG_1_NW : PRE_HG_1_NE, arriveBy: 22.7f));
         world.Events.Add(23.3f, () => FollowRoute(state.SlowNorthwest ? POST_HG_1_NW : POST_HG_1_NE, arriveBy: 25.9f));
         world.Events.Add(25.9f, RememberWhoAeroKnocksBack);
@@ -156,10 +159,36 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
             (PartyRole.PhysRangedDps, 1934, 15f),
         })
         {
-            if (world.Party.Get(role) is not { } caster || !caster.IsAlive() || !world.Party.IsBotDriven(caster)) continue;
+            if (world.Party.Get(role) is not { } caster || !caster.IsAlive()) continue;
+            var applied = status == 1934 ? (JobId)(caster.Proxy?.ClassJob ?? 0) switch { JobId.Machinist => (ushort)1951, JobId.Dancer => (ushort)1826, _ => status } : status;
             foreach (var member in world.Party.ActiveMembers())
                 if (Vector3.Distance(caster.Position, member.Position) <= 30f + member.HitboxRadius)
-                    member.AddStatus(status, duration);
+                    member.AddStatus(applied, duration);
+        }
+        foreach (var role in new[] { PartyRole.MainTank, PartyRole.OffTank })
+        {
+            if (world.Party.Get(role) is not { } tank || !tank.IsAlive()) continue;
+            ushort status = (JobId)(tank.Proxy?.ClassJob ?? 0) switch { JobId.Paladin => 1362, JobId.DarkKnight => 1894, JobId.Gunbreaker => 1839, _ => 1457 };
+            foreach (var member in world.Party.ActiveMembers())
+                if (Vector3.Distance(tank.Position, member.Position) <= 30f + member.HitboxRadius)
+                    member.AddStatus(status, status is 1362 or 1457 ? 30f : 15f);
+        }
+    }
+
+    private void HealAndShieldWings()
+    {
+        foreach (var member in world.Party.ActiveMembers())
+        {
+            if (!member.IsAlive()) continue;
+            if (world.Party.ActiveMembers().Any(h => h is ISimPartyMember { Role: PartyRole.RegenHealer or PartyRole.ShieldHealer }
+                && h.IsAlive() && Vector3.Distance(h.Position, member.Position) <= 30f + member.HitboxRadius))
+                member.RestoreHealth();
+            if (world.Party.Get(PartyRole.ShieldHealer) is { } healer && healer.IsAlive()
+                && Vector3.Distance(healer.Position, member.Position) <= 30f + member.HitboxRadius)
+            {
+                member.RemoveStatus(297);
+                member.AddStatus(297, 4f);
+            }
         }
     }
 

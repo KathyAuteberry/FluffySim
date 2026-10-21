@@ -59,9 +59,10 @@ class PacketFilterWiringTests(unittest.TestCase):
         self.assertIn('NotePracticeAction(actionId)',body)
         start=section(actions,'public void OnScenarioStart()', 'public void OnSessionStart()')
         self.assertIn('if (!SimActive) return;',start)
-        self.assertIn('processedSeq = am->LastUsedActionSequence;',start)
-        self.assertIn('world.PracticeInvulnerability.Enabled',start)
-        self.assertIn('world.PracticeAntiKnockback.Enabled',start)
+        self.assertIn('if (hooks.LastUsedActionSequence is { } seq) processedSeq = seq;',start)
+        self.assertIn('PracticeDefensiveActions.RecastsForJob(Natives.BattleCharas.LocalPlayer.ClassJob)',start)
+        self.assertIn('Natives.Zone.ResetPracticeRecast(action);',start)
+        self.assertLess(start.index('ResetPracticeRecast'),start.index('foreach (var handler'))
 
     def test_ui_buttons_are_fallback_only_and_low_level_command_is_purely_local(self):
         ui=read('Windows/MainWindow.cs')
