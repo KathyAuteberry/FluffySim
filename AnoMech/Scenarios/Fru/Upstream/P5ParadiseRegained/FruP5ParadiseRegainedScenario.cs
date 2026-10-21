@@ -28,6 +28,7 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
 
     private SimWorld world = null!;
     private FruP5ParadiseRegainedState state = null!;
+    public FruP5ParadiseRegainedState? LastState { get; private set; }
     private SimEnemy? pandora;
     internal SimEnemy? SharedPandora { get; set; }
     internal float PolarizingOffset { get; set; }
@@ -51,7 +52,7 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
         wingTether = null;
         if (!polarizingOnly && settingsWindow.Overrides.RequireInvulnerability) world.PracticeInvulnerability.Start();
         else world.PracticeInvulnerability.Clear();
-        state = new FruP5ParadiseRegainedState(world.Rng, settingsWindow.Overrides);
+        state = LastState = new FruP5ParadiseRegainedState(world.Rng, settingsWindow.Overrides);
         if (selectedAi is { } idx && idx < AiStrats.Count)
             new FruP5ParadiseRegainedAi(polarizingOnly, PolarizingOffset).Run(state, world);
 

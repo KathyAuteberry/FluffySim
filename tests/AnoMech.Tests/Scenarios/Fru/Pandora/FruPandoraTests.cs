@@ -31,6 +31,30 @@ public class FruPandoraTests
                 settings.EastSecond = eastSecond;
                 settings.DarkFirst = darkFirst;
             },
+            Probe = p =>
+            {
+                var state = ((FruP5ParadiseRegainedScenario)p.Game.ActiveScenario!).LastState!;
+                for (var tower = 0; tower < 3; tower++)
+                {
+                    if (p.Crossed(FruP5ParadiseRegainedState.TowerHitAt(tower) + .8f))
+                    {
+                        var effects = p.World.Children.OfType<SimEnemy>()
+                            .SelectMany(e => ((FakeBattleChara)e.Proxy!).EffectSourceSnapshots)
+                            .Where(e => e.Effect.ActionId == 40320).ToArray();
+                        Assert.That(effects, Has.Length.EqualTo(tower + 1));
+                        var expectedIds = Enum.GetValues<PartyRole>().Where(r => FruP5ParadiseRegainedAi.AssignedTower(state, r) == tower)
+                            .Select(r => p.Member(r)!.GameObjectId);
+                        Assert.That(effects[^1].Effect.Targets!.Select(t => t.Id), Is.EquivalentTo(expectedIds));
+                    }
+                    if (!p.Crossed(FruP5ParadiseRegainedState.TowerHitAt(tower))) continue;
+                    var occupants = p.World.Party.ActiveMembers()
+                        .Where(m => Vector3.Distance(m.Position, state.TowerPosition(tower)) < FruP5ParadiseRegainedState.TowerRadius)
+                        .Select(m => ((ISimPartyMember)m).Role).ToArray();
+                    var expected = Enum.GetValues<PartyRole>().Where(r => FruP5ParadiseRegainedAi.AssignedTower(state, r) == tower).ToArray();
+                    Assert.That(occupants, Is.EquivalentTo(expected), $"Tower {tower}, dark={darkFirst}, eastSecond={eastSecond}");
+                    if (!role.IsTank()) Assert.That(FruP5ParadiseRegainedAi.AssignedTower(state, role), Is.Not.Null);
+                }
+            },
         });
         Assert.That(run.Passed, run.ToString);
     }

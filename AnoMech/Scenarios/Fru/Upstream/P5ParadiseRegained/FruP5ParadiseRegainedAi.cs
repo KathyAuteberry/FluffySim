@@ -66,10 +66,18 @@ public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedS
         PartyRole.OffTank => new(state.DarkFirst ? -6.0622f : 6.0622f, 0f, 3.5f),
         PartyRole.RegenHealer => new(-0.65f, 0f, -7.5f),
         PartyRole.ShieldHealer => new(0.65f, 0f, -7.5f),
-        PartyRole.MeleeDpsA => new(state.DarkFirst ? -5f : 5f, 0f, -4.5f),
-        PartyRole.MeleeDpsB => new(state.DarkFirst ? -5.2f : 5.2f, 0f, -4.7f),
-        PartyRole.PhysRangedDps => new(state.DarkFirst ? 5f : -5f, 0f, -4.5f),
-        _ => new(state.DarkFirst ? 5.2f : -5.2f, 0f, -4.7f),
+        PartyRole.MeleeDpsA => new(state.DarkFirst ? 5f : -5f, 0f, -4.5f),
+        PartyRole.MeleeDpsB => new(state.DarkFirst ? 5.2f : -5.2f, 0f, -4.7f),
+        PartyRole.PhysRangedDps => new(state.DarkFirst ? -5f : 5f, 0f, -4.5f),
+        _ => new(state.DarkFirst ? -5.2f : 5.2f, 0f, -4.7f),
+    };
+
+    public static int? AssignedTower(FruP5ParadiseRegainedState state, PartyRole role) => role switch
+    {
+        PartyRole.RegenHealer or PartyRole.ShieldHealer => 0,
+        PartyRole.MeleeDpsA or PartyRole.MeleeDpsB => state.EastSecond == state.DarkFirst ? 1 : 2,
+        PartyRole.PhysRangedDps or PartyRole.CasterDps => state.EastSecond == state.DarkFirst ? 2 : 1,
+        _ => null,
     };
 
     private static int BaitOrder(PartyRole role) => role switch

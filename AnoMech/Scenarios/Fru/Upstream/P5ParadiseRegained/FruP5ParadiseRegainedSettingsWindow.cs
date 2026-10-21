@@ -8,6 +8,7 @@ public sealed class FruP5ParadiseRegainedSettingsWindow
 
     public void Draw()
     {
+        ImGui.TextWrapped("First tower is relative South: H1/H2. After the first wing, D1/D2 cross to the far tower that was cleaved; D3/D4 take the near tower.");
         if (ImGui.Button("Auto")) ResetAll();
         if (SettingsGrid.Begin("##frup5paradise"))
         {
