@@ -32,7 +32,7 @@ jobs:
           git merge-base --is-ancestor HEAD origin/master
           if ($LASTEXITCODE -ne 0) { throw 'Tag must belong to published master history' }
           $catalog = Get-Content AnoMech/Scenarios/ScenarioCatalog.cs -Raw
-          $requiredScenarios = @('FruFallOfFaithScenario', 'FruLightRampantScenario', 'FruUltimateRelativityScenario', 'FruApocalypseScenario', 'FruDarklitScenario', 'DsrStrengthScenario', 'DsrStrength2Scenario', 'DsrSanctity1Scenario', 'DsrSanctity2Scenario')
+          $requiredScenarios = @('FruFallOfFaithScenario', 'FruLightRampantScenario', 'FruUltimateRelativityScenario', 'FruApocalypseScenario', 'FruDarklitScenario', 'DsrStrengthScenario', 'DsrStrength2Scenario', 'DsrSanctity1Scenario', 'DsrSanctity2Scenario', 'DsrP1KnightsScenario', 'DsrP3NidhoggScenario', 'DsrP4EyesScenario', 'DsrP5WrathScenario', 'DsrP5DeathScenario', 'DsrP6DoubleDragonsScenario', 'DsrP6CauterizeScenario', 'FruDiamondDustScenario', 'FruMirrorMirrorScenario', 'FruP4CrystallizeTimeScenario', 'FruP5FulgentBladeScenario', 'FruP5ParadiseRegainedScenario', 'FruPolarizingStrikesScenario', 'FruPandorasBoxScenario', 'FruPandoraSequenceScenario')
           foreach ($scenario in $requiredScenarios) {
             if ($catalog -notmatch "new\s+[\w.]*$scenario\s*\(") { throw "Missing registered scenario: $scenario" }
           }

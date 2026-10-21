@@ -38,7 +38,7 @@ python -m unittest discover -s tools/tests -p test_package_release.py
 ```
 
 Run both Debug safety backends using [tests/SafetyTests/README.md](tests/SafetyTests/README.md).
-Native acceptance still requires all nine encounters, Easy/Hard, Pause, visibility, God Mode,
+Native acceptance still requires all registered encounters, Easy/Hard, Pause, visibility, God Mode,
 local abilities, offline FRU/DSR, party HUD and safe Leave/BGM restoration.
 Local packaging dry-run only:
 `python tools/package_release.py --input AnoMech/bin/x64/Debug --output /tmp/fluffysim-package-check`.
@@ -46,8 +46,11 @@ Never distribute this Debug ZIP. The packager never builds or mutates its input.
 
 ## Publication setup
 
-Versions 2.0.0.0 and 2.0.1.0 are already published. Do not move their tags or rewrite their ancestry.
-Prepared version: **2.2.0.0**. `FluffySim.Version.props` contains `2.2.0`; assembly/file/tag
+Published releases through **2.2.0.0** are immutable. Do not move their tags or rewrite their ancestry.
+The 3.0 preparation keeps the shared DSR integration below a separate release-preparation child.
+Local preparation does not authorize pushing master, tagging, publishing or changing plogons.
+The final P4 rescue carry still requires native confirmation before publication approval.
+Prepared version: **3.0.0.0**. `FluffySim.Version.props` contains `3.0.0`; assembly/file/tag
 versions append `.0`. Revision stays zero.
 
 Both GitHub default branches are master. FluffySim's Actions repository secret must be named
@@ -64,9 +67,9 @@ jj bookmark list --all-remotes
 jj git push --remote origin --bookmark master --dry-run
 jj git push --remote origin --bookmark master
 # Verify all master CI jobs succeeded for this exact commit before tagging.
-jj tag set v2.2.0.0 -r master
+jj tag set v3.0.0.0 -r master
 jj tag list
-jj git push --remote origin --tag v2.2.0.0
+jj git push --remote origin --tag v3.0.0.0
 ```
 
 Local master must point to the reviewed release-preparation commit above the merge containing
@@ -77,7 +80,7 @@ No manual plogons version edit is needed: successful publication updates its man
 ## Recurring release pipeline
 
 Bump version props, update changelog, Debug-test, commit and publish the reviewed integrated
-master. Tag `vX.Y.Z.0`. The workflow verifies version, master ancestry and all nine custom scenario registrations, runs plugin/relay
+master. Tag `vX.Y.Z.0`. The workflow verifies version, master ancestry and the required scenario registrations, runs plugin/relay
 and both safety backends, builds Release on its isolated runner and packages declared runtime
 dependencies plus selected public documentation. Preserve matching complete source at the
 tag and AGPL attribution; GitHub provides tagged source archives.
@@ -95,7 +98,7 @@ Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mo
 
 Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
 metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
-tag: `gh workflow run publish-fluffysim.yml --ref v2.2.0.0`. Reruns reuse the existing asset and
+tag: `gh workflow run publish-fluffysim.yml --ref v3.0.0.0`. Reruns reuse the existing asset and
 never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
 higher version, never a moved tag or replacement ZIP.
 

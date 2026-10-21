@@ -129,3 +129,21 @@ Native acceptance still required: stay at either proper yellow soak and let DPS 
 ## Final P4 pull and 3.0.0.0 preparation
 
 The owner confirmed the complete Eyes orb/handoff sequence clears natively. P4 rescue lacked physical carry entirely; earlier bot walking masked it. Repair reuses P1's existing CarryTo/local 0xF1 path and delays prison boundary enforcement until displacement settles. P1 movement remains unchanged. Initial focused P1/P4 run: 98 passed, 27.805 seconds. Native P4 pull confirmation remains pending; test stationary human, bots, offline/inn entry, Restart and Leave mid-pull. Release preparation is authorized locally only; no push, tag, publication or plogons edits.
+
+### 3.0.0.0 local release validation
+
+Repair `txmtnx` is incorporated in shared integration `xwtnow`, alongside independent logo parent `upllop`; all six original DSR phase feature tips remain ancestors. Separate release-preparation child `qyypuu` has exact description `chore(release): prepare 3.0.0.0`. Version props contain 3.0.0; generated assembly/file/manifests contain 3.0.0.0. Live GitHub master was verified at 235f704cccd364d70d349f94a663a868f6b0b018 (published 2.2.0.0), matching master@origin. Local master is advanced to the completed preparation only; no publication is authorized.
+
+Validation (Debug only):
+- Solution build: succeeded, 6.40 seconds build / 6.546 seconds wall.
+- Final focused P1/P4 mechanics/orb/lifecycle: 101 passed, 27.456 seconds test / 32.767 seconds wall. This includes three added pause/repeated-entry cases during the carry, after the routine run; the routine run already includes physical carry assertions for both P1/P4 and displaced bot coverage.
+- Optimized Debug routine suite, Extended excluded: 7,133 passed, 2.2816 minutes test / 2m22.210s wall. Isolated fast-Debug output/intermediates preserve ordinary safety input.
+- Relay: 44 passed, 2.112 seconds test / 3.588 seconds wall.
+- Fresh ordinary Debug build: 3.364 seconds wall; final isolated optimized TRACE Debug safety rebuild: 2.964 seconds wall.
+- Packet isolation default backend: 313 passed, three Windows-only skips, 18.583 seconds test / 19.105 seconds wall.
+- Packet isolation safetyhook backend: 313 passed, three Windows-only skips, 18.769 seconds test / 19.316 seconds wall.
+- Packaging tooling: seven passed (0.032 seconds); release-note tooling: three passed. 3.0.0.0 changelog extraction and Debug packaging dry-run succeeded under /tmp; no Release build or installed-output writes.
+- Catalog: 45 registered entries (17 FRU, 11 DSR, 17 other); public DSR names/order match display overrides. Hidden scenarios are excluded. Publication guard now includes newly shipped DSR and FRU entries.
+- README relative links/images checked. Main icon is 512×512 RGBA PNG; offline icon 64×64 RGBA PNG, both preserve transparent pixels. Embedded offline PNG verified in the solution Debug DLL; generated manifests in both Debug output trees report 3.0.0.0. GitHub Issues was verified enabled after owner action.
+
+Before publication: native-test the final P4 prison carry from inn and title-screen offline practice, including a stationary human outside the ring, bot movement, Pause/Resume, Restart and Leave during transition, and continued LB3/healing/Brightwing rescue. Verify P1's confirmed working carry remains unchanged. Prior complete Eyes orb playtest is owner-confirmed; synthetic results do not establish native visuals for the final carry. Publication remains blocked on owner native acceptance and explicit later approval. No P7, pushes, tags, release publication or plogons modifications occurred.

@@ -1,3 +1,33 @@
+# FluffySim 3.0.0.0 — release prepared
+
+## Added
+
+- Seven new Dragonsong's Reprise practice entries: The Holy See, Dive from Grace, Eyes with Haurchefant rescue, Wrath and Death of the Heavens, and both Double Dragons halves. DSR now has eleven entries in phase order; Dragonking Thordan is not included.
+- Elemental assignments and seven-bot choreography across the new phases, with role selection, Easy/Hard movement and mechanic-specific practice preferences, including P5 assignment selection.
+- Native DSR actors, phase environments and readiness-gated initialization for inn and title-screen offline practice.
+
+## Improved
+
+- Existing P2 drills retain their measured timelines and Elemental assignments with improved native presentation and lifecycle handling.
+- Nidhogg choreography, Eyes orb handoffs and North-relative Mirage Dive swaps, scenario feedback and event-level orb diagnostics.
+- Central local practice cooldown restoration for supported defensive actions, tank invulnerability, anti-knockback and relevant interrupts, with restoration on exit.
+- Short chronological DSR menu names and repeated-entry/retry reliability.
+
+## Fixed
+
+- Invisible P1/P5 bosses and incorrect P4 story NPC appearances.
+- P1 Faith Unmoving displacement, distance-based Playstation chain breaks, artificial Dimension floor warnings and the Pure of Heart prison pull.
+- P4 duplicate orb hits, support interception and delayed handoffs that left blue orbs uncollected; rescue now physically carries the party into Planar Prison before enforcing its boundary.
+- Both P5 Heavenly Heel/Ascalon's Might sequences use conventional MT → ST swaps with simulation-local Provoke and damage checks on actual recipients.
+- P6 Akh Morn puddle exposure no longer kills correctly moving players immediately; lingering remains lethal.
+
+## Branding and documentation
+
+- New FluffySim artwork, with a 512×512 plugin icon and 64×64 title-screen icon.
+- Rewritten player-facing README with custom-repository installation, current encounter coverage, offline setup and troubleshooting.
+
+Native testing confirmed the preceding DSR repairs, including the complete Eyes orb sequence. The final P4 prison-pull correction still needs native confirmation. Some effects, damage budgets and timing remain approximations; leave simulations cleanly before normal play.
+
 # FluffySim 2.2.0.0 — release prepared
 
 ## More Futures Rewritten practice
