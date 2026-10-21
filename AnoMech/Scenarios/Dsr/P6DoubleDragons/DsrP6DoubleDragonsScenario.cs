@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.EnemyActions;
+using AnoMech.Core;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
@@ -26,6 +27,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     public object SettingsOverrides => overrides;
     public void DrawSettings()
     {
+        Dalamud.Bindings.ImGui.ImGui.TextWrapped("Wroth: drop three Akh Morns horizontally from the safe wall, then curve inward for the fourth. Attack markers spread West (1 at the wall, 4 near center). Bind 1/2 stack together East; Ignore 1/2 stack together at the East wall.");
         var difference = overrides.InitialHpDifference;
         if (Dalamud.Bindings.ImGui.ImGui.SliderFloat("Initial HP difference", ref difference, -.1f, .1f, "%.3f")) overrides.InitialHpDifference = difference;
     }
@@ -40,6 +42,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     public const float NidhoggCauterizeCast = 49.53f;
     public const float HallowedWingsLands = 54.26f;
     public static readonly float[] VowPasses = [62.97f, 97.03f, 131.06f, 165.10f];
+    // UNVERIFIED: inherited Wroth event offsets remain provisional until checked against a native capture.
     public const float WrothFlames = 66.08f;
     public static readonly float[] OrbSpawns = [70.37f, 72.39f, 75.58f];
     public static readonly float[] FlameBlastCasts = [77.69f, 79.69f, 82.68f];
@@ -127,6 +130,10 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
         {
             foreach (var role in state.Spreads) world.Party.Get(role)?.AddStatus(0xAC6, 23.4f);
             foreach (var role in state.Stacks) world.Party.Get(role)?.AddStatus(0xAC7, 23.4f);
+            var markers = new DsrWrothMarkers(state.Spreads, state.Stacks);
+            foreach (var (role, marker) in markers.Assignments)
+                if (world.Party.Get(role) is { } member) world.SoftMarkers.Set(marker, member);
+            DiagnosticLog.Info($"[Wroth] Spreads={string.Join(",", state.Spreads)}; stacks={string.Join(",", state.Stacks)}; markers={string.Join(",", markers.Assignments)}; lane={state.HraesvelgrLane}; second eyes={state.SecondSetCorner}");
         });
         for (var i = 0; i < 3; i++)
         {
@@ -143,6 +150,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
         At(79.45f, () => Dive(hraesvelgr, 0x6D3F));
         At(85, () => Home(hraesvelgr, HraesvelgrHome));
         At(FlamesResolve, Wroth);
+        At(FlamesResolve + .1f, () => world.SoftMarkers.Clear());
         At(134.85f, () => world.Map.DirectorUpdate(0x80000016, 1, 0x3C));
         At(148.5f, () => { Fly(nidhogg, state.NidhoggCauterizeStart); Fly(hraesvelgr, state.HraesvelgrCauterizeStart); });
         At(CauterizeCast, () => { nidhogg.Cast(0x6D3E); hraesvelgr.Cast(0x6D3F); });
@@ -312,6 +320,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     }
     private void FlameBlasts(int set)
     {
+        DiagnosticLog.Info($"[Wroth] Sable Price {set + 1} resolves");
         foreach (var orb in orbs[set])
         {
             foreach (var member in world.Party.ActiveMembers())
@@ -321,22 +330,24 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     private void AkhMorn(int hit)
     {
         var target = world.Party.Get(state.AkhMornTarget)!; var spot = target.Position;
+        DiagnosticLog.Info($"[Wroth] Akh Morn {hit + 1}: {spot}; party={string.Join(",", world.Party.ActiveMembers().Select(m => $"{((ISimPartyMember)m).Role}@{m.Position}"))}");
         Helper(new(spot, 0)).Cast(Instant(hit == 0 ? 0x6D46u : 0x6D47u, Damage(split: Distribution.Stack(8)) ), target);
         if (world.SpawnEventObject(new() { EObjId = 0x1EB683, Placement = new(spot, 0) }) is { } pool)
             pools.Add((pool, elapsed + 1.1f));
     }
     private void Wroth()
     {
+        DiagnosticLog.Info($"[Wroth] Flames resolve: {string.Join(",", world.Party.ActiveMembers().Select(m => $"{((ISimPartyMember)m).Role}@{m.Position}"))}");
         foreach (var role in state.Spreads)
         {
             var target = world.Party.Get(role)!;
-            Helper(new(target.Position, 0)).Cast(Instant(0x742B, Damage(), OnOthers(Damage(Severity.Lethal))), target);
+            Helper(new(target.Position, 0)).Cast(Instant(0x742B, Damage(VulnerableTo(0xB56)), OnOthers(Damage(Severity.Lethal)), ApplyStatus(0xB56, 3f)), target);
             target.RemoveStatus(0xAC6);
         }
         foreach (var role in state.Stacks)
         {
             var target = world.Party.Get(role)!;
-            Helper(new(target.Position, 0)).Cast(Instant(0x742C, Damage(split: Distribution.Stack(2))), target);
+            Helper(new(target.Position, 0)).Cast(Instant(0x742C, Damage(VulnerableTo(0xB56), split: Distribution.Stack(2)), ApplyStatus(0xB56, 3f), Resolve(ctx => DiagnosticLog.Info($"[Wroth] Stack {role}: {string.Join(",", ctx.Hits.Select(m => ((ISimPartyMember)m).Role))}"))), target);
             target.RemoveStatus(0xAC7);
         }
     }
@@ -376,6 +387,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     public void Tick(float delta, float time)
     {
         elapsed = time;
+        if (world.Party.ActiveMembers().Count() < 8) world.SoftMarkers.Clear();
         if (nidhogg == null || hraesvelgr == null) return;
         if (MathF.Abs(nidhoggHp - hraesvelgrHp) > .03f) hpLink ??= world.Tether(nidhogg, hraesvelgr, 2);
         else { hpLink?.Despawn(); hpLink = null; }
