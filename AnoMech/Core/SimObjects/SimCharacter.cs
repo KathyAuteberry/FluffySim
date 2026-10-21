@@ -312,6 +312,11 @@ public abstract class SimCharacter : ISimObject, IPositioned
         unannouncedGains.Clear();
     }
 
+    public void RestoreHealth()
+    {
+        if (!Dead && Proxy is { } chara) SendStatusList(chara.MaxHealth, chara.Mana);
+    }
+
     protected void SendStatusList(uint health, uint mana)
     {
         statusListChanged = false;
@@ -320,7 +325,7 @@ public abstract class SimCharacter : ISimObject, IPositioned
         foreach (var status in statusList)
             if (status.IsActive && status.Slot >= 0 && !status.Hidden)
                 slots[status.Slot] = new StatusSlot(status.StatusId, status.Stacks, status.RemainingTime, (status.ShownSource ?? status.SourceObject).ObjectId);
-        var shield = Mitigation.ShieldFraction(statusList.Where(s => s.IsActive).Select(s => s.StatusId));
+        var shield = statusList.Where(s => s.IsActive).Sum(s => s.RemainingShieldFraction ?? Mitigation.ShieldFraction([s.StatusId], chara.MaxHealth));
         chara.ReceiveStatusList(slots, health, mana, (byte)Math.Clamp(shield * 100f, 0f, 100f));
     }
 

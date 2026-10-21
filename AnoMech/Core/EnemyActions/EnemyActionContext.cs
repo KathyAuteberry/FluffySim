@@ -15,6 +15,7 @@ public sealed class EnemyActionContext
     private readonly List<System.Action> afterResolve = [];
     private readonly List<(SimStatus Status, float RevealAt)> hiddenStatuses = [];
     private readonly List<(SimCharacter, ushort)> impactRemovals = [];
+    private readonly List<(SimStatus Status, int Version, float Fraction)> impactShields = [];
 
     internal EnemyActionContext(EnemyAction action, SimCharacter caster, SimCharacter? target, Placement origin, SimParty party, float releaseDelay)
     {
@@ -59,6 +60,8 @@ public sealed class EnemyActionContext
         if (outcome.Damage is not { } shown || amount > shown.Amount) outcome.Damage = (amount, kind);
     }
 
+    public void SetRemainingHealth(SimCharacter who, uint health) => Outcome(who).RemainingHealth = health;
+
     // Decided now; moves the character after `delay` (null = TimingSpec.DamageDelay), unless it died
     // meanwhile. knockbackRow goes into the ActionEffect; null for a push with no Knockback sheet
     // row. The first push wins.
@@ -95,6 +98,8 @@ public sealed class EnemyActionContext
     // Taken off at TimingSpec.DamageDelay, unless the character died meanwhile.
     public void RemoveStatusAtImpact(SimCharacter who, ushort statusId) => impactRemovals.Add((who, statusId));
 
+    internal void UpdateShieldAtImpact(SimStatus status, float fraction) => impactShields.Add((status, status.ApplicationVersion, fraction));
+
     // Runs once every effect has applied and the deaths due now have been dealt, so a follow-up
     // cast can't claim this action's kills.
     public void AfterResolve(System.Action run) => afterResolve.Add(run);
@@ -103,6 +108,7 @@ public sealed class EnemyActionContext
     internal IReadOnlyList<System.Action> AfterResolveActions => afterResolve;
     internal IReadOnlyList<(SimStatus Status, float RevealAt)> HiddenStatuses => hiddenStatuses;
     internal IReadOnlyList<(SimCharacter Who, ushort StatusId)> ImpactRemovals => impactRemovals;
+    internal IReadOnlyList<(SimStatus Status, int Version, float Fraction)> ImpactShields => impactShields;
 
     private TargetOutcome Outcome(SimCharacter who)
     {
@@ -116,6 +122,7 @@ public sealed class EnemyActionContext
     {
         public SimCharacter Target { get; } = target;
         public (uint Amount, DamageKind Kind)? Damage { get; set; }
+        public uint? RemainingHealth { get; set; }
         public bool Killed { get; set; }
         public bool Dodged { get; set; }
         public string? Explanation { get; set; }

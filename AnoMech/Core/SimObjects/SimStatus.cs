@@ -12,6 +12,14 @@ public sealed class SimStatus : ISimObject
     private float duration;
     private float elapsed;
 
+    internal float? RemainingShieldFraction { get; private set; }
+    internal void SetRemainingShieldFraction(float fraction)
+    {
+        RemainingShieldFraction = fraction;
+        target.StatusListChanged();
+    }
+
+    internal int ApplicationVersion { get; private set; }
     public ushort StatusId { get; }
     public GameObjectId SourceObject { get; }
 
@@ -60,6 +68,8 @@ public sealed class SimStatus : ISimObject
 
     public void Reapply(float duration, int stacks)
     {
+        ApplicationVersion++;
+        RemainingShieldFraction = null;
         if (duration > 0f)
         {
             this.duration = duration;

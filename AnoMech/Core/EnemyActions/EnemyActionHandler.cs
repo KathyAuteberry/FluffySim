@@ -194,6 +194,13 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
             Schedule(action.Timing.DamageDelay, () => ConfirmDamage(delivery));
         foreach (var (status, revealAt) in ctx.HiddenStatuses)
             Schedule(revealAt, status.Reveal);
+        foreach (var (status, version, fraction) in ctx.ImpactShields)
+            Schedule(action.Timing.DamageDelay, () =>
+            {
+                if (!status.IsActive || status.ApplicationVersion != version) return;
+                if (fraction <= 0f) status.Despawn();
+                else status.SetRemainingShieldFraction(fraction);
+            });
         foreach (var (who, statusId) in ctx.ImpactRemovals)
             Schedule(action.Timing.DamageDelay, () =>
             {
@@ -265,7 +272,11 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
         if (delivery.ImpactDue) return;
         foreach (var (who, index) in delivery.Confirmations)
             if (who.Proxy is { Exists: true } chara)
-                chara.ReceiveEffectResult(delivery.Sequence, index, chara.Health);
+            {
+                var health = who.Dead ? 0u : delivery.Outcomes.FirstOrDefault(o => o.Target == who)?.RemainingHealth ?? chara.Health;
+                if (Plugin.Game.GodMode) health = chara.Health;
+                chara.ReceiveEffectResult(delivery.Sequence, index, health);
+            }
     }
 
     // Resolve's outcomes, for the ActionEffect; the ActionEffect's ids, for the EffectResults.
