@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using AnoMech.Core.Game.Party;
 
 namespace AnoMech.Scenarios.Dsr.P4Eyes;
@@ -11,6 +12,7 @@ public sealed class DsrP4EyesState
     public PartyRole SoulMarked { get; }
     public IReadOnlyCollection<PartyRole> FirstRed { get; }
     public IReadOnlyList<(int, int)> DivePicks { get; }
+    public Dictionary<Vector3, PartyRole[]> OrbSoakers { get; } = [];
     public HashSet<PartyRole> Red { get; } = [];
     public List<PartyRole>[] DiveTargets { get; } = [[], [], [], []];
 

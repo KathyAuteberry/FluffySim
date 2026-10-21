@@ -44,6 +44,12 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         [PartyRole.RegenHealer] = new(-14.4f, 1f),
     };
 
+    private static readonly Dictionary<PartyRole, Vector2> CompletedHandoffWait = new()
+    {
+        [PartyRole.MainTank] = new(0, -3), [PartyRole.OffTank] = new(0, -5),
+        [PartyRole.RegenHealer] = new(0, 3), [PartyRole.ShieldHealer] = new(0, 5),
+    };
+
     private static readonly Dictionary<PartyRole, PartyRole> PassPartner = new()
     {
         [PartyRole.OffTank] = PartyRole.CasterDps,
@@ -94,6 +100,9 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         world = worldParam;
         foreach (var plan in swapPlans) plan.Clear();
         firstDiveCorners.Clear();
+        state.OrbSoakers[new(-17, 0, 0)] = [PartyRole.MainTank, PartyRole.RegenHealer];
+        state.OrbSoakers[new(17, 0, 0)] = [PartyRole.OffTank, PartyRole.ShieldHealer];
+        foreach (var (role, spot) in AzureOrb) state.OrbSoakers[new(spot.X, 0, spot.Y)] = [role];
         foreach (var (role, spot) in GildedOrbSpot)
             AnoMech.Core.DiagnosticLog.Info($"[Eyes assignment] {role} yellow pair at={spot}; centre handoff to={PassPartner[role]}");
         foreach (var (role, spot) in AzureOrb)
@@ -103,6 +112,13 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
         ScheduleRescue(ai);
         ai.Move(0.3f, () => AiMove.Create(Stacked(AlphinaudStack)).NaturalOrder());
         ai.Move(18.0f, () => AiMove.Create(SupportsToRedEyeDpsToBlueEye()).NaturalOrder(), jitter: 0f);
+        world.Events.Add(DsrP4EyesScenario.OrbSpawnTime, () =>
+        {
+            var human = world.Party.PlayerRole;
+            world.Announce(AzureOrb.TryGetValue(human, out var orb)
+                ? $"Orbs: {human}, take red at centre after yellow, then soak your {(orb.Y < 0 ? "north" : "south")}{(orb.X < 0 ? "west" : "east")} blue orb."
+                : $"Orbs: {human}, share the {(GildedOrbSpot[human].X < 0 ? "west" : "east")} yellow orb; let DPS take red before moving west.");
+        });
         Every(ai, 35.5f, 40.5f, TradeWrongColoursOnEstinienThenPreposition);
         Every(ai, 41.2f, 46.5f, SupportsHandRedToDpsAfterGildedPop);
         Every(ai, 47.0f, 58.5f, DpsToBoxCornersAfterAzurePop);
@@ -172,26 +188,58 @@ public sealed class DsrP4EyesAi : IScenarioAi<DsrP4EyesState>
 
     private Vector2?[] SupportsHandRedToDpsAfterGildedPop()
     {
+        var handoffs = HandoffTargets();
         var spots = new Vector2?[8];
         foreach (var (melee, ranged) in PassPartner)
         {
-            if (!state.HoldsRed(melee)) spots[(int)melee] = BlueEyeHuddle[melee];
+            if (!state.HoldsRed(melee)) spots[(int)melee] = SupportRetreat(melee);
             else if (Popped(melee)) spots[(int)melee] = Estinien;
-            spots[(int)ranged] = state.HoldsRed(ranged) ? AzurePop(ranged) : Estinien;
+            spots[(int)ranged] = state.HoldsRed(ranged) ? AzurePop(ranged) : handoffs.GetValueOrDefault(ranged, Estinien);
         }
         return spots;
     }
 
     private Vector2?[] DpsToBoxCornersAfterAzurePop()
     {
+        var handoffs = HandoffTargets();
         var spots = new Vector2?[8];
         foreach (var (melee, ranged) in PassPartner)
         {
-            spots[(int)melee] = state.HoldsRed(melee) ? Estinien : BlueEyeHuddle[melee];
-            if (!state.HoldsRed(ranged)) spots[(int)ranged] = Estinien;
+            spots[(int)melee] = state.HoldsRed(melee) ? Estinien : SupportRetreat(melee);
+            if (!state.HoldsRed(ranged)) spots[(int)ranged] = handoffs.GetValueOrDefault(ranged, Estinien);
             else spots[(int)ranged] = Popped(ranged) ? CornerSpot(HomeCorner[ranged]) : AzurePop(ranged);
         }
         return spots;
+    }
+
+    private Dictionary<PartyRole, Vector2> HandoffTargets()
+    {
+        var red = PassPartner.Keys.Where(r => state.HoldsRed(r) && Popped(r)).Order().ToList();
+        var blue = AzureOrb.Keys.Where(r => !state.HoldsRed(r)).Order().ToList();
+        var pairs = new Dictionary<PartyRole, PartyRole>();
+        foreach (var (support, dps) in PassPartner)
+            if (red.Contains(support) && blue.Contains(dps))
+            {
+                pairs[dps] = support;
+                red.Remove(support); blue.Remove(dps);
+            }
+        foreach (var (dps, support) in blue.Zip(red)) pairs[dps] = support;
+        var targets = new Dictionary<PartyRole, Vector2>();
+        foreach (var (dps, support) in pairs)
+            if (world.Party.Get(support) is { } member)
+            {
+                var at = new Vector2(member.Position.X, member.Position.Z);
+                targets[dps] = at.LengthSquared() > 1 ? at - Vector2.Normalize(at) : Estinien;
+            }
+        return targets;
+    }
+
+    private Vector2 SupportRetreat(PartyRole role)
+    {
+        if (!AzureOrb.Keys.All(state.HoldsRed)) return CompletedHandoffWait[role];
+        var member = world.Party.Get(role);
+        return member != null && MathF.Abs(member.Position.Z) > 1 && member.Position.X > -2
+            ? Estinien : BlueEyeHuddle[role];
     }
 
     private bool Popped(PartyRole role) => world.Party.Get(role) is { } member && member.HasStatus(StatusId.FireResistanceDownII);

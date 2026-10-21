@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
@@ -66,6 +68,7 @@ public sealed class DsrP4EyesScenario : IScenario
     private readonly List<SimEnemy> extras = [];
     private readonly Queue<SimEnemy> waitingDivers = new();
     private readonly List<Orb> orbs = [];
+    private static readonly JsonSerializerOptions OrbTraceOptions = new() { NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals };
     public sealed record OrbHit(float Time, Vector3 Position, bool Yellow, PartyRole Role, bool Red, bool Resistance);
     public List<OrbHit> OrbHits { get; } = [];
     public sealed record Transfer(float Time, PartyRole From, PartyRole To);
@@ -305,7 +308,9 @@ public sealed class DsrP4EyesScenario : IScenario
             Placement: new Placement(at, RotationTowards(at, Vector3.Zero))));
         if (enemy == null) return;
         extras.Add(enemy);
-        orbs.Add(new Orb(enemy, at, gilded));
+        var orb = new Orb(enemy, at, gilded);
+        orbs.Add(orb);
+        TraceOrb(orb, "spawn");
         AnoMech.Core.DiagnosticLog.Info($"[Eyes spawn] t={world.Events.Elapsed:F2} player={party.PlayerRole} orb={baseId}@{at} yellow={gilded}");
     }
     private void TouchOrbs(float elapsed)
@@ -318,6 +323,7 @@ public sealed class DsrP4EyesScenario : IScenario
             {
                 orb.Scale = radius;
                 orb.Enemy.SetModelScale(radius);
+                TraceOrb(orb, "growth");
                 AnoMech.Core.DiagnosticLog.Info($"[Eyes growth] t={elapsed:F2} at={orb.At} yellow={orb.Gilded} radius={radius}");
 
             }
@@ -328,6 +334,7 @@ public sealed class DsrP4EyesScenario : IScenario
     private void Pop(Orb orb, List<SimCharacter> touchers, bool ripe)
     {
         orb.Popped = true;
+        TraceOrb(orb, "soaked");
         AnoMech.Core.DiagnosticLog.Info($"[Eyes orb] t={world.Events.Elapsed:F2} at={orb.At} yellow={orb.Gilded} radius={orb.Scale} ripe={ripe} touchers={string.Join(",", touchers.Select(m => ((ISimPartyMember)m).Role))}");
         var actionId = orb.Gilded ? ActionId.FlareNova : ActionId.FlareStar;
         var hits = AliveMembers().Where(m => FlatDistance(m.Position, orb.At) <= OrbBlastRadius).ToArray();
@@ -354,11 +361,50 @@ public sealed class DsrP4EyesScenario : IScenario
     {
         foreach (var orb in orbs.Where(o => o.Gilded == gilded && !o.Popped).ToList())
         {
+            TraceOrb(orb, "expired");
+            var assigned = state.OrbSoakers.GetValueOrDefault(orb.At) ?? [];
+            var responsibility = string.Join("/", assigned.Select(r => r + (r == party.PlayerRole ? " (human)" : " (bot)")));
+            world.Announce($"Missed {(gilded ? "yellow" : "blue")} orb at {orb.At.X}, {orb.At.Z}; assigned: {responsibility}.");
             orb.Popped = true;
             var actionId = gilded ? ActionId.FlareNovaUnpopped : ActionId.FlareStarUnpopped;
             Hit(orb.Enemy, actionId, AliveMembers(), (ctx, hit) => ctx.Kill(hit, "orb left to burst"));
             world.Events.Add(EffectCarrierLinger, orb.Enemy.FadeOut);
         }
+    }
+
+    private void TraceOrb(Orb orb, string phase)
+    {
+        var assigned = state.OrbSoakers.GetValueOrDefault(orb.At) ?? [];
+        object Point(Vector3 at) => new { x = at.X, z = at.Z };
+        var payload = new
+        {
+            time = world.Events.Elapsed, orb = orb.Enemy.GameObjectId.ObjectId,
+            position = Point(orb.At), colour = orb.Gilded ? "yellow" : "blue", state = phase,
+            radius = Orbs.Radius(orb.Gilded, world.Events.Elapsed - OrbSpawnTime), ripe = Orbs.Ripe(orb.Gilded, world.Events.Elapsed - OrbSpawnTime),
+            human = party.PlayerRole.ToString(), assigned = assigned.Select(r => r.ToString()).ToArray(),
+            humanResponsible = assigned.Contains(party.PlayerRole),
+            failure = phase != "expired" ? null : assigned.Any(r => party.Get(r) is not { Dead: false })
+                ? "assigned soaker unavailable" : assigned.Any(r => !state.HoldsRed(r))
+                    ? "assigned soaker lacks red tether" : "assigned soaker did not reach orb",
+            affected = (phase == "expired" ? AliveMembers() : phase == "soaked" ? AliveMembers().Where(m => FlatDistance(m.Position, orb.At) <= OrbBlastRadius) : Array.Empty<SimCharacter>())
+                .Cast<ISimPartyMember>().Select(m => m.Role.ToString()).ToArray(),
+            recentTransfers = Transfers.Where(t => world.Events.Elapsed - t.Time <= 5)
+                .Select(t => new { time = t.Time, from = t.From.ToString(), to = t.To.ToString() }).ToArray(),
+            players = Enum.GetValues<PartyRole>().Select(role =>
+            {
+                var member = party.Get(role);
+                return new
+                {
+                    role = role.ToString(), red = state.HoldsRed(role), alive = member is { Dead: false },
+                    position = member == null ? null : Point(member.Position),
+                    destination = member?.MoveDestination is { } destination ? Point(destination) : null,
+                    distance = member == null ? (float?)null : FlatDistance(member.Position, orb.At),
+                    lockout = member?.FindStatus(StatusId.BoundAndDetermined)?.RemainingTime ?? 0,
+                    fireResistanceDown = member?.FindStatus(StatusId.FireResistanceDownII)?.RemainingTime ?? 0,
+                };
+            }).ToArray(),
+        };
+        AnoMech.Core.DiagnosticLog.Info("[EyesOrb] " + JsonSerializer.Serialize(payload, OrbTraceOptions));
     }
 
     private void SpawnWaitingDivers()
