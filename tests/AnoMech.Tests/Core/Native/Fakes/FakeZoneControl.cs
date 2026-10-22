@@ -12,7 +12,6 @@ internal sealed class FakeZoneControl(FakeCharacter player, SimTimeline timeline
     public bool IsActive { get; private set; }
     public bool NativePracticeReady { get; set; }
     public string FirewallStatus => "fake transport";
-    public void EndSpeedBuffs() { }
     public List<uint> ResetRecasts { get; } = [];
     public void ResetPracticeRecast(uint action) => ResetRecasts.Add(action);
     public void NotePracticeAction(uint action) { }
@@ -25,6 +24,8 @@ internal sealed class FakeZoneControl(FakeCharacter player, SimTimeline timeline
         settling = null;
         return null;
     }
+
+    public void EndSpeedBuffs() { }
 
     public bool Enter(uint territoryId, Vector3 playerSpawn)
     {
