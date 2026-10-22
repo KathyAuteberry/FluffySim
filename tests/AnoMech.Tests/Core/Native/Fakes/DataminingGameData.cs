@@ -46,6 +46,13 @@ internal sealed class DataminingGameData(FakeRsvFunctions rsv) : IGameData
     public static IEnumerable<uint> PlayerActionIds()
         => Actions.Value.Ids.Where(id => Actions.Value.Row(id) is { } row && row.Bool("IsPlayerAction") && !row.Bool("IsPvP"));
 
+    public static (float Cast, float Recast, byte Group, byte AdditionalGroup, uint Category) RecastData(uint id)
+    {
+        var row = Actions.Value.Row(id) ?? throw new ArgumentException($"Missing action {id}");
+        return (row.UInt("Cast100ms") / 10f, row.UInt("Recast100ms") / 10f,
+            row.Byte("CooldownGroup"), row.Byte("AdditionalCooldownGroup"), row.UInt("ActionCategory"));
+    }
+
     public KnockbackRow? Knockback(uint knockbackId)
         => Knockbacks.Value.Row(knockbackId) is { } row
             ? new KnockbackRow(knockbackId, row.Byte("Distance"), row.Byte("Speed"), row.Byte("Direction"))

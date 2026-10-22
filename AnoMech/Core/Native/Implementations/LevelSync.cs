@@ -59,6 +59,9 @@ internal sealed unsafe class LevelSync
             statsSynced = true;
 
             var stats = savedStats;
+            if (Offline.OfflineSession.InWorld && PacketIndex(47) is { } hasteIndex)
+                stats.Attributes[hasteIndex] = Offline.OfflineLoadouts.PermanentHaste(classJobId,
+                    cfcLevelSync == 0 ? currentLevel : System.Math.Min(currentLevel, cfcLevelSync));
             foreach (var (baseParamId, value) in GetSyncedAttributes(cfcLevelSync, ilvlSync))
             {
                 if (PacketIndex((uint)baseParamId) is { } index)

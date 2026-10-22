@@ -48,7 +48,7 @@ internal static class OfflineLoadouts
     private const byte DefaultVoice = 1;
     private const uint DefaultMaxMp = 10000;
     private const int AttributeCount = 74;
-    private const int SkillSpeed = 45, SpellSpeed = 46;
+    private const int SkillSpeed = 45, SpellSpeed = 46, Haste = 47;
 
     // RaptureGearsetModule.GearsetItemIndex -> DrawDataContainer.EquipmentSlot.
     private static readonly (int Item, int Slot)[] ArmorSlots =
@@ -99,7 +99,7 @@ internal static class OfflineLoadouts
         var maxHp = EstimatedMaxHp(level, JobRow(set.ClassJobId) is { Role: 1 });
         var inn = inns[0];
         var summary = $"{JobName(set.ClassJobId)} level {level}, i{set.ItemLevel}, about {maxHp:N0} HP, in {inn.Name}";
-        return new OfflineLoadout(character, ChosenName(choice), set.ClassJobId, level, maxHp, DefaultMaxMp, Attributes(equipment, level), LookFromGearset(set),
+        return new OfflineLoadout(character, ChosenName(choice), set.ClassJobId, level, maxHp, DefaultMaxMp, Attributes(equipment, level, set.ClassJobId), LookFromGearset(set),
                                   equipment, appearance?.Customize ?? DefaultCustomize, appearance?.Voice ?? DefaultVoice, inn, summary) { HomeWorld = choice.HomeWorld };
     }
 
@@ -148,9 +148,8 @@ internal static class OfflineLoadouts
         return IsKnownLevel(level) ? level : (byte)1;
     }
 
-    // Only skill and spell speed change what the game does offline (the GCD), so only those carry
-    // the level's base value; the rest is what the gear and materia give.
-    private static int[] Attributes(OfflineGearset set, byte level)
+    // Recast stats need their native baselines; the remaining attributes come from equipment.
+    private static int[] Attributes(OfflineGearset set, byte level, byte classJobId)
     {
         var attributes = new int[AttributeCount];
         void Add(uint param, int value)
@@ -175,9 +174,43 @@ internal static class OfflineLoadouts
             }
         }
         var baseSpeed = Plugin.DataManager.GetExcelSheet<ParamGrow>().GetRowOrDefault(level)?.BaseSpeed ?? 0;
+        AddRecastBaselines(attributes, baseSpeed);
+        attributes[Haste] = PermanentHaste(classJobId, level);
+        return attributes;
+    }
+
+    internal static void AddRecastBaselines(Span<int> attributes, int baseSpeed)
+    {
         attributes[SkillSpeed] += baseSpeed;
         attributes[SpellSpeed] += baseSpeed;
-        return attributes;
+        // Haste is a percentage multiplier, not an additive stat. Zero hits the native 1500ms floor.
+        attributes[Haste] = 100;
+    }
+
+    internal static int PermanentHaste(byte classJobId, byte level)
+    {
+        var traits = Plugin.DataManager.GetExcelSheet<Trait>();
+        return HasteFromTraits(id =>
+        {
+            var trait = traits.GetRow(id);
+            var jobs = trait.ClassJobCategory.Value;
+            return trait.Level <= level && (classJobId switch
+            {
+                2 => jobs.PGL,
+                20 => jobs.MNK,
+                30 => jobs.NIN,
+                _ => false,
+            });
+        });
+    }
+
+    internal static int HasteFromTraits(Func<uint, bool> unlocked)
+    {
+        // These traits replace one another; their reductions must not stack.
+        if (unlocked(367)) return 80;
+        if (unlocked(366) || unlocked(584)) return 85;
+        if (unlocked(365)) return 90;
+        return unlocked(364) ? 95 : 100;
     }
 
     private static uint EstimatedMaxHp(byte level, bool tank)
