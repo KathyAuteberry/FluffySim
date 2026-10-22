@@ -3,12 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Game.Geometry;
 using static AnoMech.Scenarios.Dsr.DsrP5Constants;
 
 namespace AnoMech.Scenarios.Dsr.P5Wrath;
 
 public sealed class DsrP5WrathState
 {
+    public readonly List<WrathTwister> Twisters = [];
+
     public const float KnightRadius = 23f;
     public const float DragoonOffset = 30f;
     public const float CasterRadius = 9f;
@@ -72,4 +75,12 @@ public sealed class DsrP5WrathState
     public Vector3 DragoonSpot(int dragoon) => AtBearing(DragonBearing + (dragoon == 0 ? DragoonOffset : -DragoonOffset), KnightRadius);
     public Vector3 WarriorSpot => AtBearing(WarriorBearing, CasterRadius);
     public Vector3 MageSpot => AtBearing(MageBearing, CasterRadius);
+}
+
+public sealed record WrathTwister(PartyRole Owner, Vector3 Position)
+{
+    public const float CollisionRadius = 1.5f;
+    public const float Activation = 46.70f;
+    public const float Expiration = 50.90f;
+    public TimedCircle Hazard => new(new(Position.X, Position.Z), CollisionRadius, Activation, Expiration);
 }
