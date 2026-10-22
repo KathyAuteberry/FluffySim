@@ -81,7 +81,11 @@ public abstract class SimCharacter : ISimObject, IPositioned
     // What mechanics and the AI read, like the server's position; CharacterMotion says where each
     // kind of character gets it.
     private Placement? pausedPose;
-    internal void FreezePausePose(Placement? pose) => pausedPose = pose;
+    internal void FreezePausePose(Placement? pose)
+    {
+        pausedPose = pose;
+        Casting.PausePresentation(pose is not null);
+    }
     public Vector3 Position => pausedPose?.Position ?? Motion.Position;
     public float Rotation => pausedPose?.Rotation ?? Motion.Rotation;
 

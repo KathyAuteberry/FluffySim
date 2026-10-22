@@ -42,4 +42,45 @@ public class SimCastTests
         Assert.That(fake.BattleCharas.Player.ActorCasts, Is.Empty);
         Assert.That(fake.Timeline.Rows.Where(e => e["kind"] == "cast"), Is.Empty);
     }
+    [TestCase(0)] [TestCase(3)] [TestCase(18)]
+    public void GeirskogulRetainsLockedDirectionAndRemainingOmenDelayAcrossRegistrationAndPause(int spawnFrames)
+    {
+        var fake = FakeGame.Install();
+        fake.BattleCharas.PacketSpawnDelayFrames = spawnFrames;
+        using var world = new SimWorld(new EventScheduler());
+        var clone = world.SpawnEnemy(new EnemySpawnConfig(12606))!;
+        clone.Casting.NativeCast(26378, ActionType.Action, 3.5f, 4.2f, false, rotation: 1.2f);
+        for (var i = 0; i < 10; i++) fake.Frame(.1f, clone.Tick);
+        clone.Casting.PausePresentation(true);
+        for (var i = 0; i < 10; i++) fake.Frame(.1f, clone.Tick);
+        clone.Casting.PausePresentation(false);
+        for (var i = 0; i < 10; i++) fake.Frame(.1f, clone.Tick);
+        var casts = ((FakeBattleChara)clone.Proxy!).ReceivedCasts;
+        Assert.That(casts, Is.Not.Empty);
+        var last = casts.Last();
+        Assert.That(last.Rotation, Is.EqualTo(1.2f));
+        Assert.That(last.CastTime - last.OmenDelay, Is.EqualTo(.7f).Within(.001f));
+        Assert.That(last.OmenDelay, Is.GreaterThan(1.4f));
+        Assert.That(clone.Casting.CastSeq, Is.EqualTo(1));
+        var count = casts.Count;
+        clone.Casting.Despawn();
+        for (var i = 0; i < 5; i++) fake.Frame(.1f, clone.Tick);
+        Assert.That(casts.Count, Is.EqualTo(count));
+    }
+
+    [Test]
+    public void ActorArrivingAfterOmenDeadlineStillReceivesTheRemainingWarning()
+    {
+        var fake = FakeGame.Install();
+        fake.BattleCharas.PacketSpawnDelayFrames = 16;
+        using var world = new SimWorld(new EventScheduler());
+        var clone = world.SpawnEnemy(new EnemySpawnConfig(12606))!;
+        clone.Casting.NativeCast(26378, ActionType.Action, 3.5f, 4.2f, false, rotation: 1.2f);
+        for (var i = 0; i < 19; i++) fake.Frame(.2f, clone.Tick);
+        var cast = ((FakeBattleChara)clone.Proxy!).ReceivedCasts.Single();
+        Assert.That(cast.OmenDelay, Is.Zero);
+        Assert.That(cast.CastTime, Is.InRange(.1f, .7f));
+        Assert.That(cast.Rotation, Is.EqualTo(1.2f));
+    }
+
 }

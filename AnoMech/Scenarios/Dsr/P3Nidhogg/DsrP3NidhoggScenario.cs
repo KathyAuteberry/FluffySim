@@ -6,6 +6,7 @@ using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Core.EnemyActions.EnemyActionEffects;
 using static AnoMech.Scenarios.Dsr.P3Nidhogg.DsrP3NidhoggActions;
@@ -100,6 +101,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
 
     private void SpawnOpening()
     {
+        Natives.TimelinePreload.Preload([(4574, "mon_sp/m0711/hide/mon_sp002")], "DsrP3Nidhogg");
         boss = Spawn(12605, Vector3.Zero, true);
         boss.SetTargetable(false);
         helper = Spawn(9020, Vector3.Zero);
@@ -151,7 +153,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
             state.DiveTowers[line - 1].Add((role, tower));
             divers[line - 1].Add(actor);
             actor.Cast(Dive(state.Arrows[role]), target);
-            world.Events.Add(.57f, () => actor.SetModelHidden(true));
+            world.Events.Add(1.1f, () => actor.SetModelHidden(true));
         }
     }
 

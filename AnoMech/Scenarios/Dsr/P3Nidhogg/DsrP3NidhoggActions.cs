@@ -20,7 +20,10 @@ public static class DsrP3NidhoggActions
         Effects = [Damage(split: Distribution.Stack(4))],
         Timing = new() { DamageDelay = 0 },
     };
-    public static readonly EnemyAction Geirskogul = Hit(26378, Severity.Lethal);
+    public static readonly EnemyAction Geirskogul = Hit(26378, Severity.Lethal) with
+    {
+        Cast = new() { OmenDelay = 3.5f },
+    };
     public static readonly EnemyAction Drachenlance = Hit(26380, Severity.Lethal) with
     {
         Area = new() { Size = MathF.PI / 4 },
