@@ -97,12 +97,27 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
     // the caster, since the game aims some lines from behind it, and an action with Cast.FaceTarget
     // off keeps its facing for any target. Some actions animate only when delivered to a target, but one outside
     // CharacterManager null-derefs ApplyAll.
-    private void Release(EnemyAction action, SimCharacter? target, Vector3? location, GameObjectId? castTarget, byte animationVariation, Delivery delivery)
+    private void Release(EnemyAction action, SimCharacter? target, Vector3? location, GameObjectId? castTarget, byte animationVariation, Delivery delivery,
+        float? presentationDeadline = null)
     {
-        if (!world.Map.IsInInstance) return;
+        if (!world.Map.IsInInstance || !caster.IsActive) return;
         var id = action.ActionId;
         if (target == caster) target = null;
         var aim = location ?? target?.Position;
+        if (presentationDeadline is { } expired && world.Events.Elapsed >= expired)
+        {
+            DiagnosticLog.Warn($"[EnemyPresentation] action={id} stage=expired source=0x{caster.GameObjectId.ObjectId:X} target=0x{castTarget?.ObjectId:X} {caster.Proxy?.DescribeDrawState()}");
+            return;
+        }
+        if (action.Cast.RequireAnimationReady && caster.Proxy is not { IsAnimationReady: true })
+        {
+            var deadline = presentationDeadline ?? world.Events.Elapsed + action.Cast.AnimationLock;
+            if (presentationDeadline == null)
+                DiagnosticLog.Warn($"[EnemyPresentation] action={id} stage=waiting source=0x{caster.GameObjectId.ObjectId:X} target=0x{castTarget?.ObjectId:X} {caster.Proxy?.DescribeDrawState()}");
+            if (world.Events.Elapsed < deadline)
+                Schedule(1f / 60f, () => Release(action, target, aim, castTarget, animationVariation, delivery, deadline));
+            return;
+        }
         // The client plays the release along the caster's model facing, not the packet's rotation, and
         // a turn reaches the model only on the next flush, so an unseen helper snaps to its target.
         if (action.Cast.FaceTarget && target is not null)
@@ -154,6 +169,16 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
             id, action.Cast.AnimationLock, (ushort)id, animationVariation, ActionType.Action, 0,
             rotation: caster.Rotation + action.Cast.Rotation, position: aim ?? caster.Position, animationTargetId: action.Cast.AnimationTargetsCaster ? caster.GameObjectId : castTarget, targets: targets);
         delivery.Confirmations = confirmations;
+        if (action.Cast.RequireAnimationReady)
+        {
+            DiagnosticLog.Info($"[EnemyPresentation] action={id} stage=dispatched source=0x{caster.GameObjectId.ObjectId:X} target=0x{castTarget?.ObjectId:X} sequence={delivery.Sequence} animationReady={caster.Proxy?.IsAnimationReady} {caster.Proxy?.DescribeActionTimeline()}");
+            foreach (var delay in new[] { .12f, .45f, .95f })
+                Schedule(delay, () =>
+                {
+                    if (caster.IsActive && world.Map.IsInInstance)
+                        DiagnosticLog.Info($"[EnemyPresentation] action={id} stage=observe after={delay:F2} source=0x{caster.GameObjectId.ObjectId:X} {caster.Proxy?.DescribeActionTimeline()}");
+                });
+        }
         if (delivery.ImpactDue) ConfirmDamage(delivery);
     }
 

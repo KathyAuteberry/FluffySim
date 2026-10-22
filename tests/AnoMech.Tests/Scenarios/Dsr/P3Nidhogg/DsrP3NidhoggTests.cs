@@ -196,7 +196,7 @@ public class DsrP3NidhoggTests
                     Assert.That(boss.Proxy!.TargetableStatus & 3, Is.Zero);
                     var divers = enemies.Where(e => e.BNpcBaseId == 12606).ToArray();
                     Assert.That(divers.Length, Is.EqualTo(8));
-                    Assert.That(divers.All(e => ((FakeBattleChara)e.Proxy!).ModelHidden), Is.True);
+                    Assert.That(divers.All(e => !((FakeBattleChara)e.Proxy!).IsDrawObjectVisible), Is.True);
                 }
                 if (p.Crossed(11f))
                 {
@@ -330,7 +330,7 @@ public class DsrP3NidhoggTests
         Assert.That(run.Passed, run.ToString);
         Assert.That(checks, Is.EqualTo(11));
         var preloads = ((FakeActionTimelinePreload)AnoMech.Core.Native.Interfaces.Natives.TimelinePreload).Rows;
-        Assert.That(preloads, Is.EqualTo(new[] { ((ushort)4574, "mon_sp/m0711/hide/mon_sp002") }));
+        Assert.That(preloads, Is.Empty);
     }
 
     [TestCase(1, DiveArrow.Circle)] [TestCase(1, DiveArrow.Up)] [TestCase(1, DiveArrow.Down)]
@@ -344,6 +344,11 @@ public class DsrP3NidhoggTests
         var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
         {
             ScenarioFactory = () => scenario, StopAt = at + 1.3f, PlayerRole = PartyRole.MainTank,
+            ConfigureNative = f =>
+            {
+                f.BattleCharas.PacketSpawnDelayFrames = 5;
+                f.BattleCharas.NpcDrawObjectDelayFrames = 12;
+            },
             Overrides = o =>
             {
                 var settings = (DsrP3NidhoggStateOverrides)o;
@@ -360,7 +365,10 @@ public class DsrP3NidhoggTests
                     foreach (var clone in clones)
                     {
                         var native = (FakeBattleChara)clone.Proxy!;
-                        Assert.That(native.ModelHidden, Is.EqualTo(hidden));
+                        Assert.That(native.IsDrawObjectVisible, Is.EqualTo(!hidden));
+                        Assert.That(native.IsAnimationReady, Is.True);
+                        Assert.That(native.ModelHidden, Is.False);
+                        Assert.That(native.UnrenderableActions.Where(id => id is >= 26382 and <= 26384), Is.Empty);
                         Assert.That(native.ReceivedEffects.Count(e => e.ActionId is >= 26382 and <= 26384), Is.EqualTo(1));
                     }
                     checks++;
@@ -421,6 +429,71 @@ public class DsrP3NidhoggTests
         Assert.That(moved, Is.True);
         var hit = run.Deaths.Single(d => d.Role == PartyRole.MainTank && d.ActionId == 26378);
         Assert.That(hit.Time, Is.EqualTo(46.51f + 4.2f).Within(.04));
+    }
+
+    [TestCase(false)] [TestCase(true)]
+    public void ColdRendererWaitsWithoutMovingThePlacementSnapshotAndCancelsOnLeave(bool leaveEarly)
+    {
+        var scenario = new DsrP3NidhoggScenario();
+        SimEnemy? clone = null;
+        FakeCharacter? nativeActor = null;
+        FakeGame? client = null;
+        System.Numerics.Vector3 lockedPosition = default;
+        var checkedSnapshot = false;
+        var checkedDispatch = false;
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
+        {
+            ScenarioFactory = () => scenario, PlayerRole = PartyRole.MainTank,
+            StopAt = leaveEarly ? 37.4f : 38f,
+            ConfigureNative = f => client = f,
+            Takeovers = [new(37.2f, null)],
+            Overrides = o => ((DsrP3NidhoggStateOverrides)o).PlayerLine = 1,
+            Probe = p =>
+            {
+                if (p.Crossed(37.2f))
+                {
+                    foreach (var actor in p.World.Children.OfType<SimEnemy>().Where(e => e.BNpcBaseId == 12606))
+                        client!.BattleCharas.Find(actor.EntityId)!.HasLoadedModel = false;
+                    lockedPosition = p.Member(PartyRole.MainTank)!.Position;
+                }
+                if (p.Crossed(37.35f))
+                {
+                    clone = p.World.Children.OfType<SimEnemy>().Single(e => e.BNpcBaseId == 12606
+                        && System.Numerics.Vector3.DistanceSquared(e.Position, lockedPosition) < .01f);
+                    var native = (FakeBattleChara)clone.Proxy!;
+                    Assert.That(native.ReceivedEffects, Is.Empty);
+                    Assert.That(scenario.LastState!.DiveTowers[0], Is.Not.Empty);
+                    Assert.That(p.Member(PartyRole.MainTank)!.HasStatus(DsrP3NidhoggActions.FireResistanceDown), Is.True);
+                    nativeActor = client!.BattleCharas.Find(clone.EntityId);
+                    var beforePause = p.Time;
+                    p.Game.Paused = true;
+                    client.Frame(.6f, p.Game.Tick);
+                    Assert.That(p.Time, Is.EqualTo(beforePause));
+                    Assert.That(native.ReceivedEffects, Is.Empty);
+                    p.Game.Paused = false;
+                    checkedSnapshot = true;
+                }
+                if (p.Crossed(37.5f))
+                {
+                    foreach (var actor in p.World.Children.OfType<SimEnemy>().Where(e => e.BNpcBaseId == 12606))
+                        client!.BattleCharas.Find(actor.EntityId)!.HasLoadedModel = true;
+                }
+                if (p.Crossed(37.7f))
+                {
+                    var native = (FakeBattleChara)clone!.Proxy!;
+                    var effect = native.ReceivedEffects.Single();
+                    Assert.That(effect.ActionId, Is.InRange(26382u, 26384u));
+                    Assert.That(effect.AnimationTarget, Is.EqualTo(p.Member(PartyRole.MainTank)!.GameObjectId));
+                    Assert.That(effect.Position, Is.EqualTo(p.World.Coordinates.ToGlobal(lockedPosition)));
+                    Assert.That(native.UnrenderableActions, Is.Empty);
+                    checkedDispatch = true;
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedSnapshot, Is.True);
+        Assert.That(checkedDispatch, Is.EqualTo(!leaveEarly));
+        Assert.That(nativeActor!.ActionEffects.Count, Is.EqualTo(leaveEarly ? 0 : 1));
     }
 
 }

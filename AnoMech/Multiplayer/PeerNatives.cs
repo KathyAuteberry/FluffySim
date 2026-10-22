@@ -266,11 +266,12 @@ internal sealed class PeerProxy(IBattleCharaProxy inner, PeerSeat seat) : IBattl
     public float Rotation => inner.Rotation;
     public float HitboxRadius => inner.HitboxRadius;
     public bool HasDrawObject => inner.HasDrawObject;
-        public bool HasLoadedModel => inner.HasLoadedModel;
+    public bool HasLoadedModel => inner.HasLoadedModel;
+    public bool IsAnimationReady => inner.IsAnimationReady;
     public void SetModelScale(float scale) => inner.SetModelScale(scale);
     public void SetModelHidden(bool hidden) => inner.SetModelHidden(hidden);
     public IActorVfxProxy? AttachVfx(string path) => inner.AttachVfx(path);
-    public bool IsDrawObjectVisible => inner.IsDrawObjectVisible;
+    public bool IsDrawObjectVisible { get => inner.IsDrawObjectVisible; set => inner.IsDrawObjectVisible = value; }
     public byte ModelState => inner.ModelState;
     public bool IsCasting => inner.IsCasting;
     public uint CastActionId => inner.CastActionId;

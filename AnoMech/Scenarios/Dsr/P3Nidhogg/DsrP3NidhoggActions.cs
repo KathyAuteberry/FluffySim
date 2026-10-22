@@ -38,7 +38,7 @@ public static class DsrP3NidhoggActions
     };
     public static EnemyAction Dive(DiveArrow arrow) => new((uint)(arrow switch { DiveArrow.Up => 26383, DiveArrow.Down => 26384, _ => 26382 }))
     {
-        Cast = new() { FaceTarget = false, AnimationLock = 1.1f },
+        Cast = new() { FaceTarget = false, AnimationLock = 1.1f, RequireAnimationReady = true },
         Effects = [Damage(VulnerableTo(FireResistanceDown)), ApplyStatus(FireResistanceDown, 11.96f), ApplyStatus(PhysicalVulnerability, 2.96f)],
         Timing = new() { DamageDelay = 0 },
     };

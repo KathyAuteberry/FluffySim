@@ -194,6 +194,15 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         PartyModelVisibility.Reconcile(obj, Slot, hidden, Offline.OfflineSession.InWorld);
     }
 
+    public bool IsAnimationReady
+    {
+        get
+        {
+            var actor = Ptr;
+            return actor != null && HasLoadedModel && actor->Timeline.TimelineSequencer.Parent != null;
+        }
+    }
+
     public void SetModelScale(float scale)
     {
         var obj = Ptr;
@@ -208,6 +217,11 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         {
             var obj = Ptr;
             return obj != null && obj->DrawObject != null && obj->DrawObject->IsVisible;
+        }
+        set
+        {
+            var obj = Ptr;
+            if (obj != null && obj->DrawObject != null) obj->DrawObject->IsVisible = value;
         }
     }
 

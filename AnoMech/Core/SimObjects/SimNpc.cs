@@ -87,6 +87,22 @@ public class SimNpc : SimCharacter
 
     private float? modelScale;
     private bool modelScaleApplied;
+    private bool? drawObjectVisible;
+
+    // Hide a staged actor without suppressing creation of its renderer and animation sequencer.
+    public void SetDrawObjectVisible(bool visible)
+    {
+        drawObjectVisible = visible;
+        ApplyDrawObjectVisibility();
+    }
+
+    private void ApplyDrawObjectVisibility()
+    {
+        if (drawObjectVisible is { } visible && Proxy is { HasDrawObject: true } native
+            && native.IsDrawObjectVisible != visible)
+            native.IsDrawObjectVisible = visible;
+    }
+
     public void SetModelScale(float scale)
     {
         if (scale <= 0 || !float.IsFinite(scale)) return;
@@ -124,6 +140,7 @@ public class SimNpc : SimCharacter
         PacketSpawnFrames++;
         ProbePacketSpawn();
         ApplyModelScale();
+        ApplyDrawObjectVisibility();
     }
 
     public override void Despawn()

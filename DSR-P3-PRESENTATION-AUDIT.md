@@ -89,3 +89,60 @@ and confirm tower placement is already locked, compare the late line flash to re
 before and during the flash, and Restart/Leave at both pending and visible presentation points.
 Repeat in an inn and from title-screen offline practice. Confirm native castbar/enemy-list and
 resource preload behavior with no duplicate or orphaned effects.
+
+## Native retest failure and renderer correction (2026-10-22)
+
+The previous lifetime/preload change did **not** repair the native jump. It must not be treated
+as a verified visual fix. The native retest's Dalamud log shows all eight waiting clone actors
+with `DrawObject=null` and empty animation slots at +5, +30, +90 and +210 frames. Their
+BattleCharas and model IDs existed; their renderers/sequencers did not. An ActionEffect request
+at the same frame as clearing the model-suppression mask cannot make that renderer already exist.
+The earlier fake assumed renderers existed as soon as their actors registered and therefore
+could not expose this failure. A successful TMB preload also says nothing about the actor's
+ability to play it. Preloading this model-specific timeline has been removed; extending the
+hide deadline again is not the correction.
+
+AsuMech's `Core/SimObjects/SimEnemy.Fork.cs` preserves a desired visibility and applies it to an
+existing DrawObject every tick. Its `BattleCharaProxy.IsDrawObjectVisible` setter writes the
+DrawObject's IsVisible property, rather than GameObject.RenderFlags.Model. Its P3 Dive method
+uses the same three native action IDs and targets; it does not supply a missing alternate jump
+spell or a separate movement packet. The local AnoMech implementation exposes only a read-only
+DrawObject visibility and model-mask hiding. FluffySim's adaptation lost this important
+visibility distinction. The original recorded clone sequences contain ActorSetPos followed by
+ActionEffect1 (26382/26383/26384), with the marked player as animation target. No additional
+source ActorControl jump event appears in the inspected dive window. The recorded hidden spawn
+flags are useful context, but old packet header/mode layouts have not been blindly copied.
+
+The correction adds retained-renderer visibility at the native boundary and uses it only for
+P3's clone staging, dives and tower/line reveals. Waiting clones may finish loading their model
+and sequencer while their DrawObjects remain invisible. At the unchanged snapshot the source
+is placed at the locked target pose, revealed, and the original targeted ActionEffect is sent
+through ActionEffectHandler.Receive. Native timeline 4574 resolves the clone jump, target impact
+AVFX and sound already identified above. No second action, manual fallback VFX or invented
+flight path is added. The existing 1.1-second hide deadline is unchanged.
+
+Only the three dive actions opt into a loaded-renderer/sequencer guard. Unexpectedly cold sources
+retry presentation on the simulation scheduler until the original animation-lock deadline;
+mechanical damage/status/placement snapshots have already resolved. The visual aim is captured
+before waiting, and no stale jump is replayed after the deadline. Pause stops this retry clock;
+Restart/Leave clear the world queue and destroy its actors. A genuinely late renderer cannot
+render at a past timestamp: the fallback is explicitly logged, not claimed to be frame-perfect.
+
+Diagnostics are prefixed `[DsrP3Dive]` (staged readiness, numbered snapshot, hide, tower cast,
+world cleanup) and `[EnemyPresentation]` (waiting, dispatched sequence, expiry and three native
+sequencer observations). A dispatch sequence means the native handler was called, not that pixels
+were drawn. Inspect the observations for timeline 4574, advancing scheduler timestamps, loaded
+resources, render flags and actual DrawObject visibility. Missing models/empty sequencers remain
+an actionable failure even if every simulated timeline assertion passes.
+
+New tests model asynchronous renderer allocation blocked by model suppression; cover the nine
+number/arrow combinations with retained hidden renderers; detect unrenderable ActionEffect
+requests; exercise cold-source retry, original snapshots, Pause and Leave cancellation. Existing
+P3 tests continue to cover target IDs, facing offsets, human/bot targets, lifecycle, all seats
+and the recorded Geirskogul delay. A metadata contract checks both Debug artifacts for the real
+DrawObject visibility setter and ActionEffectHandler.Receive path.
+
+**Native acceptance remains pending.** Retest all three numbered waves and jump types against
+human and bot targets in both an inn and title-screen practice. Confirm a visible native clone
+dive/impact at marker expiry, before the later tower. Use the new renderer/sequencer diagnostics
+if the native presentation is still absent; passing headless tests does not close the visual bug.
