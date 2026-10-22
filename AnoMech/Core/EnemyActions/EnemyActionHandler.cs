@@ -113,7 +113,7 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
         {
             var deadline = presentationDeadline ?? world.Events.Elapsed + action.Cast.AnimationLock;
             if (presentationDeadline == null)
-                DiagnosticLog.Warn($"[EnemyPresentation] action={id} stage=waiting source=0x{caster.GameObjectId.ObjectId:X} target=0x{castTarget?.ObjectId:X} {caster.Proxy?.DescribeDrawState()}");
+                DiagnosticLog.Warn($"[EnemyPresentation] action={id} stage=waiting source=0x{caster.GameObjectId.ObjectId:X} target=0x{castTarget?.ObjectId:X} {caster.Proxy?.DescribeDrawState()} {caster.Proxy?.DescribeActionTimeline()}");
             if (world.Events.Elapsed < deadline)
                 Schedule(1f / 60f, () => Release(action, target, aim, castTarget, animationVariation, delivery, deadline));
             return;

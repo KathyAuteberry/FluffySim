@@ -146,3 +146,27 @@ DrawObject visibility setter and ActionEffectHandler.Receive path.
 human and bot targets in both an inn and title-screen practice. Confirm a visible native clone
 dive/impact at marker expiry, before the later tower. Use the new renderer/sequencer diagnostics
 if the native presentation is still absent; passing headless tests does not close the visual bug.
+
+## Second native retest: visible clone, suppressed dive action
+
+The retained-renderer change made the clone visible, but the second retest showed a static
+appearance/disappearance instead of a landing. Every numbered dive logged `stage=waiting` then
+`stage=expired`; none logged `stage=dispatched`. The marked player and bots were affected alike.
+All sources had an existing visible DrawObject and `ReadyToDraw=True`. The animation guard was
+incorrectly rejecting already-loaded models, so this retest did not exercise the native dive
+ActionEffect at all. The user's clear video corroborates a forceful native landing before the
+later tower; blinking is not an acceptable substitute.
+
+`HasLoadedModel` used `CharacterBase.HasModelInSlotLoaded != 0`. The ClientStructs definition
+identifies this as temporary staging data cleared after loading. It is not a persistent loaded
+state. The getter now requires an existing DrawObject and the native `IsReadyToDraw()` result.
+Animation readiness still additionally requires the sequencer parent. Waiting diagnostics now
+include sequencer details, so a subsequent failure can distinguish an unloaded renderer from
+an unavailable sequencer. The three original native targeted dive IDs, snapshot, visibility
+window, damage, tower timings and Geirskogul delay are unchanged.
+
+The native metadata regression now forbids the transient staging field as the loaded-model
+condition and verifies the native readiness call in both Debug artifacts. The nine numbered
+wave/arrow cases also assert the specific native action ID delivered to the human target.
+This corrects a demonstrated dispatch blocker; a rendered native slam still requires retesting.
+ClientStructs reference: https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Graphics/Scene/CharacterBase.cs

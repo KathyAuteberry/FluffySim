@@ -16,6 +16,9 @@ public class NativeDivePresentationTests
             Assert.Contains(visibility.Body.Instructions, i => i.Operand is MethodReference m
                 && m.DeclaringType.Namespace.StartsWith("FFXIVClientStructs.") && m.Name == "set_IsVisible");
             Assert.DoesNotContain(visibility.Body.Instructions, i => i.Operand is FieldReference f && f.Name == "RenderFlags");
+            var model = il.Method("AnoMech.Core.Native.Implementations.BattleCharaProxy", "get_HasLoadedModel");
+            Assert.DoesNotContain(model.Body.Instructions, i => i.Operand is FieldReference f && f.Name == "HasModelInSlotLoaded");
+            Assert.Contains(model.Body.Instructions, i => i.Operand is MethodReference m && m.Name == "IsReadyToDraw");
             var ready = il.Method("AnoMech.Core.Native.Implementations.BattleCharaProxy", "get_IsAnimationReady");
             Assert.Contains(ready.Body.Instructions, i => i.Operand is FieldReference f && f.Name == "Parent");
             var dispatch = il.Method("AnoMech.Core.Native.Implementations.BattleCharaProxy", "ReceiveActionEffect");

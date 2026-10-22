@@ -371,6 +371,14 @@ public class DsrP3NidhoggTests
                         Assert.That(native.UnrenderableActions.Where(id => id is >= 26382 and <= 26384), Is.Empty);
                         Assert.That(native.ReceivedEffects.Count(e => e.ActionId is >= 26382 and <= 26384), Is.EqualTo(1));
                     }
+                    var playerEffect = clones.SelectMany(c => ((FakeBattleChara)c.Proxy!).ReceivedEffects)
+                        .Single(e => e.AnimationTarget == p.Member(PartyRole.MainTank)!.GameObjectId);
+                    Assert.That(playerEffect.ActionId, Is.EqualTo(arrow switch
+                    {
+                        DiveArrow.Up => 26383u,
+                        DiveArrow.Down => 26384u,
+                        _ => 26382u,
+                    }));
                     checks++;
                 }
             },

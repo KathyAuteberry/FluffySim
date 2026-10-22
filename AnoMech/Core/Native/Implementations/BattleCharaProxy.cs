@@ -181,9 +181,8 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         get
         {
             var actor = Ptr;
-            if (actor == null || actor->DrawObject == null) return false;
-            var draw = (CharacterBase*)actor->DrawObject;
-            return draw->HasModelInSlotLoaded != 0;
+            // Slot-loading staging bits are cleared after loading finishes.
+            return actor != null && actor->DrawObject != null && actor->IsReadyToDraw();
         }
     }
 
