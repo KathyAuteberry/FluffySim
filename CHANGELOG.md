@@ -1,3 +1,18 @@
+# FluffySim 3.0.3.0 — release prepared
+
+## Fixed
+
+- Offline practice now initializes native recast haste correctly, fixing normal Paladin weaponskills and other ordinary GCD actions being reduced to 1.5 seconds. Permanent Monk and Ninja attack-speed traits follow the simulated level; legitimate shorter actions and active speed effects retain their native recasts. Inn-mode recasts and native cooldown restoration are preserved.
+- DSR Dive from Grace now plays the native Nidhogg clone dive and landing presentation for Dark High Jump, Dark Spineshatter Dive and Dark Elusive Jump across all three numbered waves. The visible landing cue accompanies the position/facing snapshot, before the later tower appears.
+- P3 clone Geirskogul line warnings now appear only during the final 0.7 seconds of their casts, preserving their original bait selection, locked direction and damage timing in both Dive from Grace and the later four-tower sequence.
+- Wrath bots now route around the actual snapshotted Twister locations during their clockwise dodge, preserving the original bait timing and subsequent spread assignments. Human-controlled players remain responsible for their own movement.
+
+## Improved
+
+- Integrates AnoMech upstream revision `250b9539`, including default TLS relays, relay group discovery, ping/server status and host selection, while preserving FluffySim's packet isolation and native state-restoration safeguards.
+
+Native retesting confirmed the clone dive animation. A brief stationary clone flash may remain just before the dive starts. Multiplayer participants should use matching plugin builds.
+
 # FluffySim 3.0.2.0 — release prepared
 
 ## Fixed
