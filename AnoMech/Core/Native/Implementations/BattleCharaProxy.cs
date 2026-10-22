@@ -181,9 +181,8 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         get
         {
             var actor = Ptr;
-            if (actor == null || actor->DrawObject == null) return false;
-            var draw = (CharacterBase*)actor->DrawObject;
-            return draw->HasModelInSlotLoaded != 0;
+            // Slot-loading staging bits are cleared after loading finishes.
+            return actor != null && actor->DrawObject != null && actor->IsReadyToDraw();
         }
     }
 
@@ -192,6 +191,15 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         var obj = Ptr;
         if (obj == null) return;
         PartyModelVisibility.Reconcile(obj, Slot, hidden, Offline.OfflineSession.InWorld);
+    }
+
+    public bool IsAnimationReady
+    {
+        get
+        {
+            var actor = Ptr;
+            return actor != null && HasLoadedModel && actor->Timeline.TimelineSequencer.Parent != null;
+        }
     }
 
     public void SetModelScale(float scale)
@@ -208,6 +216,11 @@ internal sealed unsafe class BattleCharaProxy : IBattleCharaProxy
         {
             var obj = Ptr;
             return obj != null && obj->DrawObject != null && obj->DrawObject->IsVisible;
+        }
+        set
+        {
+            var obj = Ptr;
+            if (obj != null && obj->DrawObject != null) obj->DrawObject->IsVisible = value;
         }
     }
 

@@ -19,6 +19,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
     public int Slot => slot;
     internal IReadOnlyList<(ActionEffectData Effect, Vector3 Position, float Rotation)> EffectSourceSnapshots => Actor?.EffectSourceSnapshots ?? [];
     internal IReadOnlyList<ActionEffectData> ReceivedEffects => Actor?.ActionEffects ?? [];
+    internal IReadOnlyList<uint> UnrenderableActions => Actor?.UnrenderableActions ?? [];
     internal IReadOnlyList<ActorCastData> ReceivedCasts => Actor?.ActorCasts ?? [];
     internal IReadOnlyList<(int State, int Param)> AnimationStates => Actor?.AnimationStates ?? [];
     internal IReadOnlyList<ushort> Timelines => Actor?.Timelines ?? [];
@@ -56,9 +57,14 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
     // ── Model ────────────────────────────────────────────────────────────────
 
     public bool HasLoadedModel => Actor is { HasDrawObject: true, HasLoadedModel: true };
+    public bool IsAnimationReady => HasLoadedModel;
     public bool HasDrawObject => Actor?.HasDrawObject ?? false;
 
-    public bool IsDrawObjectVisible => Actor is { HasDrawObject: true, IsDrawObjectVisible: true, ModelHidden: false };
+    public bool IsDrawObjectVisible
+    {
+        get => Actor is { HasDrawObject: true, IsDrawObjectVisible: true, ModelHidden: false };
+        set { if (Actor is { HasDrawObject: true } actor) actor.IsDrawObjectVisible = value; }
+    }
 
     internal bool ModelHidden => Actor?.ModelHidden ?? false;
     public IActorVfxProxy? AttachVfx(string path) => new FakeVfxHandle();
@@ -97,6 +103,7 @@ internal sealed class FakeBattleChara(FakeBattleCharas owner, int slot) : IBattl
     // The client pushes its own player from a knockback entry the moment it applies it.
     public uint ReceiveActionEffect(ActionEffectData effect)
     {
+        if (Actor is { } source && !IsAnimationReady) source.UnrenderableActions.Add(effect.ActionId);
         if (Actor is { } actor) actor.EffectSourceSnapshots.Add((effect, actor.Position, actor.Rotation));
         Actor?.ActionEffects.Add(effect);
         var sequence = ++nextSequence;

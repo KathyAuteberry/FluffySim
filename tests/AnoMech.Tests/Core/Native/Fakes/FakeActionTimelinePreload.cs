@@ -4,5 +4,6 @@ namespace AnoMech.Tests;
 
 internal sealed class FakeActionTimelinePreload : IActionTimelinePreload
 {
-    public void Preload(IEnumerable<(ushort Id, string Key)> rows, string tag) { }
+    public List<(ushort Id, string Key)> Rows { get; } = [];
+    public void Preload(IEnumerable<(ushort Id, string Key)> rows, string tag) => Rows.AddRange(rows);
 }

@@ -2,10 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AnoMech.Core;
 using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Core.EnemyActions.EnemyActionEffects;
 using static AnoMech.Scenarios.Dsr.P3Nidhogg.DsrP3NidhoggActions;
@@ -42,7 +44,9 @@ public sealed class DsrP3NidhoggScenario : IScenario
         Completed = false;
         actors.Clear(); waiting.Clear(); fourTowers.Clear(); Array.Clear(tethers);
         foreach (var group in divers) group.Clear();
+        world.OnDespawn(() => DiagnosticLog.Info($"[DsrP3Dive] stage=cleanup actors={actors.Count} waiting={waiting.Count}; run presentations cancelled with world teardown"));
         world.Events.Add(0, SpawnOpening);
+        world.Events.Add(2f, InspectStagedDiveRenderers);
         world.Events.Add(6.96f, () => boss.Cast(FinalChorus));
         world.Events.Add(10f, Engage);
         foreach (var at in new[] { 14.10f, 17.22f, 20.35f }) world.Events.Add(at, Auto);
@@ -107,11 +111,18 @@ public sealed class DsrP3NidhoggScenario : IScenario
         for (var i = 0; i < 8; i++)
         {
             var actor = Spawn(12606, new(23, 0, 4));
-            actor.SetModelHidden(true); waiting.Enqueue(actor);
+            actor.SetDrawObjectVisible(false); waiting.Enqueue(actor);
         }
     }
 
     private void Engage() { boss.SetTargetable(true); boss.SetTarget(world.Party.Get(PartyRole.MainTank), false); }
+
+    private void InspectStagedDiveRenderers()
+    {
+        DiagnosticLog.Info($"[DsrP3Dive] stage=staged animationReady={waiting.Count(a => a.Proxy?.IsAnimationReady == true)}/{waiting.Count}");
+        foreach (var actor in waiting.Where(a => a.Proxy?.IsAnimationReady != true))
+            DiagnosticLog.Warn($"[DsrP3Dive] stage=staged-not-ready source=0x{actor.GameObjectId.ObjectId:X} {actor.DescribeDrawState()}");
+    }
     private void Auto() => boss.Cast(AutoAttack, world.Party.Get(PartyRole.MainTank));
 
     private void MarkNumbers()
@@ -145,13 +156,18 @@ public sealed class DsrP3NidhoggScenario : IScenario
         {
             var target = world.Party.Get(role)!;
             var actor = waiting.Dequeue();
-            actor.SetPosition(target.Placement()); actor.SetModelHidden(false);
+            actor.SetPosition(target.Placement()); actor.SetDrawObjectVisible(true);
             var facing = new Vector3(MathF.Sin(target.Rotation), 0, MathF.Cos(target.Rotation));
             var tower = target.Position + facing * DsrP3NidhoggState.DiveOffset(state.Arrows[role]);
             state.DiveTowers[line - 1].Add((role, tower));
             divers[line - 1].Add(actor);
+            DiagnosticLog.Info($"[DsrP3Dive] stage=snapshot wave={line} role={role} arrow={state.Arrows[role]} source=0x{actor.GameObjectId.ObjectId:X} target=0x{target.GameObjectId.ObjectId:X} position={target.Position} facing={target.Rotation:F3} tower={tower} animationReady={actor.Proxy?.IsAnimationReady} {actor.DescribeDrawState()}");
             actor.Cast(Dive(state.Arrows[role]), target);
-            world.Events.Add(.57f, () => actor.SetModelHidden(true));
+            world.Events.Add(1.1f, () =>
+            {
+                actor.SetDrawObjectVisible(false);
+                DiagnosticLog.Info($"[DsrP3Dive] stage=hide wave={line} source=0x{actor.GameObjectId.ObjectId:X} {actor.DescribeDrawState()}");
+            });
         }
     }
 
@@ -171,8 +187,9 @@ public sealed class DsrP3NidhoggScenario : IScenario
         {
             var actor = divers[line - 1][i];
             actor.SetPosition(new Placement(state.DiveTowers[line - 1][i].Spot, 0).Face(Vector3.Zero));
+            DiagnosticLog.Info($"[DsrP3Dive] stage=tower-cast wave={line} source=0x{actor.GameObjectId.ObjectId:X} position={actor.Position}");
             actor.Cast(Tower(26385, 1));
-            world.Events.Add(2.85f, () => actor.SetModelHidden(false));
+            world.Events.Add(2.85f, () => actor.SetDrawObjectVisible(true));
         }
     }
 
@@ -185,7 +202,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
             actor.SetRotation(actor.Placement().Face(closest.Position).Rotation);
             actor.Cast(Geirskogul);
             world.Events.Add(6.6f, () => actor.PlayActionTimeline(7747));
-            world.Events.Add(7.3f, () => actor.SetModelHidden(true));
+            world.Events.Add(7.3f, () => actor.SetDrawObjectVisible(false));
         }
     }
 
@@ -202,7 +219,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
         for (var i = 0; i < 4; i++)
         {
             var actor = Spawn(12606, DsrP3NidhoggState.FourTowerSpot(i));
-            actor.SetModelHidden(true); fourTowers.Add(actor);
+            actor.SetDrawObjectVisible(false); fourTowers.Add(actor);
         }
     }
 
@@ -212,7 +229,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
         {
             var actor = fourTowers[i];
             actor.Cast(Tower((uint)(26390 + state.TowerSoakers[i]), state.TowerSoakers[i]));
-            world.Events.Add(5.35f, () => actor.SetModelHidden(false));
+            world.Events.Add(5.35f, () => actor.SetDrawObjectVisible(true));
         }
     }
 

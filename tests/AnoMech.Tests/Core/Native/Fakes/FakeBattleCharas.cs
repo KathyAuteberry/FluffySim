@@ -29,6 +29,7 @@ internal sealed class FakeBattleCharas : IBattleCharas
     public int SlotOffset { get; set; }
     public (int Min, int Max) PacketSpawnFrames { get; set; }
     public int PacketSpawnDelayFrames { get; set; }
+    public int NpcDrawObjectDelayFrames { get; set; }
     public bool VisibleActorsHaveDrawObjects { get; set; } = true;
     public bool MeshlessHelpersHaveDrawObjects { get; set; } = true;
     internal int OccupiedSlots => slots.Count(a => a is not null);
@@ -99,6 +100,12 @@ internal sealed class FakeBattleCharas : IBattleCharas
             HasDrawObject = config.Visibility == SpawnVisibility.InvisibleHelper ? MeshlessHelpersHaveDrawObjects : VisibleActorsHaveDrawObjects,
             IsDrawObjectVisible = config.Visibility == SpawnVisibility.Visible,
         };
+        if (config.Visibility != SpawnVisibility.InvisibleHelper && NpcDrawObjectDelayFrames > 0)
+        {
+            actor.HasDrawObject = false;
+            actor.HasLoadedModel = false;
+            actor.DrawObjectFramesRemaining = NpcDrawObjectDelayFrames;
+        }
         Place(slot, actor);
         Timeline.Add("spawn", entityId, name, config.BNpcBaseId.ToString(), "BNpcBase", position: placement.Position,
             rotation: placement.Rotation,
@@ -175,7 +182,16 @@ internal sealed class FakeBattleCharas : IBattleCharas
             slots[slot] = actor;
         }
         Player.Tick(deltaSeconds);
-        foreach (var actor in slots) actor?.Tick(deltaSeconds);
+        foreach (var actor in slots)
+        {
+            if (actor is { ModelHidden: false, DrawObjectFramesRemaining: > 0 }
+                && --actor.DrawObjectFramesRemaining == 0)
+            {
+                actor.HasDrawObject = true;
+                actor.HasLoadedModel = true;
+            }
+            actor?.Tick(deltaSeconds);
+        }
     }
 
     // UNVERIFIED: assumes the engine's packet handler sizes the actor the way

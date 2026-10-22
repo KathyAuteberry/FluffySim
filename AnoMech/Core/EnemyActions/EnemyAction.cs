@@ -22,6 +22,7 @@ public sealed record EnemyAction(uint ActionId)
 // Cast bar and animation settings the Action sheet lacks, plus overrides of the ones it has.
 public sealed record CastSpec
 {
+    public bool RequireAnimationReady { get; init; }
     // Presentation targets do not alter mechanic hit selection.
     public bool Interruptible { get; init; }
     public bool AnimationTargetsCaster { get; init; }

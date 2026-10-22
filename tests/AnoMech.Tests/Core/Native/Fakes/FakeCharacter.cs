@@ -13,6 +13,7 @@ internal sealed class FakeCharacter(uint entityId, string name)
     private const float CarrySettledSeconds = 0.9f;
 
     public List<ActionEffectData> ActionEffects { get; } = [];
+    public List<uint> UnrenderableActions { get; } = [];
     public List<(ActionEffectData Effect, Vector3 Position, float Rotation)> EffectSourceSnapshots { get; } = [];
     public List<ActorCastData> ActorCasts { get; } = [];
     public List<(int State, int Param)> AnimationStates { get; } = [];
@@ -35,6 +36,7 @@ internal sealed class FakeCharacter(uint entityId, string name)
     public byte ModelState { get; set; }
     public bool HasLoadedModel { get; set; } = true;
     public bool HasDrawObject { get; set; }
+    public int DrawObjectFramesRemaining { get; set; }
     public bool IsDrawObjectVisible { get; set; }
     public Dictionary<byte, ushort> Tethers { get; } = new();
     // By id and source: one id applied by two sources is two entries, as in the status list. The spawn

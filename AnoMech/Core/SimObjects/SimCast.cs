@@ -21,6 +21,8 @@ public sealed class SimCast : ISimObject
     private float remainingCastTime;
     // Packet-spawned helpers have no native slot contents until a later client frame.
     private ActorCastData? pendingCast;
+    private ActorCastData? delayedOmenCast;
+    private bool presentationPaused;
 
     public bool IsCasting => parent.Proxy?.IsCasting ?? false;
 
@@ -65,6 +67,8 @@ public sealed class SimCast : ISimObject
             actionId, actionType, castTime, omenDelay, interruptible,
             castRotation, coordinates.ToGlobal(position ?? parent.Position), targetId, ballistaId);
         pendingCast = null;
+        delayedOmenCast = omenDelay > 0f ? cast : null;
+        presentationPaused = false;
         if (parent is SimNpc { PacketSpawnPending: true }) pendingCast = cast;
         else parent.Proxy?.ReceiveActorCast(cast);
 
@@ -82,6 +86,7 @@ public sealed class SimCast : ISimObject
     public uint NativeActionEffect(uint actionId, float animationLock, ushort spellId, byte animationVariation, ActionType actionType, byte flags, float? rotation = null, Vector3? position = null, GameObjectId? animationTargetId = null, IReadOnlyList<ActionEffectTarget>? targets = null, GameObjectId? ballistaId = null, GameObjectId? actionTargetId = null)
     {
         pendingCast = null;
+        delayedOmenCast = null;
         if (parent.Proxy is not { Exists: true } chara) return 0;
         targets ??= actionTargetId is { } target ? [new ActionEffectTarget(target)] : null;
 
@@ -101,22 +106,35 @@ public sealed class SimCast : ISimObject
     public void Cancel(CastCancelReason reason)
     {
         pendingCast = null;
+        delayedOmenCast = null;
         remainingCastTime = 0;
         parent.ActorControl.CancelCast(ActionId, reason);
     }
 
+    internal void PausePresentation(bool paused)
+    {
+        if (presentationPaused == paused) return;
+        presentationPaused = paused;
+        if (delayedOmenCast is not { } cast || remainingCastTime <= 0f) return;
+        // Native omen countdowns keep running while the simulation clock is stopped.
+        if (paused) parent.ActorControl.CancelCast(ActionId, CastCancelReason.Silent);
+        else pendingCast = cast;
+    }
+
     public void Tick(float deltaSeconds)
     {
+        if (presentationPaused) return;
         remainingCastTime = MathF.Max(0, remainingCastTime - deltaSeconds);
-        if (pendingCast is { } cast && parent is not SimNpc { PacketSpawnPending: true })
+        if (remainingCastTime <= 0f) pendingCast = null;
+        if (pendingCast is { } cast && parent is not SimNpc { PacketSpawnPending: true }
+            && parent.Proxy is { Exists: true } chara)
         {
             pendingCast = null;
-            if (remainingCastTime > 0f && parent.Proxy is { Exists: true } chara)
-                chara.ReceiveActorCast(cast with
-                {
-                    CastTime = remainingCastTime,
-                    OmenDelay = MathF.Max(0f, cast.OmenDelay - (Total - remainingCastTime)),
-                });
+            chara.ReceiveActorCast(cast with
+            {
+                CastTime = remainingCastTime,
+                OmenDelay = MathF.Max(0f, cast.OmenDelay - (Total - remainingCastTime)),
+            });
         }
         if (remainingAnimationLock > 0f)
             remainingAnimationLock = MathF.Max(0f, remainingAnimationLock - deltaSeconds);
@@ -127,6 +145,7 @@ public sealed class SimCast : ISimObject
     public void Despawn()
     {
         pendingCast = null;
+        delayedOmenCast = null;
         if (parent.Proxy is { IsCasting: true } chara)
             parent.ActorControl.CancelCast(chara.CastActionId, CastCancelReason.Silent);
     }
