@@ -54,7 +54,7 @@ public sealed class DsrP5WrathScenario : IScenario
     private readonly SimEnemy[] dragoons = new SimEnemy[2];
     private readonly List<SimEnemy> actors = [];
     private readonly List<SimTether> tethers = [];
-    private readonly List<(Vector3 At, SimEventObject? Object)> twisters = [];
+    private readonly List<(WrathTwister Bait, SimEventObject? Object)> twisters = [];
     private readonly Queue<SimEnemy> eruptionHelpers = [];
     private readonly List<SimEnemy> mercyHelpers = [];
     private readonly Queue<SimEnemy> liquidHelpers = [];
@@ -113,11 +113,12 @@ public sealed class DsrP5WrathScenario : IScenario
         if (!twistersArmed) return;
         foreach (var twister in twisters.ToArray())
         {
-            var touched = world.Party.Find.InsideCircle(twister.At, 1.5f).ToArray();
+            var touched = world.Party.Find.InsideCircle(twister.Bait.Position, WrathTwister.CollisionRadius).ToArray();
             if (touched.Length == 0) continue;
-            var helper = Helper(twister.At);
+            var helper = Helper(twister.Bait.Position);
             helper.Cast(Hit(ActionId.Twister, Severity.Lethal) with { Area = new() { AdjustTargets = (_, _) => touched } });
-            twister.Object?.Despawn(); twisters.Remove(twister);
+            AnoMech.Core.DiagnosticLog.Info($"[Wrath] Twister collision: owner={twister.Bait.Owner}, at={twister.Bait.Position}, touched={string.Join(",", touched.Select(m => m.ToString()))}");
+            twister.Object?.Despawn(); twisters.Remove(twister); state.Twisters.Remove(twister.Bait);
         }
     }
 
@@ -174,15 +175,21 @@ public sealed class DsrP5WrathScenario : IScenario
     }
     private void SnapshotTwisters()
     {
-        foreach (var member in world.Party.ActiveMembers()) twisters.Add((member.Position, null));
+        foreach (var member in world.Party.ActiveMembers())
+        {
+            var bait = new WrathTwister(((ISimPartyMember)member).Role, member.Position);
+            state.Twisters.Add(bait);
+            twisters.Add((bait, null));
+            AnoMech.Core.DiagnosticLog.Info($"[Wrath] Twister snapshot: owner={bait.Owner}, at={bait.Position}, active={WrathTwister.Activation:F2}..{WrathTwister.Expiration:F2}");
+        }
     }
     private void SpawnTwisters()
     {
-        for (var i = 0; i < twisters.Count; i++) twisters[i] = (twisters[i].At, world.SpawnEventObject(new() { EObjId = EObjId.Twister, Placement = new(twisters[i].At, 0) }));
+        for (var i = 0; i < twisters.Count; i++) twisters[i] = (twisters[i].Bait, world.SpawnEventObject(new() { EObjId = EObjId.Twister, Placement = new(twisters[i].Bait.Position, 0) }));
     }
     private void ClearTwisters()
     {
-        twistersArmed = false; foreach (var item in twisters) item.Object?.Despawn(); twisters.Clear();
+        twistersArmed = false; foreach (var item in twisters) item.Object?.Despawn(); twisters.Clear(); state.Twisters.Clear();
     }
     private void SpiralPierce()
     {

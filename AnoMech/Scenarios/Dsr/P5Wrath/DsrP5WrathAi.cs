@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game.Geometry;
+using AnoMech.Core;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Scenarios.Dsr.DsrP5Constants;
@@ -44,16 +46,17 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         state = stateParam;
         world = worldParam;
         proteanAngle.Clear();
+        routeVersions.Clear();
         AssignProteanAngles();
         var ai = new AiManager(world);
 
         ai.Move(0.3f, () => AiMove.Create(MainTankSouthPartyNorth()).NaturalOrder());
         ai.Move(W + 0.3f, () => AiMove.Create(Stacked(new Vector2(0f, -2f))).NaturalOrder());
         ai.Move(W + 10.0f, () => AiMove.Create(SpreadForTethersDefamationAndTwisters()).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(W + 16.05f, () => AiMove.Create(ProteanSpots()).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(W + 16.05f, () => AiMove.Create(ClockwiseMarkedSpots(1)).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(W + 16.95f, () => AiMove.Create(ClockwiseMarkedSpots(2)).NaturalOrder(), jitter: 0f, sprint: true);
-        ai.Move(W + 17.85f, () => AiMove.Create(ClockwiseMarkedSpots(3)).NaturalOrder(), jitter: 0f, sprint: true);
+        world.Events.Add(W + 16.05f, () => NavigateTwisters(ProteanSpots()));
+        world.Events.Add(W + 16.05f, () => NavigateTwisters(ClockwiseMarkedSpots(1)));
+        world.Events.Add(W + 16.95f, () => NavigateTwisters(ClockwiseMarkedSpots(2)));
+        world.Events.Add(W + 17.85f, () => NavigateTwisters(ClockwiseMarkedSpots(3)));
         ai.Move(W + 22.3f, () => AiMove.Create(UnbaitedToCentre()).NaturalOrder(), jitter: 0f);
         ai.Move(DsrP5WrathScenario.CauterizeCast + 0.15f, () => AiMove.Create(DivebombToCentre()).NaturalOrder(), jitter: 0f);
         var eruption = EruptionDrops();
@@ -72,6 +75,75 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         ai.Move(DsrP5WrathScenario.ThunderstruckEnds + 0.3f, () => AiMove.Create(LightningBackUnderWarrior()).NaturalOrder(), jitter: 0f);
         ai.Move(W + 37.0f, () => AiMove.Create(TankbusterPositions(false)).NaturalOrder(), jitter: 0, sprint: true);
         ai.Move(77.6f, () => AiMove.Create(TankbusterPositions(true)).NaturalOrder(), jitter: 0, sprint: true);
+    }
+
+    private readonly Dictionary<PartyRole, int> routeVersions = [];
+
+    private void NavigateTwisters(Vector2?[] spots)
+    {
+        foreach (var role in Enum.GetValues<PartyRole>())
+        {
+            if (spots[(int)role] is not { } goal || world.Party.Get(role) is not { } member || !member.IsAlive() || !world.Party.IsBotDriven(member)) continue;
+            var version = routeVersions.GetValueOrDefault(role) + 1;
+            routeVersions[role] = version;
+            var start = Flat(member.Position);
+            var hazards = state.Twisters.Select(t => t.Hazard).ToArray();
+            var clockwise = state.Marked.Contains(role);
+            IReadOnlyList<Vector2>? RouteTo(Vector2 target)
+            {
+                var planned = TimedCircleRoute.Plan(start, target, world.Events.Elapsed, AiManager.SprintSpeed, hazards, clockwise, minRadius: clockwise ? 12f : 0f);
+                if (planned == null) return null;
+                var previous = start;
+                var arrival = world.Events.Elapsed;
+                foreach (var point in planned)
+                {
+                    arrival += Vector2.Distance(previous, point) / AiManager.SprintSpeed + .04f;
+                    previous = point;
+                }
+                return arrival <= WrathTwister.Expiration - .05f ? planned : null;
+            }
+            var route = RouteTo(goal);
+            if (route == null)
+            {
+                foreach (var radius in new[] { 16f, 14f, 17f, 13f })
+                {
+                    var adjusted = Vector2.Normalize(goal) * radius;
+                    if (Vector2.Distance(adjusted, goal) > 2.5f) continue;
+                    route = RouteTo(adjusted);
+                    if (route != null) break;
+                }
+            }
+            if (route == null)
+            {
+                member.MoveTo(member.Position);
+                DiagnosticLog.Warn($"[Wrath] No safe route before spreads for {role}: {start} -> {goal}");
+                continue;
+            }
+            DiagnosticLog.Info($"[Wrath] Route {role}: {start} -> {string.Join(" -> ", route)}; {(route.Count > 1 || route[^1] != goal ? "hazard detour selected" : "direct")}");
+            ((ISimPartyMember)member).UseSprint(6);
+            void Walk(int index)
+            {
+                if (routeVersions.GetValueOrDefault(role) != version || !member.IsAlive() || !world.Party.IsBotDriven(member) || index >= route.Count) return;
+                var next = route[index];
+                if (!TimedCircleRoute.SegmentClear(Flat(member.Position), next, world.Events.Elapsed, AiManager.SprintSpeed, state.Twisters.Select(t => t.Hazard).ToArray()))
+                {
+                    DiagnosticLog.Info($"[Wrath] Hazard changed on route for {role}; replanning");
+                    NavigateTwisters(Only(role, goal));
+                    return;
+                }
+                var duration = Vector2.Distance(Flat(member.Position), next) / AiManager.SprintSpeed;
+                member.MoveTo(new(next.X, 0, next.Y), speed: AiManager.SprintSpeed);
+                world.Events.Add(duration + .02f, () => Walk(index + 1));
+            }
+            Walk(0);
+            if (route[^1] != goal)
+                world.Events.Add(MathF.Max(0, WrathTwister.Expiration - world.Events.Elapsed), () =>
+                {
+                    if (routeVersions.GetValueOrDefault(role) != version || !world.Party.IsBotDriven(member)) return;
+                    routeVersions[role]++;
+                    member.MoveTo(new(goal.X, 0, goal.Y), speed: AiManager.SprintSpeed);
+                });
+        }
     }
 
     private float DragonFromWarrior => state.MageOnDragonSide ? 180f : 0f;
