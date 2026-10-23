@@ -55,7 +55,8 @@ public unsafe class MainWindow : Window, IDisposable
     private IScenario? _selectedScenario;
 
     internal ScenarioSelection? Selection => _selectedScenario is { } scenario
-        ? new ScenarioSelection(scenario, HasStartableStrat() ? _selectedStrat : null, _selectedWaymark, SelectedSeed, _roleOverride, _spectator ? Plugin.Config.SpectatorRole : null)
+        ? new ScenarioSelection(scenario, HasStartableStrat() ? _selectedStrat : null, _selectedWaymark, SelectedSeed, _roleOverride,
+            _spectator ? _roleOverride ?? PartyPresets.SkipRoleForJob(Natives.BattleCharas.LocalPlayer.ClassJob) : null)
         : null;
 
     private PartyRole? _roleOverride;
@@ -880,12 +881,6 @@ public unsafe class MainWindow : Window, IDisposable
         }
         if (_spectator)
         {
-            var role = Math.Clamp((int)Plugin.Config.SpectatorRole, 0, 7);
-            if (ImGui.Combo("POV", ref role, PovLabels, PovLabels.Length))
-            {
-                Plugin.Config.SpectatorRole = (PartyRole)role;
-                Plugin.Config.Save();
-            }
             ImGui.TextDisabled("Mouse camera control retained.");
             if (_selectedScenario?.SupportsSpectator != true)
                 ImGui.TextDisabled("This scenario has not been validated for spectator mode.");

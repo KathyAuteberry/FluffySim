@@ -9,7 +9,6 @@ namespace AnoMech;
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
-    public AnoMech.Core.Game.Party.PartyRole SpectatorRole { get; set; } = AnoMech.Core.Game.Party.PartyRole.MeleeDpsA;
     public int Version { get; set; } = 0;
 
     
