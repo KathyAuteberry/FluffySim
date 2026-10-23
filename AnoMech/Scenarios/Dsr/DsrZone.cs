@@ -7,6 +7,7 @@ namespace AnoMech.Scenarios.Dsr;
 
 public sealed class DsrZone : IZone
 {
+    public bool SupportsSpectator => true;
     public static readonly DsrZone Instance = new();
     public static readonly Phase P2 = new(Instance, "P2 King Thordan", 45, PhaseMusic.Heroes, init: InitializeP2);
     public static readonly Phase P3 = new(Instance, "P3 Nidhogg", 3, 922, init: world =>

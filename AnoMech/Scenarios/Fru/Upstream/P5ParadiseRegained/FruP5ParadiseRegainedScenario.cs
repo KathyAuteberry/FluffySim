@@ -189,11 +189,14 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
         {
             Effects = [.. action.Effects, Resolve(ctx =>
             {
-                var player = ctx.Party.Player;
-                if (player is not ISimPartyMember { Role: PartyRole.MainTank or PartyRole.OffTank }
-                    || ctx.Party.IsBotDriven(player) || !ctx.Hits.Contains(player) || ctx.IsKilled(player)) return;
-                if (!world.PracticeInvulnerability.Active && !new ushort[] { 82, 409, 810, 1836 }.Any(player.HasStatus))
-                    ctx.Kill(player, "invulnerability required by tank practice setting");
+                foreach (var target in ctx.Hits.OfType<ISimPartyMember>().Where(m => m.Role.IsTank()))
+                {
+                    var tank = (SimCharacter)target;
+                    if (ctx.IsKilled(tank)) continue;
+                    if (!(ReferenceEquals(tank, ctx.Party.Player) && world.PracticeInvulnerability.Active)
+                        && !new ushort[] { 82, 409, 810, 1836 }.Any(tank.HasStatus))
+                        ctx.Kill(tank, "invulnerability required by tank practice setting");
+                }
             })],
         };
     }

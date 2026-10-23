@@ -22,9 +22,11 @@ public sealed class FruP5ParadiseRegainedState
     public int Rotation { get; }
     public bool EastSecond { get; }
     public bool DarkFirst { get; }
+    public bool RequireInvulnerability { get; }
 
     public FruP5ParadiseRegainedState(Rng rng, FruP5ParadiseRegainedStateOverrides overrides)
     {
+        RequireInvulnerability = overrides.RequireInvulnerability;
         Rotation = overrides.Rotation ?? rng.Next(3);
         EastSecond = overrides.EastSecond ?? rng.NextBool();
         DarkFirst = overrides.DarkFirst ?? rng.NextBool();

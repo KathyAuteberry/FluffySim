@@ -25,6 +25,7 @@ internal sealed record ScenarioRunOptions
 
     // Called after every frame; see ScenarioProbe.
     public Action<ScenarioProbe>? Probe { get; init; }
+    public Func<ScenarioProbe, bool>? StopWhen { get; init; }
 
     // Writes the artifact folder even for a passing run.
     public bool AlwaysWriteArtifacts { get; init; }
@@ -162,6 +163,7 @@ internal sealed record ScenarioRun(
                     probeAction(probe);
                     probe.EndFrame();
                 }
+                if (options.StopWhen?.Invoke(probe) == true) break;
             }
         }
         catch (Exception e)

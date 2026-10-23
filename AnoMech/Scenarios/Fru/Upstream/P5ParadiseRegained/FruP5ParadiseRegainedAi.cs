@@ -29,6 +29,12 @@ public sealed class FruP5ParadiseRegainedAi : IScenarioAi<FruP5ParadiseRegainedS
         var ai = new AiManager(world);
         if (!polarizingOnly)
         {
+            if (state.RequireInvulnerability)
+                world.Events.Add(13f, () =>
+                {
+                    BotActions.UseInvulnerability(world, PartyRole.MainTank);
+                    BotActions.UseInvulnerability(world, PartyRole.OffTank);
+                });
             ai.Move(2f, () => ByRole(StackUnderFirstTower), jitter: 0f, arrivalTime: 8.3f);
             ai.Move(10f, () => ByRole(role => state.Rotate(FirstWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(0));
             ai.Move(16.5f, () => ByRole(role => state.Rotate(SecondWingSpot(role))), jitter: 0f, arrivalTime: TowerHitAt(1));

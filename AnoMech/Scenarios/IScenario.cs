@@ -20,7 +20,7 @@ public interface IScenario
     IPhase Phase { get; }
 
     bool SupportsSolo => false;
-    bool SupportsSpectator => false;
+    bool SupportsSpectator => Phase.Zone.SupportsSpectator;
 
     // Core replication works for any scenario; this also needs the debug-bot AI replay plumbing
     // (IMultiplayerReplayable).

@@ -886,7 +886,7 @@ public unsafe class MainWindow : Window, IDisposable
                 Plugin.Config.SpectatorRole = (PartyRole)role;
                 Plugin.Config.Save();
             }
-            ImGui.TextDisabled("Actor-follow camera: native verification pending. Mouse camera control retained.");
+            ImGui.TextDisabled("Mouse camera control retained.");
             if (_selectedScenario?.SupportsSpectator != true)
                 ImGui.TextDisabled("This scenario has not been validated for spectator mode.");
         }

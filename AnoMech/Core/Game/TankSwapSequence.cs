@@ -53,6 +53,7 @@ public sealed class TankSwapSequence
                 if (offTank != null && world.Party.IsBotDriven(offTank))
                 {
                     MitigateBot(offTank);
+                    world.Party.Act(offTank, new EnemyAction(7533) { Cast = new() { CastSecondsOverride = 0, FaceTarget = false } }, boss);
                     world.NotifyActionResolved(offTank, 7533, boss.GameObjectId.ObjectId);
                 }
             })],

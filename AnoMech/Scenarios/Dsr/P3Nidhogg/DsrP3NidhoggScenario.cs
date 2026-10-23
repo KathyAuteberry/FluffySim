@@ -16,7 +16,6 @@ namespace AnoMech.Scenarios.Dsr.P3Nidhogg;
 
 public sealed class DsrP3NidhoggScenario : IScenario
 {
-    public bool SupportsSpectator => true;
     public string Name => "Nidhogg — Easthogg (Elemental)";
     public string DisplayNameOverride => "P3 Dive from Grace";
     public bool IsIncomplete => true;

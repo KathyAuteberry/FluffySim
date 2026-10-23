@@ -9,6 +9,7 @@ namespace AnoMech.Scenarios.Fru.Upstream;
 
 public sealed class FruZone : IZone
 {
+    public bool SupportsSpectator => true;
     public static readonly FruZone Instance = new();
     public static readonly Phase P2 = new(Instance, "P2", WeatherId.Usurper, BgmId.Usurper);
     public static readonly Phase P3 = new(Instance, "P3", WeatherId.Oracle, BgmId.Oracle,

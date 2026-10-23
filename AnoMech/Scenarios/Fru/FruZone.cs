@@ -7,6 +7,7 @@ namespace AnoMech.Scenarios.Fru;
 
 public sealed class FruZone : IZone
 {
+    public bool SupportsSpectator => true;
     public static readonly FruZone Instance = new();
     public static readonly Phase P1 = new(Instance, "P1", 2, PhaseMusic.TheLegendaryBeast, init: InitializeP1, clientSetup: HoldP1Layers);
     public static readonly Phase P2 = new(Instance, "P2", 35, PhaseMusic.FootstepsInTheSnow, init: InitializeP2, clientSetup: HoldP2Layers);

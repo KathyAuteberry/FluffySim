@@ -1,6 +1,6 @@
 # JESUS TAKE THE WHEEL
 
-Development implementation; native camera presentation is **not yet verified in FFXIV**.
+The maintainer has verified and approved the native DSR P3 spectator camera experience.
 
 Choose Mode → JESUS TAKE THE WHEEL and a POV role (MT, ST, H1, H2, D1–D4), then Start.
 The last role is saved in the plugin configuration. Pause/Resume, Restart, Stop and Leave use
@@ -16,8 +16,7 @@ membership, tower count or damage participation. The watched role supplies the p
 for practice overrides, without manufacturing a `SimPlayer`. Spectator runs force party visibility
 and disable God Mode. No missing AI solution is replaced with immunity.
 
-The initial supported scenarios are DSR P3 Nidhogg (Elemental Easthogg), DSR Strength 1, and
-FRU Light Rampant. Other scenarios explicitly refuse this mode until validated. This is a
+Every selectable FRU and DSR catalog entry supports this mode; see SPECTATOR-COVERAGE.md. This is a
 simulator-level roster/camera facility; scenario support only opts into that facility.
 
 ## Camera and isolation
@@ -42,7 +41,7 @@ failed initialization and disposal use the same world cleanup callback.
 ## Native verification still required
 
 The client structures expose an actor lookup but no documented actor-follow setter. Redirecting
-that lookup is an implementation candidate, **not proof of authentic native POV following**.
+that lookup is now native-verified for DSR P3. Other encounters still need native presentation checks.
 Headless fakes cannot establish camera behavior, native party-list behavior or animation quality.
 If the lookup is insufficient, further native investigation is needed; there is no silent static
 spectator-view fallback. An unavailable normal camera refuses the start.
@@ -61,4 +60,4 @@ offline mode:
 - Unexpected zone loss and plugin unload. Firewall remains armed until ordinary restoration
   proves client/server state agrees.
 
-No native success claim should be inferred from passing headless tests.
+Headless tests do not replace native presentation checks outside the approved DSR P3 case.
