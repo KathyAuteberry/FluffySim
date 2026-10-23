@@ -4,11 +4,13 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Hooking;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI.Arrays;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using AnoMech.Core.SimObjects;
+using AnoMech.Core.Game.Party;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Group;
@@ -39,6 +41,9 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
     private UpdatePartyPacket realParty;
 
     private List<nint> presentedActors = new();
+    private bool spectatorPresentation;
+    private Hook<AgentHUD.Delegates.Update>? hudUpdateHook;
+    private readonly Dictionary<ushort, SpectatorPartyProjection.StatusIcon> statusIcons = new();
     private string? lastPresentationTrace;
     private int presentationTraceChanges;
 
@@ -48,9 +53,27 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
     {
         Plugin.AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "_PartyList", BeforePartyUpdate);
         Clear();
+        hudUpdateHook?.Dispose();
     }
 
-    private void BeforePartyUpdate(AddonEvent type, AddonArgs args) => PublishOfflinePresentation();
+    private void UpdateHudDetour(AgentHUD* hud, uint frameCount)
+    {
+        hudUpdateHook!.Original(hud, frameCount);
+        if (!spectatorPresentation || hud != AgentHUD.Instance()) return;
+        try { PublishSpectatorPresentation(); }
+        catch (Exception e)
+        {
+            DiagnosticLog.Warn($"[PartyHud] Spectator presentation failed; restoring the authentic roster: {e}");
+            try { Clear(); }
+            catch (Exception cleanup) { DiagnosticLog.Warn($"[PartyHud] Presentation restoration failed: {cleanup}"); }
+        }
+    }
+
+    private void BeforePartyUpdate(AddonEvent type, AddonArgs args)
+    {
+        if (spectatorPresentation) PublishSpectatorPresentation();
+        else PublishOfflinePresentation();
+    }
 
     internal static void PublishHudMember(ref HudPartyMember target, BattleChara* actor, ref GroupPartyMember member, byte index)
     {
@@ -114,6 +137,13 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
         var gm = GroupManager.Instance();
         if (gm == null) return;
 
+        spectatorPresentation = party.WatchedRole is not null;
+        if (spectatorPresentation && hudUpdateHook is null && AgentHUD.Instance() != null)
+        {
+            hudUpdateHook = Plugin.GameInterop.HookFromAddress<AgentHUD.Delegates.Update>(
+                (nint)AgentHUD.Instance()->VirtualTable->Update, UpdateHudDetour);
+            hudUpdateHook.Enable();
+        }
         var members = OrderedMembers(party);
         presentedActors = members;
         roster.Clear();
@@ -137,7 +167,88 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
             sentRoster.Clear();
             sentRoster.AddRange(roster);
         }
-        PublishOfflinePresentation();
+        if (spectatorPresentation) PublishSpectatorPresentation();
+        else PublishOfflinePresentation();
+    }
+
+    private SpectatorPartyProjection.StatusIcon StatusIcon(ushort id)
+    {
+        if (statusIcons.TryGetValue(id, out var icon)) return icon;
+        var sheet = Plugin.DataManager.GetExcelSheet<Lumina.Excel.Sheets.Status>();
+        icon = sheet.TryGetRow(id, out var row) ? new(row.Icon, row.CanDispel, row.MaxStacks) : default;
+        statusIcons[id] = icon;
+        return icon;
+    }
+
+    private void PublishSpectatorPresentation()
+    {
+        if (!ownsRoster || !Natives.Zone.IsActive || presentedActors.Count != 8) return;
+        var gm = GroupManager.Instance();
+        var hud = AgentHUD.Instance();
+        var stage = AtkStage.Instance();
+        if (gm == null) return;
+        for (var i = 0; i < 8; i++)
+            SpectatorPartyProjection.PublishGroupMember((BattleChara*)presentedActors[i], ref gm->MainGroup.PartyMembers[i]);
+        gm->MainGroup.MemberCount = 8;
+        if (hud == null || stage == null) return;
+        var numberData = stage->GetNumberArrayData(NumberArrayType.PartyList);
+        var stringData = stage->GetStringArrayData(StringArrayType.PartyList);
+        if (numberData == null || numberData->IntArray == null || numberData->Size < sizeof(PartyListNumberArray) / sizeof(int)
+            || stringData == null || stringData->StringArray == null || stringData->Size < sizeof(PartyListStringArray) / sizeof(nint)) return;
+        var numbers = (PartyListNumberArray*)numberData->IntArray;
+        var strings = (PartyListStringArray*)stringData->StringArray;
+        for (var i = 0; i < 8; i++)
+        {
+            var actor = (BattleChara*)presentedActors[i];
+            if (actor == null) return;
+            SpectatorPartyProjection.PublishMember(actor, ref gm->MainGroup.PartyMembers[i],
+                ref hud->PartyMembers[i], ref numbers->PartyMembers[i], (byte)i, StatusIcon);
+            for (var field = 0; field < strings->Members[i].Data.Length; field++)
+                SetPartyString(stringData, strings, i, field, "");
+            SetPartyString(stringData, strings, i, 0, (i + 1).ToString());
+            SetPartyString(stringData, strings, i, 1, hud->PartyMembers[i].Name.ToString());
+            SetPartyString(stringData, strings, i, 2, actor->CastInfo.IsCasting ? Natives.Data.ActionName(actor->CastInfo.ActionId) : "");
+            var statusSlot = 0;
+            foreach (var status in actor->StatusManager.Status)
+            {
+                if (status.StatusId == 0 || StatusIcon(status.StatusId).Icon == 0) continue;
+                SetPartyString(stringData, strings, i, 3 + statusSlot++, Natives.Data.StatusName(status.StatusId));
+                if (statusSlot == 10) break;
+            }
+        }
+        gm->MainGroup.MemberCount = 8;
+        hud->PartyMemberCount = 8;
+        for (var i = 8; i < hud->PartyMembers.Length; i++) hud->PartyMembers[i] = default;
+        SpectatorPartyProjection.PublishCount(ref *numbers, 8);
+        numberData->UpdateState = 1;
+    }
+
+    private static void SetPartyString(StringArrayData* data, PartyListStringArray* strings, int row, int field, string text)
+    {
+        var index = (int)(((nint)Unsafe.AsPointer(ref strings->Members[row].Data[field]) - (nint)strings) / sizeof(nint));
+        if (index >= 0 && index < data->Size) data->SetValue(index, text, true, true, false);
+    }
+
+    private static void ClearSpectatorArrays()
+    {
+        var stage = AtkStage.Instance();
+        if (stage == null) return;
+        var numberData = stage->GetNumberArrayData(NumberArrayType.PartyList);
+        var data = stage->GetStringArrayData(StringArrayType.PartyList);
+        var numbers = numberData != null && numberData->IntArray != null && numberData->Size >= sizeof(PartyListNumberArray) / sizeof(int)
+            ? (PartyListNumberArray*)numberData->IntArray : null;
+        var strings = data != null && data->StringArray != null && data->Size >= sizeof(PartyListStringArray) / sizeof(nint)
+            ? (PartyListStringArray*)data->StringArray : null;
+        if (numbers != null)
+        {
+            foreach (ref var member in numbers->PartyMembers) member = default;
+            SpectatorPartyProjection.PublishCount(ref *numbers, 0);
+            numberData->UpdateState = 1;
+        }
+        if (strings != null && data != null)
+            for (var row = 0; row < 8; row++)
+                for (var field = 0; field < strings->Members[row].Data.Length; field++)
+                    SetPartyString(data, strings, row, field, "");
     }
 
     internal static bool MatchesNativeParty(ref GroupManager.Group group, List<(uint EntityId, byte ClassJob, byte Level)> expected)
@@ -159,15 +270,17 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
 
     public void Clear()
     {
-        if (ownsRoster && AnoMech.Offline.OfflineSession.InWorld)
+        if (ownsRoster && (spectatorPresentation || AnoMech.Offline.OfflineSession.InWorld))
         {
             var hud = AgentHUD.Instance();
             if (hud != null)
             {
                 ClearVirtualHud(hud->PartyMembers);
                 hud->PartyMemberCount = 0;
+                if (spectatorPresentation) ClearSpectatorArrays();
             }
         }
+        spectatorPresentation = false;
         presentedActors.Clear();
         lastPresentationTrace = null;
         presentationTraceChanges = 0;
@@ -179,11 +292,11 @@ internal sealed unsafe class PartyHud : IPartyHud, IDisposable
         realParty = default;
     }
 
-    // The player first, then the bots in role order: the slot order the player sees.
+    // The native self row must refer to the watched actor before the other seven rows are filled.
     private static List<nint> OrderedMembers(SimParty party)
     {
         var list = new List<nint>();
-        foreach (var member in party.AllMembers().OrderBy(m => m is SimNpc ? 1 : 0))
+        foreach (var member in PartyPresentation.Members(party))
         {
             var bc = member.BattleCharaPtr();
             if (bc != null) list.Add((nint)bc);

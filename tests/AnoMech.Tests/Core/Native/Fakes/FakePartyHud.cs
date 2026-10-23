@@ -9,7 +9,7 @@ internal sealed class FakePartyHud : IPartyHud
     public void Refresh(SimParty party)
     {
         Members.Clear();
-        foreach (var member in party.AllMembers())
+        foreach (var member in AnoMech.Core.Game.Party.PartyPresentation.Members(party))
             if (member.Proxy is { Exists: true } proxy)
                 Members.Add((((ISimPartyMember)member).Role, proxy.EntityId));
     }

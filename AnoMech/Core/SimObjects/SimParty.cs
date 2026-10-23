@@ -77,6 +77,7 @@ public sealed class SimParty : ISimObject
     }
 
     private bool spectating;
+    public PartyRole? WatchedRole => spectating ? PlayerRole : null;
 
     private void SetSlot(PartyRole role, ISimPartyMember slot)
     {
