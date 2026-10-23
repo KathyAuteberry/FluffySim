@@ -11,6 +11,7 @@ Choose a mechanic, pick your role and strategy, and retry as often as you like. 
 - Individual mechanics with randomized assignments and seven bots.
 - Easy or Hard bot movement, with the simulated party visible or hidden.
 - Role selection and mechanic-specific assignment preferences where supported.
+- **JESUS TAKE THE WHEEL**: automatic spectator practice for every selectable FRU/DSR scenario, using your selected role and eight bot-controlled participants with a following camera.
 - God Mode, Pause/Resume and Restart for repeated practice.
 - Local defensive actions and restored practice cooldowns between isolated attempts.
 - Native bosses, casts, effects and arena environments.
@@ -99,6 +100,11 @@ Assignments normally randomize each run. Some encounters offer preferences for a
 **God Mode** helps you inspect mechanics without ordinary lethal failures ending your practice. **Pause/Resume** freezes simulation progression, statuses and movement/actions; native client animations may continue. **Restart** resets the attempt and restores supported local practice cooldowns. Cooldowns still matter within an attempt, and connected sequences can preserve cooldown planning between segments.
 
 The local action model supports selected defensive and mechanic-relevant actions, including tank invulnerability, mitigation, anti-knockback and supported interrupts/LB practice. It does not reproduce every job action or interaction. Use the scenario's instructions and settings for its specific requirements.
+
+For local spectator practice, choose **JESUS TAKE THE WHEEL** in Mode and use the existing
+**Role** selector to choose whom to watch; Auto follows your job's default role. Mouse camera
+control, Pause/Resume, Restart and Leave remain available. This works in an inn or offline and
+does not send automated movement or actions to the game server.
 
 ## Title-screen offline practice
 

@@ -50,7 +50,7 @@ Published releases through **3.0.0.0** are immutable. Do not move their tags or 
 The 3.0 preparation keeps the shared DSR integration below a separate release-preparation child.
 Local preparation does not authorize pushing master, tagging, publishing or changing plogons.
 The final P4 rescue carry still requires native confirmation before publication approval.
-Prepared version: **3.0.3.0**. `FluffySim.Version.props` contains `3.0.3`; assembly/file/tag
+Prepared version: **3.1.0.0**. `FluffySim.Version.props` contains `3.1.0`; assembly/file/tag
 versions append `.0`. Revision stays zero.
 
 Both GitHub default branches are master. FluffySim's Actions repository secret must be named
@@ -67,9 +67,9 @@ jj bookmark list --all-remotes
 jj git push --remote origin --bookmark master --dry-run
 jj git push --remote origin --bookmark master
 # Verify all master CI jobs succeeded for this exact commit before tagging.
-jj tag set v3.0.3.0 -r master
+jj tag set v3.1.0.0 -r master
 jj tag list
-jj git push --remote origin --tag v3.0.3.0
+jj git push --remote origin --tag v3.1.0.0
 ```
 
 Local master must point to the reviewed release-preparation commit above the merge containing
@@ -98,7 +98,7 @@ Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mo
 
 Inspect Actions logs first. Test/package failures publish nothing. If the release exists but
 metadata failed, preserve its tag/ZIP, fix credentials or metadata state and dispatch the same
-tag: `gh workflow run publish-fluffysim.yml --ref v3.0.3.0`. Reruns reuse the existing asset and
+tag: `gh workflow run publish-fluffysim.yml --ref v3.1.0.0`. Reruns reuse the existing asset and
 never replace it. Missing existing assets deliberately fail. Incorrect binaries require a
 higher version, never a moved tag or replacement ZIP.
 

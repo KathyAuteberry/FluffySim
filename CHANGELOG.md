@@ -1,3 +1,22 @@
+# FluffySim 3.1.0.0 — release prepared
+
+## Added
+
+- **JESUS TAKE THE WHEEL**: watch your selected role perform any currently selectable FRU or DSR practice scenario automatically. All eight simulated party members use the existing bot AI and normal mechanic/failure rules, with the native camera following the watched actor and mouse camera control retained.
+- Uses the existing Role selector, including job-based Auto selection. Pause/Resume, Restart and Leave remain available in both inn and title-screen offline practice. This mode is local-only; it does not automate the real player's server actions.
+
+## Improved
+
+- DSR P3 Easthogg now randomizes initial West/South/East claims within valid Elemental configurations instead of assigning them by party order. Arrow overrides, role restrictions and forced assignments remain intact; fixed seeds reproduce assignments.
+- Spectator coverage includes all 28 selectable FRU/DSR entries and 30 strategies, including continuous practice. Bot tank swaps show a simulated Provoke, and strict Paradise practice requires actual simulated tank invulnerability actions and statuses across both continuous stages. Existing LB3 actions consume the shared gauge and apply their normal protection.
+
+## Fixed
+
+- Spectator party presentation now uses the watched bot in the existing self slot, with the other seven bots filling the remaining slots. Shared party data and native HUD membership show all eight simulated roles without the parked real player displacing D4; the real player actor remains intact.
+- Leaving spectator mode stops queued actions, casts, movement and steering before camera restoration, including while paused.
+
+Thanks to Yura Ri and Izulle for the spectator-mode request and to the community for native testing. Existing incomplete-scenario labels and practice approximations still apply. Multiplayer participants should use matching plugin builds.
+
 # FluffySim 3.0.3.0 — release prepared
 
 ## Fixed
