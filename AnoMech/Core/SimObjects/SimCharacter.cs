@@ -74,6 +74,14 @@ public abstract class SimCharacter : ISimObject, IPositioned
         Motion.Clear();
     }
 
+    internal void StopSimulationActivity()
+    {
+        Casting.Despawn();
+        Motion.Clear();
+        if (Proxy is { Exists: true } actor)
+            Motion.SetPlacement(new Placement(Coordinates.ToLocal(actor.Position), actor.Rotation));
+    }
+
     // -------------------------
     // Location Subsystem
     // -------------------------

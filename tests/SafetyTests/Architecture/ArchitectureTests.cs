@@ -146,6 +146,7 @@ public class ArchitectureTests
         "AnoMech.Offline.OfflineNetworkGuard::Arm",
         "AnoMech.Core.Native.Implementations.LocalPlayerInputHooks::.ctor",
         "AnoMech.Core.Native.Implementations.SpectatorCamera::Begin",
+        "AnoMech.Core.Native.Implementations.PartyHud::Refresh",
         "AnoMech.Core.Native.Implementations.VfxSpawnLog::Enable",
     ];
 

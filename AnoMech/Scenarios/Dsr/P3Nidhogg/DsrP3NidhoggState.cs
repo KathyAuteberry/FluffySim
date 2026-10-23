@@ -32,6 +32,8 @@ public sealed class DsrP3NidhoggState
     private static readonly PartyRole[] NonTanks =
         [PartyRole.RegenHealer, PartyRole.ShieldHealer, PartyRole.MeleeDpsA, PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps];
 
+    private readonly IReadOnlyList<PartyRole> claimOrder;
+
     public IReadOnlyDictionary<PartyRole, int> Lines { get; }
     public IReadOnlyDictionary<PartyRole, DiveArrow> Arrows { get; }
     public IReadOnlyList<bool> LashFirst { get; }
@@ -90,6 +92,7 @@ public sealed class DsrP3NidhoggState
         EyeTargets = [StackTarget(rng, 1), StackTarget(rng, 3)];
         DrachenlanceTarget = (PartyRole)rng.Next(8);
         PreparationPattern = rng.Next(3);
+        claimOrder = rng.Shuffle(Enum.GetValues<PartyRole>()).ToArray();
     }
 
     private static void KeepArrowsPossible(List<int> arrowedLines, int playerLine, bool wantsArrow)
@@ -112,7 +115,7 @@ public sealed class DsrP3NidhoggState
         return candidates[rng.Next(candidates.Count)];
     }
 
-    public IEnumerable<PartyRole> Line(int line) => Lines.Where(kv => kv.Value == line).Select(kv => kv.Key).OrderBy(r => r);
+    public IEnumerable<PartyRole> Line(int line) => claimOrder.Where(role => Lines[role] == line);
 
     public bool LineHasArrows(int line) => Line(line).Any(r => Arrows[r] != DiveArrow.Circle);
 

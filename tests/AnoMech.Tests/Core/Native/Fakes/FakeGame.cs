@@ -24,7 +24,7 @@ internal sealed class FakeGame
     private readonly FakeLayoutFunctions layout = new();
     private readonly FakeInstanceContentDirector director;
     private readonly FakeRsfFunctions rsf = new();
-    private readonly FakePartyHud partyHud = new();
+    public FakePartyHud PartyHud { get; } = new();
     private readonly FakeHaterList haterList;
     private readonly FakeLimitBreakController limitBreak = new();
     private readonly FakeWaymarks waymarks = new();
@@ -69,7 +69,7 @@ internal sealed class FakeGame
         Natives.Director = director;
         Natives.Rsv = rsv;
         Natives.Rsf = rsf;
-        Natives.PartyHud = partyHud;
+        Natives.PartyHud = PartyHud;
         Natives.HaterList = haterList;
         Natives.PlayerConditions = PlayerConditions;
         Natives.LimitBreak = limitBreak;

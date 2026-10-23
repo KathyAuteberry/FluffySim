@@ -424,13 +424,14 @@ public class DsrP3NidhoggTests
         var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
         {
             StopAt = 51, PlayerRole = PartyRole.MainTank,
+            Overrides = o => ((DsrP3NidhoggStateOverrides)o).PlayerLine = 1,
             Takeovers = [new(46.7f, null)], WriteArtifactsOnFailure = false,
             Probe = p =>
             {
                 if (!p.Crossed(47)) return;
                 var clone = p.World.Children.OfType<SimEnemy>()
                     .First(e => e.Casting.ActionId == 26378 && e.Casting.IsBusy);
-                p.Member(PartyRole.MainTank)!.SetPosition(clone.Position);
+                p.Member(PartyRole.MainTank)!.SetPosition(clone.Placement().MoveForward(2));
                 moved = true;
             },
         });

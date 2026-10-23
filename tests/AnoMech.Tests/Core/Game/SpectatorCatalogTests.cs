@@ -102,6 +102,12 @@ public class SpectatorCatalogTests
                 Assert.That(p.World.Party.Player, Is.Null);
                 Assert.That(p.Game.WatchedRole, Is.EqualTo(role));
                 Assert.That(native!.SpectatorCamera.Target, Is.SameAs(p.Member(role)!.Proxy));
+                var rows = native.PartyHud.Members;
+                Assert.That(rows, Has.Count.EqualTo(8));
+                Assert.That(rows[0].Role, Is.EqualTo(role));
+                Assert.That(rows.Select(r => r.Role), Is.EquivalentTo(Enum.GetValues<PartyRole>()));
+                Assert.That(rows.Select(r => r.Actor), Is.Unique);
+                Assert.That(rows.Select(r => r.Actor), Does.Not.Contain(native.BattleCharas.Player.EntityId));
             },
         });
         Assert.That(initialized, Is.True, run.ToString);

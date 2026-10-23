@@ -146,6 +146,8 @@ public sealed class SimCast : ISimObject
     {
         pendingCast = null;
         delayedOmenCast = null;
+        remainingCastTime = remainingAnimationLock = 0;
+        presentationPaused = false;
         if (parent.Proxy is { IsCasting: true } chara)
             parent.ActorControl.CancelCast(chara.CastActionId, CastCancelReason.Silent);
     }
