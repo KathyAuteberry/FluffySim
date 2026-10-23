@@ -58,6 +58,8 @@ public sealed class ScenarioSession
     private SimEnemy? markHelper;
 
     public IScenario Scenario => run.Scenario;
+    public PartyRole? WatchedRole => run.WatchedRole;
+    internal RunScenarioParams Parameters => run;
     public SessionMode Mode { get; }
 
     // Set once the post-first-death freeze timer fires; Game stops ticking the sim while true.
@@ -120,6 +122,15 @@ public sealed class ScenarioSession
             if (!scenario.SupportsSolo) return $"{scenario.Name} does not support Solo mode";
             if (run.SelectedAi is not null) return "a strat needs a full party";
         }
+        if (run.WatchedRole is { } watched)
+        {
+            if (instance.Mode != SessionMode.Local) return "spectator mode is local only";
+            if (!Enum.IsDefined(watched)) return "invalid POV role";
+            if (!scenario.SupportsSpectator) return "this scenario has not been validated for JESUS TAKE THE WHEEL";
+            if (run.SelectedAi is null) return "spectator mode needs a strat";
+            if (roster.Count != 8 || roster.Any(slot => slot is not BotSlot)) return "spectator mode needs eight bots";
+            if (!Natives.SpectatorCamera.Available) return "native actor-follow camera is unavailable";
+        }
         return null;
     }
 
@@ -139,6 +150,13 @@ public sealed class ScenarioSession
         world.Reseed(seed);
         Plugin.Log.Info($"Game: {Scenario.Name} seed {seed}");
         world.ApplyParty(roster);
+        if (run.WatchedRole is { } watched)
+        {
+            Natives.UserActions.OnSpectatorStart();
+            world.Party.SetWatchedRole(watched);
+            world.OnDespawn(Natives.SpectatorCamera.End);
+            Natives.SpectatorCamera.Begin(world.Party.Get(watched)!.Proxy!);
+        }
         world.Map.BeginPhase();
         zone.RunClientSetup(world);
         phase.RunClientSetup(world);
@@ -165,7 +183,7 @@ public sealed class ScenarioSession
         // Both host and peer: RunInstanceEvents carries no RNG/AI/damage-check dependency.
         Scenario.RunInstanceEvents(world);
         instance.PlacePlayer();
-        Natives.UserActions.OnScenarioStart();
+        if (run.WatchedRole is null) Natives.UserActions.OnScenarioStart();
         StartMusic();
         Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
     }

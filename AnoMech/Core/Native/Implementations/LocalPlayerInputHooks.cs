@@ -33,6 +33,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
         }
     }
     public bool PauseInput { get; set; }
+    public bool SpectatorInput { get; set; }
     public bool TransitionInput { get; set; }
 
     // --- Player activity signals (read by SimPlayer to drive Party.Player.IsMoving/IsActing) ---
@@ -142,7 +143,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     public void Dispose()
     {
-        PauseInput = TransitionInput = false;
+        PauseInput = TransitionInput = SpectatorInput = false;
         rmiWalkHook?.Dispose();
         updateHook?.Dispose();
         useActionHook?.Dispose();
@@ -154,7 +155,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
     // outgoing packet is firewalled in the sim, so it has no visible effect here).
     private void CancelCastDetour(Hotbar* thisPtr)
     {
-        if (PauseInput || TransitionInput) return;
+        if (PauseInput || TransitionInput || SpectatorInput) return;
         cancelCastRequested = true;
         CastCancelRequested?.Invoke();
         cancelCastHook.Original(thisPtr);
@@ -169,7 +170,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
         rmiWalkHook.Original(self, sumLeft, sumForward, sumTurnLeft, haveBackwardOrStrafe, a6, bAdditiveUnk);
         // self is a MoveControllerSubMemberForMine*; the sums are its move vector.
         MovementInputActive = *sumLeft != 0 || *sumForward != 0;
-        if (PauseInput || TransitionInput)
+        if (PauseInput || TransitionInput || SpectatorInput)
         {
             *sumLeft = *sumForward = *sumTurnLeft = 0;
             *haveBackwardOrStrafe = 0;
@@ -215,7 +216,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     private bool UseActionDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, uint extraParam, ActionManager.UseActionMode mode, uint comboRouteId, bool* outOptAreaTargeted)
     {
-        if (PauseInput || TransitionInput)
+        if (PauseInput || TransitionInput || SpectatorInput)
         {
             LogProvokeInput(actionType, actionId, targetId, null, "UseAction", false, "input-locked");
             return false;
@@ -236,7 +237,7 @@ public sealed unsafe class LocalPlayerInputHooks : ILocalPlayerInput
 
     private bool UseActionLocationDetour(ActionManager* self, ActionType actionType, uint actionId, ulong targetId, Vector3* location, uint extraParam, byte a7)
     {
-        if (PauseInput || TransitionInput)
+        if (PauseInput || TransitionInput || SpectatorInput)
         {
             LogProvokeInput(actionType, actionId, targetId, null, "UseActionLocation", false, "input-locked");
             return false;

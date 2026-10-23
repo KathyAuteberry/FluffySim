@@ -13,6 +13,7 @@ public interface ILocalPlayerInput : IDisposable
     ushort? LastUsedActionSequence { get; }
 
     bool PauseInput { get; set; }
+    bool SpectatorInput { get; set; }
     bool TransitionInput { get; set; }
     event Action? CastCancelRequested;
 

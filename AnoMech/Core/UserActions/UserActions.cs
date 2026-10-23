@@ -95,7 +95,7 @@ public sealed unsafe class UserActions : IUserActions
             Natives.Zone.ResetPracticeRecast(action);
         pendingResolve = false;
         pausedCast.Clear();
-        if (!SimActive || hooks.PauseInput) return;
+        if (!SimActive || hooks.PauseInput || hooks.SpectatorInput) return;
         foreach (var handler in handlers) if (Runs(handler)) handler.OnScenarioStart();
     }
 
@@ -109,6 +109,8 @@ public sealed unsafe class UserActions : IUserActions
         gaugeSnapshot = JobGaugeEdit.Capture();
     }
 
+    public void OnSpectatorStart() => OnCastCanceled();
+
     // Called by Game when the player leaves the sim zone.
     public void OnSessionEnd()
     {
@@ -120,7 +122,7 @@ public sealed unsafe class UserActions : IUserActions
     // Called each frame by Plugin.OnFrameworkUpdate.
     public void Tick(float deltaSeconds)
     {
-        if (!SimActive || hooks.PauseInput) return;
+        if (!SimActive || hooks.PauseInput || hooks.SpectatorInput) return;
         foreach (var handler in handlers) if (Runs(handler)) handler.OnTick(deltaSeconds);
         ResolvePendingCast(deltaSeconds);
     }
@@ -151,7 +153,7 @@ public sealed unsafe class UserActions : IUserActions
         {
             if (provoke) Core.DiagnosticLog.Info($"[ProvokeInput] event=dispatch-rejected reason={reason} target=0x{targetId:X}");
         }
-        if (!SimActive || hooks.PauseInput || hooks.TransitionInput) { Rejected("inactive-or-input-locked"); return; }
+        if (!SimActive || hooks.PauseInput || hooks.TransitionInput || hooks.SpectatorInput) { Rejected("inactive-or-input-locked"); return; }
         if (hooks.LastUsedActionSequence is not { } seq) { Rejected("action-manager-unavailable"); return; }
         if (seq == processedSeq) { Rejected("unchanged-execution-sequence"); return; }
         processedSeq = seq;

@@ -14,11 +14,12 @@ internal sealed class FakeLocalPlayerInput : ILocalPlayerInput
     public void ReportNativeExecution(ActionType type, uint action, ulong target, ushort sequence, bool nativeResult = true)
     {
         LastUsedActionSequence = sequence;
-        if (nativeResult && !PauseInput && !TransitionInput)
+        if (nativeResult && !PauseInput && !TransitionInput && !SpectatorInput)
             ActionExecuted?.Invoke(type, action, target);
     }
 
     public bool PauseInput { get; set; }
+    public bool SpectatorInput { get; set; }
     public bool TransitionInput { get; set; }
     public event Action? CastCancelRequested { add { } remove { } }
     public bool MovementInputActive { get; set; }

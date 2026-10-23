@@ -12,6 +12,7 @@ namespace AnoMech.Scenarios.Dsr.Strength;
 
 public sealed class DsrStrengthScenario : IScenario
 {
+    public bool SupportsSpectator => true;
     public string Name => "Strength of the Ward — Part 1 (Elemental)";
     public string DisplayNameOverride => "P2 Strength of the Ward 1";
     public IPhase Phase => DsrZone.P2;

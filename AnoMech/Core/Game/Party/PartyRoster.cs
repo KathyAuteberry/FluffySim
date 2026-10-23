@@ -22,17 +22,17 @@ public interface IPartyProvider
     IReadOnlyList<PartySlot?> Roster(uint playerJob);
 }
 
-// Single player: bots in every other seat, or nobody for Solo.
 public sealed record LocalPartyProvider : IPartyProvider
 {
     public PartyRole? RoleOverride { get; init; }
     public bool Solo { get; init; }
+    public bool Spectator { get; init; }
 
     public IReadOnlyList<PartySlot?> Roster(uint playerJob)
     {
         var playerRole = RoleOverride ?? PartyPresets.SkipRoleForJob(playerJob);
         return Enum.GetValues<PartyRole>()
-            .Select(role => role == playerRole ? new PlayerSlot()
+            .Select(role => role == playerRole && !Spectator ? new PlayerSlot()
                 : Solo ? null
                 : (PartySlot?)new BotSlot(PartyPresets.Standard[(int)role]))
             .ToList();

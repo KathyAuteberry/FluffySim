@@ -12,6 +12,7 @@ internal sealed class FakeGame
     public FakeFramework Framework { get; } = FakeFramework.Create();
     public FakeZoneControl Zone { get; }
     public FakeMapEffects MapEffects { get; }
+    public FakeSpectatorCamera SpectatorCamera { get; } = new();
     public FakeUserActions UserActions { get; } = new();
     public FakeLocalPlayerInput PlayerInput { get; } = new();
     public FakePlayerConditions PlayerConditions { get; }
@@ -59,6 +60,7 @@ internal sealed class FakeGame
         Natives.BattleCharas = BattleCharas;
         Natives.EventObjects = EventObjects;
         Natives.PlayerInput = PlayerInput;
+        Natives.SpectatorCamera = SpectatorCamera;
         Natives.UserActions = UserActions;
         Natives.TimelinePreload = timelinePreload;
         Natives.Zone = Zone;
@@ -88,7 +90,7 @@ internal sealed class FakeGame
 
     private void WalkSteeredPlayer(float deltaSeconds)
     {
-        if (PlayerInput.PauseInput || PlayerInput.TransitionInput || PlayerConditions.StatusAffliction || PlayerConditions.ControlAffliction) return;
+        if (PlayerInput.PauseInput || PlayerInput.TransitionInput || PlayerInput.SpectatorInput || PlayerConditions.StatusAffliction || PlayerConditions.ControlAffliction) return;
         if (PlayerInput.SteerDirection is not { } dir) return;
         var step = dir * PlayerInput.SteerSpeed * deltaSeconds;
         BattleCharas.Player.Position += new System.Numerics.Vector3(step.X, 0f, step.Y);

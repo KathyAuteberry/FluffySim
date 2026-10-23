@@ -15,6 +15,7 @@ internal static class GameNatives
         Natives.BattleCharas = new BattleCharas();
         Natives.EventObjects = new EventObjects();
         Natives.PlayerInput = new LocalPlayerInputHooks(Plugin.GameInterop);
+        Natives.SpectatorCamera = new SpectatorCamera(Plugin.GameInterop);
         Natives.UserActions = new UserActions.UserActions(Natives.PlayerInput);
         Natives.TimelinePreload = new ActionTimelinePreload();
         Natives.MapEffects = new MapEffects();

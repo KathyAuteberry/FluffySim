@@ -7,6 +7,7 @@ namespace AnoMech.Core.Native.Interfaces;
 public static class Natives
 {
     public static IVfxFunctions Vfx { get; internal set; } = null!;
+    public static ISpectatorCamera SpectatorCamera { get; internal set; } = null!;
     public static IGameData Data { get; internal set; } = null!;
 
     public static IBattleCharas BattleCharas { get; internal set; } = null!;
@@ -45,6 +46,7 @@ public static class Natives
     // that failed part-way through installing.
     public static void Dispose()
     {
+        SpectatorCamera?.Dispose();
         (PartyHud as IDisposable)?.Dispose();
         Bgm?.Dispose();
         MapEffects?.Dispose();

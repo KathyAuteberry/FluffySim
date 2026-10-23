@@ -55,12 +55,14 @@ public unsafe class MainWindow : Window, IDisposable
     private IScenario? _selectedScenario;
 
     internal ScenarioSelection? Selection => _selectedScenario is { } scenario
-        ? new ScenarioSelection(scenario, HasStartableStrat() ? _selectedStrat : null, _selectedWaymark, SelectedSeed, _roleOverride)
+        ? new ScenarioSelection(scenario, HasStartableStrat() ? _selectedStrat : null, _selectedWaymark, SelectedSeed, _roleOverride, _spectator ? Plugin.Config.SpectatorRole : null)
         : null;
 
     private PartyRole? _roleOverride;
     internal PartyRole? SelectedRoleOverride => _roleOverride;
     private bool _soloMode;
+    private bool _spectator;
+    private static readonly string[] PovLabels = ["MT", "ST", "H1", "H2", "D1", "D2", "D3", "D4"];
 
     // Index into the selected scenario's AiStrats; reset to the first strat whenever the
     // selected scenario changes. -1 when a grouped scenario's selected region has no strats
@@ -501,6 +503,7 @@ public unsafe class MainWindow : Window, IDisposable
 
         DrawScenarioHeader(game);
         if (inSession) DrawSession();
+        DrawSpectatorMode(game);
         DrawPrimaryActions(game, inSession);
         if (!inSession) DrawSoloOption(game);
         ImGui.TextDisabled("FluffySim extends AnoMech by Anomek and contributors.");
@@ -517,7 +520,11 @@ public unsafe class MainWindow : Window, IDisposable
     // is broadcast and run; each is reset, not just disabled, so a stale pick can't apply.
     private void ReconcileSetup(bool mpConnected, bool mpGuest)
     {
-        if (mpConnected) _roleOverride = null;
+        if (mpConnected)
+        {
+            _roleOverride = null;
+            _spectator = false;
+        }
         if (mpGuest)
         {
             _selectedStrat = 0;
@@ -801,6 +808,11 @@ public unsafe class MainWindow : Window, IDisposable
         {
             if (DrawSemanticButton("Stop", actionSize, StopColor))
                 plugin.Runs.Reset();
+            if (game.WatchedRole is not null)
+            {
+                ContinueActionRow();
+                if (DrawSemanticButton("Restart", actionSize, StartColor)) game.Restart();
+            }
             var pause = ScenarioPauseControls.Evaluate(game, inSession);
             if (pause.Visible)
             {
@@ -853,6 +865,32 @@ public unsafe class MainWindow : Window, IDisposable
         ImGui.SameLine();
         if (ImGui.Button("Multiplayer", size)) _showMultiplayerSetup = true;
 #endif
+    }
+
+    private void DrawSpectatorMode(AnoMech.Core.Game.Game game)
+    {
+        if (game.WatchedRole is { } watched)
+            ImGui.TextUnformatted($"JESUS TAKE THE WHEEL — {PovLabels[(int)watched]}");
+        ImGui.BeginDisabled(game.IsScenarioActive || Plugin.Multiplayer.IsConnected);
+        var mode = _spectator ? 1 : 0;
+        if (ImGui.Combo("Mode", ref mode, "Normal Practice\0JESUS TAKE THE WHEEL\0"))
+        {
+            _spectator = mode == 1;
+            if (_spectator) _soloMode = false;
+        }
+        if (_spectator)
+        {
+            var role = Math.Clamp((int)Plugin.Config.SpectatorRole, 0, 7);
+            if (ImGui.Combo("POV", ref role, PovLabels, PovLabels.Length))
+            {
+                Plugin.Config.SpectatorRole = (PartyRole)role;
+                Plugin.Config.Save();
+            }
+            ImGui.TextDisabled("Actor-follow camera: native verification pending. Mouse camera control retained.");
+            if (_selectedScenario?.SupportsSpectator != true)
+                ImGui.TextDisabled("This scenario has not been validated for spectator mode.");
+        }
+        ImGui.EndDisabled();
     }
 
     private bool SoloSelected => _selectedScenario is { SupportsSolo: true } && _soloMode;
@@ -973,7 +1011,7 @@ public unsafe class MainWindow : Window, IDisposable
 
     private void DrawSoloOption(AnoMech.Core.Game.Game game)
     {
-        if (!_selectedScenario!.SupportsSolo) return;
+        if (!_selectedScenario!.SupportsSolo || _spectator) return;
         var running = game.Status >= SessionStatus.Running;
         ImGui.BeginDisabled(running);
         ImGui.Checkbox("Solo", ref _soloMode);
@@ -999,8 +1037,8 @@ public unsafe class MainWindow : Window, IDisposable
         ImGui.EndDisabled();
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled)) ImGui.SetTooltip("Bot settings apply on the next start. Invisible bots remove body-language cues and bot-only local markers; tethers and encounter effects remain. Hard preserves required communication and hazard escape windows.");
         if (mpActive) game.GodMode = false;
-        ImGui.BeginDisabled(mpActive);
-        var god = mpActive ? false : Plugin.Config.PracticeGodMode;
+        ImGui.BeginDisabled(mpActive || game.WatchedRole is not null);
+        var god = mpActive || game.WatchedRole is not null ? false : Plugin.Config.PracticeGodMode;
         if (ImGui.Checkbox("God Mode", ref god))
         { game.GodMode = god; Plugin.Config.PracticeGodMode = god; Plugin.Config.Save(); }
         ImGui.EndDisabled();

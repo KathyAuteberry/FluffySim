@@ -12,6 +12,7 @@ public interface IUserActions : IDisposable
     // A true zone entry: snapshots the real job gauge for OnSessionEnd to restore.
     void OnSessionStart();
     void OnScenarioStart();
+    void OnSpectatorStart();
     void OnSessionEnd();
 
     void OnPause();

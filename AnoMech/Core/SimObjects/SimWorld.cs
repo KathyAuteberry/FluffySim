@@ -210,7 +210,7 @@ public sealed class SimWorld : ISimObject, IDisposable
     // A one-shot VFX sheet row at a scenario-local point, e.g. FRU's Return marker (1013) under each
     // player. Shown on this client only.
     public void PlaceGroundVfx(uint vfxId, Vector3 position)
-        => Party.Player?.ActorControl.PlaceGroundVfx(vfxId, Coordinates.ToGlobal(position));
+        => Party.PresentationControl.PlaceGroundVfx(vfxId, Coordinates.ToGlobal(position));
 
     // Seats the run's roster, spawning only the seats that changed since the last run. Must be
     // called after ScenarioOrigin is set and the run reseeded: the spawn ring draws from it.

@@ -17,13 +17,19 @@ public sealed class Game : IDisposable
     public SimWorld World { get; }  
     public ScenarioCatalog Catalog { get; } = ScenarioCatalog.Create();
     public float EventTimeScale { get; set; } = 1f;
-    public bool GodMode { get; set; }
+    private bool godMode;
+    public bool GodMode
+    {
+        get => godMode;
+        set => godMode = WatchedRole is null && value;
+    }
     private readonly System.Collections.Generic.Dictionary<(PartyRole, uint?, string), float> godMistakeTimes = [];
     
     public SimPlayer? Player => World.Party.Player;
     public IZone? Zone => instance?.Zone;
     public SessionMode? Mode => instance?.Mode;
     public IScenario? ActiveScenario => run?.Scenario;
+    public PartyRole? WatchedRole => run?.WatchedRole;
     public float EventClockNow => Events.Elapsed;
     public bool HasScenarioSucceeded => Status == SessionStatus.Succeeded;
     public bool IsScenarioActive => run is not null;
@@ -212,6 +218,11 @@ public sealed class Game : IDisposable
         World.SeatParty(p.Party.Roster(player.ClassJob));
     }
 
+    public void Restart()
+    {
+        if (run is { Mode: SessionMode.Local } current) StartScenario(current.Parameters);
+    }
+
     public void Reset() => Plugin.Framework.Run(() =>
     {
         CancelPendingStart();
@@ -260,10 +271,11 @@ public sealed class Game : IDisposable
         run = next;
         run.Finished += OnRunFinished;
         World.BotDifficulty = Plugin.Config.BotDifficulty;
-        World.ShowSimulatedParty = Plugin.Config.ShowSimulatedParty;
-        GodMode = Plugin.Config.PracticeGodMode;
+        World.ShowSimulatedParty = p.WatchedRole is not null || Plugin.Config.ShowSimulatedParty;
+        GodMode = p.WatchedRole is null && Plugin.Config.PracticeGodMode;
         godMistakeTimes.Clear();
-        run.Start();
+        try { run.Start(); }
+        catch { EndRun(); throw; }
         RunStarted?.Invoke(p, instance.Mode == SessionMode.Local);
         return null;
     }
@@ -374,7 +386,7 @@ public sealed class Game : IDisposable
         CancelPendingStart();
         CancelPause();
         Events.ActionFailed -= CancelPause;
-        run = null;
+        EndRun();
         Events.Clear();
         instance?.Dispose();
         instance = null;
@@ -416,4 +428,4 @@ public sealed class Game : IDisposable
 
 // A null Seed draws a fresh one on every start
 // A null SelectedAi runs no strat: solo, or a peer
-public sealed record RunScenarioParams(IScenario Scenario, IPartyProvider Party, int? SelectedAi, int SelectedWaymark, int? Seed = null);
+public sealed record RunScenarioParams(IScenario Scenario, IPartyProvider Party, int? SelectedAi, int SelectedWaymark, int? Seed = null, PartyRole? WatchedRole = null);

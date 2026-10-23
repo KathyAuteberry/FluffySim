@@ -15,6 +15,8 @@ internal sealed class FakeUserActions : IUserActions
     public void OnSessionStart() { }
     public Action? ScenarioStarting { get; set; }
     public void OnScenarioStart() => ScenarioStarting?.Invoke();
+    public int SpectatorStarts { get; private set; }
+    public void OnSpectatorStart() => SpectatorStarts++;
     public void OnSessionEnd() { }
     public int Pauses { get; private set; }
     public int Resumes { get; private set; }

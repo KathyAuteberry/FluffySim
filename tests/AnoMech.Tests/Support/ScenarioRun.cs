@@ -15,6 +15,7 @@ internal sealed record ScenarioRunOptions
     // Ends the run at this scenario time, as a pass unless something already failed.
     public float? StopAt { get; init; }
     public bool Solo { get; init; }
+    public bool Spectator { get; init; }
     public AnoMech.Core.Game.Ai.BotDifficulty BotDifficulty { get; init; }
     public bool ShowSimulatedParty { get; init; } = true;
     public bool GodMode { get; init; }
@@ -110,7 +111,7 @@ internal sealed record ScenarioRun(
         var config = new Configuration { BotDifficulty = options.BotDifficulty, ShowSimulatedParty = options.ShowSimulatedParty, PracticeGodMode = options.GodMode };
         options.Configure?.Invoke(config);
         DalamudServices.Install(nameof(Plugin.Config), config);
-        DebugBotControl.Enabled = true;
+        DebugBotControl.Enabled = !options.Spectator;
         PerRole.ForceSeats = true;
         AoeQuery.Evaluated += OnAoeEvaluated;
         game = new Game();
@@ -133,7 +134,7 @@ internal sealed record ScenarioRun(
                 fake.Frame(0, game.Tick);
                 beforeStart(game, fake);
             }
-            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo }, options.Solo ? null : strat, 0, seed));
+            game.StartScenario(new RunScenarioParams(scenario, new LocalPartyProvider { RoleOverride = role, Solo = options.Solo, Spectator = options.Spectator }, options.Solo ? null : strat, 0, seed, options.Spectator ? role : null));
             fake.Frame(FrameSeconds, game.Tick);
             if (game.Status < SessionStatus.Running)
                 failure = "did not start";

@@ -65,12 +65,18 @@ public sealed class SimParty : ISimObject
 
     public SimCharacter? Get(PartyRole role) => Get((int)role);
 
-    // The role of the slot currently holding the SimPlayer — set by SetSlot
-    // when it receives one. Falls back to MainTank if no SimPlayer has been
-    // placed (no scenario hits this today).
+    // Local practice settings use the human seat, or the watched bot seat in spectator mode.
     public PartyRole PlayerRole { get; private set; } = PartyRole.MainTank;
 
     public SimPlayer? Player => Get(PlayerRole) as SimPlayer;
+
+    internal void SetWatchedRole(PartyRole role)
+    {
+        PlayerRole = role;
+        spectating = true;
+    }
+
+    private bool spectating;
 
     private void SetSlot(PartyRole role, ISimPartyMember slot)
     {
@@ -87,6 +93,12 @@ public sealed class SimParty : ISimObject
     internal void Apply(IReadOnlyList<PartySlot?> roster, SimWorld world)
     {
         this.world = world;
+        spectating = false;
+        if (player is not null && !roster.Any(slot => slot is PlayerSlot))
+        {
+            player.Despawn();
+            player = null;
+        }
         var ring = world.Stream("party-spawn");
         for (int i = 0; i < slots.Length; i++)
         {
@@ -248,11 +260,13 @@ public sealed class SimParty : ISimObject
         foreach (var member in AllMembers()) member.ActorControl.SetInCombat(inCombat);
     }
 
-    public void Mark(Sign sign, SimCharacter target) => Player?.ActorControl.Mark(sign, target.GameObjectId);
+    internal ActorControl PresentationControl => Player?.ActorControl ?? new ActorControl(() => spectating && Natives.Zone.IsActive ? Natives.BattleCharas.LocalPlayer : null);
 
-    public void ClearMark(Sign sign) => Player?.ActorControl.ClearMark(sign);
+    public void Mark(Sign sign, SimCharacter target) => PresentationControl.Mark(sign, target.GameObjectId);
 
-    public void ClearMarks() => Player?.ActorControl.ClearMarks();
+    public void ClearMark(Sign sign) => PresentationControl.ClearMark(sign);
+
+    public void ClearMarks() => PresentationControl.ClearMarks();
 
     // Between runs of one zone stay: the members stay spawned, what the run left on them goes.
     internal void EndRun()
@@ -276,6 +290,7 @@ public sealed class SimParty : ISimObject
             seated[i] = null;
         }
         player = null;
+        spectating = false;
         confusedChases.Clear();
         actionHandlers.Clear();
         Natives.PartyHud.Clear();

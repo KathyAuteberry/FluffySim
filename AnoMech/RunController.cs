@@ -2,6 +2,7 @@ using AnoMech.Core;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Native.Implementations;
+using AnoMech.Core.Native.Interfaces;
 using AnoMech.Multiplayer;
 
 namespace AnoMech;
@@ -31,6 +32,13 @@ internal sealed class RunController
     {
         if (selection is not { Scenario: var scenario }) return "No scenario selected.";
         if (game.IsPreparingScenario) return "Waiting for the native arena and entrance barrier.";
+        if (selection.WatchedRole is not null)
+        {
+            if (!scenario.SupportsSpectator) return "This scenario has not been validated for JESUS TAKE THE WHEEL.";
+            if (multiplayer.IsConnected) return "JESUS TAKE THE WHEEL is local only.";
+            if (!Natives.SpectatorCamera.Available) return "Native actor-follow camera is unavailable.";
+            if (solo) return "JESUS TAKE THE WHEEL needs the full party.";
+        }
         if (solo && !scenario.SupportsSolo) return $"{scenario.Name} does not support Solo mode.";
         // Starting here bypasses MultiplayerManager: a host would run the fight without a
         // StartMessage, a peer would start a second independent simulation.
@@ -51,8 +59,8 @@ internal sealed class RunController
             Plugin.Log.Warning(refusal);
             return;
         }
-        var party = new LocalPartyProvider { RoleOverride = selection!.RoleOverride, Solo = solo };
-        var p = new RunScenarioParams(selection.Scenario, party, solo ? null : selection.Strat, selection.Waymark, selection.Seed);
+        var party = new LocalPartyProvider { RoleOverride = selection!.RoleOverride, Solo = solo, Spectator = selection.WatchedRole is not null };
+        var p = new RunScenarioParams(selection.Scenario, party, solo ? null : selection.Strat, selection.Waymark, selection.Seed, selection.WatchedRole);
         ZoneControl.EndSpeedBuffs();
         if (ZoneControl.StartBlockedReason(out var settling) != null && settling != null)
         {

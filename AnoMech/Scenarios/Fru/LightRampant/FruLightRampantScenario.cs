@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Fru.LightRampant;
 
 public sealed class FruLightRampantScenario : IScenario
 {
+    public bool SupportsSpectator => true;
     public string Name => "Light Rampant";
     public string MenuName => "Light Rampant";
     public IPhase Phase => FruZone.P2;
