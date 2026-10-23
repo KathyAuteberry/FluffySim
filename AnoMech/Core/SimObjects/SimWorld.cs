@@ -243,6 +243,13 @@ public sealed class SimWorld : ISimObject, IDisposable
     // The run's teardown; the party stays.
     public void Despawn()
     {
+        if (Party.WatchedRole is not null)
+        {
+            Events.Clear();
+            foreach (var actor in Party.AllMembers().Concat(children.OfType<SimCharacter>()))
+                actor.StopSimulationActivity();
+            Natives.PlayerInput.Steer(null, 0);
+        }
         var actions = cleanup.ToArray();
         cleanup.Clear();
         foreach (var action in actions)
