@@ -149,6 +149,13 @@ public sealed partial class MultiplayerManager : IDisposable
     private object? debugShadowStateGeneric;
     private bool debugBotReplayStarted;
 
+    internal string? DebugBotPeerRefusal(IScenario scenario)
+    {
+        if (scenario is IMultiplayerReplayable) return null;
+        var peer = Session.ClaimedBy.Values.FirstOrDefault(id => id != Session.HostId && Session.DebugBots.Contains(id));
+        return peer == Guid.Empty ? null : $"{Session.NameOf(peer)} must turn off Debug AI bot for this scenario.";
+    }
+
     // Every client judges a seat its debug bot plays as a bot (SimParty.IsBotDriven), so the roster
     // carries it: a peer's Hello goes again until a lobby state shows it.
     public bool SetDebugBotControlled(bool value)
@@ -924,6 +931,12 @@ public sealed partial class MultiplayerManager : IDisposable
         if (selection is not { Scenario: { SupportsMultiplayer: true } selectedScenario })
         {
             DiagnosticLog.Warn("[Multiplayer] Cannot start: no multiplayer-supported scenario is selected in the main window.");
+            return;
+        }
+        if (DebugBotPeerRefusal(selectedScenario) is { } debugBotRefusal)
+        {
+            StartCheckFailureReason = debugBotRefusal;
+            DiagnosticLog.Warn($"[Multiplayer] Cannot start: {debugBotRefusal}");
             return;
         }
         // A region with no strats leaves SelectedStrat at -1, which a debug-bot peer would index with.

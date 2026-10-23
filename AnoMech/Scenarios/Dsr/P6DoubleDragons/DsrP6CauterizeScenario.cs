@@ -6,6 +6,7 @@ public sealed class DsrP6CauterizeScenario : IScenario
 {
     private readonly DsrP6DoubleDragonsScenario scenario = new(true);
     public string DisplayNameOverride => scenario.DisplayNameOverride;
+    public bool SupportsMultiplayer => true;
     public string Name => scenario.Name;
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;

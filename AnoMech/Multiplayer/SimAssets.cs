@@ -19,7 +19,7 @@ internal enum SimAssetKind { Action, BNpcBase, EObj, Tether, Layout, EventId, Mo
 //
 // The allowlist is harvested by reflection: every constant in a class named for an id kind
 // (UmadConstants.ActionId, ...) plus any static field whose own name names one.
-// Declaring a constant is registering it; there is no manifest to drift.
+// Literal scenario assets are registered explicitly in DsrFruAssets.
 //
 // A keyword must be the id-suffixed form, never a bare noun: the field name wins over the class,
 // so a plain word also claims any descriptively-named constant containing it.
@@ -115,6 +115,33 @@ internal static class SimAssets
     private static bool IsPlayable(uint actionId)
         => IsKnown(SimAssetKind.Action, actionId) || JobActions.Knows(actionId) || LimitBreakHandler.IsLimitBreak(actionId)
            || Natives.Data.Action(actionId) is { IsPlayerAction: true };
+
+    private static HashSet<string>? omenPaths;
+
+    public static bool AllowStaticVfx(string path)
+    {
+        if (path == null || path.Length > NetGuard.MaxStringLength) return false;
+        if (omenPaths == null)
+        {
+            EnsureHarvested();
+            omenPaths = new(StringComparer.Ordinal);
+            foreach (var id in numbers![SimAssetKind.Action])
+            {
+                if (Natives.Data.Action((uint)id) is not { } action) continue;
+                AddOmenPath(action.OmenPath);
+                AddOmenPath(action.OmenAltPath);
+            }
+        }
+        return omenPaths.Contains(path);
+    }
+
+    private static void AddOmenPath(string? path)
+    {
+        if (string.IsNullOrWhiteSpace(path)) return;
+        var withExtension = path.EndsWith(".avfx", StringComparison.OrdinalIgnoreCase) ? path : path + ".avfx";
+        omenPaths!.Add(withExtension);
+        if (!withExtension.Contains('/')) omenPaths.Add($"vfx/omen/eff/{withExtension}");
+    }
 
     public static bool AllowAction(uint actionId, string context)
     {

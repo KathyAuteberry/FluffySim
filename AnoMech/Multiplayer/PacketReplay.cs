@@ -47,6 +47,7 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
     }
 
     private readonly Dictionary<uint, Spawned> spawned = new();
+    private readonly Dictionary<uint, IStaticVfxProxy> staticVfx = new();
     // Each status's source as this client was first shown it, kept while the status lasts: the
     // host's list goes on naming an applier that has despawned, or whose id a later spawn took.
     private readonly Dictionary<(uint Actor, ushort StatusId, uint Source), uint> statusSources = new();
@@ -99,6 +100,10 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
         if (packet.ShownBy == myRole) return;
         switch (packet)
         {
+            case SpawnStaticVfxPacket p: SpawnStaticVfx(p); return;
+            case RemoveStaticVfxPacket p:
+                if (staticVfx.Remove(p.Id, out var handle)) handle.Remove();
+                return;
             case SpawnNpcPacket p: SpawnNpc(p); return;
             case SpawnObjPacket p: SpawnObject(p); return;
             case MapEffectPacket or MapEffectSnapshotPacket or DirectorUpdatePacket:
@@ -161,6 +166,8 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
     // Whatever the host's own despawns didn't reach: the run ended, the host left, or we did.
     public void Clear()
     {
+        foreach (var handle in staticVfx.Values) handle.Remove();
+        staticVfx.Clear();
         foreach (var actor in spawned.Keys.ToList()) Despawn(actor);
         foreach (var tether in tethers.Values) tether.Despawn();
         tethers.Clear();
@@ -268,6 +275,16 @@ internal sealed class PacketReplay(PeerNatives natives, SimWorld world, PartyRol
     }
 
     // ── Spawns ───────────────────────────────────────────────────────────────
+
+    private void SpawnStaticVfx(SpawnStaticVfxPacket p)
+    {
+        if (p.Id == 0 || !SimAssets.AllowStaticVfx(p.Path) || !NetGuard.TryPosition(p.X, p.Y, p.Z, out var position)) return;
+        if (!NetGuard.TryPosition(p.ScaleX, p.ScaleY, p.ScaleZ, out var scale) || scale.X <= 0 || scale.Y <= 0 || scale.Z <= 0) return;
+        if (staticVfx.Remove(p.Id, out var previous)) previous.Remove();
+        if (staticVfx.Count >= 256) return;
+        if (Natives.Vfx.SpawnStatic(p.Path, new Placement(position, NetGuard.Rotation(p.Rotation)), scale) is { } handle)
+            staticVfx[p.Id] = handle;
+    }
 
     private void SpawnNpc(SpawnNpcPacket p)
     {

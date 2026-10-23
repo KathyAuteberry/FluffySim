@@ -14,6 +14,7 @@ namespace AnoMech.Scenarios.Fru.Apocalypse;
 
 public sealed class FruApocalypseScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name=>"Apocalypse (Mana)";
     public string DisplayNameOverride=>"P3 Apocalypse";
     public bool IsIncomplete=>true;

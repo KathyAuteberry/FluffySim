@@ -420,6 +420,7 @@ internal sealed class MultiplayerUi
         if (!mp.IsConnected) return "Not connected to the server.";
         if (selection is not { Scenario: { SupportsMultiplayer: true } scenario })
             return "Select a multiplayer-supported scenario.";
+        if (mp.DebugBotPeerRefusal(scenario) is { } debugBotRefusal) return debugBotRefusal;
         if (selection.Strat is null) return "No strat available for the selected scenario/region.";
         var conflicts = scenario.SettingsConflicts;
         if (conflicts.Count > 0)

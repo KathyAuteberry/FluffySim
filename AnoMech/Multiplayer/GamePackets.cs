@@ -32,6 +32,8 @@ internal static class PacketActor
 }
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "k")]
+[JsonDerivedType(typeof(SpawnStaticVfxPacket), "staticVfx")]
+[JsonDerivedType(typeof(RemoveStaticVfxPacket), "removeStaticVfx")]
 [JsonDerivedType(typeof(SpawnNpcPacket), "npc")]
 [JsonDerivedType(typeof(SpawnObjPacket), "obj")]
 [JsonDerivedType(typeof(DespawnPacket), "despawn")]
@@ -123,3 +125,7 @@ public sealed record WeatherPacket(byte WeatherId, float Transition, bool AfterL
 // The server's PlayerStateFlags for a seat's own client: the host computes it from the statuses
 // it holds on that seat, as SimPlayer does for the local player.
 public sealed record AfflictionsPacket(uint Actor, bool Status, bool Control) : GamePacket;
+
+public sealed record SpawnStaticVfxPacket(uint Id, string Path, float X, float Y, float Z, float Rotation,
+    float ScaleX, float ScaleY, float ScaleZ) : GamePacket;
+public sealed record RemoveStaticVfxPacket(uint Id) : GamePacket;

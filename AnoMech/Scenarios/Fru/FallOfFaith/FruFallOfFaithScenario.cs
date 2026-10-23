@@ -15,6 +15,7 @@ public sealed record FaithCone(int Order, bool Fire, float Time, Vector3 Origin,
 
 public sealed class FruFallOfFaithScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Fall of Faith";
     public IPhase Phase => FruZone.P1;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruFallOfFaithAi()];

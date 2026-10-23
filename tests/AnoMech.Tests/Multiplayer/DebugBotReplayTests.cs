@@ -1,3 +1,4 @@
+using AnoMech.Multiplayer;
 using System.Globalization;
 using System.Numerics;
 using System.Text.RegularExpressions;
@@ -20,7 +21,7 @@ public partial class DebugBotReplayTests
     private const float SpotTolerance = 0.05f;
 
     private static IEnumerable<TestCaseData> Strats() =>
-        from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer)
+        from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer && s is IMultiplayerReplayable)
         from strat in scenario.AiStrats.Select((ai, index) => (ai, index))
         select new TestCaseData(scenario.GetType(), strat.index).SetArgDisplayNames(scenario.FullName(), strat.ai.Name);
 
@@ -28,7 +29,7 @@ public partial class DebugBotReplayTests
     public void EveryBotPeerWalksWhereTheHostsAiSendsItsSeat(Type scenarioType, int strat) => Verify(scenarioType, strat, runs: 1);
 
     private static IEnumerable<TestCaseData> FirstStrats() =>
-        from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer)
+        from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer && s is IMultiplayerReplayable)
         select new TestCaseData(scenario.GetType()).SetArgDisplayNames(scenario.FullName());
 
     // The stay's next run: each peer's bot starts over on that run's rolls and clock.

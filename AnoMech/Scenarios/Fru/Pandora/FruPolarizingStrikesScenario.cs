@@ -7,6 +7,7 @@ namespace AnoMech.Scenarios.Fru.Pandora;
 
 public sealed class FruPolarizingStrikesScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     private readonly FruP5ParadiseRegainedScenario encounter = new();
     public string Name => "Polarizing Strikes";
     public IPhase Phase => FruZone.P5;

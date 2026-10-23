@@ -17,6 +17,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P5FulgentBlade;
 // Akh Morn closes it on one member of each light party.
 public sealed class FruP5FulgentBladeScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Fulgent Blade";
     public IPhase Phase => FruZone.P5;
     public bool SupportsSolo => true;
