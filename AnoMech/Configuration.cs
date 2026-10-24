@@ -20,6 +20,12 @@ public class Configuration : IPluginConfiguration
     public Core.Game.Ai.BotDifficulty BotDifficulty { get; set; }
     public bool ShowSimulatedParty { get; set; } = true;
     public bool PracticeGodMode { get; set; }
+    private int simulatedPingRttMs;
+    public int SimulatedPingRttMs
+    {
+        get => simulatedPingRttMs;
+        set => simulatedPingRttMs = Math.Clamp(value, 0, 300);
+    }
     public bool AutoCollapseWhileRunning { get; set; } = false;
     public Dictionary<string, string> ScenarioStrategies { get; set; } = new();
     public string LastSelectedScenario { get; set; } = "";

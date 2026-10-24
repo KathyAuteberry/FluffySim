@@ -56,6 +56,19 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
+        var ping = configuration.SimulatedPingRttMs;
+        ImGui.SetNextItemWidth(100 * ImGuiHelpers.GlobalScale);
+        if (ImGui.InputInt("Simulated Ping (RTT, ms)", ref ping, 50, 50))
+        {
+            configuration.SimulatedPingRttMs = ping;
+            configuration.Save();
+        }
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip("0 = Off. 50 = Low, 100 = Moderate, 150 = High, 200 = Very high.\n"
+                + "Custom range: 0–300 ms. Applies on next local run.\n"
+                + "Approximates server receipt of your movement and actions using half the RTT.\n"
+                + "Your controls stay immediate. Bots and spectator mode are unaffected.");
+
         var userActions = configuration.EnableUserActions;
         if (ImGui.Checkbox("Resolve your own actions", ref userActions))
         {

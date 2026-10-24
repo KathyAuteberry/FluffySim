@@ -51,7 +51,7 @@ public sealed class Game : IDisposable
             {
                 Natives.UserActions.OnPause();
                 PauseStatuses = World.Party.AllMembers().Concat(World.Children.OfType<SimCharacter>())
-                    .Distinct().Select(c => new PausedCharacterStatuses(c, new(c.Position, c.Rotation),
+                    .Distinct().Select(c => new PausedCharacterStatuses(c, c is SimPlayer local ? local.LocalPose : new(c.Position, c.Rotation),
                         c.Proxy?.Rotation ?? c.Rotation, Array.AsReadOnly(c.ActiveStatuses.Select(s => s.Snapshot).ToArray()))).ToArray();
                 foreach (var snapshot in PauseStatuses) snapshot.Character.FreezePausePose(snapshot.Pose);
                 pauseInputOwner = Natives.PlayerInput;
@@ -274,7 +274,11 @@ public sealed class Game : IDisposable
         World.ShowSimulatedParty = p.WatchedRole is not null || Plugin.Config.ShowSimulatedParty;
         GodMode = p.WatchedRole is null && Plugin.Config.PracticeGodMode;
         godMistakeTimes.Clear();
-        try { run.Start(); }
+        try
+        {
+            run.Start();
+            World.BeginLatency(instance.Mode == SessionMode.Local && p.WatchedRole is null ? Plugin.Config.SimulatedPingRttMs : 0);
+        }
         catch { EndRun(); throw; }
         RunStarted?.Invoke(p, instance.Mode == SessionMode.Local);
         return null;
@@ -330,6 +334,7 @@ public sealed class Game : IDisposable
             if (paused) Natives.PlayerConditions.SetAfflictions(true, true);
             return;
         }
+        World.Latency.Sample(deltaSeconds, Player?.LocalPose ?? default);
         Events.Tick(deltaSeconds * EventTimeScale);
         if (Paused) return;
         World.Tick(deltaSeconds * EventTimeScale);

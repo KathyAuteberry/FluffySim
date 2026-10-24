@@ -94,8 +94,11 @@ public abstract class SimCharacter : ISimObject, IPositioned
         pausedPose = pose;
         Casting.PausePresentation(pose is not null);
     }
-    public Vector3 Position => pausedPose?.Position ?? Motion.Position;
-    public float Rotation => pausedPose?.Rotation ?? Motion.Rotation;
+    public Vector3 Position => pausedPose?.Position ?? MechanicPose.Position;
+    public float Rotation => pausedPose?.Rotation ?? MechanicPose.Rotation;
+
+    private protected virtual Placement MechanicPose => new(Motion.Position, Motion.Rotation);
+    private protected virtual void OnPositionReset() { }
 
     // Yalms (XZ) between Position and the model at the start of the last tick.
     public float ModelDivergence => Motion.ModelDivergence;
@@ -110,9 +113,9 @@ public abstract class SimCharacter : ISimObject, IPositioned
         FlushStatusList();
     }
 
-    public void SetPosition(Vector3 position) => Motion.SetPosition(position);
-    public void SetPosition(Placement placement) => Motion.SetPlacement(placement);
-    public void SetRotation(float rotation) => Motion.SetPlacement(new Placement(Position, rotation));
+    public void SetPosition(Vector3 position) { Motion.SetPosition(position); OnPositionReset(); }
+    public void SetPosition(Placement placement) { Motion.SetPlacement(placement); OnPositionReset(); }
+    public void SetRotation(float rotation) => Motion.SetPlacement(new Placement(Motion.Position, rotation));
 
     public void TurnTo(float rotation) => Motion.TurnTo(rotation);
     public void Face(Vector3? target)
@@ -186,7 +189,7 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     // A mechanic's snap, which a remote player's own client has to make; SetPosition is the
     // engine-side one. Replay and sim: ActorSetPos.
-    public void TeleportTo(Placement placement) => Motion.Force(new ForcedMove.Teleport(placement));
+    public void TeleportTo(Placement placement) { Motion.Force(new ForcedMove.Teleport(placement)); OnPositionReset(); }
 
     // Replay (UMAD P1 Confusion): the confused player's own movement, nothing that names the
     // target. Live, never in a replay: forced-move end + follow {target, 1} to the confused player

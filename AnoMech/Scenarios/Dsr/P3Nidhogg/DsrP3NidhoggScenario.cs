@@ -156,6 +156,7 @@ public sealed class DsrP3NidhoggScenario : IScenario
         foreach (var role in state.Line(line))
         {
             var target = world.Party.Get(role)!;
+            target.RemoveStatus((ushort)(3003 + line));
             var actor = waiting.Dequeue();
             actor.SetPosition(target.Placement()); actor.SetDrawObjectVisible(true);
             var facing = new Vector3(MathF.Sin(target.Rotation), 0, MathF.Cos(target.Rotation));

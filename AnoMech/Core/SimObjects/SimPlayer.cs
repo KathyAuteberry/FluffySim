@@ -16,6 +16,10 @@ public sealed class SimPlayer : SimCharacter, ISimPartyMember
         => motion = (PlayerMotion)Motion;
 
     public PartyRole Role { get; set; }
+    internal LocalLatency? Latency { get; set; }
+    internal Placement LocalPose => new(motion.Position, motion.Rotation);
+    private protected override Placement MechanicPose => Latency?.ServerPose(LocalPose) ?? LocalPose;
+    private protected override void OnPositionReset() => Latency?.ResetPose(LocalPose);
 
     // For stillness/movement mechanics: IsMoving = movement input, a jump, any action, or an
     // in-flight debug-bot MoveTo; IsActing also counts auto-attacks. Forced false while KO'd.

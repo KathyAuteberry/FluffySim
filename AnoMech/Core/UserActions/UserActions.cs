@@ -159,15 +159,9 @@ public sealed unsafe class UserActions : IUserActions
         processedSeq = seq;
 
         if (actionType == ActionType.Action) Natives.Zone.NotePracticeAction(actionId);
-        if (provoke)
+        if (provoke || actionType == ActionType.Action && PracticeDefensiveActions.IsSupported(actionId))
         {
-            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, actionType, actionId, targetId));
-            new LocalProvokeHandler().OnAction(actionType, actionId, targetId);
-            return;
-        }
-        if (actionType == ActionType.Action && PracticeDefensiveActions.Apply(Plugin.Game?.Player, actionId))
-        {
-            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, actionType, actionId, targetId));
+            ResolveAction(actionType, actionId, targetId);
             return;
         }
         // Effects resolve when the cast finishes. Instant (or made instant) → now; a real cast bar
@@ -189,9 +183,28 @@ public sealed unsafe class UserActions : IUserActions
         }
         else
         {
-            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, actionType, actionId, targetId));
-            foreach (var handler in handlers) if (Runs(handler)) handler.OnAction(actionType, actionId, targetId);
+            ResolveAction(actionType, actionId, targetId);
         }
+    }
+
+    private void ResolveAction(ActionType type, uint action, ulong target)
+    {
+        void Apply()
+        {
+            if (!SimActive || hooks.SpectatorInput || Plugin.Game is { World.Latency.PingRttMs: > 0, Player.Dead: true }) return;
+            if (type == ActionType.Action && PracticeDefensiveActions.Apply(Plugin.Game?.Player, action))
+            {
+                Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, type, action, target));
+                return;
+            }
+            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, type, action, target));
+            if (type == ActionType.Action && action == 7533)
+                new LocalProvokeHandler().OnAction(type, action, target);
+            else
+                foreach (var handler in handlers) if (Runs(handler)) handler.OnAction(type, action, target);
+        }
+        if (Plugin.Game is { } game) game.World.Latency.Accept(game.Events, game.EventTimeScale, Apply);
+        else Apply();
     }
 
     // Fires the deferred hard-cast effects once the cast completes; drops them if it was interrupted.
@@ -203,8 +216,7 @@ public sealed unsafe class UserActions : IUserActions
             if (!pausedCast.Tick(deltaSeconds)) return;
             pendingResolve = false;
             pausedCast.Clear();
-            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, pendingType, pendingAction, pendingTarget));
-            foreach (var handler in handlers) if (Runs(handler)) handler.OnAction(pendingType, pendingAction, pendingTarget);
+            ResolveAction(pendingType, pendingAction, pendingTarget);
             return;
         }
         var bc = (BattleChara*)(Plugin.ObjectTable.LocalPlayer?.Address ?? 0);
@@ -221,8 +233,7 @@ public sealed unsafe class UserActions : IUserActions
         {
             var am = ActionManager.Instance();
             if (am != null) processedSeq = am->LastUsedActionSequence; // dedup any re-entrant combo fire during dispatch
-            Acted?.Invoke(new PlayerAction(PlayerActionStep.Resolved, pendingType, pendingAction, pendingTarget));
-            foreach (var handler in handlers) if (Runs(handler)) handler.OnAction(pendingType, pendingAction, pendingTarget);
+            ResolveAction(pendingType, pendingAction, pendingTarget);
         }
         else
         {
