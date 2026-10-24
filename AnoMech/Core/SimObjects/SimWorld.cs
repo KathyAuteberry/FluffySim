@@ -228,6 +228,17 @@ public sealed class SimWorld : ISimObject, IDisposable
         foreach (var member in Party.ActiveMembers().OfType<SimPartyNpc>()) member.SetPresentationVisible(ShowSimulatedParty);
     }
 
+    public LocalLatency Latency { get; } = new();
+
+    public void BeginLatency(int pingRttMs)
+    {
+        Latency.Begin(pingRttMs, Party.Player?.LocalPose ?? default);
+        if (Party.Player is { } player) player.Latency = Latency;
+        PracticeInvulnerability.DelayActivation = Accept;
+        PracticeAntiKnockback.DelayActivation = Accept;
+        void Accept(Action effect) => Latency.Accept(Events, Plugin.Game?.EventTimeScale ?? 1, effect);
+    }
+
     public void Tick(float deltaSeconds)
     {
         PracticeInvulnerability.Tick(deltaSeconds);
@@ -243,6 +254,8 @@ public sealed class SimWorld : ISimObject, IDisposable
     // The run's teardown; the party stays.
     public void Despawn()
     {
+        Latency.Clear();
+        if (Party.Player is { } localPlayer) localPlayer.Latency = null;
         if (Party.WatchedRole is not null)
         {
             Events.Clear();
