@@ -1,3 +1,9 @@
+# FluffySim 3.1.1.0 — release prepared
+
+## Fixed
+
+- Minor fixes to scenario AI and practice behavior.
+
 # FluffySim 3.1.0.0 — release prepared
 
 ## Added
