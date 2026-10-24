@@ -130,7 +130,7 @@ public sealed class DsrSanctity2Ai : IScenarioAi<DsrSanctity2State>
             foreach (var role in DsrSanctity2State.Roles.Where(r => !state.TakesKnockback(r)))
             {
                 var member = world.Party.Get(role);
-                if (member is SimPlayer && !DebugBotControl.Enabled) continue;
+                if (member is null || !world.Party.IsBotDriven(member)) continue;
                 var caster = role is PartyRole.RegenHealer or PartyRole.ShieldHealer or PartyRole.CasterDps;
                 if (member is SimNpc npc) npc.PlayAction(caster ? 7559u : 7548u); member?.AddStatus(caster ? (ushort)160 : (ushort)1209,6);
             }
