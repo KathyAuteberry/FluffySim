@@ -9,6 +9,34 @@ namespace AnoMech.Tests;
 
 public class DsrP3NidhoggTests
 {
+    [TestCase(1, 37.28f)]
+    [TestCase(2, 47.27f)]
+    [TestCase(3, 58.29f)]
+    public void NumberedStatusClearsOnItsOwnDiveWithoutClearingLaterAssignments(int line, float at)
+    {
+        var scenario = new DsrP3NidhoggScenario();
+        var checks = 0;
+        var run = ScenarioRun.Execute(typeof(DsrP3NidhoggScenario), 0, 0, new()
+        {
+            ScenarioFactory = () => scenario, StopAt = at + .2f,
+            Probe = p =>
+            {
+                foreach (var (offset, active) in new[] { (-.1f, true), (.1f, false) })
+                {
+                    if (!p.Crossed(at + offset)) continue;
+                    foreach (var role in scenario.LastState!.Line(line))
+                        Assert.That(p.Member(role)!.HasStatus((ushort)(3003 + line)), Is.EqualTo(active));
+                    foreach (var later in Enumerable.Range(line + 1, 3 - line))
+                        foreach (var role in scenario.LastState.Line(later))
+                            Assert.That(p.Member(role)!.HasStatus((ushort)(3003 + later)), Is.True);
+                    checks++;
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checks, Is.EqualTo(2));
+    }
+
     [Test]
     public void HumanMainTankDoesNotPullBotsIntoItsCleave()
     {
