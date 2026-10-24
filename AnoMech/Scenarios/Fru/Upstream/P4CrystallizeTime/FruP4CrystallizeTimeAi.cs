@@ -119,7 +119,7 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         if (elapsed is >= 45.9f and < 48.5f)
         {
             if (mana) MoveEveryBot(ManaSpreadSpot, arriveBy: 48.3f);
-            else SpreadAwayFromPlayerForSpiritTaker();
+            else SpreadAwayFromPlayersForSpiritTaker();
         }
     }
 
@@ -391,14 +391,14 @@ public sealed class FruP4CrystallizeTimeAi(bool mana = false) : IScenarioAi<FruP
         return spots.ToArray();
     }
 
-    private void SpreadAwayFromPlayerForSpiritTaker()
+    private void SpreadAwayFromPlayersForSpiritTaker()
     {
-        var player = world.Party.Player;
+        var players = world.Party.ActiveMembers().Where(member => !world.Party.IsBotDriven(member)).ToArray();
         foreach (var bot in Bots().OrderBy(b => ((ISimPartyMember)b).Role))
         {
             var role = ((ISimPartyMember)bot).Role;
             bool Clear(Vector3 spot) =>
-                (!player.IsAlive() || world.Party.IsBotDriven(player!) || Vector3.Distance(spot, player!.Position) >= SpreadClearance)
+                players.All(player => Vector3.Distance(spot, player.Position) >= SpreadClearance)
                 && spreadSpots.All(s => s.Key == role || Vector3.Distance(spot, s.Value) >= SpreadClearance);
             if (spreadSpots.TryGetValue(role, out var current) && Clear(current)) continue;
             var spot = SpreadCandidates.Where(Clear).OrderBy(c => Vector3.DistanceSquared(bot.Position, c)).Cast<Vector3?>().FirstOrDefault();

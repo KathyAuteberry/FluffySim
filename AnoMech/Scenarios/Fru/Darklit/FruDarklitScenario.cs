@@ -27,6 +27,7 @@ public static class FruDarklitRules
 }
 public sealed class FruDarklitScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Darklit Dragonsong (Mana)";
     public string DisplayNameOverride => "P4 Darklit Dragonsong";
     public bool IsIncomplete => true;

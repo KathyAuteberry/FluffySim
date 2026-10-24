@@ -61,7 +61,7 @@ public sealed class FruUltimateRelativityAi : IScenarioAi<FruUltimateRelativityS
         {
             var d = state.Direction(state.Clock(role));
             var member = world.Party.Get(role);
-            if (member is SimPlayer && !DebugBotControl.Enabled) continue;
+            if (member is null || !world.Party.IsBotDriven(member)) continue;
             member?.SetRotation(MathF.Atan2(d.X, d.Z));
         }
     }

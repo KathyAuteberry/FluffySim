@@ -16,6 +16,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P2LightRampant;
 
 public sealed class FruP2LightRampantScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Light Rampant";
     public IPhase Phase => FruZone.P2;
 

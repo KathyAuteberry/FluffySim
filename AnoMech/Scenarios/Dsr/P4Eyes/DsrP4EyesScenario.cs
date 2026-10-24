@@ -16,6 +16,7 @@ namespace AnoMech.Scenarios.Dsr.P4Eyes;
 public sealed class DsrP4EyesScenario : IScenario
 {
     public string DisplayNameOverride => "P4 Eyes";
+    public bool SupportsMultiplayer => true;
     public string Name => "Eyes (Elemental)";
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;

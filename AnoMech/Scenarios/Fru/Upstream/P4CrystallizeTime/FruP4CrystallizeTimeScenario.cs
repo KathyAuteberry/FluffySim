@@ -18,6 +18,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P4CrystallizeTime;
 
 public sealed class FruP4CrystallizeTimeScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Crystallize Time";
     public IPhase Phase => global::AnoMech.Scenarios.Fru.FruZone.P4;
 

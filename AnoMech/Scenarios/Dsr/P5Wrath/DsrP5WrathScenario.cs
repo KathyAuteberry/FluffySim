@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Dsr.P5Wrath;
 public sealed class DsrP5WrathScenario : IScenario
 {
     public string DisplayNameOverride => "P5 Wrath of the Heavens";
+    public bool SupportsMultiplayer => true;
     public string Name => "Wrath of the Heavens (Elemental)";
     public IPhase Phase => DsrZone.P5;
     public bool IsIncomplete => true;

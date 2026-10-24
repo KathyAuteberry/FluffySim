@@ -14,6 +14,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P2DiamondDust;
 
 public sealed class FruP2DiamondDustScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Diamond Dust";
     public IPhase Phase => FruZone.P2;
 

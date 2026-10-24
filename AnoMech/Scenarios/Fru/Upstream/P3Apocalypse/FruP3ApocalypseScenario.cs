@@ -14,6 +14,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P3Apocalypse;
 
 public sealed class FruP3ApocalypseScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Apocalypse";
     public IPhase Phase => FruZone.P3;
 

@@ -26,6 +26,8 @@ internal sealed class PacketRecorder
     private readonly IInstanceContentDirector realDirector;
     private readonly IHaterList realHaters;
     private readonly IZoneControl realZone;
+    private readonly IVfxFunctions realVfx;
+    private uint nextStaticVfx;
 
     private readonly List<GamePacket> pending = [];
     // Host entity ids of the actors spawned while recording: the only ones peers have.
@@ -49,6 +51,7 @@ internal sealed class PacketRecorder
         realDirector = Natives.Director;
         realHaters = Natives.HaterList;
         realZone = Natives.Zone;
+        realVfx = Natives.Vfx;
         localPlayer = new RecordingBattleChara(realCharas.LocalPlayer, this, 0);
     }
 
@@ -61,6 +64,7 @@ internal sealed class PacketRecorder
         Natives.Director = new RecordingDirector(recorder);
         Natives.HaterList = new RecordingHaterList(recorder);
         Natives.Zone = new RecordingZone(recorder);
+        Natives.Vfx = new RecordingVfx(recorder);
         return recorder;
     }
 
@@ -72,6 +76,7 @@ internal sealed class PacketRecorder
         Natives.Director = realDirector;
         Natives.HaterList = realHaters;
         Natives.Zone = realZone;
+        Natives.Vfx = realVfx;
     }
 
     public List<GamePacket> Drain()
@@ -335,6 +340,33 @@ internal sealed class PacketRecorder
     }
 
     // ── The recording natives ────────────────────────────────────────────────
+
+    private sealed class RecordingVfx(PacketRecorder recorder) : IVfxFunctions
+    {
+        public string? LockonIconName(uint lockonId) => recorder.realVfx.LockonIconName(lockonId);
+
+        public IStaticVfxProxy? SpawnStatic(string path, Placement placement, Vector3 scale)
+        {
+            var handle = recorder.realVfx.SpawnStatic(path, placement, scale);
+            if (handle == null || !recorder.Recording) return handle;
+            var id = ++recorder.nextStaticVfx;
+            recorder.Add(new SpawnStaticVfxPacket(id, path, placement.Position.X, placement.Position.Y, placement.Position.Z,
+                placement.Rotation, scale.X, scale.Y, scale.Z));
+            return new RecordingStaticVfx(handle, recorder, id);
+        }
+    }
+
+    private sealed class RecordingStaticVfx(IStaticVfxProxy inner, PacketRecorder recorder, uint id) : IStaticVfxProxy
+    {
+        private bool removed;
+        public void Remove()
+        {
+            if (removed) return;
+            removed = true;
+            inner.Remove();
+            recorder.Add(new RemoveStaticVfxPacket(id));
+        }
+    }
 
     private sealed class RecordingBattleCharas(PacketRecorder recorder) : IBattleCharas
     {

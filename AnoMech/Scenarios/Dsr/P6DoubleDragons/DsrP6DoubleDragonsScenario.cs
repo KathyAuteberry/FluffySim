@@ -18,6 +18,7 @@ public sealed class DsrP6DoubleDragonsScenario : IScenario
     public DsrP6DoubleDragonsScenario() : this(false) { }
     public DsrP6DoubleDragonsScenario(bool secondHalf) => this.secondHalf = secondHalf;
     public string DisplayNameOverride => secondHalf ? "P6 Hallowed Wings 2 to Cauterize" : "P6 Wyrmsbreath 1 to Wroth Flames";
+    public bool SupportsMultiplayer => true;
     public string Name => secondHalf ? "Hallowed Wings 2 to Cauterize (Elemental 5-1)" : "Wyrmsbreath to Wroth Flames (Elemental)";
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;

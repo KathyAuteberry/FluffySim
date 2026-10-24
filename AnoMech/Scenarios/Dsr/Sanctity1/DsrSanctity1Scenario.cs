@@ -18,6 +18,7 @@ public sealed class DsrSanctity1Scenario : IScenario
     {
         public void Apply(EnemyActionContext ctx, System.Collections.Generic.IReadOnlyList<SimCharacter> hits) => resolve(ctx);
     }
+    public bool SupportsMultiplayer => true;
     public string Name => "Sanctity of the Ward — Part 1: Sacred Severs (Elemental)";
     public string DisplayNameOverride => "P2 Sanctity of the Ward 1";
     public IPhase Phase => DsrZone.P2;

@@ -1,3 +1,4 @@
+using AnoMech.Multiplayer;
 using System.Globalization;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
@@ -18,7 +19,11 @@ public class ResultMarkTests
         from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer)
         select new TestCaseData(scenario.GetType()).SetArgDisplayNames(scenario.FullName());
 
-    [TestCaseSource(nameof(Scenarios))]
+    private static IEnumerable<TestCaseData> BotScenarios() =>
+        from scenario in ScenarioCatalog.Create().Scenarios.Where(s => s.SupportsMultiplayer && s is IMultiplayerReplayable)
+        select new TestCaseData(scenario.GetType()).SetArgDisplayNames(scenario.FullName());
+
+    [TestCaseSource(nameof(BotScenarios))]
     public void EveryPlayerSeesEveryPlayersSuccessMark(Type scenarioType)
     {
         var run = Play(scenarioType, bots: true);

@@ -1,3 +1,4 @@
+using AnoMech.Multiplayer;
 using AnoMech.Core.Game.Party;
 using AnoMech.Scenarios;
 
@@ -21,7 +22,7 @@ public class FallingBehindTests
     [TestCaseSource(nameof(Scenarios))]
     public void TheHostEndsTheRunOnceAPeerFallsMoreThanTenSecondsBehind(Type scenarioType)
     {
-        var run = MultiplayerRun.Play(scenarioType, 0, 1, new PlayerSeat(PartyRole.MeleeDpsA), [new PlayerSeat(PartyRole.CasterDps)],
+        var run = MultiplayerRun.Play(scenarioType, 0, 1, new PlayerSeat(PartyRole.MeleeDpsA), [new PlayerSeat(PartyRole.CasterDps, typeof(IMultiplayerReplayable).IsAssignableFrom(scenarioType))],
             peerLink: Starved, immortal: true);
         Assert.That(run.Failure, Is.Null);
         var behind = run.Relay.MaxHostDelay;

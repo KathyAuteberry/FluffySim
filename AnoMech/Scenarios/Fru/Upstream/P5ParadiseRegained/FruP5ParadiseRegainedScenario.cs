@@ -17,6 +17,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P5ParadiseRegained;
 
 public sealed class FruP5ParadiseRegainedScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Paradise Regained";
     public IPhase Phase => FruZone.P5;
 

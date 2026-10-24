@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Dsr.P1Knights;
 public sealed class DsrP1KnightsScenario : IScenario
 {
     public string DisplayNameOverride => "P1 The Holy See";
+    public bool SupportsMultiplayer => true;
     public string Name => "The Holy See — South-first / HMRT (Elemental)";
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;

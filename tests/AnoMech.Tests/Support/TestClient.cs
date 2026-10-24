@@ -36,6 +36,7 @@ internal sealed class TestClient
     public Game Game { get; }
     public MultiplayerManager Multiplayer { get; }
     public TraceLog Log { get; }
+    public Action<TestClient>? FrameObserved { get; set; }
 
     public TestClient(string name, PartyRole seat, int seed, TestRelay relay, bool isHost, int slotOffset, (int Min, int Max) spawnFrames)
     {
@@ -81,6 +82,7 @@ internal sealed class TestClient
             Multiplayer.Tick(delta);
         });
         RecordNames();
+        FrameObserved?.Invoke(this);
     });
 
     // An entity id as both clients name it at `at`: its seat's role, or the host's entity id for an

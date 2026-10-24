@@ -1,3 +1,4 @@
+using AnoMech.Multiplayer;
 using AnoMech.Core.Game.Party;
 using AnoMech.Scenarios;
 
@@ -20,7 +21,7 @@ public class PeerParityTests
     // touches the controls leaves the host immortal, so nobody dies and the fight runs to its end.
     private static IEnumerable<TestCaseData> CleanLink() =>
         from scenario in Scenarios
-        from bot in new[] { true, false }
+        from bot in scenario is IMultiplayerReplayable ? new[] { true, false } : new[] { false }
         select new TestCaseData(scenario.GetType(), bot).SetArgDisplayNames(scenario.FullName(), bot ? "bot peer" : "player peer");
 
     [TestCaseSource(nameof(CleanLink))]
@@ -34,7 +35,8 @@ public class PeerParityTests
 
     [TestCaseSource(nameof(BadLinks))]
     public void APeerSeesWhatTheHostSeesOverABadConnection(Type scenarioType, ConnectionProfile link)
-        => Verify(MultiplayerRun.Play(scenarioType, 0, 1, Host, [new PlayerSeat(PeerSeat)], link, link));
+        => Verify(MultiplayerRun.Play(scenarioType, 0, 1, Host, [new PlayerSeat(PeerSeat, typeof(IMultiplayerReplayable).IsAssignableFrom(scenarioType))], link, link,
+            immortal: !typeof(IMultiplayerReplayable).IsAssignableFrom(scenarioType)));
 
     private static IEnumerable<TestCaseData> Restarts() =>
         from scenario in Scenarios
@@ -44,13 +46,37 @@ public class PeerParityTests
     // host's, with every actor of the run before gone.
     [TestCaseSource(nameof(Restarts))]
     public void APeerSeesWhatTheHostSeesAfterAReset(Type scenarioType)
-        => Verify(MultiplayerRun.Play(scenarioType, 0, 1, Host, [new PlayerSeat(PeerSeat)], runs: 2));
+        => Verify(MultiplayerRun.Play(scenarioType, 0, 1, Host, [new PlayerSeat(PeerSeat, typeof(IMultiplayerReplayable).IsAssignableFrom(scenarioType))],
+            immortal: !typeof(IMultiplayerReplayable).IsAssignableFrom(scenarioType), runs: 2));
+
+    [Test]
+    public void UnsupportedPeerAiReplayIsRefusedBeforeEntering()
+    {
+        var run = MultiplayerRun.Play(typeof(AnoMech.Scenarios.Dsr.Strength.DsrStrengthScenario), 0, 1,
+            Host with { BotControlled = false }, [new PlayerSeat(PeerSeat)]);
+        Assert.That(run.Host.Multiplayer.StartCheckFailureReason, Does.Contain("turn off Debug AI bot"));
+        Assert.That(run.Host.Game.World.Map.IsInInstance, Is.False);
+        Assert.That(run.Peers[0].Game.World.Map.IsInInstance, Is.False);
+    }
+
+    private static IEnumerable<TestCaseData> DsrFruHumanParties() =>
+        from scenario in Scenarios
+        where scenario.GetType().Namespace is { } ns && (ns.StartsWith("AnoMech.Scenarios.Dsr") || ns.StartsWith("AnoMech.Scenarios.Fru"))
+        from seed in Enumerable.Range(0, 4)
+        select new TestCaseData(scenario.GetType(), seed).SetArgDisplayNames(scenario.FullName(), $"seed {seed}");
+
+    [TestCaseSource(nameof(DsrFruHumanParties))]
+    public void EveryDsrFruSeatReceivesTheFightWithoutAiReplay(Type scenarioType, int seed)
+    {
+        var peers = Enum.GetValues<PartyRole>().Where(r => r != Host.Role).Select(r => new PlayerSeat(r, false)).ToArray();
+        Verify(MultiplayerRun.Play(scenarioType, 0, seed, Host with { BotControlled = false }, peers, immortal: true));
+    }
 
     private static void Verify(MultiplayerRun run)
     {
         Assert.That(run.Failure, Is.Null);
         Assert.That(run.Relay.Rejected, Is.Empty, "messages the relay or a peer refused");
-        var gaps = ClientParity.Compare(run, run.Peers[0]);
+        var gaps = run.Peers.SelectMany(peer => ClientParity.Compare(run, peer)).ToList();
         TestContext.Out.WriteLine($"Within {ClientParity.Slack(run):F2}s (worst delivery {run.Relay.MaxHostDelay:F2}s):");
         foreach (var gap in gaps.Take(40)) TestContext.Out.WriteLine($"  {gap}");
         foreach (var client in run.Peers.Prepend(run.Host))

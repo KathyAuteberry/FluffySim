@@ -202,7 +202,9 @@ public class LinkInterruptionTests
     // ── Sessions ────────────────────────────────────────────────────────────
 
     private static MultiplayerRun Play(Type scenario, int runs, Action<TestRelay> interrupt)
-        => MultiplayerRun.Play(scenario, 0, 1, Host, Peers, immortal: true, runs: runs, interrupt: interrupt);
+        => MultiplayerRun.Play(scenario, 0, 1, Host,
+            typeof(IMultiplayerReplayable).IsAssignableFrom(scenario) ? Peers : Peers.Select(p => p with { BotControlled = false }).ToArray(),
+            immortal: true, runs: runs, interrupt: interrupt);
 
     // A session as the census reads it: its first fight's window, and what its links carried.
     private sealed record Summary(double StartedAt, double EndedAt, List<Moment> Sent, List<Moment> Arrived);

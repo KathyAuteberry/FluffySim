@@ -16,6 +16,7 @@ namespace AnoMech.Scenarios.Fru.Pandora;
 
 public sealed class FruPandoraSequenceScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Pandora sequence";
     public IPhase Phase => FruZone.P5;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruPandoraSequenceAi()];

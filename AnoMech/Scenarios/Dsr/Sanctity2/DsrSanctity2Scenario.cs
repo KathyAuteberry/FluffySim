@@ -13,6 +13,7 @@ namespace AnoMech.Scenarios.Dsr.Sanctity2;
 
 public sealed class DsrSanctity2Scenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Sanctity of the Ward — Part 2: Meteors (Elemental)";
     public string DisplayNameOverride => "P2 Sanctity of the Ward 2";
     public bool IsIncomplete => true;

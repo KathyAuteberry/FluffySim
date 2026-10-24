@@ -17,6 +17,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P4DarklitDragonsong;
 
 public sealed class FruP4DarklitDragonsongScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Darklit Dragonsong";
     public IPhase Phase => FruZone.P4;
 

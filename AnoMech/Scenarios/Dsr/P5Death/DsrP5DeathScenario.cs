@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Dsr.P5Death;
 public sealed class DsrP5DeathScenario : IScenario
 {
     public string DisplayNameOverride => "P5 Death of the Heavens";
+    public bool SupportsMultiplayer => true;
     public string Name => "Death of the Heavens (Elemental)";
     public IPhase Phase => DsrZone.P5;
     public bool IsIncomplete => true;

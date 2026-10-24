@@ -17,7 +17,7 @@ internal sealed class FakeGame
     public FakeLocalPlayerInput PlayerInput { get; } = new();
     public FakePlayerConditions PlayerConditions { get; }
 
-    private readonly FakeVfxFunctions vfx = new();
+    public FakeVfxFunctions Vfx { get; } = new();
     private readonly FakeRsvFunctions rsv = new();
     private readonly DataminingGameData data;
     private readonly FakeActionTimelinePreload timelinePreload = new();
@@ -56,7 +56,7 @@ internal sealed class FakeGame
     public void Activate()
     {
         Natives.Data = data;
-        Natives.Vfx = vfx;
+        Natives.Vfx = Vfx;
         Natives.BattleCharas = BattleCharas;
         Natives.EventObjects = EventObjects;
         Natives.PlayerInput = PlayerInput;

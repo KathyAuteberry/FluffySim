@@ -15,6 +15,7 @@ namespace AnoMech.Scenarios.Fru.Upstream.P3UltimateRelativity;
 
 public sealed class FruP3UltimateRelativityScenario : IScenario
 {
+    public bool SupportsMultiplayer => true;
     public string Name => "Ultimate Relativity";
     public IPhase Phase => FruZone.P3;
 
