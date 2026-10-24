@@ -1,3 +1,20 @@
+# FluffySim 3.2.0.0 — release prepared
+
+## Added
+
+- **Simulated Ping (RTT)** in Settings: optional local practice latency from 0–300 ms, saved between sessions and disabled by default. Changes apply on the next run or Restart.
+- Movement and facing snapshots use an estimated server view delayed by half the configured RTT. Local action effects, including Provoke and mitigation, use the same outgoing delay. At 150 ms RTT, that means approximately 75 ms of added receipt delay; your controls remain immediate and the encounter timeline stays unchanged.
+- Available in inn and title-screen offline practice. The seven bots, JESUS TAKE THE WHEEL and multiplayer are unaffected.
+
+## Fixed
+
+- DSR Dive from Grace numbered statuses now clear at their own dives instead of remaining until the end of the sequence. Dive placement, damage, tower timing and bot routes are unchanged.
+
+## Verification and practice limitations
+
+- Reviewed fresh FRU and DSR combat logs and native recordings, including FRU P5 and DSR P3. Existing Fulgent strip omen delay and P3 Geirskogul cast/omen timing match the recorded fields; no speculative encounter timing changes were made.
+- The new latency model is experimental and has not yet been verified in game. It approximates outgoing movement and action receipt, without reproducing server ticks, incoming presentation delay, jitter or latency-dependent animation lock. Use a fixed simulation speed when comparing deadlines.
+
 # FluffySim 3.1.1.0 — release prepared
 
 ## Fixed
