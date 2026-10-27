@@ -134,7 +134,7 @@ public sealed class ScenarioSession
         return null;
     }
 
-    public void Start()
+    public void Start(int? preparedSeed = null)
     {
         if (!instance.IsLoaded) throw new InvalidOperationException("The simulation zone is no longer loaded.");
 #if DEBUG
@@ -146,7 +146,7 @@ public sealed class ScenarioSession
         var zone = phase.Zone;
         world.PlaceWaymarks(ResolveWaymarks(zone, run.SelectedWaymark));
         // Before ApplyParty: the spawn ring draws from the run's party-spawn stream.
-        var seed = run.Seed ?? Random.Shared.Next();
+        var seed = preparedSeed ?? run.Seed ?? Random.Shared.Next();
         world.Reseed(seed);
         Plugin.Log.Info($"Game: {Scenario.Name} seed {seed}");
         world.ApplyParty(roster);

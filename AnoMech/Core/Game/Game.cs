@@ -136,7 +136,7 @@ public sealed class Game : IDisposable
     public void StartScenario(RunScenarioParams p, Action<string?>? resolved = null)
         => Deferred(() => StartScenarioNow(p), resolved);
 
-    private (RunScenarioParams Params, Action<string?>? Resolved, bool Start)? pendingStart;
+    private (RunScenarioParams Params, int Seed, Action<string?>? Resolved, bool Start)? pendingStart;
     private float preparationSeconds;
     public bool IsPreparingScenario => pendingStart is not null;
 
@@ -151,7 +151,6 @@ public sealed class Game : IDisposable
             else QueueStart(p, resolved);
             return;
         }
-        p = p with { Seed = p.Seed ?? Random.Shared.Next() };
         ZoneIn(zone, mode, refusal =>
         {
             if (refusal != null)
@@ -177,7 +176,7 @@ public sealed class Game : IDisposable
     private void QueueStart(RunScenarioParams p, Action<string?>? resolved, bool start = true)
     {
         CancelPendingStart();
-        pendingStart = (p with { Seed = p.Seed ?? Random.Shared.Next() }, resolved, start);
+        pendingStart = (p, p.Seed ?? Random.Shared.Next(), resolved, start);
         preparationSeconds = 0f;
     }
 
@@ -203,18 +202,18 @@ public sealed class Game : IDisposable
         pendingStart = null;
         Deferred(() =>
         {
-            PrepareRunNow(start.Params);
-            return start.Start ? StartScenarioNow(start.Params) : null;
+            PrepareRunNow(start.Params, start.Seed);
+            return start.Start ? StartScenarioNow(start.Params, start.Seed) : null;
         }, start.Resolved);
     }
 
-    private void PrepareRunNow(RunScenarioParams p)
+    private void PrepareRunNow(RunScenarioParams p, int seed)
     {
         if (instance is null || !World.Map.IsInInstance || !Natives.Zone.IsActive) return;
         instance.ApplyPhase(p.Scenario.Phase);
         var player = Natives.BattleCharas.LocalPlayer;
         if (!player.Exists) return;
-        World.Reseed(p.Seed!.Value);
+        World.Reseed(seed);
         World.SeatParty(p.Party.Roster(player.ClassJob));
     }
 
@@ -258,7 +257,7 @@ public sealed class Game : IDisposable
     }
 
     // Null once the run is up, else why it was refused.
-    private string? StartScenarioNow(RunScenarioParams p)
+    private string? StartScenarioNow(RunScenarioParams p, int? preparedSeed = null)
     {
         if (instance is null)
         {
@@ -276,7 +275,7 @@ public sealed class Game : IDisposable
         godMistakeTimes.Clear();
         try
         {
-            run.Start();
+            run.Start(preparedSeed);
             World.BeginLatency(instance.Mode == SessionMode.Local && p.WatchedRole is null ? Plugin.Config.SimulatedPingRttMs : 0);
         }
         catch { EndRun(); throw; }
