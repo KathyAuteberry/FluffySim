@@ -1,3 +1,9 @@
+# FluffySim 3.2.1.0 — release prepared
+
+## Fixed
+
+- Auto Restart now rolls a fresh seed for each run when the Seed field is blank, including runs started after entering an arena. An explicitly entered seed continues to repeat the same pattern.
+
 # FluffySim 3.2.0.0 — release prepared
 
 ## Added
