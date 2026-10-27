@@ -40,6 +40,7 @@ public sealed unsafe partial class ZoneControl
     private const double SettleSeconds = 3;
 
     private static long? zoneChangePressedAt;
+    private static long? zoneChangeCastObservedAt;
     private static uint zoneChangeActionId;
     private static bool zoneChangeCastSeen;
     private static bool zoneChangeCastLost;
@@ -64,6 +65,7 @@ public sealed unsafe partial class ZoneControl
         if (type != ActionType.Action || actionId is not (TeleportActionId or ReturnActionId)) return;
         if (ZoneChangeCastCompleted) return;
         zoneChangePressedAt = Stopwatch.GetTimestamp();
+        zoneChangeCastObservedAt = null;
         zoneChangeActionId = actionId;
         zoneChangeCastSeen = false;
         zoneChangeCastLost = false;
@@ -198,6 +200,7 @@ public sealed unsafe partial class ZoneControl
             && (zoneChangePressedAt == null || player.CastActionId != zoneChangeActionId) && !ZoneChangeCastCompleted)
         {
             zoneChangePressedAt = Stopwatch.GetTimestamp();
+            zoneChangeCastObservedAt = null;
             zoneChangeActionId = player.CastActionId;
             zoneChangeCastSeen = false;
             zoneChangeCastLost = false;
@@ -208,6 +211,8 @@ public sealed unsafe partial class ZoneControl
         // Without a local player (a redraw) the cast can't be watched; whatever it did meanwhile,
         // only the zone change or the timeout can resolve it now.
         if (player == null) zoneChangeCastLost = true;
+        if (player is { IsCasting: true } && player.CastActionId is TeleportActionId or ReturnActionId)
+            zoneChangeCastObservedAt = Stopwatch.GetTimestamp();
         if (player is { IsCasting: true } && player.CastActionId == zoneChangeActionId)
         {
             zoneChangeCastSeen = true;
@@ -222,8 +227,9 @@ public sealed unsafe partial class ZoneControl
             release = $"its cast was interrupted at {zoneChangeCastProgress:P0}";
         else if (player != null && !zoneChangeCastLost && !zoneChangeCastSeen && elapsed > NoCastGraceSeconds)
             release = "no cast followed the press";
-        else if (elapsed > ZoneChangeHoldSeconds)
-            release = $"{ZoneChangeHoldSeconds:F0}s passed with no zone change";
+        // A later cast can share a completed cast's latch; its pending zone change needs a full hold too.
+        else if (Stopwatch.GetElapsedTime(zoneChangeCastObservedAt ?? pressedAt).TotalSeconds > ZoneChangeHoldSeconds)
+            release = $"{ZoneChangeHoldSeconds:F0}s passed with no cast or zone change";
         if (release == null) return;
         DiagnosticLog.Info($"[ZoneGuard] {Natives.Data.ActionName(zoneChangeActionId)} hold released: {release}.");
         zoneChangePressedAt = null;

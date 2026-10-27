@@ -17,6 +17,12 @@ public class FuzzTests
     private const int DefaultSeedsPerBatch = 200;
     private const int Batches = 10;
 
+    [Fact]
+    public void LaterTeleport_DoesNotExpireWithAnEarlierCastsHold()
+    {
+        Assert.Null(FuzzRun.Run(1001110, fullTrace: true));
+    }
+
     public static IEnumerable<object[]> SeedBatches() => Enumerable.Range(0, Batches).Select(b => new object[] { b });
 
     private static int SeedsPerBatch()

@@ -9,6 +9,25 @@ namespace AnoMech.SafetyTests.Firewall;
 // One test per problem found in development, named for what went wrong.
 public class IncidentRegressionTests : FirewallTestBase
 {
+    [Xunit.Theory]
+    [InlineData(VirtualGame.TeleportActionId)]
+    [InlineData(VirtualGame.ReturnActionId)]
+    public void LaterZoneChangeCast_KeepsTheGateShutUntilItsZoneChangeArrives(uint actionId)
+    {
+        Game.ServerLatencySeconds = 3.14;
+        Game.PressZoneChangeAction();
+        Game.RunFor(4.3);
+        Game.Walk(new Vector3(0.5f, 0, 0));
+        Game.RunFor(11.2);
+        Game.PressZoneChangeAction(actionId);
+        Game.RunFor(7.3);
+        Assert.True(Game.ZoneChangeInFlight);
+        Plugin.ClickStart(SimZone.Umad);
+        Game.RunFor(1);
+        Assert.DoesNotContain(Game.NativeLoads, l => l.Territory == VirtualGame.OtherDutyTerritory);
+        AssertClean();
+    }
+
     // "Leave session" without ever entering a sim ran the revert: its delayed restore moved the
     // character to a stale (or zero) position in the real world with no firewall at all.
     [Fact]
