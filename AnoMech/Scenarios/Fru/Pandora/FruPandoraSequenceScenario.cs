@@ -33,7 +33,6 @@ public sealed class FruPandoraSequenceScenario : IScenario
 
     private static readonly EnemyAction Enrage = new(40328)
     {
-        Cast = new() { CastSecondsOverride = 21.5f },
         Effects = [Resolve(ctx =>
         {
             foreach (var member in ctx.Hits) ctx.Kill(member, "Paradise Lost enrage");
@@ -95,8 +94,17 @@ public sealed class FruPandoraSequenceScenario : IScenario
     private void ClearStage()
     {
         if (stage is null) return;
-        foreach (var child in world.Children.Where(child => !retained.Contains(child) && !ReferenceEquals(child, pandora)).ToArray())
-            child.Despawn();
+        var children = world.Children.Where(child => !retained.Contains(child) && !ReferenceEquals(child, pandora)).ToArray();
+        void Despawn()
+        {
+            foreach (var child in children) child.Despawn();
+        }
+        // Fulgent's remaining strips keep rolling after the first Paradise cast begins.
+        var remaining = stage is FruP5FulgentBladeScenario
+            ? stageStarted + FruP5FulgentBladeScenario.ExalinesCompleteAt - world.Events.Elapsed
+            : 0f;
+        if (remaining > 0f) world.Events.Add(remaining, Despawn);
+        else Despawn();
         stage = null;
     }
 

@@ -4,7 +4,7 @@ Baseline: FluffySim `5d6b648b6ea6b1e4d0003494e00e2a363f4691d1`. Shared FRU sourc
 
 ## Evidence language
 
-**Observed** means installed native sheet/asset data or an actual native capture. **Corroborated** means independent sources agree on the specified feature. **Inferred** means inherited simulator behavior or alignment not independently measured. **Unknown** means not established. An installed action row establishes its ID/shape/cast duration, not its runtime snapshot or rendered effect. The complete [local capture inventory](fru-native-capture-inventory.md) found no P5 cast/effect records and only interrupted CT entry casts.
+**Observed** means installed native sheet/asset data or an actual native capture. **Corroborated** means independent sources agree on the specified feature. **Inferred** means inherited simulator behavior or alignment not independently measured. **Unknown** means not established. An installed action row establishes its ID/shape/cast duration, not its runtime snapshot or rendered effect. The historical [local capture inventory](fru-native-capture-inventory.md) found no P5 cast/effect records and only interrupted CT entry casts. The later [clear audit](fru-clear-audit-2026-10-31.md) supplies complete P5 cast/event coverage, confirms the shorter second Paradise cycle, and documents a fix for prematurely cleared exalines. Its measured event timings supersede the inferred timing qualifications below where explicitly compared; rendered onset and exact snapshots remain unverified.
 
 References:
 
