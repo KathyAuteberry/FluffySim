@@ -1,3 +1,16 @@
+# FluffySim 3.2.2.0 — release prepared
+
+## Fixed
+
+- FRU continuous P5 practice now lets the remaining Fulgent Blade exalines finish during the transition into Paradise Regained, preserving their effects and collision checks.
+- FRU Paradise Lost now uses the recorded 21.2-second helper cast bar. Enabling terminal enrage resolves the lethal strike 0.3 seconds earlier, at the intended practice time.
+- Practice entry now keeps its safety hold through later Teleport or Return casts that share an earlier cast's completion state, waiting for the pending zone change or a full timeout after the last observed cast.
+
+## Verification and practice limitations
+
+- Compared the FRU clear's combat log and native Duty Recorder capture with the simulation, including both Paradise cycles, Polarizing Strikes, Pandora's Box and all three Fulgent sequences. Added regressions for late exalines, helper cleanup and the terminal enrage bar/time.
+- The corrected overlap and cast bar have headless coverage; their native rendering has not yet been retested in game. The clear interrupts enrage, so it does not establish the lethal damage delay. Boss HP and the final DPS race remain outside the practice model.
+
 # FluffySim 3.2.1.0 — release prepared
 
 ## Fixed
