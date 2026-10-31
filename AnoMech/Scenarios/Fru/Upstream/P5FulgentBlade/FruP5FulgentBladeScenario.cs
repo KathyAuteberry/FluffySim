@@ -21,6 +21,7 @@ public sealed class FruP5FulgentBladeScenario : IScenario
     public string Name => "Fulgent Blade";
     public IPhase Phase => FruZone.P5;
     public bool SupportsSolo => true;
+    internal static float ExalinesCompleteAt => HitAt(GroupCount - 1, MaxHitCount - 1) + Actions.PathOfLightRest.Timing.DamageDelay;
 
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruP5FulgentBladeAi()];
 
