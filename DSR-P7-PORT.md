@@ -157,3 +157,31 @@ arena/environment checks pass. Safety passes 318 checks with four environment
 skips on each modeled backend, against ordinary and isolated optimized TRACE
 Debug binaries. No Release output, live game state, release metadata or bookmarks
 were modified during the correction.
+
+## Gigaflare warning-order correction — 2026-11-02
+
+The native retest reported all three proximity markers appearing together, making
+clockwise/counterclockwise unreadable. All three helper casts were sent together
+with zero omen delay. Their longer cast durations alone did not stagger the
+warning appearances.
+
+The three helper actions have sheet durations 9, 13 and 17 seconds. Their cast
+starts and explosion times are retained; their native omen delays now use the
+difference from the first action's duration: 0, 4 and 8 seconds. Each has the same
+8.7-second visible cast-warning window, and the last marker appears before the
+first explosion. The selected position order still supplies both rotations from
+any of the three starting points. Pause/resume uses the existing delayed-omen
+presentation path, preserving the remaining reveal delays.
+
+The exact retail ActorCast omen-delay bytes remain **UNVERIFIED**. The equal
+warning duration and four-second reveal cadence are inferred from the action
+sheet, not claimed as a measured recording. Native confirmation should check
+marker order/readability and reveal timing during both Gigaflare sets, including
+a pause between reveals.
+
+Debug build and 275 focused P7/cast checks pass, including all six position orders
+across both cycles, delayed actor registration and pause between marker reveals.
+
+Safety validation for this correction: 318 passed with four environment-dependent
+skips on each modeled hook backend, against ordinary and isolated optimized
+TRACE Debug binaries. No Release build or publication was performed.

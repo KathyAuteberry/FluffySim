@@ -275,7 +275,9 @@ public sealed class DsrP7DragonKingScenario : IScenario
         {
             var at = ToWorld(state.GigaflareSpot(cycle, blast));
             if (TakeHelper(new Placement(at, 0f)) is not { } helper) continue;
-            helper.Casting.NativeCast(GigaflareActions[blast], ActionType.Action, 0f, CastSeconds(GigaflareActions[blast]), false, targetId: helper.GameObjectId, position: at);
+            // UNVERIFIED: equal warning lengths inferred from the sheet's staggered cast durations.
+            var omenDelay = CastSeconds(GigaflareActions[blast]) - CastSeconds(GigaflareActions[0]);
+            helper.Casting.NativeCast(GigaflareActions[blast], ActionType.Action, omenDelay, CastSeconds(GigaflareActions[blast]), false, targetId: helper.GameObjectId, position: at);
             gigaflareCasters.Add(helper);
         }
     }
