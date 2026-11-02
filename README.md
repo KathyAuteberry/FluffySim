@@ -50,7 +50,7 @@ Closing the interface alone does not leave the simulation.
 
 ## Supported encounters
 
-The catalog contains **45 entries**, including **17 FRU entries** and **11 DSR entries**. Some FRU mechanics have separate regional implementations; those are separate catalog entries, rather than additional fight phases.
+The catalog contains **46 entries**, including **17 FRU entries** and **12 DSR entries**. Some FRU mechanics have separate regional implementations; those are separate catalog entries, rather than additional fight phases.
 
 ### Futures Rewritten (Ultimate)
 
@@ -81,8 +81,9 @@ DSR uses **Elemental** strategies, with these entries in encounter order:
 9. P5 Death of the Heavens
 10. P6 Wyrmsbreath 1 to Wroth Flames
 11. P6 Hallowed Wings 2 to Cauterize
+12. P7 Dragon-king Thordan
 
-P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT → ST swap for Heavenly Heel followed by Ascalon's Might; a human ST must use local Provoke when prompted. **P7 Dragonking Thordan is not implemented.**
+P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT → ST swap for Heavenly Heel followed by Ascalon's Might; a human ST must use local Provoke when prompted. P7 includes three Edge cycles with static south exaflares, all 3-3-2 Akh Morns, Elemental Trinity baits and local Provoke swaps. Practice stops before Morn Afah's Edge resolves; boss HP and the enrage DPS check are not simulated. Native P7 presentation still needs in-game validation.
 
 ### Other registered practice
 

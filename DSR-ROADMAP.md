@@ -1,3 +1,11 @@
+## Elemental P7 port — 2026-11-02
+
+Dragon-king Thordan is registered with three Edge cycles, all 3-3-2 Akh Morns,
+Elemental Trinity baits and local Provoke swaps. Practice ends before Morn Afah's
+Edge resolves. Native presentation remains unverified. See [source attribution,
+scope and client verification](DSR-P7-PORT.md). Earlier coverage tables below are
+historical and do not describe the current full DSR catalog.
+
 ## Offline P2 scenery and Meteors clock repair — 2026-10-15
 
 Final Debug validation: **13,647 plugin**, **44 relay**, **65 tooling** passed; safety **301 passed / three Windows-native skips** on each modeled backend (overlapping repeat counts). Native offline models, DSR scenery and tower timing still require manual confirmation. Functional repair revision `soxsns` is before the unchanged four-parent `plkqvn` merge; no Release build or version change.

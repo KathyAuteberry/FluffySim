@@ -88,6 +88,7 @@ public sealed class ScenarioCatalog
         new Dsr.P5Death.DsrP5DeathScenario(),
         new Dsr.P6DoubleDragons.DsrP6DoubleDragonsScenario(),
         new Dsr.P6DoubleDragons.DsrP6CauterizeScenario(),
+        new Dsr.P7DragonKing.DsrP7DragonKingScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),
