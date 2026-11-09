@@ -31,14 +31,27 @@ public sealed class SimPartyNpc : SimNpc, ISimPartyMember
         DisplayName = name;
     }
 
-    // Level 1-3; zero when the actor cannot act or the job has no limit break at that level.
+    public bool UseAction(uint actionId, SimCharacter? target = null, Random? rng = null)
+    {
+        if (Dead || ActionsLocked || target is not null && !target.IsAlive()) return false;
+        Press(actionId, target, rng);
+        if (target is SimEnemy enemy) enemy.NoteAttack(this);
+        return true;
+    }
+
+    private void Press(uint actionId, SimCharacter? target = null, Random? rng = null)
+    {
+        PlayAction(actionId, target: target);
+        JobActions.ApplyEffects(this, actionId, (ulong)(target ?? this).GameObjectId,
+            rng ?? Plugin.Game.World.Stream("bot-actions").Random);
+    }
+
     internal uint UseLimitBreak(int level)
     {
         if (!this.IsAlive() || ActionsLocked) return 0;
         var actionId = LimitBreakHandler.ActionId(ClassJob, level);
         if (actionId == 0) return 0;
-        PlayAction(actionId);
-        JobActions.ApplyEffects(this, actionId, (ulong)GameObjectId, Random.Shared);
+        Press(actionId);
         DiagnosticLog.Info($"[SimPartyNpc] {Role} (job {ClassJob}) uses LB{level} {Natives.Data.ActionName(actionId)}.");
         return actionId;
     }

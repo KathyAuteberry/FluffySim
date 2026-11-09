@@ -17,7 +17,8 @@ public sealed class EnemyActionContext
     private readonly List<(SimCharacter, ushort)> impactRemovals = [];
     private readonly List<(SimStatus Status, int Version, float Fraction)> impactShields = [];
 
-    internal EnemyActionContext(EnemyAction action, SimCharacter caster, SimCharacter? target, Placement origin, SimParty party, float releaseDelay)
+    internal EnemyActionContext(EnemyAction action, SimCharacter caster, SimCharacter? target, Placement origin, SimParty party, float releaseDelay,
+        EventScheduler events)
     {
         this.releaseDelay = releaseDelay;
         Action = action;
@@ -25,6 +26,7 @@ public sealed class EnemyActionContext
         Target = target;
         Origin = origin;
         Party = party;
+        Events = events;
     }
 
     // From this resolve to the ActionEffect: a cast's CastSpec.ActionEffectOffset, 0 for an instant action.
@@ -36,6 +38,8 @@ public sealed class EnemyActionContext
     public SimCharacter? Target { get; }
     public Placement Origin { get; }
     public SimParty Party { get; }
+    // For an effect whose consequence comes later than this action's own hit.
+    public EventScheduler Events { get; }
     // Everyone the area caught, nearest to Origin first.
     public IReadOnlyList<SimCharacter> Hits { get; internal set; } = [];
 

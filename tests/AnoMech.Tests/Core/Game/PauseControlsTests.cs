@@ -278,6 +278,8 @@ public class PauseControlsTests
 
     private sealed class ThrowingBgm : IBgm
     {
+        public void Switch(ushort bgmId) { }
+        public void Silence() { }
         public void Dispose() { }
         public void Play(ushort bgmId, float secondsIn = 0) { }
         public void Sync(float secondsIn) { }

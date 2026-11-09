@@ -26,6 +26,9 @@ public abstract class SimCharacter : ISimObject, IPositioned
     // Authoritative list of statuses for character. In-game status list can be be little different and it's ok by design.
     private readonly List<SimStatus> statusList = [];
 
+    // A status on it holds the others' timers (SimStatus.HoldingOtherTimers); set each tick before they run.
+    internal bool StatusTimersHeld { get; private set; }
+
     // Null once the character has no native object to stand for (despawned).
     internal abstract IBattleCharaProxy? Proxy { get; }
 
@@ -46,14 +49,18 @@ public abstract class SimCharacter : ISimObject, IPositioned
     public float HitboxRadius => Proxy?.HitboxRadius ?? 0f;
     public uint EntityId => Proxy?.EntityId ?? 0u;
 
+    // For an NPC that wears this character's look (TEA's Fate Projections).
+    public NpcAppearance? Appearance => Proxy?.Appearance;
+
     public virtual void Tick(float deltaSeconds)
     {
+        StatusTimersHeld = statusList.Any(s => s.IsActive && s.HoldsOtherTimers);
         statusList.Update(deltaSeconds);
         foreach (var effect in ownedVfx) effect.Tick(deltaSeconds);
         ownedVfx.RemoveAll(v => !v.IsActive);
         FlushStatusList();
         Casting.Tick(deltaSeconds);
-        Motion.Tick(deltaSeconds, new MotionGates(this.IsAlive(), MovementLocked, AnimationLock));
+        Motion.Tick(deltaSeconds, new MotionGates(this.IsAlive(), MovementLocked, AnimationLock, SpeedFactor()));
         confusedChaseHold = MathF.Max(0f, confusedChaseHold - deltaSeconds);
     }
 
@@ -190,6 +197,12 @@ public abstract class SimCharacter : ISimObject, IPositioned
     // A mechanic's snap, which a remote player's own client has to make; SetPosition is the
     // engine-side one. Replay and sim: ActorSetPos.
     public void TeleportTo(Placement placement) { Motion.Force(new ForcedMove.Teleport(placement)); OnPositionReset(); }
+
+    // Replay (TEA's Ordained statuses): ActorControlSelf 0x602 to the marched player about every
+    // 0.25s, the next point on a straight line with its heading and speed, then 0x603 at the end;
+    // another player's march is ActorMoves. Sim: player - those ActorControlSelfs (UNVERIFIED how
+    // the client walks on them); bot - ActorMoves; a remote player - its own client marches it.
+    public void MarchTo(Vector3 destination, float speed) => Force(new ForcedMove.March(destination, speed));
 
     // Replay (UMAD P1 Confusion): the confused player's own movement, nothing that names the
     // target. Live, never in a replay: forced-move end + follow {target, 1} to the confused player
@@ -332,6 +345,8 @@ public abstract class SimCharacter : ISimObject, IPositioned
         if (!Dead && Proxy is { } chara) SendStatusList(chara.MaxHealth, chara.Mana);
     }
 
+    private protected void SendHealth(uint health) => SendStatusList(health, Proxy?.Mana ?? 0);
+
     protected void SendStatusList(uint health, uint mana)
     {
         statusListChanged = false;
@@ -369,10 +384,24 @@ public abstract class SimCharacter : ISimObject, IPositioned
 
     public bool HasStatus(ushort statusId) => FindStatus(statusId) != null;
 
+    // What this client shows on the character, for a bot reading its own screen: on a peer the
+    // sim's own list holds none of the host's statuses.
+    public bool ShowsStatus(ushort statusId) => Proxy?.ShowsStatus(statusId) ?? false;
+
     public IReadOnlyList<(ushort StatusId, ushort Stacks, float RemainingTime)> ActiveStatusSnapshot =>
         statusList.Where(s => s.IsActive).Select(s => (s.StatusId, s.Stacks, s.RemainingTime)).ToList();
 
     public IReadOnlyList<SimStatus> ActiveStatuses => statusList.Where(s => s.IsActive).ToList();
+
+    private readonly List<(ushort StatusId, ushort Param)> speedStatuses = [];
+
+    private float SpeedFactor()
+    {
+        speedStatuses.Clear();
+        foreach (var status in statusList)
+            if (status.IsActive) speedStatuses.Add((status.StatusId, status.Stacks));
+        return speedStatuses.Count == 0 ? 1f : MovementSpeed.Factor(speedStatuses);
+    }
 
     // Floating Fetters uses native special processing rather than the sheet's LockMovement flag.
     public bool MovementLocked => HasStatus(2304) || AnyActiveStatusRow(row => row.LockMovement || row.LockControl);

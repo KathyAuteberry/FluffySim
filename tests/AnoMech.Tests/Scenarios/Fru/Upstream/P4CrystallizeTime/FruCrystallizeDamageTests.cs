@@ -38,7 +38,7 @@ public class FruCrystallizeDamageTests
                 uint Hit(bool strict)
                 {
                     var action = FruP4CrystallizeTimeActions.Wings(strict);
-                    var context = new EnemyActionContext(action, tank, tank, new(tank.Position, 0), p.World.Party, 0);
+                    var context = new EnemyActionContext(action, tank, tank, new(tank.Position, 0), p.World.Party, 0, p.World.Events);
                     action.Effects[0].Apply(context, [tank]);
                     return context.Outcomes.Single().Damage!.Value.Amount;
                 }

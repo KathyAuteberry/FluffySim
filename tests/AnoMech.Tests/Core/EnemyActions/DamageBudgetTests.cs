@@ -118,7 +118,7 @@ public class DamageBudgetTests
                 DamageBudget.Result Hit(float damage)
                 {
                     var ctx = new EnemyActionContext(FruP4CrystallizeTimeActions.Wings(false), player, player,
-                        player.Placement(), p.World.Party, 0);
+                        player.Placement(), p.World.Party, 0, p.World.Events);
                     return budget.Apply(ctx, player, damage);
                 }
                 Assert.That(Hit(15000).HpDamage, Is.Zero);
@@ -149,7 +149,7 @@ public class DamageBudgetTests
                 player.AddStatus(297, 1)!.Tick(expired ? 2 : 0);
                 player.AddStatus(3985, 1)!.Tick(expired ? 2 : 0);
                 var ctx = new EnemyActionContext(FruP4CrystallizeTimeActions.Wings(false), player, player,
-                    player.Placement(), p.World.Party, 0);
+                    player.Placement(), p.World.Party, 0, p.World.Events);
                 var result = new DamageBudget().Apply(ctx, player, 100000);
                 Assert.That(result.HpBefore, Is.EqualTo(80000));
                 Assert.That(result.Damage, Is.EqualTo(expired ? 100000 : 90000));

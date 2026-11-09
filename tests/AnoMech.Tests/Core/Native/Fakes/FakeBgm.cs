@@ -14,6 +14,12 @@ internal sealed class FakeBgm(SimTimeline timeline) : IBgm
         CurrentTrack = bgmId;
         timeline.Add("bgm", id: bgmId.ToString(), name: "BGM", detail: $"seconds_in={SimTimeline.F(secondsIn)}");
     }
+    public void Switch(ushort bgmId)
+    {
+        CurrentTrack = bgmId;
+        timeline.Add("bgm", id: bgmId.ToString(), name: "BGM", detail: "switch");
+    }
+    public void Silence() { CurrentTrack = 1; timeline.Add("bgm", name: "BGM", detail: "silence"); }
     public void Sync(float secondsIn) { }
     public void Reset() { if (CurrentTrack != 0) Releases++; CurrentTrack = 0; }
     public void Tick(float deltaSeconds) { }

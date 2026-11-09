@@ -144,7 +144,7 @@ public class FruP4CrystallizeTimeTests
                 if (mitigated)
                     foreach (ushort status in new ushort[] { 3829, 1191, 1193 }) member.AddStatus(status, 6f);
                 var action = FruP4CrystallizeTimeActions.Wings(checks);
-                var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0);
+                var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0, p.World.Events);
                 action.Effects[0].Apply(context, role == PartyRole.OffTank ? [p.Member(PartyRole.MainTank)!, member] : [member]);
                 killed = context.IsKilled(member);
             },
@@ -184,7 +184,7 @@ public class FruP4CrystallizeTimeTests
                     Assert.That(member.HasStatus(status), Is.True, $"missing party reduction {status}");
                 member.AddStatus(FruConstants.StatusId.MagicVulnerabilityUp, 6f);
                 var action = FruP4CrystallizeTimeActions.HallowedWingsKnockback;
-                var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0);
+                var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0, p.World.Events);
                 action.Effects[0].Apply(context, [member]);
                 killed = context.IsKilled(member);
             },
@@ -215,7 +215,7 @@ public class FruP4CrystallizeTimeTests
                 {
                     var member = p.Member(PartyRole.RegenHealer)!;
                     var action = FruP4CrystallizeTimeActions.HallowedWingsKnockback;
-                    var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0);
+                    var context = new EnemyActionContext(action, member, member, new(member.Position, 0), p.World.Party, 0, p.World.Events);
                     action.Effects[2].Apply(context, [member]);
                     return context.Outcomes.Any(o => o.Push is not null);
                 }

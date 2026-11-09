@@ -221,16 +221,36 @@ public class IncidentRegressionTests : FirewallTestBase
     public void MapEffectsAndDirectorUpdates_OutsideASim_AreIgnored()
     {
         Enter();
+        Plugin.Map.BattleTalk(1, 2, 3000);
+        Assert.Equal((1u, 2u, 3000u), (Game.NativeBattleTalks.Last().SpeakerNameId, Game.NativeBattleTalks.Last().TextId, Game.NativeBattleTalks.Last().DurationMs));
         Leave();
         var effects = Game.NativeMapEffects;
         var updates = Game.NativeDirectorUpdates;
+        var talks = Game.NativeBattleTalks.Count;
         Plugin.Map.AddEffect(0x00020001, 3);
         Plugin.Map.DirectorUpdate(0x80000004, 1);
+        Plugin.Map.BattleTalk(3, 4, 3000);
         Plugin.Map.SetEffectSnapshot([4]);
         Game.RunFor(2);
         Assert.Equal(effects, Game.NativeMapEffects);
         Assert.Equal(updates, Game.NativeDirectorUpdates);
+        Assert.Equal(talks, Game.NativeBattleTalks.Count);
         AssertClean();
+    }
+
+    [Fact]
+    public void QueuedBattleTalk_IsDiscardedOnLeave()
+    {
+        Enter();
+        Game.BattleTalkReady = false;
+        Plugin.Map.BattleTalk(1, 2, 3000);
+        var attempts = Game.NativeBattleTalks.Count;
+        Assert.Equal(1, attempts);
+        Leave();
+        Game.BattleTalkReady = true;
+        Game.RunFor(2);
+        Assert.Equal(attempts, Game.NativeBattleTalks.Count);
+        AssertBackInTheInnWithTheFirewallDown();
     }
 
     // A real zone change outside any sim: the game's own post-load packet is expected.

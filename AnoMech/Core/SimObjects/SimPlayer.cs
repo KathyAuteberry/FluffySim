@@ -1,3 +1,4 @@
+using System;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Motion;
@@ -26,11 +27,27 @@ public sealed class SimPlayer : SimCharacter, ISimPartyMember
     public bool IsMoving { get; private set; }
     public bool IsActing { get; private set; }
 
+    // How many auto-attacks it has swung, for a mechanic that a swing breaks.
+    public int AutoAttackSwings { get; private set; }
+
+    internal void CountAutoAttackSwing() => AutoAttackSwings++;
+
     internal override IBattleCharaProxy Proxy => Natives.BattleCharas.LocalPlayer;
 
     public void UseSprint(float duration)
     {
         if (DebugBotControl.Enabled && !Dead && !ActionsLocked) SprintHandler.Apply(this, duration);
+    }
+
+    public byte ClassJob => Proxy.ClassJob;
+
+    public bool UseAction(uint actionId, SimCharacter? target = null, Random? rng = null)
+    {
+        if (!DebugBotControl.Enabled || Dead || ActionsLocked || target is not null && !target.IsAlive()) return false;
+        JobActions.ApplyEffects(this, actionId, (ulong)(target ?? this).GameObjectId,
+            rng ?? Plugin.Game.World.Stream("bot-actions").Random);
+        if (target is SimEnemy enemy) EnemyHitHandler.Report(enemy, this);
+        return true;
     }
 
     public override void Tick(float deltaSeconds)

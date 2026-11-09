@@ -36,6 +36,8 @@ namespace AnoMech.Core.Native.Interfaces
     {
         public bool ProcessDirectorUpdate(uint category,uint a,uint b,uint c,uint d,uint e,uint f)
             => VirtualGame.Current.NativeDirectorUpdate(category);
+        public bool BattleTalk(uint speakerNameId,uint textId,uint durationMs)
+            => VirtualGame.Current.NativeBattleTalk(speakerNameId,textId,durationMs);
     }
     internal class FakeBattleCharas { public FakeChara LocalPlayer => new(); }
     internal class FakeChara

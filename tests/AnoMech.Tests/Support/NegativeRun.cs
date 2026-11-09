@@ -28,6 +28,12 @@ internal sealed class NegativeRun<TScenario>(PartyRole role, int strat) where TS
     private ScenarioRunOptions options = new() { PlayerRole = role, WriteArtifactsOnFailure = false };
     private int? seed;
 
+    public NegativeRun<TScenario> WithScenario(Func<IScenario> factory)
+    {
+        options = options with { ScenarioFactory = factory };
+        return this;
+    }
+
     public NegativeRun<TScenario> Overrides<TOverrides>(Action<TOverrides> set)
     {
         options = options with { Overrides = o => set((TOverrides)o) };

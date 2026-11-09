@@ -220,6 +220,7 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
     public List<(uint Territory, double At)> NativeLoads { get; } = new();
     public List<(Vector3 Position, double At)> NativePositionWrites { get; } = new();
     public List<(uint Category, double At)> ActorControls { get; } = new();
+    public List<(uint SpeakerNameId, uint TextId, uint DurationMs, double At)> NativeBattleTalks { get; } = new();
 
     // Invariant judgement needs to know the session's own view of whether a start or a lift is
     // in progress; the driver provides it.
@@ -542,6 +543,15 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
     {
         NativeDirectorUpdates++;
         return true;
+    }
+
+    public bool BattleTalkReady { get; set; } = true;
+
+    internal bool NativeBattleTalk(uint speakerNameId, uint textId, uint durationMs)
+    {
+        NativeBattleTalks.Add((speakerNameId, textId, durationMs, Now));
+        Note($"native: battle talk speaker={speakerNameId} text={textId} duration={durationMs}");
+        return BattleTalkReady;
     }
 
     public int NativeMapEffects { get; private set; }

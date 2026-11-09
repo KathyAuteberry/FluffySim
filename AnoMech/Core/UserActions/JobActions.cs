@@ -277,12 +277,21 @@ internal static unsafe class JobActions
         // Tank role
         [7531] = [Status(1191, 20f)],   // Rampart
         [7535] = [EnemyStatus(1193, 15f)],   // Reprisal
+        [7533] = [Provoke()],   // Provoke
+
+        // Role knockback immunity
+        [7548] = [Status(1209, 6f)],   // Arm's Length
+        [7559] = [Status(160, 6f)],    // Surecast
+
+        // Cleanses
+        [7568] = [Dispel()],   // Esuna
+        [3561] = [Dispel()],   // The Warden's Paean (its barrier on an unafflicted target is not modelled)
 
         // Tank LB3
-        [199]   = [TargetStatus(196, 8f)],    // Last Bastion
-        [4240]  = [TargetStatus(863, 8f)],    // Land Waker
-        [4241]  = [TargetStatus(864, 8f)],    // Dark Force
-        [17105] = [TargetStatus(1931, 8f)],   // Gunmetal Soul
+        [199]   = [LimitBreakStatus(196, 8f)],    // Last Bastion
+        [4240]  = [LimitBreakStatus(863, 8f)],    // Land Waker
+        [4241]  = [LimitBreakStatus(864, 8f)],    // Dark Force
+        [17105] = [LimitBreakStatus(1931, 8f)],   // Gunmetal Soul
 
         // WAR
         [37] = [Combo(Gauge(WarBeast, 10))],   // Maim
@@ -290,7 +299,7 @@ internal static unsafe class JobActions
         [45] = [Combo(Gauge(WarBeast, 10), Status(2677, 30f))],   // Storm's Eye (+ Surging Tempest)
         [52] = [Gauge(WarBeast, 50), Status(1897, 30f)],          // Infuriate (+ Nascent Chaos)
         [16462] = [Combo(Status(2677, 30f), Gauge(WarBeast, 20))],  // Mythril Tempest → Surging Tempest + 20 Beast
-        [7389]  = [Status(1177, 15f, 3), Status(2624, 30f)],  // Inner Release (3 stk) + Primal Rend Ready
+        [7389]  = [Status(1177, 15f, 3), Status(2624, 30f), Status(2663, 15f)],  // Inner Release (3 stk) + Primal Rend Ready + Inner Strength
         [25753] = [Status(3834, 20f)],         // Primal Rend → Primal Ruination Ready
         // mitigation:
         [43]    = [Status(409, 10f)],          // Holmgang
@@ -469,8 +478,16 @@ internal static unsafe class JobActions
         [16531] = [Gauge(WhmBloodLily, 1)],   // Afflatus Solace
         [16534] = [Gauge(WhmBloodLily, 1)],   // Afflatus Rapture
         [136]   = [Status(157, 15f), Status(3879, 30f, 3)],   // Presence of Mind → self-haste + Sacred Sight (3 stk)
-        [16536] = [Status(3881, 30f)],   // Temperance → Divine Grace (enables Divine Caress)
+        [16536] = [Status(3881, 30f), PartyStatus(3985, 20f, 40f)],   // Temperance → Divine Grace (enables Divine Caress)
         [120]   = [Random(0.15f, Status(155, 15f))],   // Cure → Freecure (15%)
+
+        [185] = [TargetStatus(297, 30f)],
+        [186] = [TargetStatus(297, 30f)],
+        [24291] = [TargetStatus(2607, 30f)],
+        [24292] = [TargetStatus(2609, 30f)],
+        [7405] = [TargetStatus(1934, 15f)],
+        [16889] = [TargetStatus(1951, 15f)],
+        [16012] = [TargetStatus(1826, 15f)],
 
         // DNC — Feathers only (50% procs); Esprit is buff-gated, not modelled
         // Esprit +5 per own damage GCD (base Esprit-trait rate; dance-partner contribution not modelled), +50 from Tillana.
@@ -703,6 +720,13 @@ internal static unsafe class JobActions
     public static void ApplyAutoAttack(SimCharacter caster, uint actionId, ulong targetId, System.Random rng)
         => ApplyJobEffects(AutoAttacks, caster, actionId, targetId, rng);
 
+    public const uint AttackActionId = 7;
+    public const uint ShotActionId = 8;
+
+    // Dancer's chakram throw is Attack at range; Shot plays nothing on it.
+    public static uint AutoAttackActionId(byte classJob)
+        => (JobId)classJob is JobId.Archer or JobId.Bard or JobId.Machinist ? ShotActionId : AttackActionId;
+
     public static void ApplyStartingResources(SimCharacter caster, System.Random rng)
         => ApplyJobEffects(StartingResources, caster, 0, 0, rng);
 
@@ -764,8 +788,13 @@ internal static unsafe class JobActions
     private static IActionEffect Gauge(ResourceGauge gauge, int amount) => new GaugeEffect(gauge, amount);
     private static IActionEffect SetGauge(ResourceGauge gauge, int value) => new SetGaugeEffect(gauge, value);
     private static IActionEffect Status(ushort statusId, float duration, int stacks = 0) => new StatusEffect(statusId, duration, stacks);
+    private static IActionEffect PartyStatus(ushort statusId, float duration, float radius)
+        => new TargetStatusEffect(statusId, duration, partyRadius: radius);
     private static IActionEffect TargetStatus(ushort statusId, float duration, int stacks = 0) => new TargetStatusEffect(statusId, duration, stacks);
+    private static IActionEffect LimitBreakStatus(ushort statusId, float duration) => new LimitBreakStatusEffect(statusId, duration);
     private static IActionEffect EnemyStatus(ushort statusId, float duration, int stacks = 0) => new EnemyStatusEffect(statusId, duration, stacks);
+    private static IActionEffect Dispel() => new DispelEffect();
+    private static IActionEffect Provoke() => new ProvokeEffect();
     private static IActionEffect Combo(params IActionEffect[] inner) => new ComboEffect(inner);
     private static IActionEffect Random(float chance, params IActionEffect[] inner) => new RandomEffect(chance, inner);
 

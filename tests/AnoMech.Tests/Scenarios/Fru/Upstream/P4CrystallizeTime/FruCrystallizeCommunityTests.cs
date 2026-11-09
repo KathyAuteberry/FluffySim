@@ -76,7 +76,7 @@ public class FruCrystallizeCommunityTests
                 if (vulnerable) player.AddStatus(2941, 6);
                 var action = FruP4CrystallizeTimeActions.Wings(strict);
                 var context = new AnoMech.Core.EnemyActions.EnemyActionContext(action, tank, player,
-                    tank.Placement(), p.World.Party, 0);
+                    tank.Placement(), p.World.Party, 0, p.World.Events);
                 action.Effects[0].Apply(context, vulnerable ? [tank, player] : [player, tank]);
                 Assert.That(context.IsKilled(player), Is.True);
                 checkedFailure = true;

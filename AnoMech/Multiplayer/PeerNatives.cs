@@ -186,6 +186,9 @@ internal sealed class PeerNatives
         {
             if (!natives.HostOwnsArena) natives.RealDirector.Commence();
         }
+
+        public bool BattleTalk(uint speakerNameId, uint textId, uint durationMs)
+            => natives.HostOwnsArena || natives.RealDirector.BattleTalk(speakerNameId, textId, durationMs);
     }
 
     private sealed class PeerHaterList(PeerNatives natives) : IHaterList
@@ -273,6 +276,7 @@ internal sealed class PeerProxy(IBattleCharaProxy inner, PeerSeat seat) : IBattl
     public IActorVfxProxy? AttachVfx(string path) => inner.AttachVfx(path);
     public bool IsDrawObjectVisible { get => inner.IsDrawObjectVisible; set => inner.IsDrawObjectVisible = value; }
     public byte ModelState => inner.ModelState;
+    public NpcAppearance? Appearance => inner.Appearance;
     public bool IsCasting => inner.IsCasting;
     public uint CastActionId => inner.CastActionId;
     public float CurrentCastTime => inner.CurrentCastTime;
@@ -283,6 +287,7 @@ internal sealed class PeerProxy(IBattleCharaProxy inner, PeerSeat seat) : IBattl
     public uint MaxMana => inner.MaxMana;
     public byte TargetableStatus => inner.TargetableStatus;
     public ushort GetTetherId(byte slot) => inner.GetTetherId(slot);
+    public bool ShowsStatus(ushort statusId) => inner.ShowsStatus(statusId);
     public string DescribeDrawState() => inner.DescribeDrawState();
     public string DescribeActionTimeline() => inner.DescribeActionTimeline();
     public string DescribeTimelineSlotIds() => inner.DescribeTimelineSlotIds();

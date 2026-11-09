@@ -11,6 +11,7 @@ public class Rng
     private readonly Random rng;
 
     public int Seed { get; }
+    internal Random Random => rng;
 
     // For state that never decides the run (a peer's replay shadow): fixed, not the run's seed.
     public static Rng Detached => new(0);

@@ -37,6 +37,8 @@ public readonly record struct Mitigation(
 
         // Prepared healer shield approximation; healer potency and gear are not simulated.
         [297] = new(ShieldAmount: 20_000f),
+        [2607] = new(ShieldAmount: 20_000f),
+        [2609] = new(ShieldAmount: 20_000f),
 
         // PLD
         [82]   = new(Damage: Invulnerable),                   // Hallowed Ground

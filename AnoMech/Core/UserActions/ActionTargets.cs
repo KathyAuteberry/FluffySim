@@ -29,6 +29,9 @@ internal static class ActionTargets
         }
     }
 
+    public static IReadOnlyList<SimCharacter> Party(ActionContext ctx, float radius)
+        => Plugin.Game?.World.Party.ActiveMembers().Where(m => InRange(ctx.Caster, m, radius)).ToList() ?? [];
+
     public static IReadOnlyList<SimEnemy> Hostile(ActionContext ctx)
     {
         if (Plugin.Game is not { } game || !TryGetAction(ctx.ActionId, out var action)) return [];
