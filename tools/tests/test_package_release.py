@@ -1,10 +1,13 @@
 import importlib.util
 import json
+import posixpath
+import re
 from pathlib import Path
 import tempfile
 import unittest
 import zipfile
 import xml.etree.ElementTree as ET
+from urllib.parse import unquote
 
 spec = importlib.util.spec_from_file_location('package_release', Path(__file__).resolve().parents[1] / 'package_release.py')
 module = importlib.util.module_from_spec(spec)
@@ -29,9 +32,9 @@ class ReleasePackageTests(unittest.TestCase):
             names = archive.namelist()
         self.assertIn('FluffySim.dll', names)
         self.assertIn('Dependency.dll', names)
-        self.assertIn('LICENSE.md', names)
-        self.assertIn('PAUSE-INVESTIGATION.md', names)
-        self.assertIn('PACKET-FILTER-AUDIT.md', names)
+        self.assertIn('docs/legal/LICENSE.md', names)
+        self.assertIn('docs/safety/PAUSE-INVESTIGATION.md', names)
+        self.assertIn('docs/safety/PACKET-FILTER-AUDIT.md', names)
         self.assertNotIn('AnoMech.dll', names)
         self.assertNotIn('Dalamud.dll', names)
         self.assertNotIn('private.log', names)
@@ -41,6 +44,21 @@ class ReleasePackageTests(unittest.TestCase):
         (self.source / 'Dependency.dll').unlink()
         with self.assertRaisesRegex(ValueError, 'Missing runtime'):
             module.package(self.source, self.root / 'archives')
+
+    def test_packaged_documentation_keeps_its_relative_links(self):
+        output = module.package(self.source, self.root / 'archives')
+        with zipfile.ZipFile(output) as archive:
+            names = set(archive.namelist())
+            for name in sorted(names):
+                if not name.endswith('.md'):
+                    continue
+                content = archive.read(name).decode()
+                for destination in re.findall(r'!?\[[^\]\n]*\]\(([^\s)]+)\)', content):
+                    path = destination.partition('#')[0]
+                    if not path or path.startswith('/') or re.match(r'[A-Za-z][\w+.-]*:', path):
+                        continue
+                    target = posixpath.normpath(posixpath.join(posixpath.dirname(name), unquote(path)))
+                    self.assertIn(target, names, f'{name}: {destination}')
 
     def test_mismatched_version_rejected(self):
         (self.source / 'FluffySim.json').write_text('{}')

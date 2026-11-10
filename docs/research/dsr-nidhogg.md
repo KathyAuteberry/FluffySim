@@ -12,7 +12,7 @@ Mechanics use EnemyActions and real Action-sheet cast times/shapes, with explici
 
 ## Evidence and provenance
 
-State, settings and initial AI structure adapted from Asunnya/AsuMech `b7a31b630ebae5e1076f65ed069f3a50dda64272`; attribution recorded in THIRD-PARTY-NOTICES.md. This is not a wholesale Legacy DamageSolver/raw-packet import. Timelines are inherited source evidence, not locally measured P3 execution. Territory-scoped local IINACT inventory found no P3-specific actions.
+State, settings and initial AI structure adapted from Asunnya/AsuMech `b7a31b630ebae5e1076f65ed069f3a50dda64272`; attribution recorded in docs/legal/THIRD-PARTY-NOTICES.md. This is not a wholesale Legacy DamageSolver/raw-packet import. Timelines are inherited source evidence, not locally measured P3 execution. Territory-scoped local IINACT inventory found no P3-specific actions.
 
 Reviewed [Tuufless Nidhogg](https://ffxiv.tuufless.com/elemental/dsr/03_nidhogg/) and local Elemental arrow, four-tower and Soul Tether diagrams. BossMod's P3DiveFromGrace/P3DarkdragonDiveCounter corroborate14y offsets, radius5 towers,8y wheel boundary and exact tower occupancy. These correct Asu's unverified6y donut hole and minimum-only four-tower check. Tuufless's approximately15y arrow description is treated as approximate; no local capture resolves finer geometry. The first lance now chooses a seeded random party target; final lance faces south.
 

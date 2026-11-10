@@ -171,7 +171,7 @@ The initial layer-hold repair was superseded after the user's flicker report. Of
 ServerWeather retained current 2 while next 45 was queued; continuous P2 holds competed
 with native phase selection. DSR now commits the existing native pending weather once per
 ready layout generation and leaves scenery ownership to the native environment selector.
-See [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md) for snapshot/runtime evidence, native
+See [OFFLINE-DSR-REPAIR.md](../safety/OFFLINE-DSR-REPAIR.md) for snapshot/runtime evidence, native
 method verification, identity fixes and remaining client checks. FRU holds are unchanged.
 
 ### Offline party models and party HUD
@@ -274,7 +274,7 @@ with bounded weather finalization, initializes configured world metadata and loc
 name caches, and adds change-only diagnostics. The offline lobby remains disconnected;
 Discord Chat Bridge requires an invalid-HomeWorld guard and should be disabled manually
 for offline testing until updated. No installed external plugin is modified. Details and
-proposed unpublished upstream patch: [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md).
+proposed unpublished upstream patch: [OFFLINE-DSR-REPAIR.md](../safety/OFFLINE-DSR-REPAIR.md).
 
 ### Offline follow-up from the user's 3308CD trace
 
@@ -284,7 +284,7 @@ native weather-manager transition, read-only recorded object-state verification,
 reserved IDs in offline spawn/roster data, and a typed offline party-HUD publication bridge.
 No phase holds, raw environment flags, real identities, network traffic or third-party DLL
 patches are introduced. The trace UI shows its exact active path and bounded before/after
-HUD tables. See OFFLINE-DSR-REPAIR.md; fresh native validation remains required.
+HUD tables. See docs/safety/OFFLINE-DSR-REPAIR.md; fresh native validation remains required.
 
 ## 2.0.1 integration
 

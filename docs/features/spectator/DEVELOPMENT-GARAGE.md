@@ -2,7 +2,7 @@
 
 All 28 currently selectable FRU/DSR catalog entries (30 strategies) accept JESUS TAKE THE
 WHEEL. The full entry-by-entry responsibility and coverage matrix is in
-[SPECTATOR-COVERAGE.md](SPECTATOR-COVERAGE.md). This includes both P6 practice halves,
+[SPECTATOR-COVERAGE.md](COVERAGE.md). This includes both P6 practice halves,
 upstream alternatives, existing incomplete-labeled entries and the continuous Pandora sequence.
 Existing practice approximations and intentionally lethal terminal options remain unchanged.
 
@@ -25,7 +25,7 @@ or server action requests were introduced.
 Eight simulated actors were correct, but the native HUD's separately rebuilt self-first view
 retained the real player and displaced the last bot. Dalamud reads shared group records;
 installed DelvUI also reads the HUD identity table. Fixing only visible nodes cannot address
-both. See [SPECTATOR-PARTY-PROJECTION.md](SPECTATOR-PARTY-PROJECTION.md) for the traced data paths,
+both. See [SPECTATOR-PARTY-PROJECTION.md](PARTY-PROJECTION.md) for the traced data paths,
 projection, restoration and native limitations.
 
 The watched bot occupies presentation row zero; the other seven follow in role order. Matching

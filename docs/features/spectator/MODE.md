@@ -16,7 +16,7 @@ membership, tower count or damage participation. The watched role supplies the p
 for practice overrides, without manufacturing a `SimPlayer`. Spectator runs force party visibility
 and disable God Mode. No missing AI solution is replaced with immunity.
 
-Every selectable FRU and DSR catalog entry supports this mode; see SPECTATOR-COVERAGE.md. This is a
+Every selectable FRU and DSR catalog entry supports this mode; see docs/features/spectator/COVERAGE.md. This is a
 simulator-level roster/camera facility; scenario support only opts into that facility.
 
 ## Camera and isolation

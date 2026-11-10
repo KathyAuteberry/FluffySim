@@ -4,7 +4,7 @@
 Outputs omit raw actor IDs, names, recorder identity and packet contents. Opaque
 payloads remain accessible by offset through Replay.payload; no opcode schema is
 assumed. --segments writes filtered metadata, not a playable or converted replay.
-Format provenance and recording-specific interpretations live in FRU-ROADMAP.md.
+Format provenance and recording-specific interpretations live in docs/encounters/fru/ROADMAP.md.
 """
 import argparse
 import collections
