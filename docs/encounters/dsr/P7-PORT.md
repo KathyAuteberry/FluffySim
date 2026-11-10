@@ -254,5 +254,6 @@ identify which rule fired, not independent proof of the retail damage formula.
 north-facing cast setups, native cast locking/resumed tracking, actual Provoke
 retargeting and collision agreement with rotated telegraphs. The existing P7
 role/difficulty, negative-mechanic and lifecycle suites must also pass. Consult
-the current correction report for the executed Debug results; source inspection
+[the correction report](../../verification/PLAYTEST-CORRECTIONS-2026-11-11.md)
+for the executed Debug results; source inspection
 and fake-client requests alone cannot certify native animation/impact timing.
