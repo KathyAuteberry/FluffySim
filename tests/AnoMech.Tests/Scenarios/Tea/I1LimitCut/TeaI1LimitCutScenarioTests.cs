@@ -12,6 +12,8 @@ using static AnoMech.Tests.NegativeRun;
 
 namespace AnoMech.Tests;
 
+public sealed class TeaI1LimitCutLegacyScenario() : TeaI1LimitCutScenario(new TeaI1LimitCutLegacyAi());
+
 // Every roll is pinned: numbers 1 H2, 2 MT, 3 OT, 4 H1, 5 C, 6 M1, 7 M2, 8 R; the first Hawk Blasters
 // on E/W.
 //
@@ -36,15 +38,16 @@ public class TeaI1LimitCutScenarioTests
         for (var k = 0; k < PinnedNumbers.Length; k++) o.Number[PinnedNumbers[k]] = k + 1;
     }
 
-    private static NegativeRun<TeaI1LimitCutScenario> LimitCut(PartyRole player)
-        => Negative<TeaI1LimitCutScenario>(player).Overrides<TeaI1LimitCutStateOverrides>(Pin);
+    private static NegativeRun<TeaI1LimitCutLegacyScenario> LimitCut(PartyRole player)
+        => Negative<TeaI1LimitCutLegacyScenario>(player).WithScenario(() => new TeaI1LimitCutLegacyScenario()).Overrides<TeaI1LimitCutStateOverrides>(Pin);
 
     private static ScenarioRun Run(PartyRole player, float stopAt, Action<ScenarioProbe>? probe = null, params Takeover[] takeovers)
         => Run(player, stopAt, probe, takeovers, music: false);
 
     private static ScenarioRun Run(PartyRole player, float stopAt, Action<ScenarioProbe>? probe, Takeover[] takeovers, bool music)
-        => ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        => ScenarioRun.Execute(typeof(TeaI1LimitCutLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaI1LimitCutLegacyScenario(),
             PlayerRole = player,
             StopAt = stopAt,
             Overrides = o => Pin((TeaI1LimitCutStateOverrides)o),
@@ -95,7 +98,8 @@ public class TeaI1LimitCutScenarioTests
     [TestCase(2)]
     [TestCase(3)]
     public void DiesToFirstHawkBlasters(int axis)
-        => Negative<TeaI1LimitCutScenario>(MeleeDpsB)
+        => Negative<TeaI1LimitCutLegacyScenario>(MeleeDpsB)
+            .WithScenario(() => new TeaI1LimitCutLegacyScenario())
             .Overrides<TeaI1LimitCutStateOverrides>(o => Pin(o, axis))
             .TeleportAt(5f, to: OnCompass(axis * 45f + 180f, 14f))
             .ShouldKill(ActionId.HawkBlaster, MeleeDpsB);
@@ -186,7 +190,7 @@ public class TeaI1LimitCutScenarioTests
     public void EachHitFollowsCruiseChasersTurnToItsBait()
     {
         string? cruiseChaser = null;
-        var run = Run(MainTank, 28.5f, p => cruiseChaser ??= p.Game.Catalog.Scenarios.OfType<TeaI1LimitCutScenario>().Single().LastState?.Objects.CruiseChaser
+        var run = Run(MainTank, 28.5f, p => cruiseChaser ??= ((TeaI1LimitCutLegacyScenario)p.Game.ActiveScenario!).LastState?.Objects.CruiseChaser
             ?.EntityId.ToString("X8"));
         Assert.That(run.Passed, run.ToString);
         var rows = Timeline().Where(r => r["actor"] == cruiseChaser).ToList();
@@ -286,8 +290,9 @@ public class TeaI1LimitCutScenarioTests
     public void DeadNumbersAlphaSwordGoesToAnotherPlayer()
     {
         var hit = false;
-        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaI1LimitCutLegacyScenario(),
             PlayerRole = MeleeDpsB,
             StopAt = 13f,
             Overrides = o =>
@@ -311,8 +316,9 @@ public class TeaI1LimitCutScenarioTests
     [TestCase(3)]
     public void PinnedRollClears(int axis)
     {
-        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaI1LimitCutLegacyScenario(),
             PlayerRole = MeleeDpsB,
             Overrides = o => Pin((TeaI1LimitCutStateOverrides)o, axis),
         });
@@ -327,7 +333,7 @@ public class TeaI1LimitCutScenarioTests
     [TestCase(6)]
     public void RandomRollClears(int seed)
     {
-        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, seed);
+        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutLegacyScenario), 0, seed, new ScenarioRunOptions { ScenarioFactory = () => new TeaI1LimitCutLegacyScenario() });
         Assert.That(run.Passed, run.ToString);
     }
 
@@ -417,13 +423,14 @@ public class TeaI1LimitCutScenarioTests
     {
         TeaI1LimitCutState? host = null;
         TeaI1LimitCutState? replayed = null;
-        ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        ScenarioRun.Execute(typeof(TeaI1LimitCutLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaI1LimitCutLegacyScenario(),
             StopAt = 1f,
             Probe = probe =>
             {
                 if (!probe.Crossed(0.5f)) return;
-                var scenario = probe.Game.Catalog.Scenarios.OfType<TeaI1LimitCutScenario>().Single();
+                var scenario = (TeaI1LimitCutLegacyScenario)probe.Game.ActiveScenario!;
                 host = scenario.LastState;
                 replayed = (TeaI1LimitCutState?)scenario.StartReplay(scenario.BuildReplayStateMessage()!, 0, MainTank, probe.World);
             },
