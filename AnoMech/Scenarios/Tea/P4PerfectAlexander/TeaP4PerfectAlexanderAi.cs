@@ -15,6 +15,9 @@ public sealed class TeaP4PerfectAlexanderAi : TeaP4PerfectAlexanderAiBase
         return new Vector2(spot.Y, -spot.X);
     }
 
+    protected override Vector2 FinalWordShuffleDirection(PartyRole role)
+        => new(0f, (int)role % 2 == 0 ? 1f : -1f);
+
     protected override Vector2 SpreadSpot(PartyRole role) => role switch
     {
         MainTank => new(-5f, -10f),

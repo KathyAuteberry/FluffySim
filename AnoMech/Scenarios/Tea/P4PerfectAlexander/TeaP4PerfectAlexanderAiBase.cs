@@ -19,8 +19,8 @@ public abstract class TeaP4PerfectAlexanderAiBase : IScenarioAi<TeaP4PerfectAlex
     public virtual string? Group => null;
 
     private const float Jitter = 0.25f;
-    private const float ShuffleSpeed = 2f;
-    private const float ShuffleLength = 0.6f;
+    private const float ShuffleSpeed = 3.25f;
+    private const float ShuffleLength = 1.3f;
     private const float StillnessWatched = 2.4f;
     private const float ArenaEdge = 19.2f;
 
@@ -157,20 +157,27 @@ public abstract class TeaP4PerfectAlexanderAiBase : IScenarioAi<TeaP4PerfectAlex
 
     private void ShuffleEveryoneThrough(float check, Func<PartyRole, Vector2>? home)
     {
-        At(check - ShuffleLength / ShuffleSpeed - 0.1f, () =>
+        At(check - 2.05f, () =>
         {
             foreach (var role in PerRole.All)
                 if (Member(role) is { } member)
-                    Shuffle(role, home?.Invoke(role) ?? Flat(member.Position), new Vector2((int)role % 2 == 0 ? 1f : -1f, 0f), check);
+                    Shuffle(role, home?.Invoke(role) ?? Flat(member.Position), FinalWordShuffleDirection(role), check);
         });
     }
 
+    protected virtual Vector2 FinalWordShuffleDirection(PartyRole role)
+        => new((int)role % 2 == 0 ? 1f : -1f, 0f);
+
     private void Shuffle(PartyRole role, Vector2 home, Vector2 direction, float check)
     {
-        var leg = ShuffleLength / ShuffleSpeed;
         var now = world.Events.Elapsed;
-        world.Events.Add(MathF.Max(0f, check - leg - 0.05f - now), () => Walk(role, home + direction * ShuffleLength, ShuffleSpeed, jitter: false));
-        world.Events.Add(MathF.Max(0f, check - 0.05f - now), () => Walk(role, home, ShuffleSpeed, jitter: false));
+        var leg = 2f * ShuffleLength / ShuffleSpeed;
+        for (var step = 0; step < 3; step++)
+        {
+            var destination = home + direction * (step % 2 == 0 ? ShuffleLength : -ShuffleLength);
+            world.Events.Add(MathF.Max(0f, check - 1.95f + step * leg - now), () => Walk(role, destination, ShuffleSpeed, jitter: false));
+        }
+        world.Events.Add(MathF.Max(0f, check + 0.45f - now), () => Walk(role, home, ShuffleSpeed, jitter: false));
     }
 
     private void TakeOpticalSights()

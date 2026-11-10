@@ -40,6 +40,79 @@ public class ManaPerfectAlexanderTests
         Assert.That(run.Passed, run.ToString);
     }
 
+    [TestCase(P4Practice.TheFinalWord, true, 23.21f)]
+    [TestCase(P4Practice.TheFinalWord, false, 34.32f)]
+    [TestCase(P4Practice.FateCalibrationAlpha, true, 97.97f)]
+    [TestCase(P4Practice.FateCalibrationAlpha, false, 102f)]
+    public void MotionShowsSustainedNativeBackAndForthMovement(P4Practice practice, bool first, float check)
+    {
+        var samples = PerRole.All.ToDictionary(role => role, _ => new List<System.Numerics.Vector3>());
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 31, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderScenario(),
+            Spectator = true,
+            StopAt = check + 0.3f,
+            Overrides = value =>
+            {
+                var o = (TeaP4PerfectAlexanderStateOverrides)value;
+                o.Practice = practice;
+                o.FinalWordMotionFirst = first;
+                o.AlphaFirstMotion = first;
+                o.AlphaSecondMotion = true;
+            },
+            Probe = p =>
+            {
+                if (p.Time < check - 1.95f || p.Time > check + 0.2f) return;
+                foreach (var role in PerRole.All)
+                    samples[role].Add(p.Member(role)!.Proxy!.Position);
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        foreach (var (role, poses) in samples)
+        {
+            Assert.That(poses.Count, Is.GreaterThan(20), role.ToString());
+            var travelled = poses.Zip(poses.Skip(1), System.Numerics.Vector3.Distance).Sum();
+            Assert.That(travelled, Is.GreaterThan(1.5f), $"{role} emitted native movement");
+            var steps = poses.Zip(poses.Skip(1), (a, b) => b - a).Where(v => v.LengthSquared() > 1e-8f).ToArray();
+            Assert.That(steps, Is.Not.Empty, role.ToString());
+            var reversed = new[] { System.Numerics.Vector3.UnitX, System.Numerics.Vector3.UnitZ }.Any(axis =>
+                steps.Any(v => System.Numerics.Vector3.Dot(v, axis) > 0.001f)
+                && steps.Any(v => System.Numerics.Vector3.Dot(v, axis) < -0.001f));
+            Assert.That(reversed, Is.True, $"{role} moves both ways");
+        }
+    }
+
+    [Test]
+    public void OpticalHealersSpreadUnderTheBossAcrossItsCentre()
+    {
+        var checkedPositions = false;
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 31, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderScenario(),
+            Spectator = true,
+            StopAt = 47f,
+            Overrides = value =>
+            {
+                var o = (TeaP4PerfectAlexanderStateOverrides)value;
+                o.Practice = P4Practice.OpticalSight;
+                o.OpticalSpreadFirst = true;
+            },
+            Probe = p =>
+            {
+                if (!p.Crossed(46f)) return;
+                var h1 = p.Member(PartyRole.RegenHealer)!.Position;
+                var h2 = p.Member(PartyRole.ShieldHealer)!.Position;
+                Assert.That(h1.X, Is.EqualTo(-5f).Within(0.5f));
+                Assert.That(h2.X, Is.EqualTo(5f).Within(0.5f));
+                Assert.That(h1.Z, Is.EqualTo(0f).Within(0.5f));
+                Assert.That(h2.Z, Is.EqualTo(0f).Within(0.5f));
+                checkedPositions = true;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedPositions, Is.True);
+    }
+
     [Test]
     public void OpticalStacksRollOneSupportAndOneDpsDeterministically()
     {
