@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
@@ -62,12 +63,15 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     private AiManager ai = null!;
     private PartyRole? secondWaterHolder;
     private PartyRole? thirdWaterHolder;
+    private bool thirdWaterVulnerableStaged;
     private PartyRole[] thirdWaterOthers = [];
     private readonly Dictionary<PartyRole, Vector2> edgeSpots = [];
     private readonly Dictionary<PartyRole, int> walks = [];
     private readonly Dictionary<PartyRole, int> orders = [];
     private readonly Dictionary<PartyRole, Plan> plans = [];
     private readonly List<Vector2> mineSpots = [];
+    private readonly Dictionary<PartyRole, (PartyRole Partner, float Until)> passContacts = [];
+    private readonly Dictionary<PartyRole, ObstacleField> personalObstacles = [];
 
     public void Run(TeaP2BjCcState stateParam, SimWorld worldParam)
     {
@@ -79,8 +83,13 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
         orders.Clear();
         plans.Clear();
         mineSpots.Clear();
+        passContacts.Clear();
+        personalObstacles.Clear();
+        foreach (var role in PerRole.All) Member(role)?.SetMovementObstacles(null);
+        world.Events.Add(90f, KeepNisiClearance);
         secondWaterHolder = null;
         thirdWaterHolder = null;
+        thirdWaterVulnerableStaged = false;
         thirdWaterOthers = [];
 
         ai.Move(0.3f, TakeClockSpots);
@@ -149,6 +158,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
         world.Events.Add(99.0f, () => PassThirdSupport(MainTank));
         world.Events.Add(101.0f, () => PassThirdSupport(OffTank));
 
+        world.Events.Add(105.0f, StageThirdWaterVulnerable);
         world.Events.Add(106.0f, TakeThirdWaterSpots);
         world.Events.Add(105.6f, TakeThirdLightningSpots);
         world.Events.Add(116.0f, () => DragCruiseChaserBehindGaol(125.1f));
@@ -458,14 +468,29 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     private PartyRole? Vulnerable() => Dps
         .Where(r => Member(r) is { } m && m.ShowsStatus(StatusId.WaterResistanceDownIIP2)).Cast<PartyRole?>().FirstOrDefault();
 
+    private void StageThirdWaterVulnerable()
+    {
+        if (thirdWaterVulnerableStaged || Vulnerable() is not { } vulnerable) return;
+        var transferred = state.NisiOnDps
+            ? NisiOf(vulnerable) is { } held && Supports.Any(s => JudgmentOf(s) == held && NisiOf(s) == held)
+            : NisiOf(vulnerable) is { } received && received == JudgmentOf(vulnerable);
+        if (!transferred)
+        {
+            if (world.Events.Elapsed < 109f) world.Events.Add(.1f, StageThirdWaterVulnerable);
+            return;
+        }
+        thirdWaterVulnerableStaged = true;
+        Go(vulnerable, new Vector2(-8f, At(vulnerable).Y), new Vector2(-8f, 8f), new Vector2(-5f, 8f));
+    }
+
     private void TakeThirdWaterSpots()
     {
         if (Holder(StatusId.CompressedWater) is not { } water || Vulnerable() is not { } vulnerable) return;
         var members = TeaManaP2Assignments.WaterParty(3, state.FirstWater, state.FirstLightning, vulnerable);
         thirdWaterHolder = water;
         thirdWaterOthers = members.Where(r => r != water).ToArray();
+        if (!thirdWaterVulnerableStaged) StageThirdWaterVulnerable();
         MoveWaterParty(members, water, InnerEast);
-        Go(vulnerable, new Vector2(-5f, 4f));
     }
 
     private void TakeThirdLightningSpots()
@@ -619,12 +644,66 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     private void PassNow(PartyRole role, PartyRole other, float side, Func<Vector2>? backTo)
     {
         if (Member(other) is not { } target) return;
+        passContacts[role] = (other, world.Events.Elapsed + 8f);
         var at = Flat(target.Position);
         var stops = side != 0f ? new[] { at + new Vector2(side, 0f), at } : new[] { at };
         GoAvoiding(role, stops, other, MaxWait, seconds =>
         {
-            if (backTo is not null) world.Events.Add(seconds + 0.5f, () => Go(role, backTo()));
+            if (backTo is null) return;
+            var order = orders.GetValueOrDefault(role);
+            world.Events.Add(seconds + 0.5f, () =>
+            {
+                if (orders.GetValueOrDefault(role) == order) Go(role, backTo());
+            });
         });
+    }
+
+    private void KeepNisiClearance()
+    {
+        var now = world.Events.Elapsed;
+        foreach (var (role, contact) in passContacts.ToArray())
+            if (contact.Until <= now || NisiOf(role) is { } held && held == NisiOf(contact.Partner)) passContacts.Remove(role);
+        foreach (var role in PerRole.All)
+        {
+            if (Member(role) is not { } member)
+            {
+                personalObstacles.Remove(role);
+                continue;
+            }
+            if (!world.Party.IsBotDriven(member) || now >= 134f)
+            {
+                member.SetMovementObstacles(null);
+                personalObstacles.Remove(role);
+                continue;
+            }
+            if (!personalObstacles.TryGetValue(role, out var field)) personalObstacles[role] = field = new ObstacleField();
+            field.Clear();
+            field.Add(new ArenaBoundary());
+            foreach (var obstacle in world.Obstacles.All) field.Add(obstacle);
+            var mine = NisiOf(role);
+            foreach (var other in PerRole.All)
+            {
+                if (other == role || Member(other) is not { } neighbour || !neighbour.IsAlive()) continue;
+                var theirs = NisiOf(other);
+                if (mine == theirs || CanTouch(role, other, now) || CanTouch(other, role, now)) continue;
+                field.Add(new CircleObstacle(At(other), member.HitboxRadius + neighbour.HitboxRadius + .45f));
+            }
+            member.SetMovementObstacles(field);
+        }
+        if (now < 134f) world.Events.Add(.02f, KeepNisiClearance);
+    }
+
+    private sealed class ArenaBoundary : IObstacle
+    {
+        public float SignedDistance(Vector2 p) => ArenaEdge - p.Length();
+        public Vector2 Normal(Vector2 p) => p.LengthSquared() > .001f ? -Vector2.Normalize(p) : Vector2.UnitY;
+    }
+
+    private bool CanTouch(PartyRole role, PartyRole other, float now)
+    {
+        if (NisiOf(role) is { } mine && NisiOf(other) is { } theirs && mine != theirs) return false;
+        return passContacts.TryGetValue(role, out var contact) && contact.Partner == other && contact.Until > now
+            || now >= 119f && JudgmentOf(role) is { } wanted && wanted == JudgmentOf(other);
     }
 
     private void Go(PartyRole role, params Vector2[] stops) => GoAvoiding(role, stops, null, NearASettlingTornado(role) ? 0f : MaxWait, null);

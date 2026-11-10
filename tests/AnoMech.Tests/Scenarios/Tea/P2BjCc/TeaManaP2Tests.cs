@@ -100,6 +100,7 @@ public class TeaManaP2Tests
     [TestCase(1037, MeleeDpsA)]
     [TestCase(1068, MeleeDpsB)]
     [TestCase(1099, PhysRangedDps)]
+    [TestCase(1224910100, PhysRangedDps)]
     public void DeterministicRoutingRegressionsPreserveNisiSeparation(int seed, PartyRole role)
     {
         var scenario = new TeaP2BjCcScenario();
@@ -110,6 +111,97 @@ public class TeaManaP2Tests
         });
         Assert.That(run.Passed, run.ToString);
         Assert.That(run.Elapsed, Is.InRange(183f, 188f));
+    }
+
+    [Test]
+    public void BoundedFullPhaseCampaignPreservesNisiSeparation()
+    {
+        var failures = new List<string>();
+        for (var seed = 0; seed < 128; seed++)
+        {
+            var scenario = new TeaP2BjCcScenario();
+            var receivedAt = new Dictionary<PartyRole, float>();
+            var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, seed, new()
+            {
+                ScenarioFactory = () => scenario,
+                PlayerRole = (PartyRole)(seed % 8),
+                Probe = p => RecordThirdTransfers(scenario, p, receivedAt),
+            });
+            if (!run.Passed) failures.Add(run.ToString());
+            else if (receivedAt.Count != 4 || Math.Max(receivedAt[RegenHealer], receivedAt[ShieldHealer]) >= Math.Min(receivedAt[MainTank], receivedAt[OffTank]))
+                failures.Add($"seed {seed}: third transfer did not complete both healer pairs before either tank pair ({string.Join(", ", receivedAt)})");
+        }
+        Assert.That(failures, Is.Empty, string.Join("\n", failures));
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void NisiAvoidancePauseRestartAndLeaveReleaseActorsAndInput(bool spectator)
+    {
+        FakeGame? native = null;
+        var scenario = new TeaP2BjCcScenario();
+        var starts = 0;
+        var restarted = false;
+        var leaving = false;
+        SimCharacter[] originalParty = [];
+        SimEnemy[] originalEnemies = [];
+        KeyValuePair<PartyRole, NisiLetter>[] originalNisi = [];
+        var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, 29, new()
+        {
+            ScenarioFactory = () => scenario,
+            Spectator = spectator,
+            PlayerRole = PhysRangedDps,
+            ConfigureNative = value => native = value,
+            BeforeStart = (game, _) => game.RunStarted += (_, _) => starts++,
+            Probe = p =>
+            {
+                if (starts == 1 && !restarted && p.Time > 94f)
+                {
+                    originalParty = p.World.Party.AllMembers().ToArray();
+                    originalEnemies = p.World.Children.OfType<SimEnemy>().Where(e => e.IsActive).ToArray();
+                    originalNisi = scenario.LastState!.Nisi.ToArray();
+                    p.Game.Paused = true;
+                    var time = p.Time;
+                    var poses = originalParty.Select(m => m.Position).ToArray();
+                    for (var frame = 0; frame < 30; frame++) native!.Frame(1f / 60f, p.Game.Tick);
+                    Assert.That(p.Time, Is.EqualTo(time));
+                    Assert.That(originalParty.Select(m => m.Position), Is.EqualTo(poses));
+                    p.Game.Paused = false;
+                    restarted = true;
+                    p.Game.Restart();
+                }
+                if (starts < 2 || p.Time < 95f || leaving) return;
+                Assert.That(originalEnemies.All(e => !e.IsActive), Is.True);
+                Assert.That(p.World.Party.AllMembers(), Is.EquivalentTo(originalParty));
+                Assert.That(scenario.LastState!.Nisi.ToArray(), Is.EqualTo(originalNisi));
+                leaving = true;
+                p.Game.Leave();
+            },
+            StopWhen = p => leaving && p.Game.ActiveScenario is null,
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(restarted && leaving, Is.True);
+        Assert.That(starts, Is.EqualTo(2));
+        Assert.That(native!.BattleCharas.OccupiedSlots, Is.Zero);
+        Assert.That(native.PlayerInput.PauseInput, Is.False);
+        Assert.That(native.PlayerInput.SpectatorInput, Is.False);
+        Assert.That(native.SpectatorCamera.Target, Is.Null);
+    }
+
+    [Test]
+    public void NisiAvoidanceDoesNotConstrainHumanMovementOrSuppressArenaFalls()
+    {
+        var scenario = new TeaP2BjCcScenario();
+        var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, 29, new()
+        {
+            ScenarioFactory = () => scenario,
+            PlayerRole = MainTank,
+            Takeovers = [new(94f, new(21f, 0f))],
+            StopAt = 94.2f,
+            WriteArtifactsOnFailure = false,
+        });
+        Assert.That(run.Failure, Is.Null, run.ToString);
+        Assert.That(run.Deaths.Any(d => d.Role == MainTank && d.Cause == "Walked out of arena"), Is.True, run.ToString);
     }
 
     [TestCaseSource(nameof(FirstCompressionAssignments))]
@@ -173,22 +265,24 @@ public class TeaManaP2Tests
         {
             ScenarioFactory = () => scenario,
             PlayerRole = MainTank,
-            Probe = p =>
-            {
-                if (p.Time < 90f || p.Time > 110f || scenario.LastState is not { } state) return;
-                foreach (var support in TeaManaP2Assignments.FinalSupportLine)
-                {
-                    var recipient = state.NisiOnDps ? support : TeaManaP2Assignments.Dps.Single(d => state.Judgment[d] == state.Nisi[support]);
-                    if (p.Member(recipient)!.HasStatus(StatusId.FinalDecreeNisi(state.Judgment[recipient])))
-                        receivedAt.TryAdd(support, p.Time);
-                }
-            },
+            Probe = p => RecordThirdTransfers(scenario, p, receivedAt),
         });
         Assert.That(run.Passed, run.ToString);
         Assert.That(receivedAt.Keys, Is.EquivalentTo(TeaManaP2Assignments.FinalSupportLine));
         var lastHealer = Math.Max(receivedAt[RegenHealer], receivedAt[ShieldHealer]);
         var firstTank = Math.Min(receivedAt[MainTank], receivedAt[OffTank]);
         Assert.That(lastHealer, Is.LessThan(firstTank));
+    }
+
+    private static void RecordThirdTransfers(TeaP2BjCcScenario scenario, ScenarioProbe p, Dictionary<PartyRole, float> receivedAt)
+    {
+        if (p.Time < 90f || p.Time > 110f || scenario.LastState is not { } state) return;
+        foreach (var support in TeaManaP2Assignments.FinalSupportLine)
+        {
+            var recipient = state.NisiOnDps ? support : TeaManaP2Assignments.Dps.Single(d => state.Judgment[d] == state.Nisi[support]);
+            if (p.Member(recipient)!.HasStatus(StatusId.FinalDecreeNisi(state.Judgment[recipient])))
+                receivedAt.TryAdd(support, p.Time);
+        }
     }
 
     [TestCase(MainTank)]
