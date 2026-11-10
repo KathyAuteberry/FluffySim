@@ -2,7 +2,7 @@
 
 ## Current upstream integration — 2026-10-15
 
-See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](../integration/UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
 
 
 ## Verdict and confidence
@@ -33,7 +33,7 @@ still requires the manual checks below. No automated test sends a live ability t
 - [FFXIVClientStructs ActionManager](https://github.com/aers/FFXIVClientStructs/blob/main/FFXIVClientStructs/FFXIV/Client/Game/ActionManager.cs):
   documents native action execution/queueing, recast groups and client-side recast records. The build
   uses the installed Dalamud SDK, not a newly downloaded native library or guessed offsets.
-- Existing installed ActionTransient evidence in DSR-ROADMAP.md establishes the six-second
+- Existing installed ActionTransient evidence in docs/encounters/dsr/ROADMAP.md establishes the six-second
   Arm's Length/Surecast protection. Existing JobActions models the four tank defenses for ten seconds.
 
 **Owner observation A:** simulated Holmgang starts a local cooldown, then zoning after leaving
@@ -279,4 +279,4 @@ Automated validation results are recorded in the roadmaps after this session's r
 - Relay: **41 passed**. Tooling: **65 passed**.
 - Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
 - Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
-- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
+- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in docs/safety/PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.

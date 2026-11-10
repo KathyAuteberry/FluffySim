@@ -22,6 +22,6 @@ if __name__ == '__main__':
     parser.add_argument('--version', required=True)
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
-    notes = extract((Path(__file__).resolve().parents[1] / 'CHANGELOG.md').read_text(), args.version)
+    notes = extract((Path(__file__).resolve().parents[1] / 'docs/releases/CHANGELOG.md').read_text(), args.version)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(notes, encoding='utf-8')

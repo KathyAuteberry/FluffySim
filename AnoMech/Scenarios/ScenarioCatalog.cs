@@ -39,6 +39,7 @@ public sealed class ScenarioCatalog
 {
     public IReadOnlyList<IScenario> Scenarios { get; }
     public IReadOnlyList<IZone> Zones { get; }
+    public IReadOnlyList<ScenarioSidebarSection> SidebarSections { get; }
     private readonly Dictionary<IZone, IReadOnlyList<IPhase>> phasesByZone;
     private readonly Dictionary<IPhase, IReadOnlyList<IScenario>> scenariosByPhase;
 
@@ -67,6 +68,7 @@ public sealed class ScenarioCatalog
             phaseScenarios.Add(scenario);
         }
         Zones = zones;
+        SidebarSections = ScenarioSidebarSection.Build(Zones);
         phasesByZone = phases.ToDictionary(kv => kv.Key, IReadOnlyList<IPhase> (kv) => kv.Value);
         scenariosByPhase = byPhase.ToDictionary(kv => kv.Key, IReadOnlyList<IScenario> (kv) => kv.Value);
     }
@@ -94,6 +96,7 @@ public sealed class ScenarioCatalog
         new Dsr.P5Death.DsrP5DeathScenario(),
         new Dsr.P6DoubleDragons.DsrP6DoubleDragonsScenario(),
         new Dsr.P6DoubleDragons.DsrP6CauterizeScenario(),
+        new Dsr.P7DragonKing.DsrP7DragonKingScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

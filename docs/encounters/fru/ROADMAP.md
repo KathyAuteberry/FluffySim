@@ -4,17 +4,17 @@ Final Debug validation: **13,647 plugin**, **44 relay**, **65 tooling** passed; 
 
 The user confirmed correct FRU offline phase arenas and released entrance collision after the first integration repair. Those presets and entry gates remain unchanged. Original AnoMech and custom FRU/DSR bots were all affected by native representation suppression: the offline logs show loaded skeletons and hidden draw objects with render bit 30, rather than missing actors. The shared native model setter now reconciles only FluffySim-owned offline doppels, respects Show Simulated Party, leaves other hide reasons/culling intact, and continues presentation updates while paused without ticking combat state. Party HUD logs already reach eight native entries and a visible addon; visual rows/statuses still require confirmation.
 
-Scenario starts also reset the authoritative scheduler even after idle time with no active run, restoring its zero-based alignment with phase logic and bot deadlines. No FRU assignments, choreography, attack timings, arenas, BGM, configuration or version changes. See [evidence, shared repairs and manual matrix](UPSTREAM-INTEGRATION.md#remaining-offline-regressions-after-the-second-client-test). Native bot models remain pending the next in-game test; builds/tests use Debug only.
+Scenario starts also reset the authoritative scheduler even after idle time with no active run, restoring its zero-based alignment with phase logic and bot deadlines. No FRU assignments, choreography, attack timings, arenas, BGM, configuration or version changes. See [evidence, shared repairs and manual matrix](../../integration/UPSTREAM-INTEGRATION.md#remaining-offline-regressions-after-the-second-client-test). Native bot models remain pending the next in-game test; builds/tests use Debug only.
 
 ## Upstream runtime entry repair — 2026-10-15
 
-The first integration playtest exposed a missing native entrance EObj/open transition and cold offline loads starting party/phase work too early. Shared entry now waits for matching native layout completion and the recorded entrance opening before spawning the party or beginning the mechanic. The original player practice spawn is preserved independently of wall placement. Phase switches clear obsolete preparation; native party state is checked and repaired rather than trusting a cached send. All existing encounter assignments, choreography, damage and audio remain unchanged. See [UPSTREAM-INTEGRATION.md](UPSTREAM-INTEGRATION.md#native-entry-repairs-after-the-first-client-test) for recorded wall bindings, diagnostics, tests and the required two-mode client matrix. Native results remain unconfirmed until another in-game test. Debug validation: 13,625 plugin tests, 44 relay tests and 65 tooling tests passed; safety 301 passed / three Windows-native tests skipped on each modeled backend.
+The first integration playtest exposed a missing native entrance EObj/open transition and cold offline loads starting party/phase work too early. Shared entry now waits for matching native layout completion and the recorded entrance opening before spawning the party or beginning the mechanic. The original player practice spawn is preserved independently of wall placement. Phase switches clear obsolete preparation; native party state is checked and repaired rather than trusting a cached send. All existing encounter assignments, choreography, damage and audio remain unchanged. See [UPSTREAM-INTEGRATION.md](../../integration/UPSTREAM-INTEGRATION.md#native-entry-repairs-after-the-first-client-test) for recorded wall bindings, diagnostics, tests and the required two-mode client matrix. Native results remain unconfirmed until another in-game test. Debug validation: 13,625 plugin tests, 44 relay tests and 65 tooling tests passed; safety 301 passed / three Windows-native tests skipped on each modeled backend.
 
 # FRU implementation roadmap
 
 ## Current upstream integration — 2026-10-15
 
-See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](../../integration/UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
 
 
 ## Development build workflow (current)
@@ -2580,7 +2580,7 @@ continues. No invincibility status, real ability or recast modification implemen
 God Mode. Normal damage/death rules remain unchanged.
 
 The Arm's Length/Surecast audit and six-second local Meteor anti-knockback are
-recorded in DSR-ROADMAP.md. Native tank invulnerability reset remains unsupported;
+recorded in docs/encounters/dsr/ROADMAP.md. Native tank invulnerability reset remains unsupported;
 the independently local ten-second practice button is preserved.
 
 Validation: Debug solution build succeeds with local DALAMUD_HOME, zero errors
@@ -2609,8 +2609,8 @@ remains independent, Ready on restart and timed protection only after clicking.
 ## FluffySim 1.0 release and final Hard audit (2026-10-12)
 
 - Inherited authoritative plugin version 0.4.2.0 becomes FluffySim 1.0.0.0 / SemVer 1.0.0, derived from FluffySim.Version.props. User-facing manifest, main/settings titles, chat/status/error prefixes and command help are rebranded; `/fluffysim` is added alongside `/anomech` and `/ano`.
-- Assembly/InternalName/DLL become FluffySim. Explicitly typed first-launch import reads legacy AnoMech.json only if current settings are absent; namespaces, configuration keys, scenario IDs, relay headers and window IDs stay stable. Original settings/snapshots are not modified. The startup guard rejects another loaded AnoMech/FluffySim instance. Manual developer-registration migration is required; see INSTALLATION.md.
-- All four FRU AI movement paths were audited; see HARD-DIFFICULTY-AUDIT.md for per-step eligibility, deadlines and deliberate exemptions. Light Rampant's final House of Light clock spread now additionally uses a 45.4 arrival deadline in Hard; Easy retains its original request. Shared telemetry records actual actor/from/to for deterministic position comparisons, not merely a Hard setting flag.
+- Assembly/InternalName/DLL become FluffySim. Explicitly typed first-launch import reads legacy AnoMech.json only if current settings are absent; namespaces, configuration keys, scenario IDs, relay headers and window IDs stay stable. Original settings/snapshots are not modified. The startup guard rejects another loaded AnoMech/FluffySim instance. Manual developer-registration migration is required; see docs/user-guide/INSTALLATION.md.
+- All four FRU AI movement paths were audited; see docs/development/HARD-DIFFICULTY-AUDIT.md for per-step eligibility, deadlines and deliberate exemptions. Light Rampant's final House of Light clock spread now additionally uses a 45.4 arrival deadline in Hard; Easy retains its original request. Shared telemetry records actual actor/from/to for deterministic position comparisons, not merely a Hard setting flag.
 - Packaging uses dependency metadata, excludes old plugin DLLs/logs/snapshots, carries licensing/installation notes, and never writes to its input or installed Release directories. The custom packager generates manifests only; release ZIP creation is owner-operated. No tags, commits, publication or installed-plugin changes were performed.
 - Debug regression/build and native migration verification results are recorded below after completion. Existing scene mechanics/presets/music/practice controls are preserved. Native Hard cue readability and the renamed DLL installation still require user verification.
 
@@ -2701,7 +2701,7 @@ these asynchronous samples do not establish a precise cutoff or charge destinati
 new close-range presentation and the retained estimated far-charge interpolation require in-game
 confirmation; no new native animation ID or memory access is introduced.
 
-Full Pause is **not enabled**. [PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) traces the current
+Full Pause is **not enabled**. [PAUSE-INVESTIGATION.md](../../safety/PAUSE-INVESTIGATION.md) traces the current
 shared internal freeze, independent user-action updates/native cast clocks, local input hooks and
 session firewall. Internal paused ticks preserve authoritative events, bot destinations, status
 expiration and virtual defenses, but do not lock the human or freeze native presentation. Existing
@@ -2737,7 +2737,7 @@ are captured with exact duration/elapsed/stacks/source/instance metadata. Resume
 status objects, avoiding refresh/cleansing. Native animation/status displays may continue; pose drift
 is corrected through the existing per-actor transform interface without cancelling movement plans.
 Multiplayer Pause is disabled until peer synchronization is implemented. See
-[PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
+[PAUSE-INVESTIGATION.md](../../safety/PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
 and the native keyboard/mouse/controller playtest checklist. Existing mechanic assignments/timings
 and BGM are unchanged; Debug development only.
 
@@ -2747,7 +2747,7 @@ Owner reports successful native Pause playtesting. Debug regression: 11,291 plug
 
 ## Native hotbar defensive practice and filter audit — 2026-10-15
 
-Supersedes the earlier conservative native-reset decision. See [PACKET-FILTER-AUDIT.md](PACKET-FILTER-AUDIT.md) for actual source paths, the owner's Holmgang/Cactbot evidence, scoped confidence and residual transport risks. Outgoing traffic through the inherited hook is heartbeat-only; unknown requests fail closed. No queued packet bytes are retained or replayed. The unload exception to native inn readiness and settling has been removed; pending actions and disposal failures cannot bypass verification. An unsafe unload now stops the client, so Leave and wait for restoration before rebuilding/reloading.
+Supersedes the earlier conservative native-reset decision. See [PACKET-FILTER-AUDIT.md](../../safety/PACKET-FILTER-AUDIT.md) for actual source paths, the owner's Holmgang/Cactbot evidence, scoped confidence and residual transport risks. Outgoing traffic through the inherited hook is heartbeat-only; unknown requests fail closed. No queued packet bytes are retained or replayed. The unload exception to native inn readiness and settling has been removed; pending actions and disposal failures cannot bypass verification. An unsafe unload now stops the client, so Leave and wait for restoration before rebuilding/reloading.
 
 Native hotbar tank defenses and Arm's Length/Surecast resolve independently of the optional combat module. Their owned client recasts reset only for relevant practice scenarios and restore the pre-entry baseline with real elapsed time on Leave, including shared-group ownership. Sprint uses the same snapshot/restore rather than its old unowned reset. No server cooldown is reset or ability automatically pressed. Main virtual buttons are suppressed when native practice is ready; unavailable gates retain safe fallback controls. Low-level Meteor players can use `/fluffysim antikb` (explicit, six seconds, once per run) without a skill unlock. Native cooldown/exit behavior still requires owner testing. All nine mechanics, Pause status ownership, arenas and BGM remain unchanged.
 
@@ -2758,7 +2758,7 @@ Native hotbar tank defenses and Arm's Length/Surecast resolve independently of t
 - Relay: **41 passed**. Tooling: **65 passed**.
 - Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
 - Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
-- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
+- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in docs/safety/PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
 
 
 ### 2.1.1 command cleanup

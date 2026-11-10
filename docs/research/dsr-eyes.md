@@ -6,7 +6,7 @@ Updated 2026-10-20. New catalog entry: **Eyes (Elemental)** under **P4 Eyes**. N
 
 Primary: [Elemental Eyes](https://ffxiv.tuufless.com/elemental/dsr/04_eyes/). Pure of Heart uses the linked HMRT sequence: [Elemental Holy See](https://ffxiv.tuufless.com/elemental/dsr/01_the_holy_see/#pure-of-heart). This implements only the P4 rescue continuation; the independent P1 door boss remains last in the mission.
 
-Adapted AsuMech's actual live source at `b7a31b630ebae5e1076f65ed069f3a50dda64272`, P4Eyes and the Pure of Heart portion of P1Knights (AGPL; THIRD-PARTY-NOTICES.md). The cached local Asu checkout is older. Asu P4 is NA, uses legacy native packet methods, and ends without rescuing Haurchefant; it was not imported wholesale. BossMod's DSW2 P4Hatebound/P4Intermission/DSW2States and DSW1 PureOfHeart corroborate shapes, nearest-two Brightwing baits, status handling and relative intermission order. Neither reference is a local native timing capture.
+Adapted AsuMech's actual live source at `b7a31b630ebae5e1076f65ed069f3a50dda64272`, P4Eyes and the Pure of Heart portion of P1Knights (AGPL; docs/legal/THIRD-PARTY-NOTICES.md). The cached local Asu checkout is older. Asu P4 is NA, uses legacy native packet methods, and ends without rescuing Haurchefant; it was not imported wholesale. BossMod's DSW2 P4Hatebound/P4Intermission/DSW2States and DSW1 PureOfHeart corroborate shapes, nearest-two Brightwing baits, status handling and relative intermission order. Neither reference is a local native timing capture.
 
 ## Implemented
 

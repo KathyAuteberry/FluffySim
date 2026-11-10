@@ -1,3 +1,11 @@
+## Elemental P7 port — 2026-11-02
+
+Dragon-king Thordan is registered with three Edge cycles, all 3-3-2 Akh Morns,
+Elemental Trinity baits and local Provoke swaps. Practice ends before Morn Afah's
+Edge resolves. Native presentation remains unverified. See [source attribution,
+scope and client verification](P7-PORT.md). Earlier coverage tables below are
+historical and do not describe the current full DSR catalog.
+
 ## Offline P2 scenery and Meteors clock repair — 2026-10-15
 
 Final Debug validation: **13,647 plugin**, **44 relay**, **65 tooling** passed; safety **301 passed / three Windows-native skips** on each modeled backend (overlapping repeat counts). Native offline models, DSR scenery and tower timing still require manual confirmation. Functional repair revision `soxsns` is before the unchanged four-parent `plkqvn` merge; no Release build or version change.
@@ -6,17 +14,17 @@ The user confirmed entrance release/movement and working inn arenas after the fi
 
 Meteors also exposed a shared run-clock regression: idle instance time survived the first scenario start while tower expiration, AI deadlines and the scenario tick assumed zero. ScenarioSession now resets its scheduler before setup, restoring the pre-merge invariant. Tower snapshots remain 12.4/25.8 seconds; releases 12.7/26.1; Fire 5.5 before Ice 8.5. No impact intervals, assignments, movement routes or damage rules changed. Complete Easy/Hard tests include idle-before-start and pause during towers; entry tests cover delayed readiness and repeated Stop/restart/Leave in both modes.
 
-Offline bots in original and custom scenarios have loaded draw objects suppressed by the native representation path. A shared, owned-offline-doppel-only presentation repair preserves Show Simulated Party and native culling, including while paused. Existing local party-HUD initialization already reports eight entries and a visible addon in the captured offline logs. See [technical evidence, regression coverage and manual matrix](UPSTREAM-INTEGRATION.md#remaining-offline-regressions-after-the-second-client-test). These new native scenery/model repairs require client validation; FRU's confirmed offline presets, entrance handling, firewall and recast restoration are retained. Version remains 1.2.0.0; Debug development only.
+Offline bots in original and custom scenarios have loaded draw objects suppressed by the native representation path. A shared, owned-offline-doppel-only presentation repair preserves Show Simulated Party and native culling, including while paused. Existing local party-HUD initialization already reports eight entries and a visible addon in the captured offline logs. See [technical evidence, regression coverage and manual matrix](../../integration/UPSTREAM-INTEGRATION.md#remaining-offline-regressions-after-the-second-client-test). These new native scenery/model repairs require client validation; FRU's confirmed offline presets, entrance handling, firewall and recast restoration are retained. Version remains 1.2.0.0; Debug development only.
 
 ## Upstream runtime entry repair — 2026-10-15
 
-The first integration playtest exposed a missing native entrance EObj/open transition and cold offline loads starting party/phase work too early. Shared entry now waits for matching native layout completion and the recorded entrance opening before spawning the party or beginning the mechanic. The original player practice spawn is preserved independently of wall placement. Phase switches clear obsolete preparation; native party state is checked and repaired rather than trusting a cached send. All existing encounter assignments, choreography, damage and audio remain unchanged. See [UPSTREAM-INTEGRATION.md](UPSTREAM-INTEGRATION.md#native-entry-repairs-after-the-first-client-test) for recorded wall bindings, diagnostics, tests and the required two-mode client matrix. Native results remain unconfirmed until another in-game test. Debug validation: 13,625 plugin tests, 44 relay tests and 65 tooling tests passed; safety 301 passed / three Windows-native tests skipped on each modeled backend.
+The first integration playtest exposed a missing native entrance EObj/open transition and cold offline loads starting party/phase work too early. Shared entry now waits for matching native layout completion and the recorded entrance opening before spawning the party or beginning the mechanic. The original player practice spawn is preserved independently of wall placement. Phase switches clear obsolete preparation; native party state is checked and repaired rather than trusting a cached send. All existing encounter assignments, choreography, damage and audio remain unchanged. See [UPSTREAM-INTEGRATION.md](../../integration/UPSTREAM-INTEGRATION.md#native-entry-repairs-after-the-first-client-test) for recorded wall bindings, diagnostics, tests and the required two-mode client matrix. Native results remain unconfirmed until another in-game test. Debug validation: 13,625 plugin tests, 44 relay tests and 65 tooling tests passed; safety 301 passed / three Windows-native tests skipped on each modeled backend.
 
 # DSR implementation roadmap
 
 ## Current upstream integration — 2026-10-15
 
-See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](../../integration/UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
 
 
 ## Development build workflow (current)
@@ -594,7 +602,7 @@ visibility is pending the user's manual test.
 ### Shared practice features and Meteor presentation — 2026-10-12
 
 The common main scenario controls now persist Easy/Hard bot difficulty, simulated
-party visibility and God Mode. See FRU-ROADMAP.md for the shared lifecycle and
+party visibility and God Mode. See docs/encounters/fru/ROADMAP.md for the shared lifecycle and
 visibility policy. Defaults preserve the previous Easy choreography and visuals.
 
 Hard DSR windows: Strength1 triangle spreads finish before Lightning/Spiral;
@@ -693,9 +701,9 @@ allows blind/error practice while still explaining failed mechanics.
 
 ## FluffySim 1.0 final Hard coverage audit (2026-10-12)
 
-All four DSR scenario AI files were traced. Strength 1 triangles, Strength 2 opening/towers, Sacred Severs initial groups, and Meteor pair/ice-return/tower preparation use the shared distance/speed/deadline scheduler. Tether crossing, committed tower body-language communication, Heavy Impact/Mercy dodges, Sacred Severs orb rotation and Meteor arcs retain their safe/communicative timing. Direct bypasses and guarded prompt requests are listed in HARD-DIFFICULTY-AUDIT.md. No DSR strategy, assignment, damage, geometry, presentation or audio changes were needed.
+All four DSR scenario AI files were traced. Strength 1 triangles, Strength 2 opening/towers, Sacred Severs initial groups, and Meteor pair/ice-return/tower preparation use the shared distance/speed/deadline scheduler. Tether crossing, committed tower body-language communication, Heavy Impact/Mercy dodges, Sacred Severs orb rotation and Meteor arcs retain their safe/communicative timing. Direct bypasses and guarded prompt requests are listed in docs/development/HARD-DIFFICULTY-AUDIT.md. No DSR strategy, assignment, damage, geometry, presentation or audio changes were needed.
 
-New per-scenario comparisons run identical Easy/Hard seed/seat assignments through completion and observe actual actor positions before delayed departures. Existing exhaustive Darklit/Meteor Hard checks and invisibility/God Mode/local practice actions remain regression coverage. See INSTALLATION.md and RELEASING.md for FluffySim DLL/config migration and owner-operated packaging. Debug-only development remains mandatory; original source/project identities stay AnoMech internally.
+New per-scenario comparisons run identical Easy/Hard seed/seat assignments through completion and observe actual actor positions before delayed departures. Existing exhaustive Darklit/Meteor Hard checks and invisibility/God Mode/local practice actions remain regression coverage. See docs/user-guide/INSTALLATION.md and docs/releases/RELEASING.md for FluffySim DLL/config migration and owner-operated packaging. Debug-only development remains mandatory; original source/project identities stay AnoMech internally.
 
 Release audit validation: 11,221 full Debug plugin tests passed; final 14 focused tests passed, including expanded all-seat Easy/Hard comparisons (overlapping counts, not additive). Across all eight FRU/DSR scenarios the comparison executes 256 matched pairs with identical seed/seat and verifies unchanged assignment state and real later movement with successful full resolution. Relay 41 and tooling 50 passed. Final Debug solution build has 0 errors / 3,965 warnings, matching the prior warning baseline. Packaging verified with Debug input and temporary output; no Release files or running plugin registration were modified.
 
@@ -710,7 +718,7 @@ are captured with exact duration/elapsed/stacks/source/instance metadata. Resume
 status objects, avoiding refresh/cleansing. Native animation/status displays may continue; pose drift
 is corrected through the existing per-actor transform interface without cancelling movement plans.
 Multiplayer Pause is disabled until peer synchronization is implemented. See
-[PAUSE-INVESTIGATION.md](PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
+[PAUSE-INVESTIGATION.md](../../safety/PAUSE-INVESTIGATION.md) for call paths, safety boundaries, cleanup, validation
 and the native keyboard/mouse/controller playtest checklist. Existing mechanic assignments/timings
 and BGM are unchanged; Debug development only.
 
@@ -720,7 +728,7 @@ Owner reports successful native Pause playtesting. Debug regression: 11,291 plug
 
 ## Native hotbar defensive practice and filter audit — 2026-10-15
 
-Supersedes the earlier conservative native-reset decision. See [PACKET-FILTER-AUDIT.md](PACKET-FILTER-AUDIT.md) for actual source paths, the owner's Holmgang/Cactbot evidence, scoped confidence and residual transport risks. Outgoing traffic through the inherited hook is heartbeat-only; unknown requests fail closed. No queued packet bytes are retained or replayed. The unload exception to native inn readiness and settling has been removed; pending actions and disposal failures cannot bypass verification. An unsafe unload now stops the client, so Leave and wait for restoration before rebuilding/reloading.
+Supersedes the earlier conservative native-reset decision. See [PACKET-FILTER-AUDIT.md](../../safety/PACKET-FILTER-AUDIT.md) for actual source paths, the owner's Holmgang/Cactbot evidence, scoped confidence and residual transport risks. Outgoing traffic through the inherited hook is heartbeat-only; unknown requests fail closed. No queued packet bytes are retained or replayed. The unload exception to native inn readiness and settling has been removed; pending actions and disposal failures cannot bypass verification. An unsafe unload now stops the client, so Leave and wait for restoration before rebuilding/reloading.
 
 Native hotbar tank defenses and Arm's Length/Surecast resolve independently of the optional combat module. Their owned client recasts reset only for relevant practice scenarios and restore the pre-entry baseline with real elapsed time on Leave, including shared-group ownership. Sprint uses the same snapshot/restore rather than its old unowned reset. No server cooldown is reset or ability automatically pressed. Main virtual buttons are suppressed when native practice is ready; unavailable gates retain safe fallback controls. Low-level Meteor players can use `/fluffysim antikb` (explicit, six seconds, once per run) without a skill unlock. Native cooldown/exit behavior still requires owner testing. All nine mechanics, Pause status ownership, arenas and BGM remain unchanged.
 
@@ -731,7 +739,7 @@ Native hotbar tank defenses and Arm's Length/Surecast resolve independently of t
 - Relay: **41 passed**. Tooling: **65 passed**.
 - Debug build: **zero errors, 3,965 existing warnings**; no increase in the warning baseline. Diff whitespace checks passed.
 - Debug ZIP packaging was checked in temporary output; no public Release artifact was produced. Release output, installed plugins, release version and repository history were not modified.
-- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
+- Native recast reset/restoration, action presentation and Wine hook behavior remain subject to the manual client checks in docs/safety/PACKET-FILTER-AUDIT.md. No automated live gameplay actions or network payload capture occurred.
 
 ### Offline P2 flicker follow-up
 
@@ -741,7 +749,7 @@ removed; a ready-layout generation finalizes the existing native weather transit
 then leaves the native environment selector in charge. All four scenarios share this path.
 No mechanic, map-slot, collision, Meteors clock or tower-lifetime changes. Cold-load and
 restart policy tests are automated; stable native scenery still requires user validation.
-See [OFFLINE-DSR-REPAIR.md](OFFLINE-DSR-REPAIR.md) for evidence and the two-mode checklist.
+See [OFFLINE-DSR-REPAIR.md](../../safety/OFFLINE-DSR-REPAIR.md) for evidence and the two-mode checklist.
 
 ### Offline P2 / HUD follow-up after build 3308CD
 
@@ -752,7 +760,7 @@ layer/instance activation signatures. No repeated layer holds or raw flag writes
 Offline bot spawn identity now matches its reserved roster identity; native HUD rows/name
 arrays receive all eight actor associations at the addon update boundary. Inn behavior,
 Meteors clocks/towers and all strategies remain unchanged. Fresh native validation pending;
-see OFFLINE-DSR-REPAIR.md for trace filenames, evidence limits and testing.
+see docs/safety/OFFLINE-DSR-REPAIR.md for trace filenames, evidence limits and testing.
 
 
 ### Native Conviction tower follow-up — 2026-10-17

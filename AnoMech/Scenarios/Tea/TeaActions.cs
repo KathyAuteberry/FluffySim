@@ -42,7 +42,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [OnTarget(Damage(TankBuster), WaterResistanceDown), OnOthers(Damage(Lethal))],
+        Effects = [OnTarget(WaterDamage(TankBuster with { CheckBotMitigation = true }), WaterResistanceDown), OnOthers(Damage(Lethal))],
         Timing = new() { DamageDelay = 0.80f },
     };
 
@@ -50,7 +50,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [OnTarget(Damage(TankBuster), WaterResistanceDown), OnOthers(Damage(Lethal))],
+        Effects = [OnTarget(WaterDamage(TankBuster with { CheckBotMitigation = true }), WaterResistanceDown), OnOthers(Damage(Lethal))],
         Timing = new() { DamageDelay = 0.78f },
     };
 
@@ -344,7 +344,7 @@ public static class TeaActions
     public static readonly EnemyAction HiddenMine = new(ActionId.HiddenMine)
     {
         Cast = new() { AnimationLock = 1.1f },
-        Effects = [Damage(TankBuster.MinMit(0.36f))],
+        Effects = [Damage(TankBuster.MinMit(0.36f, includeBots: true))],
         Timing = new() { DamageDelay = 0.31f },
     };
 
@@ -492,7 +492,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, 1f), TankBuster)],
+        Effects = [Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, 1f), TankBuster with { CheckBotMitigation = true })],
         Timing = new() { DamageDelay = 0.80f },
     };
 
@@ -561,7 +561,7 @@ public static class TeaActions
     public static readonly EnemyAction DivineJudgmentRaidwide = new(ActionId.DivineJudgmentRaidwide)
     {
         Cast = new() { AnimationLock = 3.1f },
-        Effects = [Damage(Normal.MinMit(0.8f)), ApplyStatus(StatusId.DownForTheCount, 57f, delayToEffectResult: true)],
+        Effects = [Damage(Normal.MinMit(0.8f, includeBots: true)), ApplyStatus(StatusId.DownForTheCount, 57f, delayToEffectResult: true)],
         Timing = new() { DamageDelay = 0.18f },
         DeathExplanation = "no tank LB3 for Divine Judgment",
     };
@@ -601,7 +601,7 @@ public static class TeaActions
                 var dz = target.Position.Z - ctx.Origin.Position.Z;
                 var sum = taken[target] = taken.GetValueOrDefault(target) + MathF.Max(3300f, atCentre - perYalm * MathF.Sqrt(dx * dx + dz * dz));
                 var hp = HitPoints(target);
-                var severity = sum < hp ? Normal : DamageCheck.IsTank(target) ? TankBuster.MinMit(1f - hp / sum) : Lethal;
+                var severity = sum < hp ? Normal : DamageCheck.IsTank(target) ? TankBuster.MinMit(1f - hp / sum, includeBots: true) : Lethal;
                 Damage(severity).Apply(ctx, [target]);
             }
         }
@@ -826,7 +826,7 @@ public static class TeaActions
     // Shared by whoever stands in it; alone, a human tank needs an invuln.
     public static readonly EnemyAction OrdainedCapitalPunishmentHit = new(ActionId.OrdainedCapitalPunishmentHit)
     {
-        Effects = [Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f), split: Distribution.Stack(2, understacked: TankBuster.MinMit(1f)))],
+        Effects = [Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f, includeBots: true), split: Distribution.Stack(2, understacked: TankBuster.MinMit(1f, includeBots: true)))],
         Timing = new() { DamageDelay = 0.5f },
     };
 
@@ -838,7 +838,7 @@ public static class TeaActions
         Area = new() { AdjustTargets = (ctx, hits) => ctx.Target?.IsAlive() == true ? hits : [] },
         Effects =
         [
-            OnTarget(Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f)), ApplyStatus(StatusId.PhysicalVulnerabilityUp, 30f)),
+            OnTarget(Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f, includeBots: true)), ApplyStatus(StatusId.PhysicalVulnerabilityUp, 30f)),
             OnOthers(Damage(Lethal)),
         ],
         Timing = new() { DamageDelay = 0.5f },

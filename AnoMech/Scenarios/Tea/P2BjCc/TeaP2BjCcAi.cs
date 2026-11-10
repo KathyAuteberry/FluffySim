@@ -3,60 +3,51 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Ai;
+using AnoMech.Core.Game.Geometry;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
+using AnoMech.Core.UserActions;
 using static AnoMech.Core.Game.Party.PartyRole;
 using static AnoMech.Scenarios.Tea.TeaConstants;
 
 namespace AnoMech.Scenarios.Tea.P2BjCc;
 
-public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP2BjCcState>
+public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
 {
-    public string Name => lightningThreeToOffTank ? "NAUR (third lightning on OT)" : "NAUR";
+    public string Name => "Healer-first Nisi";
+    public string Group => "Mana";
 
     private const float EdgeRadius = 17.5f;
     private const float ClearOfDash = 7.5f;
     private const float EdgeGap = 3f;
     private const float Clearance = 1.9f;
-    // Real parties keep about this far clear of a puddle's edge.
     private const float PuddleMargin = 1f;
     private const float Touching = 1f;
-    private const float PassSide = 2.6f;
     private const float RobotReach = 1f;
     private const float FlarethrowerAimNorthOfTornado = 10f;
-    private const float ShieldAhead = 4.26f;
-    private const float ShieldFacing = 40f;
+    private const float ShieldFacing = 0f;
     private const float LineupStaging = 3.4f;
     private const float ArenaEdge = 18.8f;
     private const float TornadoClearance = 11f;
 
-    private static readonly Vector2 D = new(-13.75f, 0f);
-    private static readonly Vector2 B = new(13.75f, -8.25f);
-    private static readonly (float From, float Until, Vector2 Spot)[] SettlingTornadoes = [(53.2f, 58.0f, D), (82.9f, 87.7f, B), (112.65f, 117.45f, B)];
+    private static readonly Vector2 D = new(-13.5f, 0f);
+    private static readonly Vector2 OuterEast = new(13.7f, 0f);
+    private static readonly Vector2 InnerEast = new(5.8f, 0f);
+    private static readonly (float From, float Until, Vector2 Spot)[] SettlingTornadoes = [(53.2f, 58.0f, D), (82.9f, 87.7f, OuterEast), (112.65f, 117.45f, InnerEast)];
     private static readonly Vector2 LightningPartnerSpot = new(0f, -17f);
     private static readonly Vector2 LightningHolderSpot = new(3.8f, -15.2f);
     private static readonly Vector2 SpinCrusherBaitSpot = new(-2f, 17.5f);
-    private static readonly Vector2 OffTankMissileSpot = new(-2.6f, 18f);
-    private static readonly Vector2 RangedMissileSpot = new(1.6f, 18.3f);
-    private static readonly Vector2 OffTankMinefieldSpot = new(-2.8f, 12.2f);
-    private static readonly Vector2 RangedMinefieldSpot = new(1.4f, 12.4f);
+    private static readonly Vector2 OffTankMissileSpot = new(0f, 18f);
+    private static readonly Vector2 RangedMissileSpot = new(9f, 15.588f);
+    private static readonly Vector2 OffTankMinefieldSpot = new(0f, 12.2f);
+    private static readonly Vector2 RangedMinefieldSpot = new(6.1f, 10.566f);
     private static readonly Vector2 OffTankIceSpot = new(-12.6f, 9.1f);
     private static readonly Vector2 MainTankIceSpot = new(-11.5f, -11.7f);
     private static readonly Vector2 OutOfOffTankMinefield = new(-9f, 12.2f);
     private static readonly Vector2 OffTankAfterMines = new(1.8f, 11.1f);
-    private static readonly Vector2 WestMeleeSpot = new(-0.9f, -4.5f);
-    private static readonly Vector2 WestSecondMeleeSpot = new(-3.3f, -5.4f);
-    private static readonly Vector2 WestHealerSpot = new(-3f, -1.9f);
-    private static readonly Vector2 EastCasterSpot = new(6.2f, -3.6f);
-    private static readonly Vector2 EastRangedSpot = new(7.9f, -0.4f);
-    private static readonly Vector2 EastHealerSpot = new(5.6f, -1.2f);
-    private static readonly Vector2 EastFlexSpot = new(8.4f, -4.6f);
-    private static readonly Vector2 LightningHealerLineSpot = new(1.8f, -2f);
-    private static readonly Vector2 OtherHealerLineSpot = new(0.5f, 1.5f);
     private static readonly Vector2 MainTankLineSpot = new(0f, -14.8f);
-    private static readonly Vector2[] OutOfTheThirdTornado = [new(1.9f, -2f), new(4.8f, -0.2f), new(4.5f, 3.5f)];
 
-    private static readonly PartyRole[] Dps = [MeleeDpsA, MeleeDpsB, PhysRangedDps, CasterDps];
+    private static readonly PartyRole[] Dps = [MeleeDpsA, PhysRangedDps, MeleeDpsB, CasterDps];
     private static readonly PartyRole[] Supports = [MainTank, OffTank, RegenHealer, ShieldHealer];
 
     private static readonly float[][] EdgeBearings =
@@ -70,11 +61,17 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
     private TeaP2BjCcState state = null!;
     private SimWorld world = null!;
     private AiManager ai = null!;
+    private PartyRole? secondWaterHolder;
+    private PartyRole? thirdWaterHolder;
+    private bool thirdWaterVulnerableStaged;
+    private PartyRole[] thirdWaterOthers = [];
     private readonly Dictionary<PartyRole, Vector2> edgeSpots = [];
     private readonly Dictionary<PartyRole, int> walks = [];
     private readonly Dictionary<PartyRole, int> orders = [];
     private readonly Dictionary<PartyRole, Plan> plans = [];
     private readonly List<Vector2> mineSpots = [];
+    private readonly Dictionary<PartyRole, (PartyRole Partner, float Until)> passContacts = [];
+    private readonly Dictionary<PartyRole, ObstacleField> personalObstacles = [];
 
     public void Run(TeaP2BjCcState stateParam, SimWorld worldParam)
     {
@@ -86,6 +83,14 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         orders.Clear();
         plans.Clear();
         mineSpots.Clear();
+        passContacts.Clear();
+        personalObstacles.Clear();
+        foreach (var role in PerRole.All) Member(role)?.SetMovementObstacles(null);
+        world.Events.Add(90f, KeepNisiClearance);
+        secondWaterHolder = null;
+        thirdWaterHolder = null;
+        thirdWaterVulnerableStaged = false;
+        thirdWaterOthers = [];
 
         ai.Move(0.3f, TakeClockSpots);
         ai.Move(5.1f, LureRobotsToCentre, jitter: 0f);
@@ -96,35 +101,35 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         world.Events.Add(32.3f, ReturnToClockSpots);
 
         foreach (var dps in Dps)
-            Pass(39.9f, dps, () => PartnerOf(dps));
+            Pass(dps == MeleeDpsB ? 48.4f : 39.9f, dps, () => PartnerOf(dps));
 
         world.Events.Add(41.0f, TakeFirstStackSpots);
-        world.Events.Add(41.6f, () =>
-        {
-            if (state.FirstLightning != CasterDps) Go(CasterDps, new Vector2(-10.5f, 4f));
-        });
+        world.Events.Add(45.0f, () => Go(MeleeDpsB, BesideCruiseChaser() + new Vector2(3f, 0f)));
         world.Events.Add(45.9f, () => Go(OffTank, BesideCruiseChaser()));
-        world.Events.Add(48.8f, () => Go(OffTank, OffTankMissileSpot));
+        world.Events.Add(48.7f, ReturnD2AfterFirstPass);
+        world.Events.Add(49.6f, () => Go(OffTank, OffTankMissileSpot));
 
         world.Events.Add(53.9f, LeaveFirstStacks);
-        world.Events.Add(54.6f, () => Go(RegenHealer, ClearOfTornado(0, WestHealerSpot)));
-        world.Events.Add(55.0f, () =>
-        {
-            if (state.FirstLightning != CasterDps) Go(CasterDps, EastCasterSpot);
-        });
-        world.Events.Add(55.1f, () => KeepClearOfTornado(0));
         world.Events.Add(61.95f, () =>
         {
             Go(OffTank, OffTankMinefieldSpot);
             Go(PhysRangedDps, RangedMinefieldSpot);
         });
-        world.Events.Add(63.8f, FlexForEnumerations);
         world.Events.Add(64.0f, () =>
         {
             if (state.IceTank == MainTank) Go(MainTank, MainTankIceSpot);
         });
         world.Events.Add(64.3f, NoteMineSpots);
         world.Events.Add(64.4f, LeaveMinefields);
+        ai.UseAction(65.8f, OffTank, 7531);
+        ai.UseAction(65.9f, OffTank, job => (JobId)job switch
+        {
+            JobId.Paladin or JobId.Gladiator => 17u,
+            JobId.Warrior or JobId.Marauder => 44u,
+            JobId.DarkKnight => 3636u,
+            JobId.Gunbreaker => 16148u,
+            _ => 0u,
+        });
         world.Events.Add(66.9f, () =>
         {
             if (state.IceTank != OffTank) PopMines();
@@ -134,46 +139,47 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
             if (state.IceTank == OffTank) PopMines();
             if (state.IceTank == MainTank) Go(MainTank, LightningPartnerSpot);
         });
-        Pass(69.4f, MeleeDpsB, () => RegenHealer);
+        Pass(69.4f, PhysRangedDps, () => RegenHealer);
         Pass(69.4f, CasterDps, () => ShieldHealer);
         Pass(state.IceTank == MainTank ? 71.9f : 69.4f, MeleeDpsA, () => MainTank);
-        Pass(state.IceTank == OffTank ? 72.0f : 69.6f, PhysRangedDps, () => OffTank);
+        Pass(state.IceTank == OffTank ? 72.0f : 69.6f, MeleeDpsB, () => OffTank);
 
         world.Events.Add(74.3f, TakeSecondStackSpots);
         for (var t = 65.75f; t < 83f; t += 0.5f) world.Events.Add(t, StepOutOfPuddles);
-        world.Events.Add(76.0f, () => Go(state.FirstWater, new Vector2(4.8f, -16.1f)));
-        world.Events.Add(84.0f, () => Go(CasterDps, CasterShieldSpot()));
-        world.Events.Add(84.0f, () => Go(OtherHealer(state.FirstWater), OtherHealerLine()));
-        world.Events.Add(84.0f, () => Go(state.FirstWater, LightningHealerLine()));
-        world.Events.Add(84.8f, () => Go(PhysRangedDps, RangedShieldSpot()));
-        world.Events.Add(84.9f, () => KeepClearOfTornado(1));
+        world.Events.Add(83.7f, LeaveSecondStackSpots);
+        world.Events.Add(84.0f, () => Go(RegenHealer, new Vector2(-6f, -2f)));
+        world.Events.Add(84.0f, () => Go(ShieldHealer, new Vector2(-6f, 2f)));
         world.Events.Add(85.6f, BaitTheFlarethrower);
         world.Events.Add(92.6f, () => Go(MainTank, MainTankLineSpot));
 
-        PassThree(96.8f, PhysRangedDps, PassSide);
-        PassThree(97.0f, MeleeDpsA, -PassSide);
-        PassThree(98.8f, CasterDps, PassSide + 1.2f);
-        PassThree(99.0f, MeleeDpsB, -PassSide - 1.2f);
+        world.Events.Add(92.4f, StageThirdPass);
+        world.Events.Add(93.8f, () => PassThirdSupport(RegenHealer));
+        world.Events.Add(95.8f, () => PassThirdSupport(ShieldHealer));
+        world.Events.Add(99.0f, () => PassThirdSupport(MainTank));
+        world.Events.Add(101.0f, () => PassThirdSupport(OffTank));
 
-        world.Events.Add(103.2f, () =>
-        {
-            Go(MeleeDpsA, new Vector2(7.5f, -11.5f));
-            Go(MeleeDpsB, new Vector2(7f, -7.7f));
-        });
-        world.Events.Add(104.2f, TakeThirdWaterSpots);
+        world.Events.Add(105.0f, StageThirdWaterVulnerable);
+        world.Events.Add(106.0f, TakeThirdWaterSpots);
         world.Events.Add(105.6f, TakeThirdLightningSpots);
-        if (!lightningThreeToOffTank) world.Events.Add(104.6f, () => DragCruiseChaserBehindGaol(125.1f));
-        else world.Events.Add(113.4f, () => DragCruiseChaserBehindGaol(125.1f));
+        world.Events.Add(116.0f, () => DragCruiseChaserBehindGaol(125.1f));
 
         world.Events.Add(113.1f, LeaveTheThirdTornado);
         world.Events.Add(113.4f, LineUpHolders);
-        world.Events.Add(113.7f, () => KeepClearOfTornado(2));
         world.Events.Add(119.0f, StageJoiners);
         foreach (var (at, slot) in new[] { (120.8f, 0), (122.0f, 1), (123.2f, 2), (124.4f, 3) })
             world.Events.Add(at, () => JoinSlot(slot));
         world.Events.Add(125.3f, () => Go(OffTank, SlotApproach(OffTank), LineSlot(OffTank)));
 
         PlanAfterGavel();
+        foreach (var tank in new[] { MainTank, OffTank })
+            ai.UseAction(150f, tank, job => (JobId)job switch
+            {
+                JobId.Paladin or JobId.Gladiator => 3542u,
+                JobId.Warrior or JobId.Marauder => 3551u,
+                JobId.DarkKnight => 7393u,
+                JobId.Gunbreaker => 16161u,
+                _ => 0u,
+            });
         PlanSuperJump();
     }
 
@@ -184,18 +190,12 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         RegenHealer => new(-3f, 0f),
         ShieldHealer => new(3f, 0f),
         MeleeDpsA => new(2.3f, -2f),
-        MeleeDpsB => new(-2.5f, -2.5f),
-        PhysRangedDps => new(-2.1f, 2.4f),
+        PhysRangedDps => new(-2.5f, -2.5f),
+        MeleeDpsB => new(-2.1f, 2.4f),
         _ => new(2.3f, 2.4f),
     };
 
-    private static PartyRole PartnerOf(PartyRole dps) => dps switch
-    {
-        MeleeDpsA => MainTank,
-        MeleeDpsB => RegenHealer,
-        PhysRangedDps => OffTank,
-        _ => ShieldHealer,
-    };
+    private static PartyRole PartnerOf(PartyRole dps) => TeaManaP2Assignments.FirstPairSupport(dps);
 
     private static PartyRole OtherHealer(PartyRole healer) => healer == RegenHealer ? ShieldHealer : RegenHealer;
 
@@ -260,24 +260,72 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
             Go(role, ClockSpot(role));
     }
 
+    private void MoveWaterParty(IReadOnlyList<PartyRole> members, PartyRole holder, Vector2 centre)
+    {
+        Go(holder, centre);
+        Vector2[] offsets = [new(-3f, -2.5f), new(3f, -2.5f), new(0f, 3.5f)];
+        var others = members.Where(r => r != holder).ToArray();
+        for (var i = 0; i < others.Length; i++) Go(others[i], centre + offsets[i]);
+    }
+
+    private void ReturnD2AfterFirstPass()
+    {
+        var letter = NisiOf(MeleeDpsB);
+        if (letter is null || NisiOf(OffTank) != letter)
+        {
+            if (world.Events.Elapsed < 51f) world.Events.Add(.1f, ReturnD2AfterFirstPass);
+            return;
+        }
+        if (state.FirstLightning == MeleeDpsB) Go(MeleeDpsB, new Vector2(5.5f, 0f), LightningHolderSpot);
+        else
+        {
+            var others = FirstWaterDps().ToList();
+            Vector2[] offsets = [new(-3f, -2.5f), new(3f, -2.5f), new(0f, 3.5f)];
+            Go(MeleeDpsB, D + offsets[others.IndexOf(MeleeDpsB)]);
+        }
+    }
+
+    private void StageThirdPass()
+    {
+        var line = TeaManaP2Assignments.ThirdPassLine;
+        for (var i = 0; i < line.Count; i++)
+        {
+            var role = line[i];
+            Go(role, new Vector2(0f, -14f + i * 5.2f));
+        }
+        Go(RegenHealer, new Vector2(-6f, -2f));
+        Go(ShieldHealer, new Vector2(-6f, 2f));
+    }
+
+    private void PassThirdSupport(PartyRole support)
+    {
+        var dps = Dps.FirstOrDefault(d => PassThreePartner(d) == support);
+        if (PassThreePartner(dps) != support) return;
+        var side = support.IsTank() ? 3f : -3f;
+        PassNow(dps, support, side, () => SideOf(support, side));
+    }
+
     private void TakeFirstStackSpots()
     {
-        var water = state.FirstWater;
-        var lightning = state.FirstLightning;
         Go(MainTank, LightningPartnerSpot);
         Go(OffTank, SpinCrusherBaitSpot);
-        Go(water, D);
-        Go(OtherHealer(water), water == ShieldHealer ? new Vector2(-12.5f, -4.5f) : new Vector2(-9f, -1f));
-        if (lightning != MeleeDpsA) Go(MeleeDpsA, new Vector2(1.8f, -4.7f));
-        if (lightning != MeleeDpsB) Go(MeleeDpsB, new Vector2(-2.1f, -5.3f));
-        if (lightning != PhysRangedDps) Go(PhysRangedDps, new Vector2(-13.6f, 3.4f));
-        Go(lightning, LightningRouteToMainTank(lightning));
+        if (state.FirstWater == RegenHealer) Go(RegenHealer, D);
+        else Go(ShieldHealer, new Vector2(3f, 4f), new Vector2(-9f, 4f), D);
+        var water = FirstWaterDps();
+        Go(water[0], new Vector2(-8f, -8f), new Vector2(-17f, -6f), D + new Vector2(-3f, -2.5f));
+        Go(water[1], new Vector2(-6f, -5f), D + new Vector2(3f, -2.5f));
+        Go(water[2], new Vector2(3f, 7f), new Vector2(-7f, 8f), D + new Vector2(0f, 3.5f));
+        Go(state.FirstLightning, LightningRouteToMainTank(state.FirstLightning));
     }
+
+    private PartyRole[] FirstWaterDps()
+        => new[] { PhysRangedDps, MeleeDpsA, CasterDps, MeleeDpsB }.Where(r => r != state.FirstLightning).ToArray();
 
     private static Vector2[] LightningRouteToMainTank(PartyRole holder) => holder switch
     {
-        CasterDps => [new(5.5f, -6f), LightningHolderSpot],
-        PhysRangedDps => [new(-6f, 9f), new(-17.8f, 5f), new(-17.8f, -5.5f), new(-9f, -12.5f), new(3.8f, -12.5f), LightningHolderSpot],
+        CasterDps => [new(6f, -8f), LightningHolderSpot],
+        PhysRangedDps => [new(-2f, -10f), LightningHolderSpot],
+        MeleeDpsB => [new(-6f, 9f), new(-17.8f, 5f), new(-17.8f, -5.5f), new(-9f, -12.5f), new(3.8f, -12.5f), LightningHolderSpot],
         _ => [LightningHolderSpot],
     };
 
@@ -290,26 +338,28 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
 
     private void LeaveFirstStacks()
     {
-        var lightning = state.FirstLightning;
-        Go(ShieldHealer, EastHealerSpot);
-        Go(MeleeDpsA, WestMeleeSpot);
-        Go(MeleeDpsB, WestSecondMeleeSpot);
-        if (lightning == CasterDps) Go(CasterDps, EastCasterSpot);
-        Go(PhysRangedDps, lightning == PhysRangedDps
-            ? [new Vector2(9.5f, -11f), new Vector2(9.5f, 9f), RangedMissileSpot]
-            : [RangedMissileSpot]);
+        var water = FirstWaterDps();
+        GoAvoiding(water[0], [new Vector2(-7f, -5.5f), new Vector2(-3.5f, -5.5f)], null, 0f, null);
+        GoAvoiding(water[1], [new Vector2(3.5f, -2.5f)], null, 0f, null);
+        GoAvoiding(water[2], [new Vector2(-5f, 6f), new Vector2(3.5f, 5.5f)], null, 0f, null);
+        GoAvoiding(state.FirstLightning, [new Vector2(8f, -10f), new Vector2(8f, 3f)], null, 0f, null);
+        world.Events.Add(.5f, () => GoAvoiding(RegenHealer, [new Vector2(-2.5f, -1.5f)], null, 0f, null));
+        world.Events.Add(.8f, () => GoAvoiding(ShieldHealer, [new Vector2(-2.5f, 2f)], null, 0f, null));
+        world.Events.Add(3f, () => Go(PhysRangedDps, RangedMissileSpot));
     }
 
     private void FlexForEnumerations()
     {
-        if (!EnumerationsNeedFlex()) return;
-        Go(MeleeDpsA, new Vector2(3.5f, -7.5f), EastFlexSpot);
-    }
-
-    private bool EnumerationsNeedFlex()
-    {
-        var marked = Dps.Where(r => state.Enumerations.Contains(r)).ToList();
-        return marked.Count == 2 && (marked.All(r => r is MeleeDpsA or MeleeDpsB) || marked.All(r => r is PhysRangedDps or CasterDps));
+        var (west, east) = TeaManaP2Assignments.EnumerationParties(state.Enumerations);
+        var westDps = west.Single(r => r.IsDps());
+        var eastMarked = east.Single(state.Enumerations.Contains);
+        Go(RegenHealer, new Vector2(-7f, -2f));
+        Go(ShieldHealer, new Vector2(-7f, 2f));
+        Go(westDps, new Vector2(-4f, 0f));
+        Go(eastMarked, new Vector2(4f, 0f));
+        var others = east.Where(r => r != eastMarked).ToArray();
+        Go(others[0], new Vector2(7f, -2f));
+        Go(others[1], new Vector2(7f, 2f));
     }
 
     private void NoteMineSpots()
@@ -323,7 +373,7 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
 
     private void LeaveMinefields()
     {
-        Go(PhysRangedDps, EnumerationsNeedFlex() ? WestMeleeSpot : EastRangedSpot);
+        FlexForEnumerations();
         Go(OffTank, state.IceTank == OffTank ? OffTankIceSpot : OutOfOffTankMinefield);
     }
 
@@ -335,20 +385,50 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         GoAvoiding(OffTank, [.. order, OffTankAfterMines], null, 0f, null);
     }
 
-    // With the ice north-west, the melee stand east of it as real parties do.
     private void TakeSecondStackSpots()
     {
-        var iceNorthWest = state.IceTank == MainTank;
-        Go(MeleeDpsA, iceNorthWest ? new Vector2(-2f, -4.2f) : new Vector2(-5f, -7f));
-        Go(MeleeDpsB, iceNorthWest ? new Vector2(0.3f, -5.6f) : new Vector2(-2.4f, -5.1f));
-        var water = Holder(StatusId.CompressedWater);
-        var other = OtherHealer(state.FirstWater);
-        foreach (var role in new[] { other, CasterDps, PhysRangedDps })
+        if (Holder(StatusId.CompressedWater) is not { } water) return;
+        secondWaterHolder = water;
+        var others = TeaManaP2Assignments.Dps.Where(r => r != water).ToArray();
+        MoveToSecondWaterAfterPass(water, OuterEast);
+        Vector2[] offsets = [new(-3f, -2.5f), new(3f, -2.5f), new(0f, 3.5f)];
+        for (var i = 0; i < others.Length; i++) MoveToSecondWaterAfterPass(others[i], OuterEast + offsets[i]);
+        MoveTankAfterSecondPass(MainTank, LightningPartnerSpot);
+        Go(RegenHealer, LightningHolderSpot);
+        Go(ShieldHealer, new Vector2(-5f, 0f));
+        MoveTankAfterSecondPass(OffTank, FacingSpotForShield());
+    }
+
+    private bool PairHasPassed(PartyRole dps)
+        => NisiOf(dps) is { } letter && NisiOf(PartnerOf(dps)) == letter;
+
+    private void MoveToSecondWaterAfterPass(PartyRole role, Vector2 destination)
+    {
+        if (PairHasPassed(role))
         {
-            var spot = role == water ? B : role == other ? new Vector2(10f, -5.6f) : role == CasterDps ? new Vector2(12.4f, -3.4f) : new Vector2(14.8f, -4.8f);
-            world.Events.Add(role == PhysRangedDps ? 1.6f : 0f, () => Go(role, spot));
+            Go(role, destination);
+            return;
         }
-        Go(OffTank, FacingSpotForShield());
+        if (world.Events.Elapsed > 80f) return;
+        PassNow(role, PartnerOf(role), 0f, null);
+        world.Events.Add(.25f, () => MoveToSecondWaterAfterPass(role, destination));
+    }
+
+    private void MoveTankAfterSecondPass(PartyRole tank, Vector2 destination)
+    {
+        var dps = tank == MainTank ? MeleeDpsA : MeleeDpsB;
+        if (PairHasPassed(dps)) Go(tank, destination);
+        else if (world.Events.Elapsed < 80f) world.Events.Add(.25f, () => MoveTankAfterSecondPass(tank, destination));
+    }
+
+    private void LeaveSecondStackSpots()
+    {
+        if (secondWaterHolder is not { } holder) return;
+        var others = TeaManaP2Assignments.Dps.Where(r => r != holder).ToArray();
+        GoAvoiding(others[0], [new Vector2(-4f, 0f)], null, 0f, null);
+        GoAvoiding(holder, [new Vector2(-1f, 3f)], null, 0f, null);
+        GoAvoiding(others[1], [new Vector2(16f, -10f), new Vector2(8f, -11f), new Vector2(-2f, -5f)], null, 0f, null);
+        GoAvoiding(others[2], [new Vector2(10f, 10f), new Vector2(0f, 8f)], null, 0f, null);
     }
 
     private Vector2 FacingSpotForShield()
@@ -357,35 +437,6 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         var stop = cruiseChaser.HitboxRadius + offTank.HitboxRadius + RobotReach;
         return Flat(cruiseChaser.Position) + Polar(ShieldFacing, 1f) * (stop - 0.9f);
     }
-
-    private (Vector2 At, Vector2 Facing) ExpectedShield()
-    {
-        if (state.Objects.CruiseChaser is not { } cruiseChaser) return (new Vector2(0.3f, 8.1f), Polar(ShieldFacing, 1f));
-        var facing = Forward(cruiseChaser.Rotation);
-        return (Flat(cruiseChaser.Position) + facing * ShieldAhead, facing);
-    }
-
-    private Vector2 RangedShieldSpot() => ShieldSpot(-20f, 5.2f, CasterShieldSpot());
-
-    private Vector2 CasterShieldSpot() => ShieldSpot(20f, 6.8f, null);
-
-    private Vector2 ShieldSpot(float degrees, float distance, Vector2? besides)
-    {
-        var (at, facing) = ExpectedShield();
-        var keepClear = new List<Vector2> { LightningHealerLine(), OtherHealerLine(), FacingSpotForShield() };
-        if (besides is { } other) keepClear.Add(other);
-        foreach (var (turn, reach) in from turn in new[] { 0f, -8f, 8f, -16f, 16f } from reach in new[] { 0f, 1.5f, -1f, 3f } select (turn, reach))
-        {
-            var spot = at + Rotate(facing, degrees + turn) * (distance + reach);
-            if (spot.Length() <= ArenaEdge && keepClear.All(k => Vector2.Distance(k, spot) >= 2.8f)
-                && Vector2.Distance(spot, TornadoSpot(1)) >= TornadoClearance) return spot;
-        }
-        return at + Rotate(facing, degrees) * distance;
-    }
-
-    private Vector2 LightningHealerLine() => ClearOfTornado(1, LightningHealerLineSpot);
-
-    private Vector2 OtherHealerLine() => ClearOfTornado(1, OtherHealerLineSpot);
 
     private void BaitTheFlarethrower()
     {
@@ -405,13 +456,6 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         return from + toward * 1.1f;
     }
 
-    private void PassThree(float time, PartyRole dps, float side)
-        => world.Events.Add(time, () =>
-        {
-            if (PassThreePartner(dps) is not { } support) return;
-            PassNow(dps, support, side, () => SideOf(support, side));
-        });
-
     private PartyRole? PassThreePartner(PartyRole dps)
     {
         if (state.NisiOnDps)
@@ -421,31 +465,40 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
 
     private Vector2 SideOf(PartyRole support, float side) => At(support) + new Vector2(side, 0f);
 
-    private PartyRole? Vulnerable() => new[] { OtherHealer(state.FirstWater), CasterDps, PhysRangedDps }
+    private PartyRole? Vulnerable() => Dps
         .Where(r => Member(r) is { } m && m.ShowsStatus(StatusId.WaterResistanceDownIIP2)).Cast<PartyRole?>().FirstOrDefault();
+
+    private void StageThirdWaterVulnerable()
+    {
+        if (thirdWaterVulnerableStaged || Vulnerable() is not { } vulnerable) return;
+        var transferred = state.NisiOnDps
+            ? NisiOf(vulnerable) is { } held && Supports.Any(s => JudgmentOf(s) == held && NisiOf(s) == held)
+            : NisiOf(vulnerable) is { } received && received == JudgmentOf(vulnerable);
+        if (!transferred)
+        {
+            if (world.Events.Elapsed < 109f) world.Events.Add(.1f, StageThirdWaterVulnerable);
+            return;
+        }
+        thirdWaterVulnerableStaged = true;
+        Go(vulnerable, new Vector2(-8f, At(vulnerable).Y), new Vector2(-8f, 8f), new Vector2(-5f, 8f));
+    }
 
     private void TakeThirdWaterSpots()
     {
-        var water = Holder(StatusId.CompressedWater);
-        var vulnerable = Vulnerable();
-        var stack = new[] { OtherHealer(state.FirstWater), CasterDps, PhysRangedDps }.Where(r => r != vulnerable).OrderBy(r => r == water ? 0 : 1).ToList();
-        for (var k = 0; k < stack.Count; k++)
-        {
-            var role = stack[k];
-            world.Events.Add(0.7f * k, () => Go(role, role == water ? B : new Vector2(11.8f, -4.6f)));
-        }
+        if (Holder(StatusId.CompressedWater) is not { } water || Vulnerable() is not { } vulnerable) return;
+        var members = TeaManaP2Assignments.WaterParty(3, state.FirstWater, state.FirstLightning, vulnerable);
+        thirdWaterHolder = water;
+        thirdWaterOthers = members.Where(r => r != water).ToArray();
+        if (!thirdWaterVulnerableStaged) StageThirdWaterVulnerable();
+        MoveWaterParty(members, water, InnerEast);
     }
 
     private void TakeThirdLightningSpots()
     {
-        var healer = Holder(StatusId.CompressedLightning) ?? state.FirstWater;
-        if (Vulnerable() is { } vulnerable) Go(vulnerable, new Vector2(9f, 6.2f));
-        if (lightningThreeToOffTank)
-        {
-            Go(OffTank, new Vector2(-13f, 8.5f));
-            world.Events.Add(2.4f, () => Go(healer, new Vector2(-10.2f, 9.6f)));
-        }
-        else Go(healer, new Vector2(6f, 8.6f));
+        var healer = Holder(StatusId.CompressedLightning) ?? RegenHealer;
+        Go(healer, new Vector2(-13.5f, -1.5f));
+        Go(OtherHealer(healer), new Vector2(-13.5f, 1.5f));
+        Go(MainTank, new Vector2(0f, -13f));
     }
 
     private void DragCruiseChaserBehindGaol(float until)
@@ -457,12 +510,12 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
             if (now >= until || state.Objects.CruiseChaser is not { } cruiseChaser || Member(OffTank) is not { } offTank) return;
             var pillar = GaolSpot();
             var stop = cruiseChaser.HitboxRadius + offTank.HitboxRadius + RobotReach;
-            var want = pillar + new Vector2(-1.35f, -0.4f);
+            var want = pillar + new Vector2(0f, 5.5f);
             var at = Flat(cruiseChaser.Position);
             if (!started)
             {
                 started = true;
-                Go(OffTank, pillar + new Vector2(-5.25f, 1.2f), pillar + new Vector2(-3.25f, -6.6f));
+                Go(OffTank, pillar + new Vector2(8f, 11f), pillar + new Vector2(0f, 12f));
                 world.Events.Add(4.5f, Look);
                 return;
             }
@@ -478,105 +531,52 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         Look();
     }
 
-    private static float SlotOffset(NisiLetter letter) => letter switch
-    {
-        NisiLetter.Alpha => 3.2f,
-        NisiLetter.Gamma => 6.6f,
-        NisiLetter.Beta => 10f,
-        _ => 13.4f,
-    };
-
-    private static int SlotOrder(NisiLetter letter) => letter switch
-    {
-        NisiLetter.Alpha => 0,
-        NisiLetter.Gamma => 1,
-        NisiLetter.Beta => 2,
-        _ => 3,
-    };
-
     private Vector2 GaolSpot()
         => state.Objects.GelidGaol is { IsActive: true } gaol ? Flat(gaol.Position)
             : state.Objects.Tornadoes.FirstOrDefault() is { IsActive: true } first ? Flat(first.Position)
             : D;
 
-    private Vector2 LineSlot(PartyRole role) => JudgmentOf(role) is { } letter ? GaolSpot() + new Vector2(SlotOffset(letter), 0f) : GaolSpot() + new Vector2(8f, 3f);
+    private Vector2 LineSlot(PartyRole role)
+    {
+        var support = role.IsDps()
+            ? TeaManaP2Assignments.FinalSupportLine.FirstOrDefault(s => JudgmentOf(s) == JudgmentOf(role))
+            : role;
+        var index = TeaManaP2Assignments.FinalSupportLine.ToList().IndexOf(support);
+        return GaolSpot() + new Vector2(1.5f, -3.5f - 3.2f * (3 - index));
+    }
 
-    private Vector2 SlotApproach(PartyRole role) => LineSlot(role) - new Vector2(0f, LineupStaging);
+    private Vector2 SlotApproach(PartyRole role) => LineSlot(role) + new Vector2(LineupStaging, 0f);
 
-    private Vector2 SlotStaging(PartyRole role) => LineSlot(role) + new Vector2(0f, LineupStaging);
-
-    private bool HoldsOwnJudgment(PartyRole role) => JudgmentOf(role) is { } letter && NisiOf(role) == letter;
+    private Vector2 SlotStaging(PartyRole role) => LineSlot(role) + new Vector2(LineupStaging * 2f, 0f);
 
     private void LeaveTheThirdTornado()
     {
-        var tornado = TornadoSpot(2);
-        var k = 0;
-        foreach (var role in PerRole.All.Where(r => Member(r) is not null && Vector2.Distance(At(r), tornado) < TornadoClearance).OrderBy(r => Vector2.Distance(At(r), tornado)))
-        {
-            var spot = role switch
-            {
-                MeleeDpsA => new Vector2(2.5f, -16.4f),
-                MeleeDpsB => new Vector2(-1.5f, -6.5f),
-                _ => OutOfTheThirdTornado[Math.Min(k++, OutOfTheThirdTornado.Length - 1)],
-            };
-            GoAvoiding(role, [ClearOfTornado(2, spot)], null, 0f, null);
-        }
+        if (thirdWaterHolder is not { } holder || thirdWaterOthers.Length != 3) return;
+        GoAvoiding(thirdWaterOthers[0], [new Vector2(0f, 12f)], null, 0f, null);
+        GoAvoiding(thirdWaterOthers[1], [new Vector2(8f, -13f)], null, 0f, null);
+        GoAvoiding(thirdWaterOthers[2], [new Vector2(9f, 12f)], null, 0f, null);
+        world.Events.Add(.6f, () => GoAvoiding(holder, [new Vector2(-6f, 0f)], null, 0f, null));
     }
 
     private Vector2 TornadoSpot(int k) => state.Objects.Tornadoes.ElementAtOrDefault(k) is { } rage ? Flat(rage.Position) : SettlingTornadoes[k].Spot;
 
-    private Vector2 ClearOfTornado(int k, Vector2 spot)
-    {
-        var tornado = TornadoSpot(k);
-        var away = spot - tornado;
-        if (away.Length() >= TornadoClearance) return spot;
-        var outward = away.LengthSquared() > 1e-4f ? Vector2.Normalize(away) : tornado.LengthSquared() > 1e-4f ? -Vector2.Normalize(tornado) : Vector2.UnitX;
-        var clear = tornado + outward * TornadoClearance;
-        return clear.Length() > ArenaEdge ? Vector2.Normalize(clear) * ArenaEdge : clear;
-    }
-
-    private void KeepClearOfTornado(int k)
-    {
-        var now = world.Events.Elapsed;
-        if (state.Objects.Tornadoes.Count <= k)
-        {
-            if (now < SettlingTornadoes[k].Until - 1f) world.Events.Add(0.1f, () => KeepClearOfTornado(k));
-            return;
-        }
-        foreach (var role in PerRole.All)
-        {
-            if (Member(role) is not { } member) continue;
-            var to = plans.TryGetValue(role, out var plan) && plan.End > now ? plan.Destination : Flat(member.Position);
-            var clear = ClearOfTornado(k, to);
-            if (Vector2.Distance(clear, to) > 0.1f) GoAvoiding(role, [clear], null, 0f, null);
-        }
-    }
-
     private void LineUpHolders()
     {
-        var holders = PerRole.All.Where(r => r != OffTank && HoldsOwnJudgment(r)).OrderBy(r => JudgmentOf(r) is { } l ? SlotOrder(l) : 9).ToList();
-        for (var k = 0; k < holders.Count; k++)
-        {
-            var role = holders[k];
-            world.Events.Add(1.4f * k, () => Go(role, SlotApproach(role), LineSlot(role)));
-        }
+        foreach (var role in TeaManaP2Assignments.FinalSupportLine.Where(r => r != OffTank))
+            Go(role, SlotApproach(role), LineSlot(role));
     }
 
     private void StageJoiners()
     {
-        var joiners = PerRole.All.Where(r => r != OffTank && !HoldsOwnJudgment(r)).OrderBy(r => JudgmentOf(r) is { } l ? SlotOrder(l) : 9).ToList();
-        for (var k = 0; k < joiners.Count; k++)
-        {
-            var role = joiners[k];
-            world.Events.Add(0.8f * k, () => Go(role, SlotStaging(role)));
-        }
+        foreach (var role in TeaManaP2Assignments.Dps)
+            Go(role, SlotStaging(role));
     }
 
     private void JoinSlot(int order)
     {
-        foreach (var role in PerRole.All)
-            if (role != OffTank && !HoldsOwnJudgment(role) && JudgmentOf(role) is { } letter && SlotOrder(letter) == order)
-                Go(role, LineSlot(role));
+        var support = TeaManaP2Assignments.FinalSupportLine[order];
+        foreach (var role in TeaManaP2Assignments.Dps)
+            if (JudgmentOf(role) == JudgmentOf(support)) Go(role, LineSlot(role));
     }
 
     private void PlanAfterGavel()
@@ -588,8 +588,8 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
             Go(RegenHealer, new Vector2(-9.1f, 7.2f));
             Go(ShieldHealer, new Vector2(-7.2f, -1.7f));
             Go(MeleeDpsA, new Vector2(-7.2f, 3.1f));
-            Go(MeleeDpsB, new Vector2(-6.3f, 0.2f));
-            Go(PhysRangedDps, new Vector2(-3.5f, 1.5f));
+            Go(PhysRangedDps, new Vector2(-6.3f, 0.2f));
+            Go(MeleeDpsB, new Vector2(-3.5f, 1.5f));
             Go(CasterDps, new Vector2(-8.4f, 5.4f));
         });
     }
@@ -644,12 +644,66 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
     private void PassNow(PartyRole role, PartyRole other, float side, Func<Vector2>? backTo)
     {
         if (Member(other) is not { } target) return;
+        passContacts[role] = (other, world.Events.Elapsed + 8f);
         var at = Flat(target.Position);
         var stops = side != 0f ? new[] { at + new Vector2(side, 0f), at } : new[] { at };
         GoAvoiding(role, stops, other, MaxWait, seconds =>
         {
-            if (backTo is not null) world.Events.Add(seconds + 0.5f, () => Go(role, backTo()));
+            if (backTo is null) return;
+            var order = orders.GetValueOrDefault(role);
+            world.Events.Add(seconds + 0.5f, () =>
+            {
+                if (orders.GetValueOrDefault(role) == order) Go(role, backTo());
+            });
         });
+    }
+
+    private void KeepNisiClearance()
+    {
+        var now = world.Events.Elapsed;
+        foreach (var (role, contact) in passContacts.ToArray())
+            if (contact.Until <= now || NisiOf(role) is { } held && held == NisiOf(contact.Partner)) passContacts.Remove(role);
+        foreach (var role in PerRole.All)
+        {
+            if (Member(role) is not { } member)
+            {
+                personalObstacles.Remove(role);
+                continue;
+            }
+            if (!world.Party.IsBotDriven(member) || now >= 134f)
+            {
+                member.SetMovementObstacles(null);
+                personalObstacles.Remove(role);
+                continue;
+            }
+            if (!personalObstacles.TryGetValue(role, out var field)) personalObstacles[role] = field = new ObstacleField();
+            field.Clear();
+            field.Add(new ArenaBoundary());
+            foreach (var obstacle in world.Obstacles.All) field.Add(obstacle);
+            var mine = NisiOf(role);
+            foreach (var other in PerRole.All)
+            {
+                if (other == role || Member(other) is not { } neighbour || !neighbour.IsAlive()) continue;
+                var theirs = NisiOf(other);
+                if (mine == theirs || CanTouch(role, other, now) || CanTouch(other, role, now)) continue;
+                field.Add(new CircleObstacle(At(other), member.HitboxRadius + neighbour.HitboxRadius + .45f));
+            }
+            member.SetMovementObstacles(field);
+        }
+        if (now < 134f) world.Events.Add(.02f, KeepNisiClearance);
+    }
+
+    private sealed class ArenaBoundary : IObstacle
+    {
+        public float SignedDistance(Vector2 p) => ArenaEdge - p.Length();
+        public Vector2 Normal(Vector2 p) => p.LengthSquared() > .001f ? -Vector2.Normalize(p) : Vector2.UnitY;
+    }
+
+    private bool CanTouch(PartyRole role, PartyRole other, float now)
+    {
+        if (NisiOf(role) is { } mine && NisiOf(other) is { } theirs && mine != theirs) return false;
+        return passContacts.TryGetValue(role, out var contact) && contact.Partner == other && contact.Until > now
+            || now >= 119f && JudgmentOf(role) is { } wanted && wanted == JudgmentOf(other);
     }
 
     private void Go(PartyRole role, params Vector2[] stops) => GoAvoiding(role, stops, null, NearASettlingTornado(role) ? 0f : MaxWait, null);
@@ -758,7 +812,6 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         return timed.Count > 0 ? timed[^1].Eta - now : 0f;
     }
 
-    // Out of any puddle it starts in by the shortest way, then around the rest.
     private static List<Vector2> Route(Vector2 from, IReadOnlyList<Vector2> stops, IReadOnlyList<Vector2> obstacles, IReadOnlyList<Obstacle> puddles)
     {
         var path = new List<Vector2>();
@@ -776,7 +829,6 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         return path;
     }
 
-    // The puddles on the floor as the bots see them, widened by the margin they keep.
     private List<Obstacle> Puddles()
         => world.Children.OfType<SimEventObject>().Where(o => o.IsActive)
             .Select(o => new Obstacle(Flat(o.Position), PuddleRadius(o.EObjRowId) + PuddleMargin))
@@ -802,7 +854,6 @@ public sealed class TeaP2BjCcAi(bool lightningThreeToOffTank) : IScenarioAi<TeaP
         return spot;
     }
 
-    // A puddle landing on a bot sends it out and on round it, unless its walk already keeps clear.
     private void StepOutOfPuddles()
     {
         var puddles = Puddles();

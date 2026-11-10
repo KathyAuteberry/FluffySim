@@ -118,7 +118,7 @@ The installed jj is 0.46.0. Its revset parser does not accept the proposed `all:
 with nine explicit `-o` destinations, the original eight feature changes plus `master@upstream`.
 No feature branch was individually rebased onto upstream.
 
-The imported code retains upstream authorship/ancestry and the existing `LICENSE.md` (AGPLv3).
+The imported code retains upstream authorship/ancestry and the existing `docs/legal/LICENSE.md` (AGPLv3).
 No new third-party dependency or licensing change was introduced.
 
 ## Semantic conflict resolutions

@@ -1,0 +1,71 @@
+# Runtime dependency notices
+
+AnoMech and FluffySim: AGPL-3.0-or-later, see docs/legal/LICENSE.md and docs/user-guide/README.md for attribution.
+AnoMech.Relay is part of the same source distribution.
+
+## NAudio.Core / NAudio.WinMM 2.2.1
+
+MIT license; package copyright © Mark Heath 2023.
+Project: https://github.com/naudio/NAudio
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+## NVorbis 0.10.5
+
+Project: https://github.com/NVorbis/NVorbis
+
+MIT License
+
+Copyright (c) 2020 Andrew Ward
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+## AsuMech DSR P3 adaptation
+
+Nidhogg assignment state, practice controls and the initial bot routing structure were adapted from Asunnya/AsuMech, commit b7a31b630ebae5e1076f65ed069f3a50dda64272, under the existing AGPL license. Elemental routes, EnemyAction mechanics and local lifecycle integration are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr/P3Nidhogg . Preserve AnoMech and AsuMech attribution and the accompanying docs/legal/LICENSE.md when distributing corresponding source.
+
+## AsuMech DSR P4 adaptation
+
+Eyes encounter state, orb/tether logic and bot route structure were adapted from Asunnya/AsuMech commit b7a31b630ebae5e1076f65ed069f3a50dda64272 under AGPL-3.0-or-later. Elemental allocations, North-relative swaps, EnemyAction integration and Haurchefant rescue are FluffySim adaptations. Rescue geometry and HMRT routing also reference the Pure of Heart portion of AsuMech's P1 source. Corresponding source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr . Preserve original attribution, docs/legal/LICENSE.md and matching modified source on distribution.
+
+## AsuMech DSR P5 adaptation
+
+P5 assignment state and bot-routing structure were adapted from Asunnya/AsuMech commit b7a31b630ebae5e1076f65ed069f3a50dda64272, P5Wrath/P5Death, under AGPL-3.0-or-later. Elemental assignments, modern EnemyAction mechanics, native lifecycle integration and practice final resolution are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr . Preserve original attribution, docs/legal/LICENSE.md and matching modified source when distributing.
+
+## AsuMech DSR P6 adaptation
+
+Double Dragons assignment state, overrides, timeline and initial bot routing structure were adapted from Asunnya/AsuMech, commit b7a31b630ebae5e1076f65ed069f3a50dda64272, under AGPL. Elemental triangle/5-1, Wroth priorities, Mortal Vow handoffs and modern EnemyAction resolution are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr/P6DoubleDragons . Preserve upstream attribution and docs/legal/LICENSE.md with corresponding source.
+
+## AsuMech DSR P1 adaptation
+
+Holy See assignment state, route structure and reference clocks adapted from Asunnya/AsuMech b7a31b630ebae5e1076f65ed069f3a50dda64272/P1Knights under AGPL-3.0-or-later. Elemental south-first/role assignments and EnemyAction/lifecycle implementation are FluffySim adaptations. Source: https://github.com/Asunnya/AsuMech/tree/b7a31b630ebae5e1076f65ed069f3a50dda64272/AnoMech/Scenarios/Dsr/P1Knights . Preserve original attribution, docs/legal/LICENSE.md and matching modified source on distribution.

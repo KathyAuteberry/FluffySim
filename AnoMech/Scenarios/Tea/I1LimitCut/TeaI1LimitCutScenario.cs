@@ -15,7 +15,7 @@ namespace AnoMech.Scenarios.Tea.I1LimitCut;
 
 // The intermission after Living Liquid's death, to Brute Justice and Cruise Chaser turning
 // targetable. Scenario time 0 is the death.
-public sealed class TeaI1LimitCutScenario : IMultiplayerReplayable
+public class TeaI1LimitCutScenario : IMultiplayerReplayable
 {
     // The engine builds a spawned actor up to ~0.3s later and drops an instant cast made before then.
     private const float BlastHelperLead = 1f;
@@ -27,10 +27,14 @@ public sealed class TeaI1LimitCutScenario : IMultiplayerReplayable
     // teleport on his own spot first; real turns land up to 0.14s before the hit.
     private const float TurnLead = 0.13f;
 
+    private readonly IScenarioAi<TeaI1LimitCutState> strategy;
+    public TeaI1LimitCutScenario() : this(new TeaI1LimitCutAi()) { }
+    protected TeaI1LimitCutScenario(IScenarioAi<TeaI1LimitCutState> strategy) => this.strategy = strategy;
+
     public string Name => "Limit Cut";
     public IPhase Phase => TeaZone.I1;
     public bool SupportsMultiplayer => true;
-    public IReadOnlyList<IScenarioAi> AiStrats => [new TeaI1LimitCutAi()];
+    public IReadOnlyList<IScenarioAi> AiStrats => [strategy];
     public void DrawSettings() => settingsWindow.Draw();
     public bool HasPerPlayerSettings => true;
     public void DrawPerPlayerSettings() => settingsWindow.DrawPerPlayer();

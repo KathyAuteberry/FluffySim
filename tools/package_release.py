@@ -7,6 +7,72 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
+DOCUMENTATION = (
+    'AGENTS.md',
+    'README.md',
+    'docs/NEXT-UPSTREAM-AUDIT.md',
+    'docs/README.md',
+    'docs/development/AGENTS.md',
+    'docs/development/HARD-DIFFICULTY-AUDIT.md',
+    'docs/development/JOB-RECAST-AUDIT.md',
+    'docs/development/NEXT-DEVELOPMENT-AUDIT.md',
+    'docs/encounters/dsr-sanctity-meteors-events.json',
+    'docs/encounters/dsr-sanctity-meteors-evidence.md',
+    'docs/encounters/dsr-sanctity-tower-height.md',
+    'docs/encounters/dsr/P3-PRESENTATION-AUDIT.md',
+    'docs/encounters/dsr/P7-PORT.md',
+    'docs/encounters/dsr/ROADMAP.md',
+    'docs/encounters/fru/ROADMAP.md',
+    'docs/features/spectator/COVERAGE.md',
+    'docs/features/spectator/DEVELOPMENT-GARAGE.md',
+    'docs/features/spectator/DEVELOPMENT-P3.md',
+    'docs/features/spectator/MODE.md',
+    'docs/features/spectator/PARTY-PROJECTION.md',
+    'docs/integration/UPSTREAM-INTEGRATION.md',
+    'docs/integration/UPSTREAM-QA-INTEGRATION-2026-10-21.md',
+    'docs/legal/AI-DECLARATION.md',
+    'docs/legal/LICENSE.md',
+    'docs/legal/THIRD-PARTY-NOTICES.md',
+    'docs/releases/CHANGELOG.md',
+    'docs/releases/RELEASING.md',
+    'docs/research/asumech-comparison.md',
+    'docs/research/dsr-eyes.md',
+    'docs/research/dsr-inventory.md',
+    'docs/research/dsr-native-repairs.md',
+    'docs/research/dsr-nidhogg.md',
+    'docs/research/dsr-p1.md',
+    'docs/research/dsr-p5.md',
+    'docs/research/dsr-p6.md',
+    'docs/research/dsr-practice-cooldowns.md',
+    'docs/research/dsr-progress.md',
+    'docs/research/fru-clear-audit-2026-10-31.md',
+    'docs/research/fru-completionist.md',
+    'docs/research/fru-native-capture-inventory.md',
+    'docs/research/fru-native-playtest.md',
+    'docs/research/fru-second-clear-audit-2026-11-01.md',
+    'docs/safety/OFFLINE-DSR-REPAIR.md',
+    'docs/safety/PACKET-FILTER-AUDIT.md',
+    'docs/safety/PAUSE-INVESTIGATION.md',
+    'docs/tea/EVIDENCE.md',
+    'docs/tea/IMPLEMENTATION.md',
+    'docs/tea/LIMIT-CUT.md',
+    'docs/tea/P1.md',
+    'docs/tea/P2.md',
+    'docs/tea/P3.md',
+    'docs/tea/P4.md',
+    'docs/tea/STASIS.md',
+    'docs/tea/evidence-summary.json',
+    'docs/user-guide/INSTALLATION.md',
+    'docs/user-guide/README.md',
+    'docs/verification/COMMUNITY-QA-CT-WRATH-RETEST.md',
+    'docs/verification/COMMUNITY-QA-NATIVE-RETEST.md',
+    'docs/verification/COMMUNITY-QA-PARADISE-WROTH.md',
+    'docs/verification/COMMUNITY-QA-ROUND-2.md',
+    'docs/verification/PLAYTEST-CORRECTIONS-2026-11-11.md',
+    'images/icon.png',
+    'tests/SafetyTests/README.md',
+)
+
 
 def version():
     return ET.parse(ROOT / 'FluffySim.Version.props').findtext('.//FluffySimVersion')
@@ -41,7 +107,7 @@ def package(source, destination):
     with zipfile.ZipFile(output, 'x', compression=zipfile.ZIP_DEFLATED) as archive:
         for name in sorted(files):
             archive.write(source / name, name)
-        for name in ('LICENSE.md', 'README.md', 'INSTALLATION.md', 'RELEASING.md', 'CHANGELOG.md', 'THIRD-PARTY-NOTICES.md', 'HARD-DIFFICULTY-AUDIT.md', 'PAUSE-INVESTIGATION.md', 'PACKET-FILTER-AUDIT.md', 'FRU-ROADMAP.md', 'DSR-ROADMAP.md', 'images/icon.png'):
+        for name in DOCUMENTATION:
             archive.write(ROOT / name, name)
     return output
 

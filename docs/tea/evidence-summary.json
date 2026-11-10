@@ -1,0 +1,3087 @@
+{
+  "log": {
+    "identifier": "TEA-L01",
+    "bytes": 118565613,
+    "sha256": "7aeda0a3f486cf6c6528af725ae0c274fd35a8c158b557335f47039d1c516c42"
+  },
+  "pulls": [
+    {
+      "index": 1,
+      "start": "2026-11-08T22:32:53.801000+07:00",
+      "duration_s": 163.327,
+      "outcome": "wipe"
+    },
+    {
+      "index": 2,
+      "start": "2026-11-08T22:36:25.344000+07:00",
+      "duration_s": 139.398,
+      "outcome": "wipe"
+    },
+    {
+      "index": 3,
+      "start": "2026-11-08T22:39:20.556000+07:00",
+      "duration_s": 86.851,
+      "outcome": "wipe"
+    },
+    {
+      "index": 4,
+      "start": "2026-11-08T22:41:33.661000+07:00",
+      "duration_s": 962.038,
+      "outcome": "clear"
+    },
+    {
+      "index": 5,
+      "start": "2026-11-08T23:11:24.724000+07:00",
+      "duration_s": 454.844,
+      "outcome": "wipe"
+    },
+    {
+      "index": 6,
+      "start": "2026-11-08T23:19:50.785000+07:00",
+      "duration_s": 144.772,
+      "outcome": "wipe"
+    },
+    {
+      "index": 7,
+      "start": "2026-11-08T23:22:57.035000+07:00",
+      "duration_s": 182.977,
+      "outcome": "wipe"
+    },
+    {
+      "index": 8,
+      "start": "2026-11-08T23:27:02.460000+07:00",
+      "duration_s": 166.897,
+      "outcome": "wipe"
+    },
+    {
+      "index": 9,
+      "start": "2026-11-08T23:30:26.862000+07:00",
+      "duration_s": 71.34,
+      "outcome": "wipe"
+    },
+    {
+      "index": 10,
+      "start": "2026-11-08T23:32:15.300000+07:00",
+      "duration_s": 195.728,
+      "outcome": "wipe"
+    },
+    {
+      "index": 11,
+      "start": "2026-11-08T23:36:25.131000+07:00",
+      "duration_s": 171.78,
+      "outcome": "wipe"
+    },
+    {
+      "index": 12,
+      "start": "2026-11-08T23:42:43.757000+07:00",
+      "duration_s": 967.102,
+      "outcome": "clear"
+    }
+  ],
+  "npc_ids": {
+    "Alexander": [
+      {
+        "name_id": 9225,
+        "base_id": 6358
+      },
+      {
+        "name_id": 9225,
+        "base_id": 9020
+      }
+    ],
+    "Alexander Prime": [
+      {
+        "name_id": 9220,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9220,
+        "base_id": 11347
+      },
+      {
+        "name_id": 9220,
+        "base_id": 11422
+      }
+    ],
+    "Brute Justice": [
+      {
+        "name_id": 9216,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9216,
+        "base_id": 11340
+      }
+    ],
+    "Cruise Chaser": [
+      {
+        "name_id": 9218,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9218,
+        "base_id": 11342
+      },
+      {
+        "name_id": 9218,
+        "base_id": 11421
+      }
+    ],
+    "Embolus": [
+      {
+        "name_id": 9215,
+        "base_id": 11339
+      }
+    ],
+    "Gelid Gaol": [
+      {
+        "name_id": 9219,
+        "base_id": 11393
+      }
+    ],
+    "Jagd Doll": [
+      {
+        "name_id": 9214,
+        "base_id": 11338
+      }
+    ],
+    "Judgment Crystal": [
+      {
+        "name_id": 9224,
+        "base_id": 11348
+      }
+    ],
+    "Liquid Hand": [
+      {
+        "name_id": 9212,
+        "base_id": 11336
+      }
+    ],
+    "Liquid Rage": [
+      {
+        "name_id": 9213,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9213,
+        "base_id": 11337
+      }
+    ],
+    "Living Liquid": [
+      {
+        "name_id": 9211,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9211,
+        "base_id": 11335
+      }
+    ],
+    "Perfect Alexander": [
+      {
+        "name_id": 9042,
+        "base_id": 9020
+      },
+      {
+        "name_id": 9042,
+        "base_id": 11349
+      },
+      {
+        "name_id": 9042,
+        "base_id": 11423
+      }
+    ],
+    "Plasma Shield": [
+      {
+        "name_id": 8658,
+        "base_id": 11343
+      }
+    ],
+    "Plasmasphere": [
+      {
+        "name_id": 9221,
+        "base_id": 11344
+      }
+    ],
+    "Shanoa": [
+      {
+        "name_id": 9222,
+        "base_id": 11345
+      }
+    ],
+    "Steam Chakram": [
+      {
+        "name_id": 9217,
+        "base_id": 11341
+      }
+    ],
+    "True Heart": [
+      {
+        "name_id": 9223,
+        "base_id": 11346
+      }
+    ]
+  },
+  "record_counts": {
+    "00": 29309,
+    "03": 661,
+    "04": 464,
+    "12": 39,
+    "20": 2648,
+    "21": 22230,
+    "22": 8827,
+    "23": 90,
+    "24": 11699,
+    "25": 62,
+    "251": 87,
+    "257": 64,
+    "26": 20003,
+    "260": 32,
+    "261": 25077,
+    "263": 2648,
+    "264": 23915,
+    "266": 6,
+    "267": 59,
+    "27": 225,
+    "270": 11500,
+    "271": 912,
+    "272": 474,
+    "273": 682,
+    "30": 12515,
+    "31": 387,
+    "33": 43,
+    "34": 258,
+    "35": 57,
+    "36": 1182,
+    "37": 32585,
+    "38": 32390,
+    "39": 8917,
+    "41": 5
+  },
+  "replays": [
+    {
+      "identifier": "TEA-R01",
+      "bytes": 15995936,
+      "sha256": "3a556a6ef3714211eef5368678c65c8f9cdab2343a639f5b661b833c6fe7dda0",
+      "header": {
+        "format_version": 5,
+        "operating_system_type": 3,
+        "game_build": 14155597,
+        "recorded_utc": "2026-11-08T15:31:50+00:00",
+        "total_ms": 1558924,
+        "displayed_ms": 1550141,
+        "content_id": 694,
+        "data_bytes": 15995060
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "type": 5,
+          "offset": 67952,
+          "ms": 8783
+        },
+        {
+          "index": 1,
+          "type": 1,
+          "offset": 181116,
+          "ms": 44366
+        },
+        {
+          "index": 2,
+          "type": 2,
+          "offset": 2364796,
+          "ms": 237864
+        },
+        {
+          "index": 3,
+          "type": 1,
+          "offset": 2404868,
+          "ms": 255841
+        },
+        {
+          "index": 4,
+          "type": 2,
+          "offset": 4302364,
+          "ms": 425481
+        },
+        {
+          "index": 5,
+          "type": 1,
+          "offset": 4311736,
+          "ms": 431091
+        },
+        {
+          "index": 6,
+          "type": 2,
+          "offset": 5585724,
+          "ms": 548035
+        },
+        {
+          "index": 7,
+          "type": 1,
+          "offset": 5629924,
+          "ms": 564116
+        },
+        {
+          "index": 8,
+          "type": 4,
+          "offset": 12447272,
+          "ms": 1187309
+        }
+      ],
+      "segment_count": 168133,
+      "distinct_opcodes": 49,
+      "backwards_timestamps": 0,
+      "cast_count": 185,
+      "alignment": {
+        "zero_utc": "2026-11-08T15:31:49.949000+00:00",
+        "matches": 83,
+        "residual_ms": [
+          -19.0,
+          13.0
+        ],
+        "pulls": {
+          "1": 9,
+          "2": 8,
+          "3": 2,
+          "4": 64
+        }
+      },
+      "waymark_snapshots": [
+        {
+          "ms": 0,
+          "marks": [
+            {
+              "name": "A",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "B",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "C",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "D",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "1",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "2",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "3",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "4",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          ]
+        },
+        {
+          "ms": 13673,
+          "marks": [
+            {
+              "name": "A",
+              "active": true,
+              "x": 99.971,
+              "y": 0.0,
+              "z": 94.07
+            },
+            {
+              "name": "B",
+              "active": true,
+              "x": 105.765,
+              "y": 0.0,
+              "z": 100.072
+            },
+            {
+              "name": "C",
+              "active": true,
+              "x": 100.013,
+              "y": 0.0,
+              "z": 105.949
+            },
+            {
+              "name": "D",
+              "active": true,
+              "x": 94.084,
+              "y": 0.0,
+              "z": 100.011
+            },
+            {
+              "name": "1",
+              "active": true,
+              "x": 93.055,
+              "y": 0.0,
+              "z": 83.222
+            },
+            {
+              "name": "2",
+              "active": true,
+              "x": 113.699,
+              "y": 0.0,
+              "z": 100.127
+            },
+            {
+              "name": "3",
+              "active": true,
+              "x": 100.011,
+              "y": 0.0,
+              "z": 113.742
+            },
+            {
+              "name": "4",
+              "active": true,
+              "x": 86.274,
+              "y": 0.0,
+              "z": 99.995
+            }
+          ]
+        },
+        {
+          "ms": 1558924,
+          "marks": [
+            {
+              "name": "A",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "B",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "C",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "D",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "1",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "2",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "3",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "4",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "identifier": "TEA-R02",
+      "bytes": 11489428,
+      "sha256": "77cfffcc7d4e1e6388f89b52018d18831c4e29e81c4466554b69cf42ce73cada",
+      "header": {
+        "format_version": 5,
+        "operating_system_type": 3,
+        "game_build": 14155597,
+        "recorded_utc": "2026-11-08T16:42:02+00:00",
+        "total_ms": 1219840,
+        "displayed_ms": 1212036,
+        "content_id": 694,
+        "data_bytes": 11488552
+      },
+      "chapters": [
+        {
+          "index": 0,
+          "type": 5,
+          "offset": 71488,
+          "ms": 7804
+        },
+        {
+          "index": 1,
+          "type": 1,
+          "offset": 180576,
+          "ms": 26620
+        },
+        {
+          "index": 2,
+          "type": 4,
+          "offset": 7385980,
+          "ms": 640654
+        }
+      ],
+      "segment_count": 119476,
+      "distinct_opcodes": 48,
+      "backwards_timestamps": 0,
+      "cast_count": 133,
+      "alignment": {
+        "zero_utc": "2026-11-08T16:42:01.644000+00:00",
+        "matches": 64,
+        "residual_ms": [
+          -24.0,
+          12.0
+        ],
+        "pulls": {
+          "12": 64
+        }
+      },
+      "waymark_snapshots": [
+        {
+          "ms": 8,
+          "marks": [
+            {
+              "name": "A",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "B",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "C",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "D",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "1",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "2",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "3",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "4",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          ]
+        },
+        {
+          "ms": 6330,
+          "marks": [
+            {
+              "name": "A",
+              "active": true,
+              "x": 99.977,
+              "y": 0.0,
+              "z": 94.09
+            },
+            {
+              "name": "B",
+              "active": true,
+              "x": 105.766,
+              "y": 0.0,
+              "z": 100.073
+            },
+            {
+              "name": "C",
+              "active": true,
+              "x": 99.961,
+              "y": 0.0,
+              "z": 106.0
+            },
+            {
+              "name": "D",
+              "active": true,
+              "x": 94.085,
+              "y": 0.0,
+              "z": 100.011
+            },
+            {
+              "name": "1",
+              "active": true,
+              "x": 93.056,
+              "y": 0.0,
+              "z": 83.222
+            },
+            {
+              "name": "2",
+              "active": true,
+              "x": 113.7,
+              "y": 0.0,
+              "z": 100.128
+            },
+            {
+              "name": "3",
+              "active": true,
+              "x": 100.011,
+              "y": 0.0,
+              "z": 113.743
+            },
+            {
+              "name": "4",
+              "active": true,
+              "x": 86.274,
+              "y": 0.0,
+              "z": 99.995
+            }
+          ]
+        },
+        {
+          "ms": 1019570,
+          "marks": [
+            {
+              "name": "A",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "B",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "C",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "D",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "1",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "2",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "3",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "4",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          ]
+        },
+        {
+          "ms": 1219840,
+          "marks": [
+            {
+              "name": "A",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "B",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "C",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "D",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "1",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "2",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "3",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            },
+            {
+              "name": "4",
+              "active": false,
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "clear_cast_ledgers": {
+    "4": [
+      {
+        "t": 14.716,
+        "action": 18470,
+        "actor": "Living Liquid",
+        "duration": 3.7
+      },
+      {
+        "t": 32.843,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 32.843,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 32.843,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 39.086,
+        "action": 18477,
+        "actor": "Liquid Hand",
+        "duration": 2.7
+      },
+      {
+        "t": 101.691,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 104.732,
+        "action": 18494,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 111.89,
+        "action": 18495,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 117.754,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 117.754,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 120.883,
+        "action": 18479,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 123.072,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 123.072,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 123.072,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 123.072,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 127.005,
+        "action": 18486,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 137.164,
+        "action": 19058,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 149.032,
+        "action": 18509,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 153.19,
+        "action": 18510,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 153.19,
+        "action": 18510,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 155.204,
+        "action": 18513,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 155.204,
+        "action": 18513,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 172.231,
+        "action": 18491,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 179.367,
+        "action": 18501,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 179.367,
+        "action": 18483,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 191.533,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 216.694,
+        "action": 18482,
+        "actor": "Cruise Chaser",
+        "duration": 5.7
+      },
+      {
+        "t": 219.636,
+        "action": 18492,
+        "actor": "Brute Justice",
+        "duration": 4.7
+      },
+      {
+        "t": 231.82,
+        "action": 18486,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 238.841,
+        "action": 18503,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 245.996,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 259.027,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 267.187,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 281.745,
+        "action": 18522,
+        "actor": "Alexander Prime",
+        "duration": 7.7
+      },
+      {
+        "t": 306.258,
+        "action": 19072,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 323.827,
+        "action": 18543,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 339.296,
+        "action": 18523,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 365.964,
+        "action": 18526,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 384.347,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 395.754,
+        "action": 19072,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 415.267,
+        "action": 18542,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 425.738,
+        "action": 19215,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 427.797,
+        "action": 18495,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 430.745,
+        "action": 18534,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 433.698,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 433.698,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 436.963,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 441.925,
+        "action": 18519,
+        "actor": "Alexander Prime",
+        "duration": 5.7
+      },
+      {
+        "t": 453.644,
+        "action": 18509,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 455.075,
+        "action": 19025,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 469.034,
+        "action": 19075,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 476.191,
+        "action": 19075,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 486.519,
+        "action": 19029,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 496.984,
+        "action": 18549,
+        "actor": "Cruise Chaser",
+        "duration": 24.7
+      },
+      {
+        "t": 496.984,
+        "action": 18552,
+        "actor": "Alexander Prime",
+        "duration": 74.7
+      },
+      {
+        "t": 572.294,
+        "action": 19034,
+        "actor": "Brute Justice",
+        "duration": 4.7
+      },
+      {
+        "t": 654.966,
+        "action": 18557,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 662.127,
+        "action": 18558,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 673.312,
+        "action": 18559,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 684.485,
+        "action": 18571,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 690.654,
+        "action": 18570,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 703.7,
+        "action": 18555,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 711.832,
+        "action": 18556,
+        "actor": "Perfect Alexander",
+        "duration": 21.7
+      },
+      {
+        "t": 716.926,
+        "action": 18584,
+        "actor": "Perfect Alexander",
+        "duration": 0.7
+      },
+      {
+        "t": 725.018,
+        "action": 18858,
+        "actor": "Perfect Alexander",
+        "duration": 0.7
+      },
+      {
+        "t": 756.352,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 763.538,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 778.652,
+        "action": 19219,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 786.777,
+        "action": 19220,
+        "actor": "Perfect Alexander",
+        "duration": 34.7
+      },
+      {
+        "t": 856.33,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 863.516,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 875.675,
+        "action": 18574,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 881.802,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 881.802,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 881.802,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 881.802,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 881.802,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 883.77,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 885.786,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 889.856,
+        "action": 18580,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 902.023,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 909.228,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 920.952,
+        "action": 18574,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 927.081,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 929.047,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 931.061,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 935.128,
+        "action": 18580,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 950.114,
+        "action": 18582,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 958.257,
+        "action": 18583,
+        "actor": "Perfect Alexander",
+        "duration": 41.7
+      }
+    ],
+    "12": [
+      {
+        "t": 14.702,
+        "action": 18470,
+        "actor": "Living Liquid",
+        "duration": 3.7
+      },
+      {
+        "t": 32.836,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 32.836,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 32.836,
+        "action": 18869,
+        "actor": "Liquid Rage",
+        "duration": 2.7
+      },
+      {
+        "t": 39.076,
+        "action": 18477,
+        "actor": "Liquid Hand",
+        "duration": 2.7
+      },
+      {
+        "t": 102.672,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 105.659,
+        "action": 18494,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 112.794,
+        "action": 18495,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 118.68,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 118.68,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 121.844,
+        "action": 18479,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 124.027,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 124.027,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 124.027,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 124.027,
+        "action": 18481,
+        "actor": "Cruise Chaser",
+        "duration": 4.7
+      },
+      {
+        "t": 127.948,
+        "action": 18486,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 138.112,
+        "action": 19058,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 150.012,
+        "action": 18509,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 154.154,
+        "action": 18510,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 154.154,
+        "action": 18510,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 156.156,
+        "action": 18513,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 156.156,
+        "action": 18513,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 173.18,
+        "action": 18491,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 180.258,
+        "action": 18483,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 180.304,
+        "action": 18501,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 192.414,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 217.568,
+        "action": 18482,
+        "actor": "Cruise Chaser",
+        "duration": 5.7
+      },
+      {
+        "t": 220.643,
+        "action": 18492,
+        "actor": "Brute Justice",
+        "duration": 4.7
+      },
+      {
+        "t": 232.849,
+        "action": 18486,
+        "actor": "Cruise Chaser",
+        "duration": 2.7
+      },
+      {
+        "t": 239.88,
+        "action": 18503,
+        "actor": "Brute Justice",
+        "duration": 3.7
+      },
+      {
+        "t": 247.0,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 260.048,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 268.197,
+        "action": 18882,
+        "actor": "Cruise Chaser",
+        "duration": 3.7
+      },
+      {
+        "t": 282.94,
+        "action": 18522,
+        "actor": "Alexander Prime",
+        "duration": 7.7
+      },
+      {
+        "t": 307.403,
+        "action": 19072,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 324.948,
+        "action": 18543,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 340.399,
+        "action": 18523,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 367.072,
+        "action": 18526,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 385.409,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 396.824,
+        "action": 19072,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 416.327,
+        "action": 18542,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 426.745,
+        "action": 19215,
+        "actor": "Cruise Chaser",
+        "duration": 1.7
+      },
+      {
+        "t": 428.748,
+        "action": 18495,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 431.777,
+        "action": 18534,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 434.63,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 434.63,
+        "action": 18517,
+        "actor": "Steam Chakram",
+        "duration": 5.7
+      },
+      {
+        "t": 437.881,
+        "action": 18505,
+        "actor": "Brute Justice",
+        "duration": 3.6
+      },
+      {
+        "t": 442.915,
+        "action": 18519,
+        "actor": "Alexander Prime",
+        "duration": 5.7
+      },
+      {
+        "t": 454.547,
+        "action": 18509,
+        "actor": "Brute Justice",
+        "duration": 2.7
+      },
+      {
+        "t": 456.061,
+        "action": 19025,
+        "actor": "Alexander Prime",
+        "duration": 4.7
+      },
+      {
+        "t": 470.019,
+        "action": 19075,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 477.162,
+        "action": 19075,
+        "actor": "Alexander Prime",
+        "duration": 3.7
+      },
+      {
+        "t": 487.773,
+        "action": 19029,
+        "actor": "Alexander Prime",
+        "duration": 2.7
+      },
+      {
+        "t": 498.209,
+        "action": 18549,
+        "actor": "Cruise Chaser",
+        "duration": 24.7
+      },
+      {
+        "t": 498.209,
+        "action": 18552,
+        "actor": "Alexander Prime",
+        "duration": 74.7
+      },
+      {
+        "t": 567.203,
+        "action": 19034,
+        "actor": "Brute Justice",
+        "duration": 4.7
+      },
+      {
+        "t": 649.948,
+        "action": 18557,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 657.083,
+        "action": 18559,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 668.237,
+        "action": 18558,
+        "actor": "Perfect Alexander",
+        "duration": 3.7
+      },
+      {
+        "t": 679.383,
+        "action": 18571,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 685.533,
+        "action": 18570,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 698.541,
+        "action": 18555,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 706.697,
+        "action": 18556,
+        "actor": "Perfect Alexander",
+        "duration": 21.7
+      },
+      {
+        "t": 711.785,
+        "action": 18584,
+        "actor": "Perfect Alexander",
+        "duration": 0.7
+      },
+      {
+        "t": 719.856,
+        "action": 18858,
+        "actor": "Perfect Alexander",
+        "duration": 0.7
+      },
+      {
+        "t": 751.169,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 758.341,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 773.44,
+        "action": 19219,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 781.587,
+        "action": 19220,
+        "actor": "Perfect Alexander",
+        "duration": 34.7
+      },
+      {
+        "t": 851.158,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 858.333,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 870.521,
+        "action": 18574,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 876.613,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 878.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 880.615,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 884.667,
+        "action": 18580,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 896.841,
+        "action": 18578,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 904.018,
+        "action": 18577,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 915.923,
+        "action": 18574,
+        "actor": "Perfect Alexander",
+        "duration": 2.7
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 922.018,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 924.028,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 926.031,
+        "action": 18575,
+        "actor": "Perfect Alexander",
+        "duration": 1.2
+      },
+      {
+        "t": 930.095,
+        "action": 18580,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 945.048,
+        "action": 18582,
+        "actor": "Perfect Alexander",
+        "duration": 4.7
+      },
+      {
+        "t": 953.203,
+        "action": 18583,
+        "actor": "Perfect Alexander",
+        "duration": 41.7
+      }
+    ]
+  },
+  "observed_status_ids": [
+    695,
+    706,
+    783,
+    1025,
+    1035,
+    1121,
+    1122,
+    1123,
+    1124,
+    1138,
+    2137,
+    2138,
+    2139,
+    2140,
+    2142,
+    2143,
+    2144,
+    2145,
+    2146,
+    2147,
+    2152,
+    2153,
+    2154,
+    2155,
+    2222,
+    2223,
+    2224,
+    2225,
+    3055,
+    3056,
+    3057,
+    3058
+  ],
+  "limit_cut_ground_effects": [
+    {
+      "pull": 4,
+      "t": 67.518,
+      "pose": [
+        90.074,
+        109.88,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 67.518,
+      "pose": [
+        109.88,
+        90.074,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 69.743,
+      "pose": [
+        85.985,
+        99.992,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 69.743,
+      "pose": [
+        113.97,
+        99.992,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 71.924,
+      "pose": [
+        90.074,
+        90.074,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 71.924,
+      "pose": [
+        109.88,
+        109.88,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 74.152,
+      "pose": [
+        99.992,
+        113.97,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 74.152,
+      "pose": [
+        99.992,
+        85.985,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 76.336,
+      "pose": [
+        99.992,
+        99.992,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 78.517,
+      "pose": [
+        90.074,
+        109.88,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 78.517,
+      "pose": [
+        109.88,
+        90.074,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 80.738,
+      "pose": [
+        85.985,
+        99.992,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 80.738,
+      "pose": [
+        113.97,
+        99.992,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 82.919,
+      "pose": [
+        90.074,
+        90.074,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 82.919,
+      "pose": [
+        109.88,
+        109.88,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 85.148,
+      "pose": [
+        99.992,
+        113.97,
+        -0.015,
+        -0.08
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 85.148,
+      "pose": [
+        99.992,
+        85.985,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 4,
+      "t": 87.34,
+      "pose": [
+        99.992,
+        99.992,
+        -0.015,
+        0.229
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 68.424,
+      "pose": [
+        99.992,
+        113.97,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 68.424,
+      "pose": [
+        99.992,
+        85.985,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 70.651,
+      "pose": [
+        90.074,
+        109.88,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 70.651,
+      "pose": [
+        109.88,
+        90.074,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 72.839,
+      "pose": [
+        85.985,
+        99.992,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 72.839,
+      "pose": [
+        113.97,
+        99.992,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 75.028,
+      "pose": [
+        90.074,
+        90.074,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 75.028,
+      "pose": [
+        109.88,
+        109.88,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 77.254,
+      "pose": [
+        99.992,
+        99.992,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 79.442,
+      "pose": [
+        99.992,
+        113.97,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 79.442,
+      "pose": [
+        99.992,
+        85.985,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 81.625,
+      "pose": [
+        90.074,
+        109.88,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 81.626,
+      "pose": [
+        109.88,
+        90.074,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 83.854,
+      "pose": [
+        85.985,
+        99.992,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 83.854,
+      "pose": [
+        113.97,
+        99.992,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 86.04,
+      "pose": [
+        90.074,
+        90.074,
+        -0.015,
+        -1.552
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 86.04,
+      "pose": [
+        109.88,
+        109.88,
+        -0.015,
+        -1.588
+      ]
+    },
+    {
+      "pull": 12,
+      "t": 88.226,
+      "pose": [
+        99.992,
+        99.992,
+        -0.015,
+        -1.588
+      ]
+    }
+  ],
+  "limit_cut_resolutions": [
+    {
+      "pull": 4,
+      "t": 74.955,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        118.36,
+        99.6,
+        0.0,
+        1.46
+      ],
+      "source_pose": [
+        116.01,
+        99.15,
+        0.0,
+        1.38
+      ],
+      "target_job": 24,
+      "number": 1
+    },
+    {
+      "pull": 4,
+      "t": 76.425,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        112.66,
+        98.41,
+        0.0,
+        0.05
+      ],
+      "source_pose": [
+        116.01,
+        99.15,
+        0.0,
+        1.38
+      ],
+      "target_job": 20,
+      "number": 2
+    },
+    {
+      "pull": 4,
+      "t": 79.583,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        99.63,
+        119.25,
+        0.0,
+        -0.05
+      ],
+      "source_pose": [
+        99.76,
+        117.27,
+        0.0,
+        -0.05
+      ],
+      "target_job": 32,
+      "number": 3
+    },
+    {
+      "pull": 4,
+      "t": 81.049,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        101.71,
+        116.28,
+        0.0,
+        -0.62
+      ],
+      "source_pose": [
+        99.76,
+        117.27,
+        0.0,
+        2.04
+      ],
+      "target_job": 28,
+      "number": 4
+    },
+    {
+      "pull": 4,
+      "t": 84.213,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        85.86,
+        112.69,
+        0.0,
+        -0.79
+      ],
+      "source_pose": [
+        87.3,
+        111.3,
+        0.0,
+        -0.79
+      ],
+      "target_job": 19,
+      "number": 5
+    },
+    {
+      "pull": 4,
+      "t": 85.685,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        90.1,
+        108.81,
+        0.0,
+        -0.74
+      ],
+      "source_pose": [
+        87.3,
+        111.3,
+        0.0,
+        2.29
+      ],
+      "target_job": 38,
+      "number": 6
+    },
+    {
+      "pull": 4,
+      "t": 88.86,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        81.04,
+        99.87,
+        0.0,
+        -1.58
+      ],
+      "source_pose": [
+        83.06,
+        99.91,
+        0.0,
+        -1.58
+      ],
+      "target_job": 35,
+      "number": 7
+    },
+    {
+      "pull": 4,
+      "t": 90.334,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        86.99,
+        102.59,
+        0.0,
+        -2.02
+      ],
+      "source_pose": [
+        83.06,
+        99.91,
+        0.0,
+        0.97
+      ],
+      "target_job": 34,
+      "number": 8
+    },
+    {
+      "pull": 12,
+      "t": 75.874,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        112.66,
+        88.15,
+        0.0,
+        2.42
+      ],
+      "source_pose": [
+        111.35,
+        89.68,
+        0.0,
+        2.42
+      ],
+      "target_job": 20,
+      "number": 1
+    },
+    {
+      "pull": 12,
+      "t": 77.343,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        107.47,
+        91.11,
+        0.0,
+        2.65
+      ],
+      "source_pose": [
+        111.35,
+        89.68,
+        0.0,
+        2.42
+      ],
+      "target_job": 33,
+      "number": 2
+    },
+    {
+      "pull": 12,
+      "t": 80.51,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        113.12,
+        112.99,
+        0.0,
+        0.99
+      ],
+      "source_pose": [
+        111.45,
+        111.9,
+        0.0,
+        0.99
+      ],
+      "target_job": 27,
+      "number": 3
+    },
+    {
+      "pull": 12,
+      "t": 81.982,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        110.21,
+        107.74,
+        0.0,
+        2.35
+      ],
+      "source_pose": [
+        111.45,
+        111.9,
+        0.0,
+        -2.92
+      ],
+      "target_job": 41,
+      "number": 4
+    },
+    {
+      "pull": 12,
+      "t": 85.148,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        98.89,
+        118.85,
+        0.0,
+        -0.06
+      ],
+      "source_pose": [
+        99.03,
+        116.86,
+        0.0,
+        -0.06
+      ],
+      "target_job": 32,
+      "number": 5
+    },
+    {
+      "pull": 12,
+      "t": 86.621,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        99.84,
+        112.41,
+        0.0,
+        -0.09
+      ],
+      "source_pose": [
+        99.03,
+        116.86,
+        0.0,
+        2.96
+      ],
+      "target_job": 38,
+      "number": 6
+    },
+    {
+      "pull": 12,
+      "t": 89.786,
+      "kind": "21",
+      "action": 18484,
+      "target_pose": [
+        87.21,
+        113.02,
+        0.0,
+        -0.84
+      ],
+      "source_pose": [
+        88.7,
+        111.71,
+        0.0,
+        -0.84
+      ],
+      "target_job": 19,
+      "number": 7
+    },
+    {
+      "pull": 12,
+      "t": 91.256,
+      "kind": "21",
+      "action": 19279,
+      "target_pose": [
+        91.16,
+        112.56,
+        0.0,
+        -1.63
+      ],
+      "source_pose": [
+        88.7,
+        111.71,
+        0.0,
+        1.24
+      ],
+      "target_job": 28,
+      "number": 8
+    }
+  ]
+}

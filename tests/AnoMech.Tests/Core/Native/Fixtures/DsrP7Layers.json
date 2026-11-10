@@ -1,0 +1,8 @@
+{
+  "60878": { "id": 8609070, "collision": false, "p2Active": false, "p7Active": true },
+  "61049": { "id": 8600331, "collision": false, "p2Active": true, "p7Active": false },
+  "65362": { "id": 8626397, "collision": true, "p2Active": false, "p7Active": true },
+  "5210": { "id": 9279002, "collision": true, "p2Active": true, "p7Active": true },
+  "5212": { "id": 9279003, "collision": true, "p2Active": false, "p7Active": false },
+  "5644": { "id": 9303685, "collision": true, "p2Active": true, "p7Active": false }
+}

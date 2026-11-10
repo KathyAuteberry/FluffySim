@@ -7,7 +7,26 @@ namespace AnoMech.Core.Native.Policies;
 internal static class DsrEnvironmentState
 {
     internal static bool NeedsFinalization(uint territory, byte weather, bool offline)
-        => territory == 968 && (weather is 2 or 3 or 46 || offline && weather == 45);
+        => territory == 968 && (weather is 2 or 3 or 46 or 47 || offline && weather == 45);
+
+    private static readonly (ushort Layer, uint Id, bool Active, bool Collision)[] DragonKing =
+    [
+        (60878, 8609070, true, false),
+        (61049, 8600331, false, false),
+        (65362, 8626397, true, true),
+        (5210, 9279002, true, true),
+        (5212, 9279003, false, true),
+        (5644, 9303685, false, true),
+    ];
+
+    internal static bool MatchesDragonKing(Func<ushort, IReadOnlyList<(uint Id, bool Active, bool ColliderLoaded, bool ColliderActive)>> read)
+    {
+        // The native layout can contain additional actors; require the selected floor and
+        // colliders without treating the rest of the scene as a captured fingerprint.
+        return DragonKing.All(expected => read(expected.Layer).Any(instance =>
+            instance.Id == expected.Id && instance.Active == expected.Active
+            && (!expected.Collision || instance.ColliderLoaded && instance.ColliderActive == expected.Active)));
+    }
 
     private static readonly (ushort Layer, int Count, ulong State)[] Nidhogg =
     [

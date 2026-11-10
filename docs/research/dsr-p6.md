@@ -4,7 +4,7 @@ Implemented two isolated entries: Wyrmsbreath to Wroth Flames (100s) and Hallowe
 
 ## Evidence and adaptation
 
-Primary strategy: https://ffxiv.tuufless.com/elemental/dsr/06_double_dragons/ . AsuMech b7a31b630ebae5e1076f65ed069f3a50dda64272 supplies assignment state, initial route structure and reference clocks. Its legacy packet/DamageSolver implementation was replaced with EnemyActions and normal world-owned actors. Preserve AGPL attribution in THIRD-PARTY-NOTICES.md. BossMod P6WrothFlames corroborates 6y Akh Morn stacks/voidzones and 44x3 Flame Blast crosses. These are reference values, not local capture measurements.
+Primary strategy: https://ffxiv.tuufless.com/elemental/dsr/06_double_dragons/ . AsuMech b7a31b630ebae5e1076f65ed069f3a50dda64272 supplies assignment state, initial route structure and reference clocks. Its legacy packet/DamageSolver implementation was replaced with EnemyActions and normal world-owned actors. Preserve AGPL attribution in docs/legal/THIRD-PARTY-NOTICES.md. BossMod P6WrothFlames corroborates 6y Akh Morn stacks/voidzones and 44x3 Flame Blast crosses. These are reference values, not local capture measurements.
 
 Elemental changes: WB1 H1/H2/D4 anchors, flex D1/D2/D3; four-person light parties; MT at north/south edge and ST equator for first Wings; Mortal Vow DPS→MT→ST→D1 (D2 if D1 first)→D3; Wroth spreads west, pairs east, MT/ST/H1/H2/D1/D2/D3/D4 center-to-edge priority; dynamic WB2 5-1 with D3 alone south toward glowing dragon, center selected H1/H2/D4 from the larger north element group. Final opposite-element dives retain front tank invulnerability requirements.
 

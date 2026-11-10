@@ -8,7 +8,7 @@ public sealed class TeaP1LivingLiquidSettingsWindow
 
     private static readonly string[] OpenSideLabels = ["Random", "N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 
-    public void Draw()
+    public void Draw(bool fullTimeline = true)
     {
         if (ImGui.Button("Auto"))
         {
@@ -19,7 +19,7 @@ public sealed class TeaP1LivingLiquidSettingsWindow
         if (SettingsGrid.Begin("##tealivingliquid"))
         {
             Overrides.FirstTornadoesOpenSide = DrawOpenSide("First tornadoes open to:", "##teallfirst", Overrides.FirstTornadoesOpenSide);
-            Overrides.SecondTornadoesOpenSide = DrawOpenSide("Second tornadoes open to:", "##teallsecond", Overrides.SecondTornadoesOpenSide);
+            if (fullTimeline) Overrides.SecondTornadoesOpenSide = DrawOpenSide("Second tornadoes open to:", "##teallsecond", Overrides.SecondTornadoesOpenSide);
             SettingsGrid.End();
         }
     }

@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup Condition="Exists('$(MSBuildThisFileDirectory).jj') and '$(ContinuousIntegrationBuild)' != 'true'">
+    <!-- The SDK's Git reader rejects this checkout's relativeWorktrees extension. Only local
+         source-control metadata queries are skipped; CI retains its source provenance. -->
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+  </PropertyGroup>
+</Project>

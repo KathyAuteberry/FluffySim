@@ -25,7 +25,7 @@ public class SpectatorCatalogTests
     [Test]
     public void EveryPlayableFruAndDsrEntryAcceptsSpectatorMode()
     {
-        Assert.That(Scenarios().Count(), Is.EqualTo(28));
+        Assert.That(Scenarios().Count(), Is.EqualTo(29));
         foreach (var scenario in Scenarios())
         {
             TestContext.Out.WriteLine($"CATALOG|{scenario.GetType().FullName}|{scenario.Phase.Name}|{scenario.MenuName}|{string.Join(", ", scenario.AiStrats.Select(a => a.Name))}|{scenario.IsIncomplete}");

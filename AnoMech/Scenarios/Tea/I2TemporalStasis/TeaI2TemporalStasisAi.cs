@@ -11,7 +11,8 @@ namespace AnoMech.Scenarios.Tea.I2TemporalStasis;
 
 public sealed class TeaI2TemporalStasisAi : IScenarioAi<TeaI2TemporalStasisState>
 {
-    public string Name => "NAUR";
+    public string Name => "Fixed positions";
+    public string Group => "Mana";
 
     private const float RobotX = 6f;
     private const float NorthOfRobot = -1.4f;
@@ -62,13 +63,7 @@ public sealed class TeaI2TemporalStasisAi : IScenarioAi<TeaI2TemporalStasisState
     private static Vector2 RestrainingOrderSpot(float side, float bruteJusticeSide)
         => side == bruteJusticeSide ? new(side * RestrainingWallX, 0f) : new(side * WaymarkX, 0f);
 
-    private bool TakesWestRestrainingOrder(PartyRole role)
-    {
-        var partner = PerRole.All.Where(r => r != role && DebuffSeenOn(r) == StasisDebuff.RestrainingOrder).Cast<PartyRole?>().FirstOrDefault();
-        if (partner is not { } other || world.Party.Get(role) is not { } me || world.Party.Get(other) is not { } them) return !role.IsDps();
-        var westward = them.Position.X - me.Position.X;
-        return MathF.Abs(westward) > 0.1f ? westward > 0f : !role.IsDps();
-    }
+    private static bool TakesWestRestrainingOrder(PartyRole role) => !role.IsDps();
 
     private StasisDebuff DebuffSeenOn(PartyRole role)
     {

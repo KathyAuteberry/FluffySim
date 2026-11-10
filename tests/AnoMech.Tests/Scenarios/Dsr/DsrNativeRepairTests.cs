@@ -19,7 +19,7 @@ public class DsrNativeRepairTests
     {
         var scenarios = ScenarioCatalog.Create().Scenarios.Where(s => s.Phase.Zone is DsrZone).ToArray();
         Assert.That(scenarios.Select(s => s.DisplayName()), Is.EqualTo(new[] {
-            "P1 The Holy See", "P2 Strength of the Ward 1", "P2 Strength of the Ward 2", "P2 Sanctity of the Ward 1", "P2 Sanctity of the Ward 2", "P3 Dive from Grace", "P4 Eyes", "P5 Wrath of the Heavens", "P5 Death of the Heavens", "P6 Wyrmsbreath 1 to Wroth Flames", "P6 Hallowed Wings 2 to Cauterize" }));
+            "P1 The Holy See", "P2 Strength of the Ward 1", "P2 Strength of the Ward 2", "P2 Sanctity of the Ward 1", "P2 Sanctity of the Ward 2", "P3 Dive from Grace", "P4 Eyes", "P5 Wrath of the Heavens", "P5 Death of the Heavens", "P6 Wyrmsbreath 1 to Wroth Flames", "P6 Hallowed Wings 2 to Cauterize", "P7 Dragon-king Thordan" }));
         Assert.That(scenarios[0].FullName(), Is.EqualTo("Dragonsong's Reprise (Ultimate) — P1 The Holy See The Holy See — South-first / HMRT (Elemental)"));
         Assert.That(scenarios[7].Name, Is.EqualTo("Wrath of the Heavens (Elemental)"));
         Assert.That(scenarios.Select(s => s.FullName()), Is.Unique);

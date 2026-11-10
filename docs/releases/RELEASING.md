@@ -27,7 +27,7 @@ Everyday: edit → Debug checks → Conventional Commit on the intended branch �
 advance the reviewed bookmark. Inherit the user-level restack alias without a repo override;
 inspect `jj config list` before use and
 never restack published ancestry. Upstream updates fetch/inspect/merge/test new changes on
-published history as described in [AGENTS.md](AGENTS.md). Recovery starts with `jj op log`
+published history as described in [AGENTS.md](../development/AGENTS.md). Recovery starts with `jj op log`
 and `jj --at-operation <id> log`; preserve current work before any targeted recovery.
 
 ```sh
@@ -37,7 +37,7 @@ dotnet test tests/AnoMech.Relay.Tests -c Debug
 python -m unittest discover -s tools/tests -p test_package_release.py
 ```
 
-Run both Debug safety backends using [tests/SafetyTests/README.md](tests/SafetyTests/README.md).
+Run both Debug safety backends using [tests/SafetyTests/README.md](../../tests/SafetyTests/README.md).
 Native acceptance still requires all registered encounters, Easy/Hard, Pause, visibility, God Mode,
 local abilities, offline FRU/DSR, party HUD and safe Leave/BGM restoration.
 Local packaging dry-run only:
@@ -85,7 +85,7 @@ and both safety backends, builds Release on its isolated runner and packages dec
 dependencies plus selected public documentation. Preserve matching complete source at the
 tag and AGPL attribution; GitHub provides tagged source archives.
 
-The workflow extracts the matching CHANGELOG.md entry with tools/release_notes.py and uses
+The workflow extracts the matching docs/releases/CHANGELOG.md entry with tools/release_notes.py and uses
 it as the GitHub release body; it does not substitute generated PR notes.
 
 The public release is created before metadata changes. Its downloaded ZIP supplies the

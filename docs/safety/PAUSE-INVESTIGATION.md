@@ -2,7 +2,7 @@
 
 ## Current upstream integration — 2026-10-15
 
-See [integration decisions, exact source commits, recovery checkpoint and manual checks](UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
+See [integration decisions, exact source commits, recovery checkpoint and manual checks](../integration/UPSTREAM-INTEGRATION.md). The runtime now uses upstream InstanceSession/ScenarioSession, packet-handler spawning and per-object motion, combined with Evernow PRs 35, 38 and 50. FluffySim version remains 1.2.0.0. Historical implementation notes below describe earlier architectures; the integration document supersedes their old ZoneSession paths and teardown assumptions. Debug builds only; no installed Release output was changed.
 
 
 Implemented for **local practice across all nine FRU/DSR scenarios**. Main scenario controls show
@@ -47,7 +47,7 @@ While PauseInput is set:
 - The auto-cancel branch is bypassed (`DisableAllActions && !PauseInput`). Native ActionManager
   Update itself still runs. Native cooldown bars may count down visually; scoped owned practice
   recasts are now captured/restored on Pause/Resume under the verified filter, as documented in
-  PACKET-FILTER-AUDIT.md. Server cooldowns and unrelated native cooldowns are not frozen.
+  docs/safety/PACKET-FILTER-AUDIT.md. Server cooldowns and unrelated native cooldowns are not frozen.
 
 Pause applies **no** HP, death-mode or incapacitation status. It makes no real action call,
 sends no marking/status/action/movement packet and changes no firewall rule. Normal death/stun
@@ -150,5 +150,5 @@ practice-recast records; Resume restores their exact values while the zone remai
 cooldown rings may finish visually while paused, but waiting cannot recharge the owned defensive
 actions on Resume. The original pre-entry cooldown baseline remains separate and advances in real
 time for Leave. Restore exceptions still release pause input in a finally block; plugin disposal
-reaches verified zone cleanup even if pause cleanup reports an error. See PACKET-FILTER-AUDIT.md.
+reaches verified zone cleanup even if pause cleanup reports an error. See docs/safety/PACKET-FILTER-AUDIT.md.
 Final focused safety/Pause checks: 75 passed, including all nine complete scenarios.

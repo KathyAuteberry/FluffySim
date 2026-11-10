@@ -41,8 +41,13 @@ public sealed class TeaP4PerfectAlexanderStateOverrides
         conflicts.AtMost(1, Claiming(FinalWord, FinalWordDebuff.DarkBeacon), "the dark beacon");
         conflicts.AtMost(3, Claiming(FinalWord, FinalWordDebuff.LightFollower), "a light follower's debuff");
         conflicts.AtMost(3, Claiming(FinalWord, FinalWordDebuff.DarkFollower), "a dark follower's debuff");
-        conflicts.AtMost(2, PerRole.All.Where(r => OpticalStack[r] == true).ToList(), "an Optical Sight stack");
-        conflicts.AtLeast(2, PerRole.All.Where(r => OpticalStack[r] == false).ToList(), 8, "an Optical Sight stack");
+        foreach (var support in new[] { true, false })
+        {
+            var category = PerRole.All.Where(r => TeaP4PerfectAlexanderState.IsSupport(r) == support).ToList();
+            var label = support ? "the support Optical Sight stack" : "the DPS Optical Sight stack";
+            conflicts.AtMost(1, category.Where(r => OpticalStack[r] == true).ToList(), label);
+            conflicts.AtLeast(1, category.Where(r => OpticalStack[r] == false).ToList(), category.Count, label);
+        }
         conflicts.AtMost(1, Claiming(Alpha, AlphaSentence.SharedSentence), "Fate Calibration α's shared sentence");
         conflicts.AtMost(1, Claiming(Alpha, AlphaSentence.Defamation), "Fate Calibration α's defamation");
         conflicts.AtMost(3, Claiming(Alpha, AlphaSentence.AggravatedAssault), "an aggravated assault");

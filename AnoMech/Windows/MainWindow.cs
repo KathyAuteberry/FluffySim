@@ -317,6 +317,8 @@ public unsafe class MainWindow : Window, IDisposable
     {
         var style = ImGui.GetStyle();
         var widest = 0f;
+        foreach (var section in Plugin.Game.Catalog.SidebarSections)
+            widest = Math.Max(widest, ImGui.CalcTextSize(section.Title).X);
         foreach (var zone in Plugin.Game.Catalog.Zones)
         {
             widest = Math.Max(widest, ImGui.CalcTextSize(zone.DisplayName).X + style.IndentSpacing);
@@ -347,29 +349,39 @@ public unsafe class MainWindow : Window, IDisposable
             DrawZoneScenarios(lockedZone, right);
             return;
         }
-        foreach (var zone in Plugin.Game.Catalog.Zones)
+        foreach (var section in Plugin.Game.Catalog.SidebarSections)
         {
-            var shouldOpen = _openZone == zone;
-            ImGui.SetNextItemOpen(shouldOpen, ImGuiCond.Always);
-            var containsSelection = ZoneContains(zone, _selectedScenario);
-            var headerColor = BlendColor(
-                StyleColor(ImGuiCol.WindowBg),
-                StyleColor(ImGuiCol.Header),
-                0.72f);
-            ImGui.PushStyleColor(ImGuiCol.Header,
-                containsSelection ? BlendColor(headerColor, SelectionColor, 0.58f) : headerColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderHovered, containsSelection ? SelectionHoveredColor : HoverColor);
-            ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectionActiveColor);
-            var open = ImGui.CollapsingHeader($"{zone.DisplayName}###scenario-zone-{zone.GetType().FullName}");
-            ImGui.PopStyleColor(3);
-            if (containsSelection) DrawSelectionAccent();
-            var sectionRight = ImGui.GetItemRectMax().X;
-            if (open != shouldOpen) _openZone = open ? zone : null;
-            if (!open) continue;
-            ImGui.Indent();
-            DrawZoneScenarios(zone, sectionRight);
-            ImGui.Unindent();
+            if (section.Zones.Count == 0) continue;
+            ImGui.Spacing();
+            ImGui.TextUnformatted(section.Title);
+            ImGui.Separator();
+            foreach (var zone in section.Zones)
+                DrawZoneSection(zone);
         }
+    }
+
+    private void DrawZoneSection(IZone zone)
+    {
+        var shouldOpen = _openZone == zone;
+        ImGui.SetNextItemOpen(shouldOpen, ImGuiCond.Always);
+        var containsSelection = ZoneContains(zone, _selectedScenario);
+        var headerColor = BlendColor(
+            StyleColor(ImGuiCol.WindowBg),
+            StyleColor(ImGuiCol.Header),
+            0.72f);
+        ImGui.PushStyleColor(ImGuiCol.Header,
+            containsSelection ? BlendColor(headerColor, SelectionColor, 0.58f) : headerColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderHovered, containsSelection ? SelectionHoveredColor : HoverColor);
+        ImGui.PushStyleColor(ImGuiCol.HeaderActive, SelectionActiveColor);
+        var open = ImGui.CollapsingHeader($"{zone.DisplayName}###scenario-zone-{zone.GetType().FullName}");
+        ImGui.PopStyleColor(3);
+        if (containsSelection) DrawSelectionAccent();
+        var sectionRight = ImGui.GetItemRectMax().X;
+        if (open != shouldOpen) _openZone = open ? zone : null;
+        if (!open) return;
+        ImGui.Indent();
+        DrawZoneScenarios(zone, sectionRight);
+        ImGui.Unindent();
     }
 
     private void DrawZoneScenarios(IZone zone, float sectionRight)

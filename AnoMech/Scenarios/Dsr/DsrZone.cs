@@ -41,6 +41,11 @@ public sealed class DsrZone : IZone
         world.Map.DirectorUpdate(0x80000016, 1, 0x2D);
         world.Map.DirectorUpdate(0x8000001F, 758);
     });
+    public static readonly Phase P7 = new(Instance, "P7 Dragon-king Thordan", 47, 907, init: world =>
+    {
+        for (byte slot = 0; slot < 9; slot++) world.Map.AddEffect(0x00040004, slot);
+        world.Map.DirectorUpdate(0x8000001F, 758);
+    });
     public static readonly Phase P1 = new(Instance, "P1 The Holy See", 2, 920, init: world =>
     {
         world.EnforceSquareArenaBoundary(22f);

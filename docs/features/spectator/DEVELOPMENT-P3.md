@@ -18,7 +18,7 @@ Wrath Twister and upstream changes remain ancestors. No release preparation or p
 
 ## Spectator behavior and limits
 
-See [SPECTATOR-MODE.md](SPECTATOR-MODE.md) for architecture, controls, supported scenarios and
+See [SPECTATOR-MODE.md](MODE.md) for architecture, controls, supported scenarios and
 native acceptance checks. Eight ordinary bot actors replace the normal seven bots plus human.
 The watched role is a bot, not an automated native player. Roster-based targeting and mechanic
 resolution therefore see eight participants. Native local movement and action inputs are locked;

@@ -138,7 +138,7 @@ tower placements, actor spawns, Geirskogul or the encounter timeline.
 
 Native jump action identities agree with the current targeted ActionEffect
 implementation. This confirms the event sequence, **not a rendered slam**.
-The renderer/readiness corrections described in `DSR-P3-PRESENTATION-AUDIT.md`
+The renderer/readiness corrections described in `docs/encounters/dsr/P3-PRESENTATION-AUDIT.md`
 still need native inn/offline playback acceptance: all three arrow variants,
 human and bot targets, visible dive/impact and sound before the later tower,
 late Geirskogul flash, Pause/Resume and Restart/Leave cleanup. Packet timestamps
