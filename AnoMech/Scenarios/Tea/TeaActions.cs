@@ -344,7 +344,7 @@ public static class TeaActions
     public static readonly EnemyAction HiddenMine = new(ActionId.HiddenMine)
     {
         Cast = new() { AnimationLock = 1.1f },
-        Effects = [Damage(TankBuster.MinMit(0.36f))],
+        Effects = [Damage(TankBuster.MinMit(0.36f, includeBots: true))],
         Timing = new() { DamageDelay = 0.31f },
     };
 

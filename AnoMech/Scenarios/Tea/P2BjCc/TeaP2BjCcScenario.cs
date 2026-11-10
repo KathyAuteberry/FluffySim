@@ -15,10 +15,8 @@ using static AnoMech.Scenarios.Tea.TeaConstants;
 
 namespace AnoMech.Scenarios.Tea.P2BjCc;
 
-// Brute Justice and Cruise Chaser from J Kick to the slowest real kill, which beats their double
-// enrage by 0.08s; the Temporal Stasis intermission that follows is its own scenario.
 // Scenario time 0 is 2s before J Kick.
-public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
+public class TeaP2BjCcScenario : IMultiplayerReplayable
 {
     private const float BossSpeed = 7f;
     // Both robots close in to about a yalm past touching hitboxes.
@@ -53,8 +51,7 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
     private const float GaolRadius = 2.88f;
     // The engine builds a spawned actor up to ~0.3s later and drops an instant cast made before then.
     private const float HelperLead = 1f;
-    // The slowest real kill.
-    private const float RobotsLeave = 195.87f;
+    protected virtual float EndAt => 183f;
     private const float AutoEvery = 3.03f;
 
     private static readonly (ushort Status, uint Lockon)[] Compressed =
@@ -63,7 +60,7 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
     public string Name => "BJ/CC";
     public IPhase Phase => TeaZone.P2;
     public bool SupportsMultiplayer => true;
-    public IReadOnlyList<IScenarioAi> AiStrats => [new TeaP2BjCcAi(lightningThreeToOffTank: false), new TeaP2BjCcAi(lightningThreeToOffTank: true)];
+    public virtual IReadOnlyList<IScenarioAi> AiStrats => [new TeaP2BjCcAi()];
     public void DrawSettings() => settingsWindow.Draw();
     public bool HasPerPlayerSettings => true;
     public void DrawPerPlayerSettings() => settingsWindow.DrawPerPlayer();
@@ -138,7 +135,7 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
         world.Events.Add(1.91f, () => world.Map.BattleTalk(BNpcNameId.BruteJustice, BattleTalkId.BruteJusticeArrives, 4000));
         world.Events.Add(2.00f, JKick);
         world.Events.Add(5.07f, RobotsTurnTargetable);
-        for (var t = 10.17f; t < RobotsLeave; t += AutoEvery)
+        for (var t = 10.17f; t < EndAt; t += AutoEvery)
             world.Events.Add(t, Autos);
 
         world.Events.Add(10.19f, () => CastBy(Robot.CruiseChaser, TeaActions.Whirlwind));
@@ -242,12 +239,13 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
             world.Events.Add(t, RayHit);
         world.Events.Add(167.57f, () => CastBy(Robot.CruiseChaser, TeaActions.Whirlwind));
         world.Events.Add(175.69f, () => CastBy(Robot.CruiseChaser, TeaActions.Whirlwind));
-        world.Events.Add(187.95f, () =>
-        {
-            CastBy(Robot.BruteJustice, TeaActions.FinalSentenceEnrage);
-            CastBy(Robot.CruiseChaser, TeaActions.EternalDarknessP2);
-        });
-        world.Events.Add(RobotsLeave, () =>
+        if (EndAt > 187.95f)
+            world.Events.Add(187.95f, () =>
+            {
+                CastBy(Robot.BruteJustice, TeaActions.FinalSentenceEnrage);
+                CastBy(Robot.CruiseChaser, TeaActions.EternalDarknessP2);
+            });
+        world.Events.Add(EndAt, () =>
         {
             Leave(Robot.BruteJustice);
             Leave(Robot.CruiseChaser);
@@ -451,8 +449,8 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
         return null;
     }
 
-    // Touching hitboxes copy a holder's nisi onto a player without one, with a fresh timer; the
-    // holder's own runs on. Two different letters touching each take the other's and are sentenced.
+    // UNVERIFIED contact radius: this practice uses touching hitboxes. The holder keeps its timer;
+    // two different letters touching each take the other's and are sentenced.
     private void TouchNisis()
     {
         if (cleared) return;
@@ -821,7 +819,7 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
             if (helpers.FirstOrDefault(h => h is { IsActive: true, IsCasting: false }) is { } helper)
             {
                 helper.SetPosition(new Placement(at, 0f));
-                helper.Cast(TeaActions.HiddenMine);
+                helper.Cast(TeaP2BjCcActions.HiddenMine);
             }
         }
     }

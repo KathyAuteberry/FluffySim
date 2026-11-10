@@ -24,7 +24,7 @@ namespace AnoMech.Tests;
 //  125.12  Propeller Wind (resolves 130.82); Gavel judges the nisis at 133.13, the statuses clear at 135.18.
 //  154.50  Super Jump, landing on the farthest at 158.81; Apocalyptic Ray at 161.17; both robots go
 //          down at 195.87, just before their enrage casts go off.
-public class TeaP2BjCcScenarioTests
+public class TeaP2BjCcLegacyScenarioTests
 {
     private static readonly (PartyRole Role, NisiLetter Letter)[] PinnedNisi =
         [(MainTank, NisiLetter.Beta), (OffTank, NisiLetter.Delta), (RegenHealer, NisiLetter.Gamma), (ShieldHealer, NisiLetter.Alpha)];
@@ -48,12 +48,12 @@ public class TeaP2BjCcScenarioTests
         o.IceTank = OffTank;
     }
 
-    private static NegativeRun<TeaP2BjCcScenario> BjCc(PartyRole player)
-        => Negative<TeaP2BjCcScenario>(player).Overrides<TeaP2BjCcStateOverrides>(Pin);
+    private static NegativeRun<TeaP2BjCcLegacyScenario> BjCc(PartyRole player)
+        => Negative<TeaP2BjCcLegacyScenario>(player).WithScenario(() => new TeaP2BjCcLegacyScenario()).Overrides<TeaP2BjCcStateOverrides>(Pin);
 
     // Every damage-over-time tick on a multiple of 3s.
-    private static NegativeRun<TeaP2BjCcScenario> OnTheBeat(PartyRole player)
-        => Negative<TeaP2BjCcScenario>(player).Overrides<TeaP2BjCcStateOverrides>(o =>
+    private static NegativeRun<TeaP2BjCcLegacyScenario> OnTheBeat(PartyRole player)
+        => Negative<TeaP2BjCcLegacyScenario>(player).WithScenario(() => new TeaP2BjCcLegacyScenario()).Overrides<TeaP2BjCcStateOverrides>(o =>
         {
             Pin(o);
             o.TickClock = 0f;
@@ -61,8 +61,9 @@ public class TeaP2BjCcScenarioTests
 
     private static ScenarioRun Run(PartyRole player, float? stopAt, Action<ScenarioProbe>? probe = null, Takeover[]? takeovers = null,
         Action<TeaP2BjCcStateOverrides>? also = null)
-        => ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        => ScenarioRun.Execute(typeof(TeaP2BjCcLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP2BjCcLegacyScenario(),
             PlayerRole = player,
             StopAt = stopAt,
             Overrides = o =>
@@ -74,7 +75,7 @@ public class TeaP2BjCcScenarioTests
             Probe = probe,
         });
 
-    private static TeaP2BjCcState State(ScenarioProbe p) => p.Game.Catalog.Scenarios.OfType<TeaP2BjCcScenario>().Single().LastState!;
+    private static TeaP2BjCcState State(ScenarioProbe p) => ((TeaP2BjCcLegacyScenario)p.Game.ActiveScenario!).LastState!;
 
     private static SimEnemy? Robot(ScenarioProbe p, uint bnpcBaseId) => p.World.Children.OfType<SimEnemy>().FirstOrDefault(e => e.BNpcBaseId == bnpcBaseId);
 
@@ -115,8 +116,9 @@ public class TeaP2BjCcScenarioTests
     [TestCase(1)]
     public void PinnedRollClears(int strat)
     {
-        var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP2BjCcLegacyScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP2BjCcLegacyScenario(),
             PlayerRole = MeleeDpsB,
             Overrides = o => Pin((TeaP2BjCcStateOverrides)o),
         });
@@ -135,8 +137,9 @@ public class TeaP2BjCcScenarioTests
         float? pastHitboxFromTank = null;
         var lowestHp = 1f;
         var leftAt = new float?[2];
-        var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP2BjCcLegacyScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP2BjCcLegacyScenario(),
             PlayerRole = MeleeDpsB,
             Probe = p =>
             {
@@ -340,7 +343,7 @@ public class TeaP2BjCcScenarioTests
 
     [Test]
     public void LeavingTheMinesWipes()
-        => Negative<TeaP2BjCcScenario>(OffTank)
+        => Negative<TeaP2BjCcLegacyScenario>(OffTank).WithScenario(() => new TeaP2BjCcLegacyScenario())
             .Overrides<TeaP2BjCcStateOverrides>(o =>
             {
                 Pin(o);
@@ -352,13 +355,14 @@ public class TeaP2BjCcScenarioTests
     // The OT walks onto its own mine with no mitigation up.
     [Test]
     public void PoppingTheMinesRawKillsTheTank()
-        => Negative<TeaP2BjCcScenario>(OffTank)
+        => Negative<TeaP2BjCcLegacyScenario>(OffTank).WithScenario(() => new TeaP2BjCcLegacyScenario())
             .Overrides<TeaP2BjCcStateOverrides>(o =>
             {
                 Pin(o);
                 o.IceTank = MainTank;
             })
             .WithMitigationChecks()
+            .At(66.8f, p => { foreach (var status in AnoMech.Core.UserActions.Mitigation.ByStatusId.Keys) p.Member(OffTank)!.RemoveStatus(status); })
             .TeleportAt(66.9f, to: new(-2.8f, 12.2f))
             .ShouldKill(ActionId.HiddenMine, OffTank);
 
@@ -408,8 +412,9 @@ public class TeaP2BjCcScenarioTests
         var tooClose = new List<string>();
         for (var i = 0; i < 30; i++)
         {
-            var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
+            var run = ScenarioRun.Execute(typeof(TeaP2BjCcLegacyScenario), strat, Random.Shared.Next(), new ScenarioRunOptions
             {
+                ScenarioFactory = () => new TeaP2BjCcLegacyScenario(),
                 StopAt = 118f,
                 Probe = p =>
                 {
@@ -553,13 +558,14 @@ public class TeaP2BjCcScenarioTests
     {
         TeaP2BjCcState? host = null;
         TeaP2BjCcState? replayed = null;
-        ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        ScenarioRun.Execute(typeof(TeaP2BjCcLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP2BjCcLegacyScenario(),
             StopAt = 1f,
             Probe = probe =>
             {
                 if (!probe.Crossed(0.5f)) return;
-                var scenario = probe.Game.Catalog.Scenarios.OfType<TeaP2BjCcScenario>().Single();
+                var scenario = ((TeaP2BjCcLegacyScenario)probe.Game.ActiveScenario!);
                 host = scenario.LastState;
                 replayed = (TeaP2BjCcState?)scenario.StartReplay(scenario.BuildReplayStateMessage()!, 0, MainTank, probe.World);
             },
