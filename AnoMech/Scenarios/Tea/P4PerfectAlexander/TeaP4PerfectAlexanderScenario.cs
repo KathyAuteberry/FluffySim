@@ -379,6 +379,7 @@ public sealed class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
     public void Tick(float delta, float elapsed)
     {
         if (state is null) return;
+        if (!world.Map.IsInInstance) return;
         PunishFollowersOfFallenBeacons();
         PunishContact();
         PunishEscapes();

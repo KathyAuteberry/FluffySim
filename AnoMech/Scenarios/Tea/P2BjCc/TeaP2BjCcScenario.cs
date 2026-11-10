@@ -283,6 +283,7 @@ public sealed class TeaP2BjCcScenario : IMultiplayerReplayable
     public void Tick(float delta, float elapsed)
     {
         if (state is null) return;
+        if (!world.Map.IsInInstance) return;
         TouchNisis();
         PunishDeadHolders();
         PopMines();

@@ -634,6 +634,7 @@ public class ArchitectureTests
     {
         [733] = "The Unending Coil of Bahamut (Ultimate)",
         [777] = "The Weapon's Refrain (Ultimate)",
+        [887] = "The Epic of Alexander (Ultimate)",
         [1122] = "The Omega Protocol (Ultimate)",
         [1363] = "Dancing Mad (Ultimate)",
         [1238] = "Futures Rewritten",
