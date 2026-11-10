@@ -77,7 +77,7 @@ public sealed class DsrP7DragonKingScenario : IScenario
     private SimParty party = null!;
     private DsrP7DragonKingState state = null!;
     private SimEnemy? thordan;
-    public PartyRole AggroTank { get; private set; } = PartyRole.MainTank;
+    public PartyRole AggroTank => LastState?.AggroTank ?? PartyRole.MainTank;
     private readonly List<SimEnemy> spawned = [];
     private readonly Queue<SimEnemy> helperPool = [];
 
@@ -92,7 +92,6 @@ public sealed class DsrP7DragonKingScenario : IScenario
         spawned.Clear();
         helperPool.Clear();
         thordan = null;
-        AggroTank = PartyRole.MainTank;
         world.ActionResolved += OnAction;
         world.OnDespawn(() => world.ActionResolved -= OnAction);
 
@@ -107,6 +106,7 @@ public sealed class DsrP7DragonKingScenario : IScenario
         {
             thordan?.SetTargetable(true);
             thordan?.SetTarget(party.Get(AggroTank), false);
+            thordan?.KeepFacing(party.Get(AggroTank));
         });
 
         for (var i = 0; i < EdgeCasts.Length; i++)
@@ -128,13 +128,13 @@ public sealed class DsrP7DragonKingScenario : IScenario
                 }
 
             world.Events.Add(AkhMornCasts[c], () => CastAkhMorn(c));
-            world.Events.Add(AkhMornFirstHits[c], () => AkhMorn(0));
+            world.Events.Add(AkhMornFirstHits[c], () => AkhMorn(c, 0));
             for (var hit = 1; hit <= AkhMornFollowUps[c]; hit++)
             {
                 var h = hit;
                 var at = AkhMornHitAt(c, h);
                 world.Events.Add(at - 0.8f, () => PlayEffect(thordan, h == AkhMornFollowUps[c] ? ActionId.AkhMornsEdgeLastSwing : ActionId.AkhMornsEdgeSwing, 1.1f));
-                world.Events.Add(at, () => AkhMorn(h));
+                world.Events.Add(at, () => AkhMorn(c, h));
             }
 
             if (c >= DsrP7DragonKingState.GigaflareCycles) continue;
@@ -197,10 +197,11 @@ public sealed class DsrP7DragonKingScenario : IScenario
 
     private void CastExaflares(int cycle)
     {
+        state.SnapshotExaflareFacing(cycle, thordan?.Rotation ?? MathF.PI);
         CastSelf(thordan, ActionId.ExaflaresEdge);
         foreach (var spot in Enum.GetValues<EdgeSpot>())
         {
-            var at = ToWorld(DsrP7DragonKingState.Spot(spot));
+            var at = ToWorld(state.ExaflarePoint(cycle, DsrP7DragonKingState.Spot(spot)));
             var rotation = state.ExaflareRotation(cycle, spot);
             if (TakeHelper(new Placement(at, rotation)) is not { } helper) continue;
             helper.Casting.NativeCast(ActionId.ExaflaresEdgeFirst, ActionType.Action, 0f, CastSeconds(ActionId.ExaflaresEdgeFirst), false, rotation: rotation, position: at);
@@ -211,20 +212,23 @@ public sealed class DsrP7DragonKingScenario : IScenario
     private void Exaflare(int cycle, EdgeSpot spot, Explosion explosion)
     {
         var action = explosion.Delay == 0f ? ActionId.ExaflaresEdgeFirst : ActionId.ExaflaresEdgeStep;
-        var at = ToWorld(explosion.At);
+        // The scheduler builds explosions before the cast selects its facing.
+        var at = ToWorld(state.ExaflarePoint(cycle, explosion.At));
+        var radius = Natives.Data.Action(action)?.EffectRange ?? DsrP7DragonKingState.ExaflareRadius;
         PlayFromHelper(action, at, state.ExaflareRotation(cycle, spot));
-        foreach (var hit in party.Find.InsideCircle(at, Natives.Data.Action(action)?.EffectRange ?? DsrP7DragonKingState.ExaflareRadius).Where(m => m.IsAlive()).ToList())
-            hit.Die(action, "stood in an Exaflare's Edge explosion");
+        foreach (var hit in party.Find.InsideCircle(at, radius).Where(m => m.IsAlive()).ToList())
+            hit.Die(action, $"stood in an Exaflare's Edge explosion ({Vector3.Distance(hit.Position, at):F1}y from its center, danger radius {radius:F1}y)");
     }
 
     private readonly Dictionary<EdgeSpot, SimEnemy> akhMornCasters = [];
 
     private void CastAkhMorn(int cycle)
     {
+        state.SnapshotAkhMornFacing(cycle, thordan?.Rotation ?? MathF.PI);
         CastSelf(thordan, ActionId.AkhMornsEdge);
         foreach (var spot in Enum.GetValues<EdgeSpot>())
         {
-            var at = ToWorld(DsrP7DragonKingState.Spot(spot));
+            var at = ToWorld(state.AkhMornPoint(cycle, DsrP7DragonKingState.Spot(spot)));
             if (TakeHelper(new Placement(at, 0f)) is not { } helper) continue;
             helper.Casting.NativeCast(AkhMornFirstAction(spot), ActionType.Action, 0f, CastSeconds(AkhMornFirstAction(spot)), false, targetId: helper.GameObjectId, position: at);
             akhMornCasters[spot] = helper;
@@ -244,11 +248,11 @@ public sealed class DsrP7DragonKingScenario : IScenario
     };
 
     // UNVERIFIED: solo and empty tower failures are simplified practice checks.
-    private void AkhMorn(int hit)
+    private void AkhMorn(int cycle, int hit)
     {
         foreach (var spot in Enum.GetValues<EdgeSpot>())
         {
-            var at = ToWorld(DsrP7DragonKingState.Spot(spot));
+            var at = ToWorld(state.AkhMornPoint(cycle, DsrP7DragonKingState.Spot(spot)));
             var action = hit == 0 ? AkhMornFirstAction(spot) : spot == EdgeSpot.Tanks ? ActionId.AkhMornsEdgeTanks : ActionId.AkhMornsEdgeParty;
             if (akhMornCasters.TryGetValue(spot, out var helper)) PlayEffect(helper, action, 1.1f, at: at);
             var hits = party.Find.InsideCircle(at, AkhMornRadius).Where(m => m.IsAlive()).ToList();
@@ -298,8 +302,9 @@ public sealed class DsrP7DragonKingScenario : IScenario
     {
         if (action != 7533 || thordan == null || target != thordan.GameObjectId.ObjectId || !actor.IsAlive()
             || actor is not ISimPartyMember { Role: PartyRole.MainTank or PartyRole.OffTank } member) return;
-        AggroTank = member.Role;
+        state.AggroTank = member.Role;
         thordan.SetTarget(actor, false);
+        thordan.KeepFacing(actor);
     }
 
     private void Trinity()
@@ -344,6 +349,7 @@ public sealed class DsrP7DragonKingScenario : IScenario
 
     private void CastMornAfahsEdge()
     {
+        state.SnapshotMornAfahFacing(thordan?.Rotation ?? MathF.PI);
         CastSelf(thordan, ActionId.MornAfahsEdge);
         foreach (var (spot, action) in new[]
                  {
@@ -352,7 +358,7 @@ public sealed class DsrP7DragonKingScenario : IScenario
                      (EdgeSpot.Tanks, ActionId.MornAfahsEdgeTanksFirst),
                  })
         {
-            var at = ToWorld(DsrP7DragonKingState.Spot(spot));
+            var at = ToWorld(state.MornAfahPoint(DsrP7DragonKingState.Spot(spot)));
             if (TakeHelper(new Placement(at, 0f)) is { } helper)
                 helper.Casting.NativeCast(action, ActionType.Action, 0f, CastSeconds(action), false, targetId: helper.GameObjectId, position: at);
         }

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AnoMech.Core.Game.Party;
 
 namespace AnoMech.Scenarios.Dsr.P7DragonKing;
 
@@ -36,6 +37,12 @@ public sealed class DsrP7DragonKingState
 
     private static readonly Vector2[] Spots = [new(-6.93f, -4f), new(6.93f, -4f), new(0f, 8f)];
 
+    private readonly float[] exaflareFacings = Enumerable.Repeat(MathF.PI, Cycles).ToArray();
+    private readonly float[] akhMornFacings = Enumerable.Repeat(MathF.PI, Cycles).ToArray();
+    private float mornAfahFacing = MathF.PI;
+
+    public PartyRole AggroTank { get; internal set; } = PartyRole.MainTank;
+
     public IReadOnlyList<IReadOnlyList<int>> ExaflareHeadings { get; }
     public IReadOnlyList<AscalonElement> Elements { get; }
     public IReadOnlyList<IReadOnlyList<int>> GigaflareOrder { get; }
@@ -59,10 +66,27 @@ public sealed class DsrP7DragonKingState
 
     public Vector2 GigaflareSpot(int cycle, int blast) => -Spot((EdgeSpot)GigaflareOrder[cycle][blast]) * (GigaflareRadius / SpotRadius);
 
-    public float ExaflareRotation(int cycle, EdgeSpot spot) => HeadingRotation(ExaflareHeadings[cycle][(int)spot]);
+    public void SnapshotExaflareFacing(int cycle, float facing) => exaflareFacings[cycle] = facing;
+    public void SnapshotAkhMornFacing(int cycle, float facing) => akhMornFacings[cycle] = facing;
+    public void SnapshotMornAfahFacing(float facing) => mornAfahFacing = facing;
+
+    public Vector2 ExaflarePoint(int cycle, Vector2 point) => RotateFromNorth(point, exaflareFacings[cycle]);
+    public Vector2 AkhMornPoint(int cycle, Vector2 point) => RotateFromNorth(point, akhMornFacings[cycle]);
+    public Vector2 MornAfahPoint(Vector2 point) => RotateFromNorth(point, mornAfahFacing);
+
+    public float ExaflareRotation(int cycle, EdgeSpot spot)
+        => HeadingRotation(ExaflareHeadings[cycle][(int)spot]) + exaflareFacings[cycle] - MathF.PI;
+
+    private static Vector2 RotateFromNorth(Vector2 point, float facing)
+    {
+        var offset = facing - MathF.PI;
+        var sin = MathF.Sin(offset);
+        var cos = MathF.Cos(offset);
+        return new Vector2(point.X * cos + point.Y * sin, -point.X * sin + point.Y * cos);
+    }
 
     public IEnumerable<Explosion> ExaflareExplosions(int cycle, EdgeSpot spot)
-        => Explosions(Spot(spot), ExaflareRotation(cycle, spot));
+        => Explosions(ExaflarePoint(cycle, Spot(spot)), ExaflareRotation(cycle, spot));
 
     private static float HeadingRotation(int heading) => heading * MathF.PI / 4f;
 

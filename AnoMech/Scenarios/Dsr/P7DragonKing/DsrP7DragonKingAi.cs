@@ -45,7 +45,7 @@ public sealed class DsrP7DragonKingAi : IScenarioAi<DsrP7DragonKingState>
         world = worldParam;
         var ai = new AiManager(world);
 
-        ai.Move(Scenario.StartAt + 0.5f, () => AiMove.Create(Cluster(SouthMaxMelee, Everyone)).NaturalOrder(), jitter: 0f);
+        ai.Move(Scenario.StartAt + 0.5f, () => AiMove.Create(HoldAggroNorth(Cluster(SouthMaxMelee, Everyone))).NaturalOrder(), jitter: 0f);
         for (var cycle = 0; cycle < State.Cycles; cycle++)
         {
             var c = cycle;
@@ -54,14 +54,16 @@ public sealed class DsrP7DragonKingAi : IScenarioAi<DsrP7DragonKingState>
             var gigaflarePair = 3 * c + 2;
             var firstHit = Scenario.ExaflareFirstHits[c];
 
-            var waitAtTheSouthExaflare = c == 0 ? Scenario.ExaflareCasts[0] + 1.3f : Scenario.TrinityHits[2 * (gigaflarePair - 3) + 1] + AfterTrinity;
-            ai.Move(waitAtTheSouthExaflare, () => AiMove.Create(Cluster(SouthExaflareEdge(c), Everyone)).NaturalOrder(), jitter: 0f);
-            ai.Move(firstHit + StepAfterHit, () => AiMove.Create(Cluster(State.Spot(EdgeSpot.Tanks), Everyone)).NaturalOrder(), jitter: 0f, sprint: true);
-            ai.Move(firstHit + State.ExaflareDelays[1] + 0.1f, () => AiMove.Create(Cluster(State.SouthOfTheExaflares, Everyone)).NaturalOrder(), jitter: 0f, sprint: true);
-            ai.Move(firstHit + State.BaitStepInDelay, () => AiMove.Create(FirstBaitStepsIntoTheSouthExaflare(exaflarePair)).NaturalOrder(), jitter: 0f);
+            var waitAtTheSouthExaflare = c == 0 ? Scenario.ExaflareCasts[0] - 1.3f : Scenario.TrinityHits[2 * (gigaflarePair - 3) + 1] + AfterTrinity;
+            ai.Move(waitAtTheSouthExaflare, () => AiMove.Create(HoldAggroNorth(Cluster(SouthExaflareEdge(c), Everyone))).NaturalOrder(), jitter: 0f);
+            ai.Move(Scenario.ExaflareCasts[c] + .1f, () => AiMove.Create(ExaflarePoints(c, Cluster(SouthExaflareEdge(c), Everyone))).NaturalOrder(), jitter: 0f);
+            ai.Move(firstHit + StepAfterHit, () => AiMove.Create(ExaflarePoints(c, Cluster(State.Spot(EdgeSpot.Tanks), Everyone))).NaturalOrder(), jitter: 0f, sprint: true);
+            ai.Move(firstHit + State.ExaflareDelays[1] + 0.1f, () => AiMove.Create(ExaflarePoints(c, Cluster(State.SouthOfTheExaflares, Everyone))).NaturalOrder(), jitter: 0f, sprint: true);
+            ai.Move(firstHit + State.BaitStepInDelay, () => AiMove.Create(ExaflarePoints(c, FirstBaitStepsIntoTheSouthExaflare(exaflarePair))).NaturalOrder(), jitter: 0f);
             ai.Move(firstHit + State.ExaflareDelays[^1] + 0.2f, () => AiMove.Create(TrinitySpots(exaflarePair, 1)).NaturalOrder(), jitter: 0f);
 
-            ai.Move(Scenario.TrinityHits[2 * exaflarePair + 1] + AfterTrinity, () => AiMove.Create(AkhMornSpots(c)).NaturalOrder(), jitter: 0f);
+            ai.Move(Scenario.TrinityHits[2 * exaflarePair + 1] + AfterTrinity, () => AiMove.Create(HoldAggroNorth(AkhMornSpots(c))).NaturalOrder(), jitter: 0f);
+            ai.Move(Scenario.AkhMornCasts[c] + .1f, () => AiMove.Create(AkhMornSpots(c)).NaturalOrder(), jitter: 0f);
             ai.Move(Scenario.AkhMornFirstHits[c] + .4f, () => AiMove.Create(AkhMornSpots(c, inside: true)).NaturalOrder(), jitter: 0f);
             ai.Move(Scenario.AkhMornLastHit(c) + AfterTrinity, () => AiMove.Create(TrinitySpots(akhMornPair, 0)).NaturalOrder(), jitter: 0f);
             ai.Move(Scenario.TrinityHits[2 * akhMornPair] + AfterTrinity, () => AiMove.Create(TrinitySpots(akhMornPair, 1)).NaturalOrder(), jitter: 0f);
@@ -76,7 +78,7 @@ public sealed class DsrP7DragonKingAi : IScenarioAi<DsrP7DragonKingState>
         for (var pair = 0; pair < Scenario.TrinityHits.Length / 2 - 1; pair++)
         {
             var next = AggroTank(pair + 1);
-            world.Events.Add(Scenario.TrinityHits[pair * 2 + 1] + AfterTrinity, () => Provoke(next));
+            world.Events.Add(Scenario.TrinityHits[pair * 2 + 1] + .2f, () => Provoke(next));
         }
         ai.Move(Scenario.MornAfahsEdgeCast + 0.5f, () => AiMove.Create(HealersAndMainTankTakeTheFirstTowers()).NaturalOrder(), jitter: 0f);
     }
@@ -132,7 +134,7 @@ public sealed class DsrP7DragonKingAi : IScenarioAi<DsrP7DragonKingState>
     private static PartyRole OtherTank(int pair) => pair % 2 == 0 ? OffTank : MainTank;
 
     private Vector2 AkhMornSpot(int cycle, EdgeSpot spot, bool inside)
-        => State.Spot(spot) * ((inside || state.AkhMornElement(cycle) == AscalonElement.Ice ? InsideAkhMornRadius : FlamesAkhMornRadius) / State.SpotRadius);
+        => state.AkhMornPoint(cycle, State.Spot(spot)) * ((inside || state.AkhMornElement(cycle) == AscalonElement.Ice ? InsideAkhMornRadius : FlamesAkhMornRadius) / State.SpotRadius);
 
     private Vector2?[] AkhMornSpots(int cycle, bool inside = false)
     {
@@ -142,13 +144,22 @@ public sealed class DsrP7DragonKingAi : IScenarioAi<DsrP7DragonKingState>
         return spots;
     }
 
-    private static Vector2?[] HealersAndMainTankTakeTheFirstTowers()
+    private Vector2?[] HealersAndMainTankTakeTheFirstTowers()
     {
         var spots = Cluster(OutOfEveryTower, Everyone);
-        spots[(int)RegenHealer] = State.Spot(EdgeSpot.Party);
-        spots[(int)ShieldHealer] = State.Spot(EdgeSpot.SecondParty);
-        spots[(int)MainTank] = State.Spot(EdgeSpot.Tanks);
+        spots[(int)RegenHealer] = state.MornAfahPoint(State.Spot(EdgeSpot.Party));
+        spots[(int)ShieldHealer] = state.MornAfahPoint(State.Spot(EdgeSpot.SecondParty));
+        spots[(int)MainTank] = state.MornAfahPoint(State.Spot(EdgeSpot.Tanks));
         return spots;
+    }
+
+    private Vector2?[] ExaflarePoints(int cycle, Vector2?[] points)
+        => points.Select(point => point is { } at ? (Vector2?)state.ExaflarePoint(cycle, at) : null).ToArray();
+
+    private Vector2?[] HoldAggroNorth(Vector2?[] points)
+    {
+        points[(int)state.AggroTank] = AggroTankNorth;
+        return points;
     }
 
     private static void Place(Vector2?[] into, Vector2?[] from)
