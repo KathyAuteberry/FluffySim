@@ -68,6 +68,7 @@ DOCUMENTATION = (
     'docs/verification/COMMUNITY-QA-NATIVE-RETEST.md',
     'docs/verification/COMMUNITY-QA-PARADISE-WROTH.md',
     'docs/verification/COMMUNITY-QA-ROUND-2.md',
+    'docs/verification/PLAYTEST-CORRECTIONS-2026-11-11.md',
     'images/icon.png',
     'tests/SafetyTests/README.md',
 )

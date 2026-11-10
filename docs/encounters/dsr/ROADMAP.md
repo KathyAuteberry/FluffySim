@@ -3,7 +3,7 @@
 Dragon-king Thordan is registered with three Edge cycles, all 3-3-2 Akh Morns,
 Elemental Trinity baits and local Provoke swaps. Practice ends before Morn Afah's
 Edge resolves. Native presentation remains unverified. See [source attribution,
-scope and client verification](docs/encounters/dsr/P7-PORT.md). Earlier coverage tables below are
+scope and client verification](P7-PORT.md). Earlier coverage tables below are
 historical and do not describe the current full DSR catalog.
 
 ## Offline P2 scenery and Meteors clock repair — 2026-10-15
