@@ -18,7 +18,7 @@ namespace AnoMech.Scenarios.Tea.P4PerfectAlexander;
 // Perfect Alexander from just before it turns targetable to its death, at the slowest real kill so
 // every mechanic shows up; a practice runs one of its mechanics alone. Scenario time 0 is 12s before
 // The Final Word.
-public sealed class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
+public class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
 {
     // The engine builds a spawned actor up to ~0.3s later and drops an instant cast made before then.
     private const float HelperLead = 1f;
@@ -144,7 +144,10 @@ public sealed class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
     public string Name => "Perfect Alexander";
     public IPhase Phase => TeaZone.P4;
     public bool SupportsMultiplayer => true;
-    public IReadOnlyList<IScenarioAi> AiStrats => [new TeaP4PerfectAlexanderAi()];
+    private readonly IScenarioAi strategy;
+    public TeaP4PerfectAlexanderScenario() : this(new TeaP4PerfectAlexanderAi()) { }
+    protected TeaP4PerfectAlexanderScenario(IScenarioAi strategy) => this.strategy = strategy;
+    public IReadOnlyList<IScenarioAi> AiStrats => [strategy];
     public void DrawSettings() => settingsWindow.Draw();
     public bool HasPerPlayerSettings => true;
     public void DrawPerPlayerSettings() => settingsWindow.DrawPerPlayer();
@@ -1188,4 +1191,9 @@ public sealed class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
     }
 
     private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
+}
+
+public sealed class TeaP4PerfectAlexanderLegacyScenario : TeaP4PerfectAlexanderScenario
+{
+    public TeaP4PerfectAlexanderLegacyScenario() : base(new TeaP4PerfectAlexanderLegacyAi()) { }
 }

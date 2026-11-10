@@ -826,7 +826,7 @@ public static class TeaActions
     // Shared by whoever stands in it; alone, a human tank needs an invuln.
     public static readonly EnemyAction OrdainedCapitalPunishmentHit = new(ActionId.OrdainedCapitalPunishmentHit)
     {
-        Effects = [Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f), split: Distribution.Stack(2, understacked: TankBuster.MinMit(1f)))],
+        Effects = [Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f, includeBots: true), split: Distribution.Stack(2, understacked: TankBuster.MinMit(1f, includeBots: true)))],
         Timing = new() { DamageDelay = 0.5f },
     };
 
@@ -838,7 +838,7 @@ public static class TeaActions
         Area = new() { AdjustTargets = (ctx, hits) => ctx.Target?.IsAlive() == true ? hits : [] },
         Effects =
         [
-            OnTarget(Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f)), ApplyStatus(StatusId.PhysicalVulnerabilityUp, 30f)),
+            OnTarget(Damage(MagicallyVulnerable, TankBuster.MinMit(0.3f, includeBots: true)), ApplyStatus(StatusId.PhysicalVulnerabilityUp, 30f)),
             OnOthers(Damage(Lethal)),
         ],
         Timing = new() { DamageDelay = 0.5f },

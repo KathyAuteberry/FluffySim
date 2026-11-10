@@ -100,7 +100,7 @@ public sealed class TeaP4PerfectAlexanderState
         DarkFollowers = PerRole.All.Where(r => finalWord[r] == FinalWordDebuff.DarkFollower).ToList();
         FinalWordMotionFirst = overrides.FinalWordMotionFirst ?? rng.NextBool();
         OpticalSpreadFirst = overrides.OpticalSpreadFirst ?? rng.NextBool();
-        OpticalStackTargets = overrides.OpticalStackTargets ?? Pick(rng, overrides.OpticalStack.Resolve(local), 2);
+        OpticalStackTargets = overrides.OpticalStackTargets ?? PickOpticalStackTargets(rng, overrides.OpticalStack.Resolve(local));
 
         var alpha = Deal<AlphaSentence>(rng, [AlphaSentence.SharedSentence, AlphaSentence.Defamation, .. Copies(AlphaSentence.AggravatedAssault, 3),
             .. Copies(AlphaSentence.Nothing, 3)], overrides.Alpha.Resolve(local), "Fate Calibration α sentence");
@@ -169,13 +169,21 @@ public sealed class TeaP4PerfectAlexanderState
         return slots;
     }
 
-    // `count` seats: those asking first, then the roll among the rest, those refusing last.
-    private static List<PartyRole> Pick(Rng rng, IReadOnlyList<(PartyRole Role, bool Value)> asked, int count)
+    internal static bool IsSupport(PartyRole role)
+        => role is PartyRole.MainTank or PartyRole.OffTank or PartyRole.RegenHealer or PartyRole.ShieldHealer;
+
+    // UNVERIFIED: one support and one DPS, inferred from fixed role stacks and the observed target pairs.
+    private static List<PartyRole> PickOpticalStackTargets(Rng rng, IReadOnlyList<(PartyRole Role, bool Value)> asked)
     {
-        var yes = asked.Where(a => a.Value).Select(a => a.Role).Take(count).ToList();
-        var no = asked.Where(a => !a.Value).Select(a => a.Role).ToHashSet();
-        var rest = rng.Shuffle(PerRole.All.Except(yes)).OrderBy(no.Contains);
-        return yes.Concat(rest).Take(count).ToList();
+        var targets = new List<PartyRole>();
+        foreach (var support in new[] { true, false })
+        {
+            var candidates = PerRole.All.Where(r => IsSupport(r) == support).ToList();
+            var desired = asked.Where(a => a.Value && candidates.Contains(a.Role)).Select(a => (PartyRole?)a.Role).FirstOrDefault();
+            var refused = asked.Where(a => !a.Value).Select(a => a.Role).ToHashSet();
+            targets.Add(desired ?? rng.Shuffle(candidates).OrderBy(refused.Contains).First());
+        }
+        return targets;
     }
 
     // A peer's shadow of the host's roll: nothing rolled.

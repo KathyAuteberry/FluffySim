@@ -29,12 +29,12 @@ namespace AnoMech.Tests;
 //           tethers' checks and the shared stack, 191.79 J Jumps, 197.90 Optical Sight, 202.82 the donut.
 //   232.49  Almighty Judgment: tiles lit from 238.60, blasts 246.63 / 248.62 / 250.61.
 //   315.06  Temporal Prison, jails from 325.06 every 5s.
-public class TeaP4PerfectAlexanderScenarioTests
+public class TeaP4PerfectAlexanderLegacyScenarioTests
 {
-    private static NegativeRun<TeaP4PerfectAlexanderScenario> Run(PartyRole player, Action<TeaP4PerfectAlexanderStateOverrides>? tweak = null)
-        => Negative<TeaP4PerfectAlexanderScenario>(player).Overrides<TeaP4PerfectAlexanderStateOverrides>(o => tweak?.Invoke(o));
+    private static NegativeRun<TeaP4PerfectAlexanderLegacyScenario> Run(PartyRole player, Action<TeaP4PerfectAlexanderStateOverrides>? tweak = null)
+        => Negative<TeaP4PerfectAlexanderLegacyScenario>(player).WithScenario(() => new TeaP4PerfectAlexanderLegacyScenario()).Overrides<TeaP4PerfectAlexanderStateOverrides>(o => tweak?.Invoke(o));
 
-    private static NegativeRun<TeaP4PerfectAlexanderScenario> Practice(P4Practice practice, PartyRole player,
+    private static NegativeRun<TeaP4PerfectAlexanderLegacyScenario> Practice(P4Practice practice, PartyRole player,
         Action<TeaP4PerfectAlexanderStateOverrides>? tweak = null)
         => Run(player, o =>
         {
@@ -68,8 +68,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void TheDarkStrikeLandsAsTheMarchCrossesTheLimit()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = MeleeDpsA,
             StopAt = 33f,
             Takeovers = [new Takeover(25.5f, new Vector2(0, 8))],
@@ -90,8 +91,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void LightFollowerOnItsBeaconDiesBeforeTheMarch()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = PhysRangedDps,
             StopAt = 27.4f,
             Takeovers = [new Takeover(25.5f, new Vector2(0.1f, -13.4f))],
@@ -105,8 +107,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void FollowersGoDownWithTheirBeacon()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = CasterDps,
             StopAt = 26f,
             Takeovers = [new Takeover(21.5f, null)],
@@ -140,8 +143,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void AnEarlierActionsLockIsFine()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = RegenHealer,
             StopAt = 36f,
             Overrides = o => FinalWordPinned((TeaP4PerfectAlexanderStateOverrides)o),
@@ -163,8 +167,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void ActingBeforeTheStillnessWindowIsFine()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = RegenHealer,
             StopAt = 36f,
             Overrides = o => FinalWordPinned((TeaP4PerfectAlexanderStateOverrides)o),
@@ -181,8 +186,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     public void TheDarkBeaconSpotIsOutOfReachOfTheAutos()
     {
         string? boss = null, mainTank = null;
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = RegenHealer,
             StopAt = 26f,
             Overrides = o =>
@@ -217,8 +223,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     public void TheMarchCarriesFollowersTwentyYalms()
     {
         Vector3? before = null, after = null;
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = MainTank,
             StopAt = 33f,
             Overrides = o => FinalWordPinned((TeaP4PerfectAlexanderStateOverrides)o),
@@ -238,8 +245,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     public void ThePlayersOwnMarchWalksItThere()
     {
         Vector3? before = null, after = null;
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             PlayerRole = MainTank,
             StopAt = 33f,
             Overrides = o => FinalWordPinned((TeaP4PerfectAlexanderStateOverrides)o),
@@ -408,8 +416,9 @@ public class TeaP4PerfectAlexanderScenarioTests
         Assert.That(state.BetaDonutClone, Is.EqualTo(donut));
         foreach (var seed in Enumerable.Range(1, TestContext.Parameters.Get("PracticeSeeds", 8)))
         {
-            var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, seed, new ScenarioRunOptions
+            var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, seed, new ScenarioRunOptions
             {
+                ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
                 Overrides = o =>
                 {
                     var overrides = (TeaP4PerfectAlexanderStateOverrides)o;
@@ -428,8 +437,8 @@ public class TeaP4PerfectAlexanderScenarioTests
     {
         foreach (var seed in Enumerable.Range(1, TestContext.Parameters.Get("PracticeSeeds", 8)))
         {
-            var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, seed,
-                new ScenarioRunOptions { Overrides = o => ((TeaP4PerfectAlexanderStateOverrides)o).Practice = practice });
+            var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, seed,
+                new ScenarioRunOptions { ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(), Overrides = o => ((TeaP4PerfectAlexanderStateOverrides)o).Practice = practice });
             Assert.That(run.Passed, run.ToString);
         }
     }
@@ -439,8 +448,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     public void SlowestKillReachesTheSixthJail()
     {
         var jailed = new List<PartyRole>();
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 5, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 5, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             Overrides = o =>
             {
                 var overrides = (TeaP4PerfectAlexanderStateOverrides)o;
@@ -462,8 +472,9 @@ public class TeaP4PerfectAlexanderScenarioTests
     {
         var lowestHpBefore = 1f;
         float? diedAt = null;
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 3, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             Overrides = o => ((TeaP4PerfectAlexanderStateOverrides)o).Practice = P4Practice.TemporalPrison,
             Probe = p =>
             {
@@ -485,8 +496,9 @@ public class TeaP4PerfectAlexanderScenarioTests
         SimEnemy? target = null;
         var vulnerable = false;
         var hp = 0f;
-        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderScenario), 0, 2, new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 2, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
             StopAt = 130f,
             Overrides = o =>
             {
@@ -510,7 +522,7 @@ public class TeaP4PerfectAlexanderScenarioTests
     [Test]
     public void PracticeStartsOnItsPlaceInTheTrack()
     {
-        var scenario = new TeaP4PerfectAlexanderScenario();
+        var scenario = new TeaP4PerfectAlexanderLegacyScenario();
         var overrides = (TeaP4PerfectAlexanderStateOverrides)scenario.SettingsOverrides;
         Assert.That(scenario.Phase, Is.SameAs(TeaZone.P4));
         Assert.That(scenario.BgmSecondsAtStart, Is.EqualTo(49.94f).Within(1e-3f));
