@@ -492,7 +492,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, 1f), TankBuster)],
+        Effects = [Damage(VulnerableTo(StatusId.MagicVulnerabilityUp, 1f), TankBuster with { CheckBotMitigation = true })],
         Timing = new() { DamageDelay = 0.80f },
     };
 
@@ -561,7 +561,7 @@ public static class TeaActions
     public static readonly EnemyAction DivineJudgmentRaidwide = new(ActionId.DivineJudgmentRaidwide)
     {
         Cast = new() { AnimationLock = 3.1f },
-        Effects = [Damage(Normal.MinMit(0.8f)), ApplyStatus(StatusId.DownForTheCount, 57f, delayToEffectResult: true)],
+        Effects = [Damage(Normal.MinMit(0.8f, includeBots: true)), ApplyStatus(StatusId.DownForTheCount, 57f, delayToEffectResult: true)],
         Timing = new() { DamageDelay = 0.18f },
         DeathExplanation = "no tank LB3 for Divine Judgment",
     };
@@ -601,7 +601,7 @@ public static class TeaActions
                 var dz = target.Position.Z - ctx.Origin.Position.Z;
                 var sum = taken[target] = taken.GetValueOrDefault(target) + MathF.Max(3300f, atCentre - perYalm * MathF.Sqrt(dx * dx + dz * dz));
                 var hp = HitPoints(target);
-                var severity = sum < hp ? Normal : DamageCheck.IsTank(target) ? TankBuster.MinMit(1f - hp / sum) : Lethal;
+                var severity = sum < hp ? Normal : DamageCheck.IsTank(target) ? TankBuster.MinMit(1f - hp / sum, includeBots: true) : Lethal;
                 Damage(severity).Apply(ctx, [target]);
             }
         }

@@ -13,9 +13,10 @@ using static AnoMech.Scenarios.Tea.TeaConstants;
 
 namespace AnoMech.Scenarios.Tea.P3AlexanderPrime;
 
-public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
+public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
 {
-    public string Name => "NAUR";
+    public virtual string Name => "NAUR";
+    public virtual string? Group => null;
 
     private const float ArenaEdge = 18.8f;
     private const float Clearance = 1.2f;
@@ -67,9 +68,9 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
     private static readonly PartyRole[] PartyOrder = [RegenHealer, ShieldHealer, MeleeDpsA, MeleeDpsB, PhysRangedDps, CasterDps];
     private static readonly Vector2[] PartyFlareOffsets = [new(0f, 0f), new(1.1f, 0f), new(-1.1f, 0f), new(0.55f, -0.95f), new(-0.55f, -0.95f), new(0.55f, 0.95f)];
 
-    private TeaP3AlexanderPrimeState state = null!;
-    private SimWorld world = null!;
-    private AiManager ai = null!;
+    protected TeaP3AlexanderPrimeState state = null!;
+    protected SimWorld world = null!;
+    protected AiManager ai = null!;
     private readonly Dictionary<PartyRole, int> walks = [];
     private readonly Dictionary<PartyRole, Plan> plans = [];
     private readonly Dictionary<PartyRole, Vector2?> facings = [];
@@ -95,6 +96,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
             world.Events.Add(TeaP3AlexanderPrimePractice.Of(P3Practice.Wormhole).Start, () => PlaceBotsOn(SecondSetSpot));
         At(0.3f, () => GoAll(OpenerSpot));
         Use(3.3f, OffTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(13.5f, OffTank, Invulnerability);
         Use(20.9f, MainTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
         At(22.4f, () =>
         {
@@ -106,26 +108,14 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         At(36.8f, TakeOrbAndCrystalSpots);
         At(49.25f, RunCrystalHoldersTowardAlexanderPrime);
         At(50.5f, WaitForEveryOrbThenWaitOutTheShatters);
-        At(60.5f, () =>
-        {
-            Go(MainTank, InceptionSide(FlareOneRetreat));
-            Go(OffTank, InceptionSide(FlareTwoSpot));
-        });
-        At(62.7f, () =>
-        {
-            Go(MainTank, InceptionSide(InceptionWaitSpot(MainTank)));
-            Go(OffTank, InceptionSide(FlareTwoRetreat), InceptionSide(InceptionWaitSpot(OffTank)));
-        });
-        At(64.8f, () =>
-        {
-            foreach (var role in PartyOrder) Go(role, InceptionSide(InceptionWaitSpot(role)));
-        });
+        PlanFlareWithdrawals();
         At(72.4f, NoteWhereTheHeartStopped);
         At(73.0f, ReadTheHeartsFlightAndSplit);
         At(80.35f, TakeSwordAndJumpSpots);
         At(88.5f, StepAwayFromTheJump);
         At(91.6f, () => GoAll(SecondSetSpot));
         Use(93.5f, MainTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(103.5f, MainTank, Invulnerability);
         Use(111.9f, OffTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
         At(112.3f, () => Go(OffTank, new Vector2(-0.7f, -7.0f)));
         At(123.5f, () => GoAll(MidRing));
@@ -145,6 +135,33 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         At(199.0f, () => WhenRobotLeaves(() => state.Objects.BruteJustice, () => GoAll(role => AddStackSpot(role, AddStackAfterBruteJustice))));
         At(225f, LimitBreakForDivineJudgment);
     }
+
+    protected virtual void PlanFlareWithdrawals()
+    {
+        At(60.5f, () =>
+        {
+            Go(MainTank, InceptionSide(FlareOneRetreat));
+            Go(OffTank, InceptionSide(FlareTwoSpot));
+        });
+        At(62.7f, () =>
+        {
+            Go(MainTank, InceptionSide(InceptionWaitSpot(MainTank)));
+            Go(OffTank, InceptionSide(FlareTwoRetreat), InceptionSide(InceptionWaitSpot(OffTank)));
+        });
+        At(64.8f, () =>
+        {
+            foreach (var role in PartyOrder) Go(role, InceptionSide(InceptionWaitSpot(role)));
+        });
+    }
+
+    private static uint Invulnerability(byte job) => job switch
+    {
+        19 => 30,
+        21 => 43,
+        32 => 3638,
+        37 => 16152,
+        _ => 0,
+    };
 
     private static Vector2 OpenerSpot(PartyRole role) => role switch
     {
@@ -181,7 +198,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
 
     private static Vector2 AddStackSpot(PartyRole role, Vector2 centre) => centre + Polar(45f * (int)role, 0.9f);
 
-    private static Vector2 InceptionWaitSpot(PartyRole role) => role switch
+    protected static Vector2 InceptionWaitSpot(PartyRole role) => role switch
     {
         MainTank => new(-1.5f, -9.8f),
         OffTank => new(1.5f, -9.8f),
@@ -193,7 +210,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         _ => new(1.0f, -1.4f),
     };
 
-    private void GoAll(Func<PartyRole, Vector2> spot)
+    protected void GoAll(Func<PartyRole, Vector2> spot)
     {
         foreach (var role in PerRole.All) Go(role, spot(role));
     }
@@ -207,7 +224,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
 
     private Vector2 OrbSpawnOf(int k) => state.Objects.Plasmaspheres[k] is { } orb ? Flat(orb.Position) : Vector2.Zero;
 
-    private Vector2 InceptionSide(Vector2 southLayout) => state.AlexanderPrimeNorth ? southLayout with { Y = -southLayout.Y } : southLayout;
+    protected Vector2 InceptionSide(Vector2 southLayout) => state.AlexanderPrimeNorth ? southLayout with { Y = -southLayout.Y } : southLayout;
 
     private int DotAcrossFromOrb(int k)
     {
@@ -301,7 +318,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         foreach (var role in PerRole.All) GoToFlarethrowerSpot(role);
     }
 
-    private void GoToFlarethrowerSpot(PartyRole role)
+    protected virtual void GoToFlarethrowerSpot(PartyRole role)
     {
         if (Member(role) is not { } member) return;
         if (role != MainTank) Go(role, InceptionSide(role == OffTank ? FlareTwoWait : PartyFlareSpot(role)));
@@ -355,7 +372,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         SprintIfFar(ShieldHealer, Polar(right + 2.2f, WingRadius - 1.6f));
     }
 
-    private void TakeSwordAndJumpSpots()
+    protected virtual void TakeSwordAndJumpSpots()
     {
         SprintIfFar(RegenHealer, new Vector2(0f, -1.2f));
         SprintIfFar(ShieldHealer, new Vector2(0f, 2.3f));
@@ -366,26 +383,26 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         for (var k = 0; k < stack.Count; k++) SprintIfFar(stack[k], waymark[k]);
     }
 
-    private void StepAwayFromTheJump()
+    protected virtual void StepAwayFromTheJump()
     {
         var clear = new[] { new Vector2(6.6f, 4.2f), new Vector2(7.6f, 3.6f), new Vector2(5.8f, 3.4f), new Vector2(7.0f, 5.0f) };
         var stack = new[] { MainTank, state.SharedSentence }.Concat(state.AggravatedAssault).ToList();
         for (var k = 0; k < stack.Count; k++) Go(stack[k], clear[k]);
     }
 
-    private void SprintIfFar(PartyRole role, Vector2 spot)
+    protected void SprintIfFar(PartyRole role, Vector2 spot)
     {
         if (Member(role) is not { } member) return;
         if (Vector2.Distance(Flat(member.Position), spot) > 15f) Sprint(role, spot);
         else Go(role, spot);
     }
 
-    private PartyRole Number(int number) => state.Numbers[number - 1];
+    protected PartyRole Number(int number) => state.Numbers[number - 1];
 
     private bool FourOne => state.BruteJusticeNorthWest;
     private bool Mirrored => state.PuddlesMirrored;
-    private Vector2 SouthWestSlashSpot => Mirrored ? new(-14.0f, 12.8f) : new(-13.4f, 12.6f);
-    private Vector2 SouthEastChargeSpot => Mirrored ? new(13.4f, 12.6f) : new(14.0f, 12.8f);
+    protected Vector2 SouthWestSlashSpot => Mirrored ? new(-14.0f, 12.8f) : new(-13.4f, 12.6f);
+    protected Vector2 SouthEastChargeSpot => Mirrored ? new(13.4f, 12.6f) : new(14.0f, 12.8f);
     private Vector2 FirstSoakWest => Mirrored ? new(-17.0f, 1.0f) : new(-17.0f, -5.0f);
     private Vector2 FirstSoakEast => Mirrored ? new(17.0f, -4.7f) : new(17.0f, 1.4f);
     private Vector2 SecondSoakWest => Mirrored ? new(-15.5f, 5.0f) : new(-15.0f, -2.6f);
@@ -414,11 +431,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
             Go(Number(8), EightWaitsForSecondSoak);
         });
         Use(142.0f, Number(3), KnockbackImmunity.ActionId);
-        At(142.1f, () =>
-        {
-            if (FourOne) Go(Number(4), SouthEastChargeSpot);
-            else GoFacing(Number(3), FacingSouthWest, false, SouthWestSlashSpot);
-        });
+        At(142.1f, StepThirdAndFourthAfterJump);
         Use(143.4f, Number(4), KnockbackImmunity.ActionId);
         At(Mirrored ? 146.6f : 146.25f, () => Go(Number(3), ThreeWaitsOnTheWestWall));
         Use(146.4f, Number(5), KnockbackImmunity.ActionId);
@@ -461,7 +474,13 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         });
     }
 
-    private void TakeNumberSpots()
+    protected virtual void StepThirdAndFourthAfterJump()
+    {
+        if (FourOne) Go(Number(4), SouthEastChargeSpot);
+        else GoFacing(Number(3), FacingSouthWest, false, SouthWestSlashSpot);
+    }
+
+    protected virtual void TakeNumberSpots()
     {
         GoFacing(Number(1), FacingNorthWest, false, NorthWestDot);
         Go(Number(2), NorthEastDot);
@@ -497,7 +516,7 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         }
     }
 
-    private void TakeEnumerationSpots()
+    protected virtual void TakeEnumerationSpots()
     {
         var marked = state.Enumerations.ToList();
         var melee = marked.Where(r => r is MeleeDpsA or MeleeDpsB).ToList();
@@ -550,9 +569,9 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         public Vector2 Destination => Points.Count > 0 ? Points[^1].At : From;
     }
 
-    private void Go(PartyRole role, params Vector2[] stops) => Walk(role, AiManager.RunSpeed, null, stops);
+    protected void Go(PartyRole role, params Vector2[] stops) => Walk(role, AiManager.RunSpeed, null, stops);
 
-    private void At(float time, Action action, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
+    protected void At(float time, Action action, [CallerFilePath] string file = "", [CallerLineNumber] int line = 0)
     {
         if (TeaP3AlexanderPrimePractice.Covers(state.Practice, time)) world.Events.Add(time, action, file, line);
     }
@@ -576,9 +595,9 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
                 bot.SetPosition(new Placement(new Vector3(spot(role).X, 0f, spot(role).Y), bot.Rotation));
     }
 
-    private void Sprint(PartyRole role, params Vector2[] stops) => Walk(role, AiManager.SprintSpeed, null, stops);
+    protected void Sprint(PartyRole role, params Vector2[] stops) => Walk(role, AiManager.SprintSpeed, null, stops);
 
-    private void GoFacing(PartyRole role, Vector2 facing, bool sprint, params Vector2[] stops)
+    protected void GoFacing(PartyRole role, Vector2 facing, bool sprint, params Vector2[] stops)
         => Walk(role, sprint ? AiManager.SprintSpeed : AiManager.RunSpeed, facing, stops);
 
     private void Walk(PartyRole role, float speed, Vector2? facing, Vector2[] stops)
@@ -747,9 +766,9 @@ public sealed class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState
         return Vector2.Distance(from + leg * t, point);
     }
 
-    private SimCharacter? Member(PartyRole role) => world.Party.Get(role) is { } member && member.IsAlive() ? member : null;
+    protected SimCharacter? Member(PartyRole role) => world.Party.Get(role) is { } member && member.IsAlive() ? member : null;
 
     private static Vector2 Polar(float degrees, float radius) => Flat(Geometry.OnCompass(degrees, radius));
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
+    protected static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

@@ -57,12 +57,13 @@ public class TeaP3AlexanderPrimeScenarioTests
     }
 
     private static NegativeRun<TeaP3AlexanderPrimeScenario> AlexanderPrime(PartyRole player)
-        => Negative<TeaP3AlexanderPrimeScenario>(player).Overrides<TeaP3AlexanderPrimeStateOverrides>(Pin);
+        => Negative<TeaP3AlexanderPrimeScenario>(player).WithScenario(() => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi())).Overrides<TeaP3AlexanderPrimeStateOverrides>(Pin);
 
     private static ScenarioRun Run(PartyRole player, float? stopAt = null, Action<ScenarioProbe>? probe = null, bool alexanderPrimeNorth = false,
         params Takeover[] takeovers)
         => ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = player,
             StopAt = stopAt,
             Overrides = o =>
@@ -75,7 +76,7 @@ public class TeaP3AlexanderPrimeScenarioTests
         });
 
     private static TeaP3AlexanderPrimeState State(ScenarioProbe p)
-        => p.Game.Catalog.Scenarios.OfType<TeaP3AlexanderPrimeScenario>().Single().LastState!;
+        => ((TeaP3AlexanderPrimeScenario)p.Game.ActiveScenario!).LastState!;
 
     private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 
@@ -134,6 +135,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = OffTank,
             StopAt = 21f,
             UserActionsEnabled = true,
@@ -327,6 +329,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = MainTank,
             StopAt = 44f,
             Overrides = o =>
@@ -507,6 +510,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = PhysRangedDps,
             StopAt = 86f,
             Overrides = o =>
@@ -562,6 +566,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = PhysRangedDps,
             StopAt = 73f,
             Overrides = o =>
@@ -635,6 +640,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = OffTank,
             StopAt = 57f,
             UserActionsEnabled = mitigationChecks,
@@ -771,6 +777,7 @@ public class TeaP3AlexanderPrimeScenarioTests
         var left = Geometry.OnCompass(22.5f + 45f * spot - 90f, 16.5f);
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = MeleeDpsB,
             StopAt = 81.5f,
             Overrides = o =>
@@ -1034,7 +1041,7 @@ public class TeaP3AlexanderPrimeScenarioTests
         => AlexanderPrime(MainTank)
             .WithMitigationChecks()
             .FreezeAt(274f)
-            .ShouldKill(ActionId.DivineJudgmentRaidwide, MainTank);
+            .ShouldKill(ActionId.DivineJudgmentRaidwide, PerRole.All);
 
     private static readonly string[] TankLimitBreaks = ["199", "4240", "4241", "17105"];
     private static readonly string[] TankLimitBreakStatuses = ["196", "863", "864", "1931"];
@@ -1048,6 +1055,7 @@ public class TeaP3AlexanderPrimeScenarioTests
         string? mainTank = null;
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = RegenHealer,
             UserActionsEnabled = true,
             StopAt = 290f,
@@ -1092,6 +1100,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     {
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             PlayerRole = MainTank,
             UserActionsEnabled = true,
             StopAt = 290f,
@@ -1269,6 +1278,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     private static ScenarioRun Practise(P3Practice practice, int seed, float? stopAt = null, Action<ScenarioProbe>? probe = null)
         => ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, seed, new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             StopAt = stopAt,
             Overrides = o => ((TeaP3AlexanderPrimeStateOverrides)o).Practice = practice,
             Probe = probe,
@@ -1333,11 +1343,12 @@ public class TeaP3AlexanderPrimeScenarioTests
         TeaP3AlexanderPrimeState? replayed = null;
         ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()),
             StopAt = 1f,
             Probe = probe =>
             {
                 if (!probe.Crossed(0.5f)) return;
-                var scenario = probe.Game.Catalog.Scenarios.OfType<TeaP3AlexanderPrimeScenario>().Single();
+                var scenario = (TeaP3AlexanderPrimeScenario)probe.Game.ActiveScenario!;
                 host = scenario.LastState;
                 replayed = (TeaP3AlexanderPrimeState?)scenario.StartReplay(scenario.BuildReplayStateMessage()!, 0, MainTank, probe.World);
             },

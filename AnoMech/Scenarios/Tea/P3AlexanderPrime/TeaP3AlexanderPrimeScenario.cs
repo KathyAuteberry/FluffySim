@@ -94,7 +94,13 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
     public string Name => "Alexander Prime";
     public IPhase Phase => TeaZone.P3;
     public bool SupportsMultiplayer => true;
-    public IReadOnlyList<IScenarioAi> AiStrats => [new TeaP3AlexanderPrimeAi()];
+    private readonly IScenarioAi strategy;
+    public IReadOnlyList<IScenarioAi> AiStrats => [strategy];
+
+    public TeaP3AlexanderPrimeScenario() : this(new TeaManaP3AlexanderPrimeAi()) { }
+
+    public TeaP3AlexanderPrimeScenario(IScenarioAi<TeaP3AlexanderPrimeState> strategy)
+        => this.strategy = strategy;
     public void DrawSettings() => settingsWindow.Draw();
     public bool HasPerPlayerSettings => true;
     public void DrawPerPlayerSettings() => settingsWindow.DrawPerPlayer();
