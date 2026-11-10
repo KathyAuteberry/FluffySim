@@ -17,7 +17,10 @@ possible axes. All eight share that start: there is no 1256/3478 split.
 
 Pairs 1/2, 3/4, 5/6 and 7/8 stop on perimeter blast lines 2, 4, 6 and 7.
 Odd numbers take the outer lane and face out before Cruise Chaser appears behind
-them. Even numbers take the inner lane and face Cruise Chaser for the charge.
+them. Even numbers take the inner lane and also face outward for the charge.
+The lanes stay separate: the supplied clear target poses put odds roughly 18–19y
+from center and evens roughly 12–16y out. Facing the wall does not put both
+players on the same radius; only the odd player's facing chooses the warp side.
 Completed numbers rejoin clockwise; they stay outside the final central blast
 and clear the last charge before regrouping. Both captured clears corroborate
 this one-pack convention, with successive odd targets advancing 45°, 90°, 45°
@@ -74,3 +77,18 @@ list reveal at transition, and actual impact lead times. Check Pause/Resume arou
 a warp and an explosion, Restart during active markers, then Leave in both offline
 and inn sessions. Headless packet and draw-state tests do not establish that these
 animations render in FFXIV.
+
+## Playback correction — 2026-11-11
+
+Playback review identified inward-facing even baiters. The AI now faces every
+number outward before its own hit, while preserving the captured inner/outer
+lanes and the guide-defined starting-axis priority. In clear 12, number 6's
+received target pose is (99.84, 112.41), rotation −0.09: a south-facing player
+in the inner southern lane. This corroborates outward facing without relocating
+evens to the wall. Other receive-time poses can include movement or stale
+headings, so these are not treated as exact facing-lock timestamps.
+
+The focused regression probes every number before its hit across all four axes,
+checks outward model facing and distinct lane radii, then requires the real
+collisions and vulnerability checks to complete without deaths. Native warp and
+charge presentation still need a client retest.

@@ -103,8 +103,7 @@ public sealed class TeaI1LimitCutAi : IScenarioAi<TeaI1LimitCutState>
     {
         if (world.Party.Get(state.Numbers[k]) is not { } member || !world.Party.IsBotDriven(member)) return;
         member.StopMoving();
-        if (k % 2 == 0) member.Face(member.Position * 2f);
-        else if (state.Objects.CruiseChaser is { } chaser) member.Face(chaser.Position);
+        member.Face(member.Position * 2f);
     }
 
     internal static float StartHeading(int axis) => axis switch

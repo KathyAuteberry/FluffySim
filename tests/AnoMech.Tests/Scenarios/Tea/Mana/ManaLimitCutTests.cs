@@ -3,11 +3,42 @@ using AnoMech.Core.Game.Ai;
 using AnoMech.Core.SimObjects;
 using AnoMech.Scenarios.Tea;
 using AnoMech.Scenarios.Tea.I1LimitCut;
+using System.Numerics;
 
 namespace AnoMech.Tests;
 
 public class ManaLimitCutTests
 {
+    [TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)]
+    public void EveryNumberFacesTheWallBeforeItsOwnHit(int axis)
+    {
+        float[] warpAt = [11.55f, 16.16f, 20.80f, 25.50f];
+        float[] hitAt = [12.64f, 14.14f, 17.31f, 18.80f, 21.95f, 23.42f, 26.58f, 28.05f];
+        var checkedNumbers = new HashSet<int>();
+        var scenario = new TeaI1LimitCutScenario();
+        var run = ScenarioRun.Execute(typeof(TeaI1LimitCutScenario), 0, 174, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => scenario,
+            Spectator = true,
+            Overrides = value => ((TeaI1LimitCutStateOverrides)value).FirstBlasterAxis = axis,
+            Probe = p =>
+            {
+                for (var k = 0; k < 8; k++)
+                {
+                    if (!p.Crossed(k % 2 == 0 ? warpAt[k / 2] - .2f : hitAt[k] - .2f)) continue;
+                    var member = p.Member(scenario.LastState!.Numbers[k])!;
+                    var outward = Vector2.Normalize(new Vector2(member.Position.X, member.Position.Z));
+                    var forward = new Vector2(MathF.Sin(member.Rotation), MathF.Cos(member.Rotation));
+                    Assert.That(Vector2.Dot(outward, forward), Is.GreaterThan(.999f), $"Number {k + 1}");
+                    Assert.That(new Vector2(member.Position.X, member.Position.Z).Length(), k % 2 == 0 ? Is.GreaterThan(17f) : Is.InRange(11f, 13f));
+                    checkedNumbers.Add(k + 1);
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedNumbers.Count, Is.EqualTo(8));
+    }
+
     [TestCase(0)]
     [TestCase(1)]
     [TestCase(2)]
