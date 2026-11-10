@@ -2,6 +2,7 @@ using AnoMech.Core.UserActions;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using AnoMech.Scenarios.Tea;
+using AnoMech.Scenarios;
 using AnoMech.Scenarios.Tea.P1LivingLiquid;
 using System.Numerics;
 
@@ -9,6 +10,52 @@ namespace AnoMech.Tests;
 
 public class ManaLivingLiquidTests
 {
+    [TestCase(0)] [TestCase(45)] [TestCase(90)] [TestCase(135)]
+    [TestCase(180)] [TestCase(225)] [TestCase(270)] [TestCase(315)]
+    public void PullFacesNorthAndSeparateBustersKeepThePartyBehindBothModels(int openSide)
+    {
+        var openingChecked = false;
+        var handChecked = false;
+        var scenario = new TeaP1LivingLiquidScenario();
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, 1043 + openSide, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => scenario,
+            Spectator = true,
+            Overrides = o => ((TeaP1LivingLiquidStateOverrides)o).FirstTornadoesOpenSide = openSide,
+            Probe = p =>
+            {
+                if (p.Crossed(10.2f))
+                {
+                    var boss = scenario.LastState!.Objects.LivingLiquid!;
+                    var tank = p.Member(PartyRole.MainTank)!;
+                    Assert.That(new Vector2(boss.Position.X, boss.Position.Z).Length(), Is.LessThan(3f));
+                    Assert.That(tank.Position.Z, Is.LessThan(boss.Position.Z));
+                    var native = ((FakeBattleChara)boss.Proxy!).EffectSourceSnapshots.Last(s => s.Effect.ActionId == TeaConstants.ActionId.FluidSwing);
+                    var forward = new Vector3(MathF.Sin(native.Rotation), 0, MathF.Cos(native.Rotation));
+                    Assert.That(Vector3.Dot(forward, Vector3.Normalize(tank.Position - boss.Position)), Is.GreaterThan(.95f));
+                    foreach (var member in p.World.Party.AllMembers().Where(m => m != tank))
+                        Assert.That(Vector3.Dot(forward, member.Position - boss.Position), Is.LessThan(0f));
+                    openingChecked = true;
+                }
+                if (p.Crossed(55.95f))
+                {
+                    var hand = scenario.LastState!.Objects.LiquidHand!;
+                    var tank = p.Member(PartyRole.OffTank)!;
+                    var native = ((FakeBattleChara)hand.Proxy!).EffectSourceSnapshots.Last(s => s.Effect.ActionId == TeaConstants.ActionId.FluidStrike);
+                    var forward = new Vector3(MathF.Sin(native.Rotation), 0, MathF.Cos(native.Rotation));
+                    Assert.That(Vector3.Dot(forward, Vector3.Normalize(tank.Position - hand.Position)), Is.GreaterThan(.95f));
+                    foreach (var role in PerRole.All.Where(r => r is not (PartyRole.MainTank or PartyRole.OffTank)))
+                        Assert.That(Vector3.Dot(forward, p.Member(role)!.Position - hand.Position), Is.LessThan(0f));
+                    var damaged = native.Effect.Targets!.Where(t => t.Effects!.Any(e => e.Type == 3)).Select(t => t.Id);
+                    Assert.That(damaged, Is.EqualTo(new[] { tank.GameObjectId }));
+                    handChecked = true;
+                }
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(openingChecked && handChecked, Is.True);
+    }
+
     [TestCase(0)]
     [TestCase(45)]
     [TestCase(90)]

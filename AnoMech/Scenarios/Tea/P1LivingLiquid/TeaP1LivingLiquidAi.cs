@@ -24,8 +24,9 @@ public sealed class TeaP1LivingLiquidAi : IScenarioAi<TeaP1LivingLiquidState>
         this.world = world;
         ai = new AiManager(world);
         ai.Move(0f, () => Positions(false,
-            (MainTank, 0f, -4f), (OffTank, -3f, 4f), (RegenHealer, -2f, 5f), (ShieldHealer, 2f, 5f),
+            (MainTank, 0f, 6f), (OffTank, -3f, 4f), (RegenHealer, -2f, 5f), (ShieldHealer, 2f, 5f),
             (MeleeDpsA, -1f, 3f), (MeleeDpsB, 1f, 3f), (PhysRangedDps, -4f, 5f), (CasterDps, 4f, 5f)));
+        ai.Move(2.5f, () => Positions(false, (MainTank, 0f, -4f)), jitter: 0f);
         ai.Move(20f, () => Positions(true,
             (MainTank, -5f, 15f), (OffTank, -3f, -8f), (RegenHealer, 17f, 8f), (ShieldHealer, 0f, 18f),
             (MeleeDpsA, -1f, 17f), (MeleeDpsB, 1f, 17f), (PhysRangedDps, -7f, -10f), (CasterDps, -17f, 8f)), jitter: 0f);
@@ -49,7 +50,7 @@ public sealed class TeaP1LivingLiquidAi : IScenarioAi<TeaP1LivingLiquidState>
             (MeleeDpsA, -10f, 15f), (MeleeDpsB, -9f, 15f), (PhysRangedDps, -7f, 17f), (CasterDps, -6f, 17f)), jitter: 0f);
         ai.UseAction(50f, OffTank, Enmity.ProvokeActionId, () => state.Objects.LiquidHand);
         ai.Move(52f, () => Positions(true,
-            (OffTank, -10f, 17f), (RegenHealer, -14f, 13f), (ShieldHealer, -13.8f, 13.5f),
+            (OffTank, -10f, 7f), (RegenHealer, -14f, 13f), (ShieldHealer, -13.8f, 13.5f),
             (MeleeDpsA, -13.5f, 13f), (MeleeDpsB, -14.3f, 12.8f),
             (PhysRangedDps, -14f, 13.8f), (CasterDps, -13.5f, 13.8f)), jitter: 0f);
     }
