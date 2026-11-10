@@ -42,7 +42,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [OnTarget(Damage(TankBuster), WaterResistanceDown), OnOthers(Damage(Lethal))],
+        Effects = [OnTarget(WaterDamage(TankBuster with { CheckBotMitigation = true }), WaterResistanceDown), OnOthers(Damage(Lethal))],
         Timing = new() { DamageDelay = 0.80f },
     };
 
@@ -50,7 +50,7 @@ public static class TeaActions
     {
         Cast = new() { AnimationLock = 2.1f },
         Area = new() { Size = MathF.PI / 4f },
-        Effects = [OnTarget(Damage(TankBuster), WaterResistanceDown), OnOthers(Damage(Lethal))],
+        Effects = [OnTarget(WaterDamage(TankBuster with { CheckBotMitigation = true }), WaterResistanceDown), OnOthers(Damage(Lethal))],
         Timing = new() { DamageDelay = 0.78f },
     };
 

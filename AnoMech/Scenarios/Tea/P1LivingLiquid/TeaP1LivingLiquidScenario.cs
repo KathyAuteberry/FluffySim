@@ -15,10 +15,7 @@ using static AnoMech.Scenarios.Tea.TeaConstants;
 
 namespace AnoMech.Scenarios.Tea.P1LivingLiquid;
 
-// Living Liquid from the pull to its death at the slowest real kill, about 3.4s after the Fluid Swing
-// that follows the second Hand of Parting/Prayer. Scenario time 0 is the pull. The enrage, whose cast
-// would begin about then, is left out.
-public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
+public class TeaP1LivingLiquidScenario : IMultiplayerReplayable
 {
     private const float LivingLiquidSpeed = 8.7f;
     private const float LiquidHandSpeed = 9.1f;
@@ -44,11 +41,17 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
     // A doll fed at this HP or more sets off a lethal Reducible Complexity.
     private const float DollFeedHp = 0.25f;
 
+    private readonly bool dollSkip;
+
+    public TeaP1LivingLiquidScenario() : this(true) { }
+
+    protected TeaP1LivingLiquidScenario(bool dollSkip) => this.dollSkip = dollSkip;
+
     public string Name => "Living Liquid";
     public IPhase Phase => TeaZone.P1;
     public bool SupportsMultiplayer => true;
-    public IReadOnlyList<IScenarioAi> AiStrats => [new TeaP1LivingLiquidAi()];
-    public void DrawSettings() => settingsWindow.Draw();
+    public IReadOnlyList<IScenarioAi> AiStrats => dollSkip ? [new TeaP1LivingLiquidAi()] : [new TeaP1LivingLiquidAptAi()];
+    public void DrawSettings() => settingsWindow.Draw(!dollSkip);
     public object SettingsOverrides => settingsWindow.Overrides;
 
     private readonly TeaP1LivingLiquidSettingsWindow settingsWindow = new();
@@ -118,7 +121,7 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
         foreach (var t in (float[])[3.07f, 6.08f, 9.14f, 12.17f, 19.20f, 22.22f, 25.21f, 28.23f, 31.31f, 34.34f, 37.35f, 40.36f,
                      43.32f, 46.39f, 49.43f, 52.49f, 55.56f, 58.52f, 61.56f, 64.60f, 76.94f, 79.96f, 83.00f, 86.07f, 93.06f,
                      96.10f, 99.18f, 102.19f, 115.23f, 118.26f, 121.29f, 124.32f, 127.35f])
-            world.Events.Add(t, LivingLiquidAttack);
+            if (!dollSkip || t < 65f) world.Events.Add(t, LivingLiquidAttack);
 
         world.Events.Add(10.15f, () => FluidSwing());
         world.Events.Add(14.27f, () => state.Objects.LivingLiquid?.Cast(TeaActions.Cascade));
@@ -130,7 +133,7 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
         foreach (var t in (float[])[24.29f, 27.38f, 30.41f, 33.40f, 36.38f, 42.51f, 45.58f, 48.57f, 51.59f, 54.64f, 57.72f, 60.76f,
                      63.72f, 69.83f, 72.81f, 75.87f, 78.89f, 81.96f, 84.94f, 90.98f, 94.07f, 97.06f, 100.18f, 103.15f, 109.25f,
                      112.25f, 115.29f, 118.32f, 121.35f])
-            world.Events.Add(t, LiquidHandAttack);
+            if (!dollSkip || t < 65f) world.Events.Add(t, LiquidHandAttack);
 
         world.Events.Add(29.35f, ShowHandTell);
         world.Events.Add(32.34f, () => AimTornadoProteans(firstRages));
@@ -145,13 +148,13 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
         world.Events.Add(38.56f, Exhaust);
         // A doll is absorbed from its first Exhaust on, though one may spawn beside a boss.
         world.Events.Add(38.56f, () => dollsFeedable = true);
-        world.Events.Add(38.73f, () => state.Objects.LiquidHand?.Cast(TeaActions.HandOfPain));
+        world.Events.Add(38.73f, () => state.Objects.LiquidHand?.Cast(dollSkip ? TeaP1LivingLiquidActions.UnequalHandOfPain : TeaActions.HandOfPain));
         world.Events.Add(39.06f, DollsChase);
         // Each doll's own swings start a second after its first Exhaust and land every 3s while it is hungry.
         foreach (var t in (float[])[39.57f, 42.57f, 45.57f, 48.57f, 51.57f, 54.57f, 57.57f, 60.57f, 63.57f, 66.57f, 69.57f, 72.57f,
                      75.57f, 78.57f, 81.57f, 84.57f, 87.57f, 90.57f, 93.57f, 96.57f, 99.57f, 102.57f, 105.57f, 108.57f, 111.57f,
                      114.57f, 117.57f, 120.57f, 123.57f, 126.57f, 129.57f, 132.57f, 135.57f])
-            world.Events.Add(t, DollAttacks);
+            if (!dollSkip || t < 65f) world.Events.Add(t, DollAttacks);
         world.Events.Add(40.46f, () => Pressurize(firstRages, state.FirstCalmTornado));
         world.Events.Add(41.18f, () => SpawnEmboli(state.FirstTornadoes, state.FirstCalmTornado, state.FirstHandOrbFromEarlier));
         world.Events.Add(46.01f, RollEmboli);
@@ -161,6 +164,21 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
         world.Events.Add(55.85f, FluidStrike);
         // UNVERIFIED: whether a doll still hungry after this third one Exhausts again.
         world.Events.Add(59.83f, Exhaust);
+
+        if (dollSkip)
+        {
+            world.Events.Add(65f, CompleteDollSkip);
+            world.Events.Add(66.2f, () =>
+            {
+                state.Objects.LivingLiquid?.Despawn();
+                state.Objects.LiquidHand?.Despawn();
+                foreach (var doll in dolls) doll?.Despawn();
+                DespawnTornadoes(firstRages);
+                foreach (var orb in state.Objects.Emboli) orb.Despawn();
+            });
+            world.Events.Add(68.1f, () => DespawnVoidzones(firstVoidzones));
+            return;
+        }
 
         world.Events.Add(65.67f, GatherProteanHelpers);
         world.Events.Add(65.79f, CastBossProteans);
@@ -221,6 +239,21 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
         });
         world.Events.Add(137.61f, () => DespawnTornadoes(secondRages));
         world.Events.Add(139.51f, () => DespawnVoidzones(secondVoidzones));
+    }
+
+    private void CompleteDollSkip()
+    {
+        livingLiquidDead = true;
+        state.Objects.LivingLiquid?.FadeOut();
+        state.Objects.LiquidHand?.FadeOut();
+        foreach (var doll in dolls) doll?.FadeOut();
+        foreach (var voidzone in firstVoidzones) voidzone?.DirectorEObjMod(7);
+        foreach (var rage in firstRages) rage?.FadeOut();
+        foreach (var orb in state.Objects.Emboli)
+        {
+            orb.StopMoving();
+            orb.FadeOut();
+        }
     }
 
     public void Tick(float delta, float elapsed)
@@ -540,7 +573,7 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
     {
         dollsChase = true;
         for (var k = 0; k < dolls.Length; k++)
-            if (dolls[k] is { } doll && !dollFed[k] && DollTarget(k) is { } target)
+            if (dolls[k] is { } doll && !dollFed[k] && (!dollSkip || dollTakers[k] is not null) && DollTarget(k) is { } target)
                 doll.Follow(target, JagdDollSpeed, Geometry.EnemyReach);
     }
 
@@ -747,4 +780,9 @@ public sealed class TeaP1LivingLiquidScenario : IMultiplayerReplayable
     private static float Heading(Vector3 from, Vector3 to) => MathF.Atan2(to.X - from.X, to.Z - from.Z);
 
     private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
+}
+
+public sealed class TeaP1LivingLiquidFullTimelineScenario : TeaP1LivingLiquidScenario
+{
+    public TeaP1LivingLiquidFullTimelineScenario() : base(false) { }
 }

@@ -33,7 +33,7 @@ namespace AnoMech.Tests;
 //   78.53  Drainage tethers, resolving at 85.65 on whoever holds each.
 //   95.38  Throttle for 10s, cleansed by the healers; Fluid Swing at 132.95, then autos until Living Liquid
 //          dies at 136.40, the second set and the orbs fading out with it.
-public class TeaP1LivingLiquidScenarioTests
+public class TeaP1LivingLiquidFullTimelineScenarioTests
 {
     private const ushort Holmgang = 409;
 
@@ -51,8 +51,8 @@ public class TeaP1LivingLiquidScenarioTests
         o.DollRoll = new DollRoll(0.5f, 0.5f, 0.5f, 0.5f);
     }
 
-    private static NegativeRun<TeaP1LivingLiquidScenario> LivingLiquid(PartyRole player)
-        => Negative<TeaP1LivingLiquidScenario>(player).Overrides<TeaP1LivingLiquidStateOverrides>(Pin);
+    private static NegativeRun<TeaP1LivingLiquidFullTimelineScenario> LivingLiquid(PartyRole player)
+        => Negative<TeaP1LivingLiquidFullTimelineScenario>(player).WithScenario(() => new TeaP1LivingLiquidFullTimelineScenario()).Overrides<TeaP1LivingLiquidStateOverrides>(Pin);
 
     private static ScenarioRun Run(PartyRole player, float stopAt, Action<ScenarioProbe>? probe = null, params Takeover[] takeovers)
         => Execute(player, stopAt, probe, takeovers, writeArtifactsOnFailure: true);
@@ -62,8 +62,9 @@ public class TeaP1LivingLiquidScenarioTests
         => Execute(player, stopAt, probe, takeovers, writeArtifactsOnFailure: false);
 
     private static ScenarioRun Execute(PartyRole player, float stopAt, Action<ScenarioProbe>? probe, Takeover[] takeovers, bool writeArtifactsOnFailure)
-        => ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        => ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = player,
             StopAt = stopAt,
             Overrides = o => Pin((TeaP1LivingLiquidStateOverrides)o),
@@ -175,6 +176,10 @@ public class TeaP1LivingLiquidScenarioTests
         => LivingLiquid(MainTank)
             .WithMitigationChecks()
             .FreezeAt(37.4f)
+            .At(37.4f, p =>
+            {
+                foreach (var status in new ushort[] { 82, 409, 810, 1836 }) p.Member(MainTank)!.RemoveStatus(status);
+            })
             .ShouldKill(ActionId.ProteanWaveTornadoInvisible, MainTank);
 
     // M1 carries Water Resistance Down II into the first Splash, with tank mitigation checks off.
@@ -213,8 +218,9 @@ public class TeaP1LivingLiquidScenarioTests
     [Test]
     public void HolmgangOutlastsSecondWaterHit()
     {
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 38f,
             Overrides = o => Pin((TeaP1LivingLiquidStateOverrides)o),
@@ -428,8 +434,9 @@ public class TeaP1LivingLiquidScenarioTests
     public void DeadTanksDrainageTetherGoesToAnotherPlayer(PartyRole deadTank, PartyRole survivor)
     {
         var held = new Dictionary<PartyRole, int>();
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = CasterDps,
             StopAt = 87f,
             Overrides = o =>
@@ -508,8 +515,9 @@ public class TeaP1LivingLiquidScenarioTests
     public void HealersCleanseThemselvesThenTopDownAndBottomUp()
     {
         var cleansed = new Dictionary<PartyRole, float>();
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 106f,
             Overrides = o =>
@@ -534,8 +542,9 @@ public class TeaP1LivingLiquidScenarioTests
     public void RegenHealerSkipsTheShieldHealer()
     {
         float? meleeCleansed = null;
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 106f,
             Overrides = o =>
@@ -884,8 +893,9 @@ public class TeaP1LivingLiquidScenarioTests
     public void BotsFeedEveryDoll([Values(0, 45, 90, 135, 180, 225, 270, 315)] int openSide, [Values(0.1f, 0.5f, 0.9f)] float pace)
     {
         var hungry = -1;
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 60f,
             Overrides = o =>
@@ -924,8 +934,9 @@ public class TeaP1LivingLiquidScenarioTests
         var settled = new Dictionary<PartyRole, Vector3>();
         var left = new Dictionary<PartyRole, float>();
         var drift = new Dictionary<PartyRole, float>();
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 30.15f,
             Overrides = o =>
@@ -977,8 +988,9 @@ public class TeaP1LivingLiquidScenarioTests
     {
         var touches = new Dictionary<string, float>();
         float? fromLivingLiquid = null, closest = null;
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 33.5f,
             Overrides = o =>
@@ -1020,8 +1032,9 @@ public class TeaP1LivingLiquidScenarioTests
     public void BotsFeedEveryDollWithLivingLiquidOffCentre([Values(0.1f, 0.9f)] float pace)
     {
         var hungry = -1;
-        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        var run = ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => new TeaP1LivingLiquidFullTimelineScenario(),
             PlayerRole = MainTank,
             StopAt = 60f,
             Overrides = o =>
@@ -1132,15 +1145,16 @@ public class TeaP1LivingLiquidScenarioTests
     [Test]
     public void ReplayStateRoundTrips()
     {
+        var scenario = new TeaP1LivingLiquidFullTimelineScenario();
         TeaP1LivingLiquidState? host = null;
         TeaP1LivingLiquidState? replayed = null;
-        ScenarioRun.Execute(typeof(TeaP1LivingLiquidScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
+        ScenarioRun.Execute(typeof(TeaP1LivingLiquidFullTimelineScenario), 0, Random.Shared.Next(), new ScenarioRunOptions
         {
+            ScenarioFactory = () => scenario,
             StopAt = 1f,
             Probe = probe =>
             {
                 if (!probe.Crossed(0.5f)) return;
-                var scenario = probe.Game.Catalog.Scenarios.OfType<TeaP1LivingLiquidScenario>().Single();
                 host = scenario.LastState;
                 replayed = (TeaP1LivingLiquidState?)scenario.StartReplay(scenario.BuildReplayStateMessage()!, 0, MainTank, probe.World);
             },
