@@ -25,7 +25,7 @@ public static class TeaManaP3Assignments
     public static Vector2 FlameSpot(PartyRole role) => role switch
     {
         MainTank => new(-14f, 0f),
-        OffTank => new(-17f, -7f),
+        OffTank => new(-15.5f, -7.8f),
         _ => new Vector2(-9f, 15f) + (role switch
         {
             RegenHealer => new Vector2(0f, 0f),

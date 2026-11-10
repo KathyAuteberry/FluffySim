@@ -871,7 +871,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     public void AWideFirstFlameTurnPushesTheLaterFlamesBack()
     {
         var bots = FlarethrowersFollowTheirTurns(PhysRangedDps);
-        var wide = FlarethrowersFollowTheirTurns(MainTank, new Takeover(59.5f, new(-18.87f, -5.39f)));
+        var wide = FlarethrowersFollowTheirTurns(MainTank, new Takeover(59.5f, new(-18.87f, -5.39f)), new Takeover(61.35f, new(-13.8f, -11.5f)));
         Assert.That(wide.Turns[0] - bots.Turns[0], Is.GreaterThan(0.2f), "MT's wider first turn");
         for (var k = 1; k < 3; k++)
             Assert.That(wide.Times[k] - bots.Times[k], Is.EqualTo((wide.Turns.Take(k + 1).Sum() - bots.Turns.Take(k + 1).Sum()) / (MathF.PI * 8f / 3f))
@@ -1005,6 +1005,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     [Test]
     public void CruiseChaserSurvivingEternalDarknessWipes()
         => Negative<TeaP3AlexanderPrimeScenario>(MainTank)
+            .WithScenario(() => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()))
             .Overrides<TeaP3AlexanderPrimeStateOverrides>(o =>
             {
                 Pin(o);
@@ -1015,6 +1016,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     [Test]
     public void AlexanderPrimeSurvivingDivineJudgmentWipes()
         => Negative<TeaP3AlexanderPrimeScenario>(MainTank)
+            .WithScenario(() => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()))
             .Overrides<TeaP3AlexanderPrimeStateOverrides>(o =>
             {
                 Pin(o);
@@ -1027,6 +1029,7 @@ public class TeaP3AlexanderPrimeScenarioTests
     [Test]
     public void StayingOnYourCrystalAtATickBleedsOut()
         => Negative<TeaP3AlexanderPrimeScenario>(RegenHealer)
+            .WithScenario(() => new TeaP3AlexanderPrimeScenario(new TeaP3AlexanderPrimeAi()))
             .Overrides<TeaP3AlexanderPrimeStateOverrides>(o =>
             {
                 Pin(o);

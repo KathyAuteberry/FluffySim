@@ -18,6 +18,9 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
     public virtual string Name => "NAUR";
     public virtual string? Group => null;
 
+    protected virtual PartyRole FirstHeatTank => OffTank;
+    protected virtual PartyRole SecondHeatTank => MainTank;
+
     private const float ArenaEdge = 18.8f;
     private const float Clearance = 1.2f;
     private const float WingRadius = 17.5f;
@@ -95,9 +98,9 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         if (state.Practice == P3Practice.Wormhole)
             world.Events.Add(TeaP3AlexanderPrimePractice.Of(P3Practice.Wormhole).Start, () => PlaceBotsOn(SecondSetSpot));
         At(0.3f, () => GoAll(OpenerSpot));
-        Use(3.3f, OffTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
-        Use(13.5f, OffTank, Invulnerability);
-        Use(20.9f, MainTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(3.3f, FirstHeatTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(13.5f, FirstHeatTank, Invulnerability);
+        Use(20.9f, SecondHeatTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
         At(22.4f, () =>
         {
             Go(MainTank, new Vector2(-0.3f, -5.6f));
@@ -114,9 +117,9 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         At(80.35f, TakeSwordAndJumpSpots);
         At(88.5f, StepAwayFromTheJump);
         At(91.6f, () => GoAll(SecondSetSpot));
-        Use(93.5f, MainTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
-        Use(103.5f, MainTank, Invulnerability);
-        Use(111.9f, OffTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(93.5f, SecondHeatTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
+        Use(103.5f, SecondHeatTank, Invulnerability);
+        Use(111.9f, FirstHeatTank, Enmity.ProvokeActionId, () => state.Objects.AlexanderPrime);
         At(112.3f, () => Go(OffTank, new Vector2(-0.7f, -7.0f)));
         At(123.5f, () => GoAll(MidRing));
 
@@ -163,7 +166,7 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         _ => 0,
     };
 
-    private static Vector2 OpenerSpot(PartyRole role) => role switch
+    protected virtual Vector2 OpenerSpot(PartyRole role) => role switch
     {
         MainTank => new(-6.6f, 1.0f),
         OffTank => new(0f, -6.1f),
@@ -177,7 +180,7 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
 
     private static Vector2 MidRing(PartyRole role) => Polar(45f * (int)role, RingRadius);
 
-    private static Vector2 SecondSetSpot(PartyRole role) => role switch
+    protected virtual Vector2 SecondSetSpot(PartyRole role) => role switch
     {
         MainTank => new(-0.4f, -6.2f),
         OffTank => new(7.8f, 2.2f),

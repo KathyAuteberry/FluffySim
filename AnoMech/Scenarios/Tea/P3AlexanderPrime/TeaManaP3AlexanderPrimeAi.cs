@@ -10,11 +10,31 @@ public sealed class TeaManaP3AlexanderPrimeAi : TeaP3AlexanderPrimeAi
     public override string Name => "3/4 fixed";
     public override string Group => "Mana";
 
+    protected override PartyRole FirstHeatTank => MainTank;
+    protected override PartyRole SecondHeatTank => OffTank;
+
+    protected override Vector2 OpenerSpot(PartyRole role)
+    {
+        var source = base.OpenerSpot(role == MainTank ? OffTank : role == OffTank ? MainTank : role);
+        return source with { Y = -source.Y };
+    }
+
+    protected override Vector2 SecondSetSpot(PartyRole role) => role switch
+    {
+        OffTank => new(-0.4f, 6.2f),
+        MainTank => new(7.8f, -2.2f),
+        _ => OpenerSpot(role),
+    };
+
     protected override void GoToFlarethrowerSpot(PartyRole role)
         => SprintIfFar(role, InceptionSide(TeaManaP3Assignments.FlameSpot(role)));
 
     protected override void PlanFlareWithdrawals()
-        => At(66.1f, () => GoAll(role => InceptionSide(InceptionWaitSpot(role))));
+    {
+        At(61.25f, () => Go(MainTank, InceptionSide(new Vector2(-1f, 0f))));
+        At(62.7f, () => Go(OffTank, InceptionSide(new Vector2(-2f, -17f))));
+        At(66.1f, () => GoAll(role => InceptionSide(InceptionWaitSpot(role))));
+    }
 
     protected override void TakeSwordAndJumpSpots()
     {

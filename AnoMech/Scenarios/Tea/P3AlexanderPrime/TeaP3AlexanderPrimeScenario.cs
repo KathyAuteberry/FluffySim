@@ -146,7 +146,6 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
     private bool heartGold;
     private float heartGoldAt;
     private SimTether? restrainingOrderTether;
-    private readonly HashSet<SimCharacter> flareBaits = [];
     private readonly HashSet<SimCharacter> swordBaits = [];
     private SimCharacter? swordBait;
     private readonly SimCharacter?[] numberBaits = new SimCharacter?[8];
@@ -186,7 +185,6 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
         heartGoldAt = 0f;
         heartSteps = 0;
         restrainingOrderTether = null;
-        flareBaits.Clear();
         swordBaits.Clear();
         swordBait = null;
         Array.Clear(numberBaits);
@@ -243,7 +241,7 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
         At(AlexanderPrimeTouchesAt, () => FailCrystalsTouching(alexanderPrime?.Position, ByAlexanderPrime, shatterTaken));
         At(OrbsBurst, BurstUnpoppedOrbs);
         const float firstFlameTurn = 60.37f - FirstFlameTurnLead;
-        At(firstFlameTurn, () => TurnToClosestUnflamed(firstFlameTurn, flames: 3));
+        At(firstFlameTurn, () => TurnToClosestFlameBait(firstFlameTurn, flames: 3));
         At(66.84f, GiveInceptionDebuffs);
         At(66.91f, () => alexanderPrime?.Cast(TeaActions.Inception));
         At(67.86f, () => cruiseChaser?.PlayActionTimeline(ActionTimelineId.WarpStart));
@@ -921,19 +919,18 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
 
     // -- Inception: flames, debuffs and Sacrament ------------------------------------------
 
-    // At the closest player not yet baited in this set; the flame goes along his facing and burns
+    // At the closest player; the flame goes along his facing and burns
     // whoever is in it. On the flames' own clock, so a late frame doesn't push back the ones after it.
-    private void TurnToClosestUnflamed(float turnAt, int flames)
+    private void TurnToClosestFlameBait(float turnAt, int flames)
     {
         if (bruteJustice is not { } boss) return;
-        if (party.ActiveMembers().Where(m => m.IsAlive() && !flareBaits.Contains(m))
+        if (party.ActiveMembers().Where(m => m.IsAlive())
                 .MinBy(m => Vector2.Distance(Flat(m.Position), Flat(boss.Position))) is not { } bait) return;
-        flareBaits.Add(bait);
         var flameAt = turnAt + boss.SecondsToFace(bait.Position);
         boss.Face(bait.Position);
         world.Events.Add(flameAt - world.Events.Elapsed, () => boss.Cast(TeaActions.FlarethrowerP3));
         if (flames > 1)
-            world.Events.Add(flameAt + NextFlameTurn - world.Events.Elapsed, () => TurnToClosestUnflamed(flameAt + NextFlameTurn, flames - 1));
+            world.Events.Add(flameAt + NextFlameTurn - world.Events.Elapsed, () => TurnToClosestFlameBait(flameAt + NextFlameTurn, flames - 1));
     }
 
     private SimCharacter? Living(PartyRole role) => party.Get(role) is { } member && member.IsAlive() ? member : null;

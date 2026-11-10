@@ -178,9 +178,11 @@ public class TeaManaP3AssignmentsTests
     }
 
     [Test]
-    public void JoiningThePartyInsteadOfBaitingTheTankFlameBurnsTheGroupTwice()
+    public void AbandoningTheFirstTankBaitMakesTheOffTankTakeTwoFlames()
     {
         var scenario = new TeaP3AlexanderPrimeScenario();
+        var firstFlameVulnerability = false;
+        var nativeHitsOnOffTank = 0;
         var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, 811, new ScenarioRunOptions
         {
             ScenarioFactory = () => scenario,
@@ -194,9 +196,72 @@ public class TeaManaP3AssignmentsTests
                 o.AlexanderPrimeNorth = false;
             },
             Takeovers = [new Takeover(59.8f, TeaManaP3Assignments.FlameSpot(RegenHealer))],
+            Probe = p =>
+            {
+                if (p.Crossed(61.2f)) firstFlameVulnerability = p.Member(OffTank)!.HasStatus(StatusId.FireResistanceDownII);
+                if (!p.Crossed(63.5f)) return;
+                var offTank = p.Member(OffTank)!;
+                nativeHitsOnOffTank = ((FakeBattleChara)scenario.LastState!.Objects.BruteJustice!.Proxy!).ReceivedEffects
+                    .Count(effect => effect.ActionId == ActionId.FlarethrowerP3 && effect.Targets?.Any(t => t.Id == offTank.GameObjectId) == true);
+            },
         });
         Assert.That(run.Failure, Is.Null, run.ToString);
-        Assert.That(run.Deaths.Count(d => d.ActionId == ActionId.FlarethrowerP3), Is.GreaterThanOrEqualTo(2), run.ToString);
+        Assert.That(firstFlameVulnerability, Is.True, run.ToString);
+        Assert.That(nativeHitsOnOffTank, Is.EqualTo(2), run.ToString);
+        Assert.That(run.Deaths.Any(d => d.Role == OffTank && d.ActionId == ActionId.FlarethrowerP3 && d.Cause.Contains("vuln")), Is.True, run.ToString);
+    }
+
+    [Test]
+    public void HoldingTheFirstFlamePositionBaitsAnotherFlameAndKillsTheTank()
+    {
+        var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, 811, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => new TeaP3AlexanderPrimeScenario(),
+            PlayerRole = MainTank,
+            StopAt = 67f,
+            WriteArtifactsOnFailure = false,
+            Overrides = value =>
+            {
+                var o = (TeaP3AlexanderPrimeStateOverrides)value;
+                o.Practice = P3Practice.Inception;
+                o.AlexanderPrimeNorth = false;
+            },
+            Takeovers = [new Takeover(60f, TeaManaP3Assignments.FlameSpot(MainTank))],
+        });
+        Assert.That(run.Failure, Is.Null, run.ToString);
+        Assert.That(run.Deaths.Any(d => d.Role == MainTank && d.ActionId == ActionId.FlarethrowerP3), Is.True, run.ToString);
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void FlameTanksWithdrawSoThePartyNaturallyBecomesClosest(bool north)
+    {
+        var scenario = new TeaP3AlexanderPrimeScenario();
+        var checkedPositions = false;
+        var run = ScenarioRun.Execute(typeof(TeaP3AlexanderPrimeScenario), 0, 811, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => scenario,
+            Spectator = true,
+            StopAt = 67f,
+            Overrides = value =>
+            {
+                var o = (TeaP3AlexanderPrimeStateOverrides)value;
+                o.Practice = P3Practice.Inception;
+                o.AlexanderPrimeNorth = north;
+            },
+            Probe = p =>
+            {
+                if (!p.Crossed(64.6f)) return;
+                var boss = scenario.LastState!.Objects.BruteJustice!;
+                var closestParty = PerRole.All.Where(r => r is not MainTank and not OffTank)
+                    .Min(r => Vector3.Distance(p.Member(r)!.Position, boss.Position));
+                Assert.That(Vector3.Distance(p.Member(MainTank)!.Position, boss.Position), Is.GreaterThan(closestParty));
+                Assert.That(Vector3.Distance(p.Member(OffTank)!.Position, boss.Position), Is.GreaterThan(closestParty));
+                checkedPositions = true;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(checkedPositions, Is.True);
     }
 
     [TestCase(false)]
@@ -274,12 +339,16 @@ public class TeaManaP3AssignmentsTests
                 if (p.Crossed(20f))
                 {
                     firstSpears = true;
-                    Assert.That(InvulnerabilityStatuses.Any(id => p.Member(OffTank)!.HasStatus(id)), Is.True);
+                    Assert.That(InvulnerabilityStatuses.Any(id => p.Member(MainTank)!.HasStatus(id)), Is.True);
+                    Assert.That(p.Member(MainTank)!.Position.Z, Is.GreaterThan(0f));
+                    foreach (var role in PerRole.All.Where(r => r is not MainTank and not OffTank))
+                        Assert.That(p.Member(role)!.Position.Z, Is.LessThan(0f));
                 }
                 if (p.Crossed(111.5f))
                 {
                     secondSpears = true;
-                    Assert.That(InvulnerabilityStatuses.Any(id => p.Member(MainTank)!.HasStatus(id)), Is.True);
+                    Assert.That(InvulnerabilityStatuses.Any(id => p.Member(OffTank)!.HasStatus(id)), Is.True);
+                    Assert.That(p.Member(OffTank)!.Position.Z, Is.GreaterThan(0f));
                 }
                 if (p.Crossed(287.6f))
                 {
@@ -306,11 +375,11 @@ public class TeaManaP3AssignmentsTests
             Probe = p =>
             {
                 if (!p.Crossed(14f)) return;
-                foreach (var id in InvulnerabilityStatuses) p.Member(OffTank)!.RemoveStatus(id);
+                foreach (var id in InvulnerabilityStatuses) p.Member(MainTank)!.RemoveStatus(id);
             },
         });
         Assert.That(run.Failure, Is.Null, run.ToString);
-        Assert.That(run.Deaths.Any(d => d.Role == OffTank && d.ActionId == ActionId.DivineSpear), Is.True, run.ToString);
+        Assert.That(run.Deaths.Any(d => d.Role == MainTank && d.ActionId == ActionId.DivineSpear), Is.True, run.ToString);
     }
 
     [Test]
