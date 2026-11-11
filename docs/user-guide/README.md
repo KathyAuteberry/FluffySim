@@ -11,7 +11,7 @@ Choose a mechanic, pick your role and strategy, and retry as often as you like. 
 - Individual mechanics with randomized assignments and seven bots.
 - Easy or Hard bot movement, with the simulated party visible or hidden.
 - Role selection and mechanic-specific assignment preferences where supported.
-- **JESUS TAKE THE WHEEL**: automatic spectator practice for every selectable FRU/DSR scenario, using your selected role and eight bot-controlled participants with a following camera.
+- **JESUS TAKE THE WHEEL**: automatic spectator practice for every selectable FRU, DSR and TEA scenario, using your selected role and eight bot-controlled participants with a following camera.
 - God Mode, Pause/Resume and Restart for repeated practice.
 - Local defensive actions and restored practice cooldowns between isolated attempts.
 - Native bosses, casts, effects and arena environments.
@@ -50,7 +50,7 @@ Closing the interface alone does not leave the simulation.
 
 ## Supported encounters
 
-The catalog contains **46 entries**, including **17 FRU entries** and **12 DSR entries**. Some FRU mechanics have separate regional implementations; those are separate catalog entries, rather than additional fight phases.
+The catalog contains **52 entries**, including **17 FRU entries**, **12 DSR entries** and **6 TEA entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
 
 ### Futures Rewritten (Ultimate)
 
@@ -83,7 +83,18 @@ DSR uses **Elemental** strategies, with these entries in encounter order:
 11. P6 Hallowed Wings 2 to Cauterize
 12. P7 Dragon-king Thordan
 
-P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT → ST swap for Heavenly Heel followed by Ascalon's Might; a human ST must use local Provoke when prompted. P7 includes three Edge cycles with static south exaflares, all 3-3-2 Akh Morns, Elemental Trinity baits and local Provoke swaps. Practice stops before Morn Afah's Edge resolves; boss HP and the enrage DPS check are not simulated. Native P7 presentation still needs in-game validation.
+P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT → ST swap for Heavenly Heel followed by Ascalon's Might; a human ST must use local Provoke when prompted.
+
+### The Epic of Alexander (Ultimate)
+
+| Entry | Strategy (Mana beta) |
+| --- | --- |
+| P1 Living Liquid | Doll Skip |
+| I1 Limit Cut | 1211 |
+| P2 BJ/CC | Healer-first Nisi |
+| I2 Temporal Stasis | Fixed positions |
+| P3 Alexander Prime | 3/4 fixed |
+| P4 Perfect Alexander | Nukemaru |
 
 ### Other registered practice
 
