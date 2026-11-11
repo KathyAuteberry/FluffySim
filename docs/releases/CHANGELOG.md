@@ -1,4 +1,4 @@
-# FluffySim 3.3.0.0 — release prepared
+# FluffySim 3.3.1.0 — release prepared
 
 ## Added
 
@@ -11,6 +11,11 @@
 - TEA playback corrections cover the opening Living Liquid and Hand cleaves, outward-facing Limit Cut baits, Mana's south-side Alexander Prime opener, and sustained back-and-forth bot movement for Ordained Motion. Inception flames choose the nearest living player on each bait.
 - DSR Gigaflare markers appear in sequence. Exaflare death messages include the distance to the explosion center and its hit radius.
 - Documentation is organized under `docs`, with a dedicated TEA evidence and timing ledger.
+
+## Fixed
+
+- The TEA P2 off-tank starts the Spin Crusher dodge on schedule when Nisi routes cross.
+- Release archives include the tracked upstream audit, so the documentation index works from a clean checkout.
 
 ## Beta feedback
 
