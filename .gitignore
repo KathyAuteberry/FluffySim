@@ -56,6 +56,13 @@ dist/
 
 !/docs/tea/
 
+!/docs/handover/
+/docs/handover/*
+!/docs/handover/resources.md
+!/docs/handover/tools.md
+!/docs/handover/workflow.md
+!/docs/handover/open-issues.md
+
 !/docs/README.md
 !/docs/user-guide/
 !/docs/development/
