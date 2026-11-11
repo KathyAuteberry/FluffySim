@@ -1,3 +1,21 @@
+# FluffySim 3.3.0.0 — release prepared
+
+## Added
+
+- **The Epic of Alexander (Ultimate), Mana beta.** Six practice entries cover Living Liquid with Doll Skip, 1211 Limit Cut, Brute Justice and Cruise Chaser, fixed Temporal Stasis, Alexander Prime with fixed 3/4 Wormhole, and Perfect Alexander. All six support role selection and eight-bot spectator practice.
+- **DSR Dragon-king Thordan practice** with Elemental assignments, Exaflares, Akh Morn, Gigaflares, and enrage. Thordan tracks the player holding aggro and locks the facing used for Exaflares and towers at cast start.
+
+## Improved
+
+- The sidebar groups duties under always-visible FluffySim Native and Upstream headings. Each group lists duties newest first by FFXIV release order.
+- TEA playback corrections cover the opening Living Liquid and Hand cleaves, outward-facing Limit Cut baits, Mana's south-side Alexander Prime opener, and sustained back-and-forth bot movement for Ordained Motion. Inception flames choose the nearest living player on each bait.
+- DSR Gigaflare markers appear in sequence. Exaflare death messages include the distance to the explosion center and its hit radius.
+- Documentation is organized under `docs`, with a dedicated TEA evidence and timing ledger.
+
+## Beta feedback
+
+- Mana assignments were cross-checked against the strategy guides and supplied combat logs and Duty Recorder captures. Community beta testing will help verify native animations, markers, and omen timing. Practice damage and some presentation timings are approximations.
+
 # FluffySim 3.2.2.0 — release prepared
 
 ## Fixed
