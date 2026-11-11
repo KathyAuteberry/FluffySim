@@ -31,6 +31,9 @@ public interface IScenario
     // How far into the phase's track the real fight is when this scenario starts.
     float BgmSecondsAtStart => 0f;
 
+    // The track at this scenario's start where the fight has moved past the phase's own.
+    ushort? Bgm => null;
+
     void Run(SimWorld world, int? selectedAi);
     void Tick(float delta, float elapsed) { }
 

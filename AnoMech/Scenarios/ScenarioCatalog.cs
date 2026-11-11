@@ -97,6 +97,7 @@ public sealed class ScenarioCatalog
         new Dsr.P6DoubleDragons.DsrP6DoubleDragonsScenario(),
         new Dsr.P6DoubleDragons.DsrP6CauterizeScenario(),
         new Dsr.P7DragonKing.DsrP7DragonKingScenario(),
+        new Dmu.GravenImage1.DmuGravenImage1Scenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),
