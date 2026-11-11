@@ -140,7 +140,7 @@ public sealed class DmuGravenImage1Scenario : IMultiplayerReplayable
         foreach (var role in TetheredRoles)
         {
             if (Alive(role) is not { } target || arena.GravenImageAt(index++, Statues.PulseWave) is not { } image) continue;
-            tethers.Add(world.Tether(image, target, GravenTether));
+            tethers.Add(world.Tether(image, target, TetherId.GravenImage));
             pulseWaves.Add((image, target));
         }
     }

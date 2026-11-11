@@ -23,6 +23,39 @@ public static class DmuConstants
     {
         public const uint Kefka = 0xBC1726;
         public const uint GravenImage = 0xBC1727;
+        public const uint CentreStatue = 0xBC7C91;
+        public const uint PulseWaveStatue = 0xBC178D;
+        public const uint WaveCannonStatue = 0xBC178E;
+        public const uint GravitasStatue = 0xBC178F;
+        public const uint VitrophyreStatue = 0xBC1790;
+        public const uint WestCleaveStatue = 0xBC1791;
+        public const uint EastCleaveStatue = 0xBC1792;
+        public const uint SleepStatue = 0xBC1793;
+        public const uint IndolentWillStatue = 0xBC1794;
+        public const uint ConfusionStatue = 0xBC1795;
+        public const uint AveMariaStatue = 0xBC1796;
+    }
+
+    // The multiplayer allowlist harvests these by class name.
+    public static class EObjId
+    {
+        public const uint CentreStatue = 2015156;
+        public const uint PlainStatue = 2015163;
+        public const uint MiddleStatue = 2015164;
+        public const uint EastStatue = 2015165;
+        public const uint SleepStatue = 2015166;
+        public const uint ConfusionStatue = 2015167;
+        public const uint GravitasPuddle = 2015266;
+    }
+
+    public static class TetherId
+    {
+        public const ushort GravenImage = 0x2D;
+    }
+
+    public static class EventId
+    {
+        public const uint StatueDirector = 0x800375D2;
     }
 
     public static class ActionId
@@ -48,6 +81,13 @@ public static class DmuConstants
         public const uint PulseWave = 0xBAA9;
         public const uint Explosion = 0xBAAA;
         public const uint UnmitigatedExplosion = 0xBAAB;
+        public const uint Gravitas = 0xBAAC;
+        public const uint GravitationalExplosion = 0xBAAD;
+        public const uint GravityIII = 0xBAAF;
+        public const uint Vitrophyre = 0xBAB0;
+        public const uint GravitationalWave = 0xBAB1;
+        public const uint IntemperateWill = 0xBAB2;
+        public const uint LightOfJudgment = 0xC622;
     }
 
     public static class StatusId
@@ -69,8 +109,6 @@ public static class DmuConstants
         public const uint ThunderTruth = 0x2A6;
     }
 
-    public const ushort GravenTether = 0x2D;
-
     public static class KnockbackId
     {
         public const uint PulseWave = 72;
@@ -85,24 +123,28 @@ public static class DmuConstants
         public const ushort AfterSecondJudgment = 20291;
     }
 
-    public const uint StatueDirector = 0x800375D2;
+    public const uint GravitasPuddleArg2Base = 0x500003;
+
+    // Director 0x800375D2, slot 0: Light of Judgment 1, then 2.
+    public const uint FirstJudgmentArena = 0x00080004;
+    public const uint SecondJudgmentArena = 0x00200010;
 
     // Local to the arena centre; Y is height. The spawn packets' own values.
     public sealed record Statue(uint EObjId, uint LayoutId, Vector3 Position, uint Arg2);
 
     public static class Statues
     {
-        public static readonly Statue Centre = new(2015156, 0xBC7C91, new(0f, 0f, 0f), 0x400003);
-        public static readonly Statue PulseWave = new(2015163, 0xBC178D, new(0f, 18.5f, -44f), 0x420003);
-        public static readonly Statue WaveCannon = new(2015163, 0xBC178E, new(0f, 0f, -35f), 0x410003);
-        public static readonly Statue Gravitas = new(2015164, 0xBC178F, new(2.5f, 22.5f, -73f), 0x450003);
-        public static readonly Statue Vitrophyre = new(2015165, 0xBC1790, new(26f, 7f, -58.5f), 0x460003);
-        public static readonly Statue EastCleave = new(2015165, 0xBC1792, new(16f, 6.5f, -57f), 0x440003);
-        public static readonly Statue WestCleave = new(2015164, 0xBC1791, new(-8f, 15f, -73f), 0x430003);
-        public static readonly Statue Confusion = new(2015167, 0xBC1795, new(-5f, 27f, -75f), 0x490003);
-        public static readonly Statue Sleep = new(2015166, 0xBC1793, new(7f, 8.5f, -57f), 0x4A0003);
-        public static readonly Statue AveMaria = new(2015167, 0xBC1796, new(-5f, 12.5f, -75f), 0x470003);
-        public static readonly Statue IndolentWill = new(2015166, 0xBC1794, new(5.25f, 13.5f, -66f), 0x480003);
+        public static readonly Statue Centre = new(EObjId.CentreStatue, LayoutId.CentreStatue, new(0f, 0f, 0f), 0x400003);
+        public static readonly Statue PulseWave = new(EObjId.PlainStatue, LayoutId.PulseWaveStatue, new(0f, 18.5f, -44f), 0x420003);
+        public static readonly Statue WaveCannon = new(EObjId.PlainStatue, LayoutId.WaveCannonStatue, new(0f, 0f, -35f), 0x410003);
+        public static readonly Statue Gravitas = new(EObjId.MiddleStatue, LayoutId.GravitasStatue, new(2.5f, 22.5f, -73f), 0x450003);
+        public static readonly Statue Vitrophyre = new(EObjId.EastStatue, LayoutId.VitrophyreStatue, new(26f, 7f, -58.5f), 0x460003);
+        public static readonly Statue EastCleave = new(EObjId.EastStatue, LayoutId.EastCleaveStatue, new(16f, 6.5f, -57f), 0x440003);
+        public static readonly Statue WestCleave = new(EObjId.MiddleStatue, LayoutId.WestCleaveStatue, new(-8f, 15f, -73f), 0x430003);
+        public static readonly Statue Confusion = new(EObjId.ConfusionStatue, LayoutId.ConfusionStatue, new(-5f, 27f, -75f), 0x490003);
+        public static readonly Statue Sleep = new(EObjId.SleepStatue, LayoutId.SleepStatue, new(7f, 8.5f, -57f), 0x4A0003);
+        public static readonly Statue AveMaria = new(EObjId.ConfusionStatue, LayoutId.AveMariaStatue, new(-5f, 12.5f, -75f), 0x470003);
+        public static readonly Statue IndolentWill = new(EObjId.SleepStatue, LayoutId.IndolentWillStatue, new(5.25f, 13.5f, -66f), 0x480003);
 
         public static readonly Statue[] All = [Centre, PulseWave, WaveCannon, Gravitas, Vitrophyre, EastCleave, WestCleave, Confusion, Sleep, AveMaria, IndolentWill];
     }

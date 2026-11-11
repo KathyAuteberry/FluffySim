@@ -116,4 +116,42 @@ public static class DmuActions
         Timing = new() { DamageDelay = 0.6f },
         DeathExplanation = "Double-trouble Trap",
     };
+
+    // Every Gravitas lands on the whole south stack at once, so it carries no vulnerability.
+    public static readonly EnemyAction Gravitas = new(ActionId.Gravitas)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Damage(split: Distribution.Stack(2))],
+        Timing = new() { DamageDelay = 0.6f },
+        DeathExplanation = "Gravitas stack",
+    };
+
+    public static EnemyAction Vitrophyre(Action<EnemyActionContext> onPuddles) => new(ActionId.Vitrophyre)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Resolve(onPuddles), OnTarget(Damage()), OnOthers(Damage(Lethal))],
+        Timing = new() { DamageDelay = 0.6f },
+        DeathExplanation = "clipped by Vitrophyre",
+    };
+
+    // A half-room cleave from the centre, toward the side its statue showed.
+    public static readonly EnemyAction GravitationalWave = new(ActionId.GravitationalWave)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Area = new() { Size = MathF.PI / 2f },
+        Effects = [Damage(Lethal)],
+        Timing = new() { DamageDelay = 0.6f },
+        DeathExplanation = "in the west half-room cleave",
+    };
+
+    public static readonly EnemyAction IntemperateWill = GravitationalWave with { ActionId = ActionId.IntemperateWill, DeathExplanation = "in the east half-room cleave" };
+
+    public static EnemyAction GravityIII(Action<EnemyActionContext> unsoaked) => new(ActionId.GravityIII)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Damage(), Resolve(unsoaked)],
+        Timing = new() { DamageDelay = 0.6f },
+    };
+
+    public static readonly EnemyAction BlizzardBoss = new(ActionId.BlizzardBoss) { Cast = new() { AnimationLock = 2.1f } };
 }

@@ -67,6 +67,7 @@ namespace AnoMech.Multiplayer;
 [JsonDerivedType(typeof(TeaP2BjCcAiReplayStateMessage), "teaP2BjCcAiReplayState")]
 [JsonDerivedType(typeof(TeaI2TemporalStasisAiReplayStateMessage), "teaI2TemporalStasisAiReplayState")]
 [JsonDerivedType(typeof(DmuGravenImage1AiReplayStateMessage), "dmuGravenImage1AiReplayState")]
+[JsonDerivedType(typeof(DmuGravenImage2AiReplayStateMessage), "dmuGravenImage2AiReplayState")]
 [JsonDerivedType(typeof(TeaP3AlexanderPrimeAiReplayStateMessage), "teaP3AlexanderPrimeAiReplayState")]
 [JsonDerivedType(typeof(TeaP4PerfectAlexanderAiReplayStateMessage), "teaP4PerfectAlexanderAiReplayState")]
 [JsonDerivedType(typeof(TopP5DeltaBeyondDefenseUpdateMessage), "topP5DeltaBeyondDefenseUpdate")]
@@ -330,6 +331,7 @@ public sealed record TeaI2TemporalStasisAiReplayStateMessage(bool BruteJusticeEa
 
 // Every roll; the trap's later holders are read live off the statuses.
 public sealed record DmuGravenImage1AiReplayStateMessage(bool[] Flags, PartyRole[] Roles) : MpMessage, IScenarioReplayStateMessage;
+public sealed record DmuGravenImage2AiReplayStateMessage(bool[] Flags, PartyRole[] Roles) : MpMessage, IScenarioReplayStateMessage;
 
 // Every roll; the chakrams' and Incinerating Heat's targets are picked live and the peer reads them
 // off its own screen. Aggravated Assault is the two DPS left over.

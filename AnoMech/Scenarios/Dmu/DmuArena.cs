@@ -49,7 +49,7 @@ public sealed class DmuArena
                 {
                     EObjId = statue.EObjId,
                     LayoutId = statue.LayoutId,
-                    EventId = StatueDirector,
+                    EventId = EventId.StatueDirector,
                     TargetableStatus = 5,
                     Arg2 = statue.Arg2,
                     Placement = new Placement(statue.Position, 0f),
@@ -83,6 +83,30 @@ public sealed class DmuArena
         var image = gravenImages[index];
         image.SetPosition(new Placement(statue.Position, 0f));
         return image;
+    }
+
+    public IReadOnlyList<SimEventObject> Puddles => puddles;
+    private readonly List<SimEventObject> puddles = [];
+
+    public SimEventObject? DropPuddle(Vector3 at)
+    {
+        var puddle = world.SpawnEventObject(new EventObjectSpawnConfig
+        {
+            EObjId = EObjId.GravitasPuddle,
+            EventId = EventId.StatueDirector,
+            TargetableStatus = 5,
+            Arg2 = GravitasPuddleArg2Base + ((uint)puddles.Count << 16),
+            Placement = new Placement(at with { Y = 0f }, 0f),
+            TimelineState = 1,
+        });
+        if (puddle is not null) puddles.Add(puddle);
+        return puddle;
+    }
+
+    public void ClearPuddles()
+    {
+        foreach (var puddle in puddles) puddle.Despawn();
+        puddles.Clear();
     }
 
     public void TeleportKefkaToCentre()

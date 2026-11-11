@@ -245,3 +245,37 @@ BGM follow-up: each scenario needs its own track, so Core gains an optional per-
 | D4 | Consequence of a missing provoke | Hit 2 on the wrong tank kills it if unmitigated, and kills anyone else in the cone, with an announcement. Same for an early provoke |
 | D5 | GI3 end when a P1 mechanic failed earlier in the run | Announce the failure only. No fake-clear or enrage replay |
 | D6 | Allowlist `docs/encounters/dmu/` in `.gitignore` in the GI1 commit | Yes |
+
+## 11. Implementation notes
+
+### Graven Image 2
+
+- **Trap knockback.** In the static's GI2 pass (pulls 26–33), the knocked group moved about
+  11.6–13.8 y (median ≈ 12) from about (95.5, 98) to the north puddles, against the sheet's 14 y
+  (Knockback row 240). Pulse Wave showed the same shortfall: about 10–11 y against 13. Core keeps
+  the sheet distance. The bots stand **13 y** from their puddle so either distance lands inside
+  its 5 y radius, and they walk into the puddle afterwards as Yan says. UNVERIFIED which distance
+  is right. If the in-game knockback looks long, this is the first suspect.
+- **Puddle rules, all UNVERIFIED:**
+  - A Vitrophyre whose 5 y circle reaches a puddle (centres within 10 y) wipes. Yan's spread spots
+    keep about 11 y.
+  - A puddle nobody stands in at Gravity III wipes.
+  - Stepping into a puddle before Gravity III is not modelled. Everyone stands in them as they
+    drop, so any such rule must have a grace period, and no source states one.
+- **Stack spot.** The south stack sits 0.8 y inside the safe south quadrant. The static's puddles
+  were 0.2–0.7 y off the C line.
+- **Trap pass** (settled by the owner):
+  - Supports west, knocked north-east into the north puddles.
+  - DPS east, knocked south-west into the south puddles.
+  - Each holder stands 1.5 y behind its group.
+
+### Provoke routes (fix after the owner's first GI1/GI2 test)
+
+A solo or host player's Provoke reaches the sim as `world.ActionResolved`: `UserActions` hands it
+to `LocalProvokeHandler`, which validates it without a stance and notifies. It never calls
+`SimEnemy.Provoke`, which only bots (`JobActions` → `ProvokeEffect`) and peers (host handling of
+`PeerProvokedEnemyMessage`) raise. `MarkedTankbusterSwap` first heard only `Provoked`, so every
+human Provoke graded as Missing. The in-game log showed `local-validation … result=eligible` and
+then `graded grade=Missing`. The swap now listens to both and ignores a Provoke by the current
+holder, which also drops the duplicate. The tests drive the human through `LocalProvokeHandler`
+and fail without the fix. Stance is never required.
