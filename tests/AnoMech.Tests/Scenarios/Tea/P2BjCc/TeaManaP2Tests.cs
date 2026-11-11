@@ -101,6 +101,7 @@ public class TeaManaP2Tests
     [TestCase(1068, MeleeDpsB)]
     [TestCase(1099, PhysRangedDps)]
     [TestCase(1224910100, PhysRangedDps)]
+    [TestCase(1811859361, MeleeDpsB)]
     public void DeterministicRoutingRegressionsPreserveNisiSeparation(int seed, PartyRole role)
     {
         var scenario = new TeaP2BjCcScenario();

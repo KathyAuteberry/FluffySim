@@ -105,7 +105,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
 
         world.Events.Add(41.0f, TakeFirstStackSpots);
         world.Events.Add(45.0f, () => Go(MeleeDpsB, BesideCruiseChaser() + new Vector2(3f, 0f)));
-        world.Events.Add(45.9f, () => Go(OffTank, BesideCruiseChaser()));
+        world.Events.Add(45.9f, DodgeSpinCrusher);
         world.Events.Add(48.7f, ReturnD2AfterFirstPass);
         world.Events.Add(49.6f, () => Go(OffTank, OffTankMissileSpot));
 
@@ -328,6 +328,9 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
         MeleeDpsB => [new(-6f, 9f), new(-17.8f, 5f), new(-17.8f, -5.5f), new(-9f, -12.5f), new(3.8f, -12.5f), LightningHolderSpot],
         _ => [LightningHolderSpot],
     };
+
+    private void DodgeSpinCrusher()
+        => GoAvoiding(OffTank, [BesideCruiseChaser()], null, 0f, null);
 
     private Vector2 BesideCruiseChaser()
     {
