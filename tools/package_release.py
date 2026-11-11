@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCUMENTATION = (
     'AGENTS.md',
     'README.md',
-    'docs/NEXT-UPSTREAM-AUDIT.md',
+    'docs/integration/POST-3.0.2-UPSTREAM-AUDIT.md',
     'docs/README.md',
     'docs/development/AGENTS.md',
     'docs/development/HARD-DIFFICULTY-AUDIT.md',

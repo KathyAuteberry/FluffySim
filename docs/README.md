@@ -33,7 +33,7 @@
 - [FRU clear audit](research/fru-clear-audit-2026-10-31.md),
   [second-clear comparison](research/fru-second-clear-audit-2026-11-01.md)
   and [DSR progress](research/dsr-progress.md)
-- [Next upstream audit](NEXT-UPSTREAM-AUDIT.md)
+- [Next upstream audit](integration/POST-3.0.2-UPSTREAM-AUDIT.md)
 
 Historical audits preserve the state and limitations recorded at their dates;
 consult the latest implementation notes and the current source before relying on
