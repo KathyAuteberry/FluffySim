@@ -117,6 +117,7 @@ public class LocalProvokeRoutingTests
         var cleave = wrath ? 78.94f : 68f;
         var pressAt = press switch { "early" => heel - .2f, "after" => cleave - .4f, "late" => cleave + .4f, _ => heel + .6f };
         var observed = 0;
+        var provoked = 0;
         var relayed = 0;
         var shouldPass = press is "during" or "after";
         ScenarioRun run;
@@ -143,6 +144,10 @@ public class LocalProvokeRoutingTests
                         {
                             if (action == 7533 && ReferenceEquals(actor, p.World.Party.Player)) observed++;
                         };
+                        p.World.Children.OfType<SimEnemy>().Single(e => e.BNpcBaseId == DsrP5Constants.BNpcBaseId.DarkThordan).Provoked += by =>
+                        {
+                            if (ReferenceEquals(by, p.World.Party.Player)) provoked++;
+                        };
                     }
                     if (press == "missing" || !p.Crossed(pressAt)) return;
                     var boss = p.World.Children.OfType<SimEnemy>().Single(e => e.BNpcBaseId == DsrP5Constants.BNpcBaseId.DarkThordan);
@@ -168,6 +173,7 @@ public class LocalProvokeRoutingTests
             TestContext.WriteLine($"time={hit.Time:F2} action={hit.Action} target={hit.Target} recipients=[{string.Join(",", hit.Recipients)}] statuses=[{string.Join(",", hit.TargetStatuses)}]");
         Assert.That(run.Passed, Is.EqualTo(shouldPass), run.ToString);
         Assert.That(observed, Is.EqualTo(press is "during" or "after" or "early" or "late" ? 1 : 0));
+        Assert.That(provoked, Is.EqualTo(observed), "a local Provoke reaches SimEnemy.Provoked as well, once");
         Assert.That(relayed, Is.EqualTo(press is "missing" or "native-rejected" or "unchanged-sequence" or "paused" or "transition" ? 0 : 1),
             "upstream action presentation follows native observation, including locally rejected targets, without duplicates");
         var snapshots = Sequence().Snapshots;

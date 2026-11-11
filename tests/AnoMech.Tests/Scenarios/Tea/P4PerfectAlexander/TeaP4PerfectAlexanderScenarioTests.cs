@@ -1,4 +1,6 @@
 using System.Numerics;
+using AnoMech.Core.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
@@ -612,4 +614,35 @@ public class TeaP4PerfectAlexanderLegacyScenarioTests
         tweak(overrides);
         return new TeaP4PerfectAlexanderState(new Rng(11), SimParty.Empty, overrides);
     }
+
+    // A human tank's Provoke arrives through LocalProvokeHandler, not SimEnemy.Provoke, and must still turn it.
+    [Test]
+    public void HumanProvokeTurnsPerfectAlexander()
+    {
+        string? before = null, after = null, offTank = null;
+        var run = ScenarioRun.Execute(typeof(TeaP4PerfectAlexanderLegacyScenario), 0, 3, new ScenarioRunOptions
+        {
+            ScenarioFactory = () => new TeaP4PerfectAlexanderLegacyScenario(),
+            PlayerRole = OffTank,
+            StopAt = 12f,
+            Probe = p =>
+            {
+                if (p.World.Children.OfType<SimEnemy>().FirstOrDefault(e => e.IsActive && e.Targetable && e.BNpcBaseId == BNpcBaseId.PerfectAlexander) is not { } boss) return;
+                if (p.Crossed(9f))
+                {
+                    offTank = p.Member(OffTank)!.EntityId.ToString("X8");
+                    before = LastTargetOf(boss);
+                    new LocalProvokeHandler().OnAction(ActionType.Action, Enmity.ProvokeActionId, boss.GameObjectId.ObjectId);
+                }
+                if (p.Crossed(11f)) after = LastTargetOf(boss);
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(before, Is.Not.Null.And.Not.EqualTo(offTank));
+        Assert.That(after, Is.EqualTo(offTank));
+    }
+
+    private static string? LastTargetOf(SimEnemy boss)
+        => ((FakeBattleCharas)Natives.BattleCharas).Timeline.Rows
+            .LastOrDefault(r => r["kind"] == "ac_target" && r["actor"] == boss.EntityId.ToString("X8"))?["target"];
 }

@@ -20,6 +20,9 @@ internal sealed class LocalProvokeHandler : IUserActionHandler
             : enemy is not { IsActive: true, Targetable: true } ? "invalid-target" : "eligible";
         var stanceStatuses = player?.ActiveStatusSnapshot.Where(s => s.StatusId is 79 or 91 or 743 or 1833).Select(s => s.StatusId) ?? [];
         Core.DiagnosticLog.Info($"[ProvokeInput] event=local-validation action={action} target=0x{target:X} simTarget=0x{enemy?.GameObjectId.ObjectId:X} bnpc={enemy?.BNpcBaseId} role={player?.Role} job={player?.Proxy?.ClassJob} stanceRequired=false simStanceStatuses=[{string.Join(",", stanceStatuses)}] result={reason}");
-        if (reason == "eligible") game!.World.NotifyActionResolved(player!, action, enemy!.GameObjectId.ObjectId);
+        if (reason != "eligible") return;
+        // Scenarios hear a Provoke as either signal; listeners of both ignore a Provoke by the current holder.
+        enemy!.Provoke(player!);
+        game!.World.NotifyActionResolved(player!, action, enemy.GameObjectId.ObjectId);
     }
 }

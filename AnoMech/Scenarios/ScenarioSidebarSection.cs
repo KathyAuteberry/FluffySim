@@ -18,11 +18,11 @@ public sealed record ScenarioSidebarSection(string Title, IReadOnlyList<IZone> Z
     }
 
     private static bool IsNative(IZone zone)
-        => zone is Fru.FruZone or Dsr.DsrZone || zone.TerritoryId == AlexanderTerritory;
+        => zone is Fru.FruZone or Dsr.DsrZone or Dmu.DmuZone || zone.TerritoryId == AlexanderTerritory;
 
     private static int ReleasePatch(IZone zone) => zone switch
     {
-        Umad.UmadZone => 751,
+        Umad.UmadZone or Dmu.DmuZone => 751,
         Fru.FruZone or Fru.Upstream.FruZone => 711,
         Top.TopZone => 631,
         Dsr.DsrZone => 611,

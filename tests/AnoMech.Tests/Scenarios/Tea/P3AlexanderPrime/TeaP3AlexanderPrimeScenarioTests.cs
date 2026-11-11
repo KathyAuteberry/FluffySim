@@ -1,4 +1,6 @@
 using System.Numerics;
+using AnoMech.Core.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Native.Interfaces;
@@ -1401,4 +1403,28 @@ public class TeaP3AlexanderPrimeScenarioTests
             Assert.That(Roll(marked: [MeleeDpsB, MainTank]), Is.Null);
         });
     }
+
+    // A human tank's Provoke arrives through LocalProvokeHandler, not SimEnemy.Provoke, and must still turn him.
+    [Test]
+    public void HumanProvokeTurnsAlexanderPrime()
+    {
+        string? before = null, after = null, mainTank = null;
+        var run = Run(MainTank, 13f, p =>
+        {
+            if (State(p).Objects.AlexanderPrime is not { } boss) return;
+            if (p.Crossed(10f))
+            {
+                mainTank = p.Member(MainTank)!.EntityId.ToString("X8");
+                before = LastTargetOf(boss);
+                new LocalProvokeHandler().OnAction(ActionType.Action, Enmity.ProvokeActionId, boss.GameObjectId.ObjectId);
+            }
+            if (p.Crossed(12f)) after = LastTargetOf(boss);
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(before, Is.Not.Null.And.Not.EqualTo(mainTank), "the off-tank holds him after the 3.3s Provoke");
+        Assert.That(after, Is.EqualTo(mainTank));
+    }
+
+    private static string? LastTargetOf(SimEnemy boss)
+        => Rows().LastOrDefault(r => r["kind"] == "ac_target" && r["actor"] == boss.EntityId.ToString("X8"))?["target"];
 }

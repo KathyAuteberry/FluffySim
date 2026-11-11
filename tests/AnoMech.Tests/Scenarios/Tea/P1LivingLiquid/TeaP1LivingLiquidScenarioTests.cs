@@ -1,4 +1,5 @@
 using System.Numerics;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
@@ -851,8 +852,10 @@ public class TeaP1LivingLiquidFullTimelineScenarioTests
             .FreezeAt(29.5f)
             .ShouldKill(ActionId.HandOfParting, PerRole.All.ToArray());
 
-    [Test]
-    public void ProvokeTurnsTheHandAfterTheServerDelay()
+    // The human's Provoke takes the real input route (LocalProvokeHandler); the bot's goes through JobActions.
+    [TestCase(false)]
+    [TestCase(true)]
+    public void ProvokeTurnsTheHandAfterTheServerDelay(bool humanRoute)
     {
         bool? autoBeforeTurnOnOffTank = null, autoAfterTurnOnMainTank = null;
         var run = Run(MainTank, 28f, p =>
@@ -860,7 +863,10 @@ public class TeaP1LivingLiquidFullTimelineScenarioTests
             if (p.Time < 20f) return;
             var hand = Enemy(p, BNpcBaseId.LiquidHand);
             if (p.Crossed(24.0f))
-                JobActions.ApplyEffects(p.Member(MainTank)!, Enmity.ProvokeActionId, (ulong)hand.GameObjectId, Random.Shared);
+            {
+                if (humanRoute) new LocalProvokeHandler().OnAction(ActionType.Action, Enmity.ProvokeActionId, hand.GameObjectId.ObjectId);
+                else JobActions.ApplyEffects(p.Member(MainTank)!, Enmity.ProvokeActionId, (ulong)hand.GameObjectId, Random.Shared);
+            }
             if (p.Crossed(24.35f)) autoBeforeTurnOnOffTank = LastActionTarget(hand) == Id(p.Member(OffTank));
             if (p.Crossed(27.45f)) autoAfterTurnOnMainTank = LastActionTarget(hand) == Id(p.Member(MainTank));
         });

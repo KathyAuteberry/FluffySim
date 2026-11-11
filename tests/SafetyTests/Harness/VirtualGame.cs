@@ -452,7 +452,7 @@ public sealed unsafe class VirtualGame : IDisposable, IHookHost
 
     internal void OnHookStateChanged(HookRole role, bool enabled, string by)
     {
-        HookHistory.Add($"{Now:F3} {role} {(enabled ? "on" : "off")} ({by})");
+        HookHistory.Add(string.Create(System.Globalization.CultureInfo.InvariantCulture, $"{Now:F3} {role} {(enabled ? "on" : "off")} ({by})"));
         Note($"hook {role} {(enabled ? "enabled" : "disabled")} by {by}");
         if (Dead)
         {

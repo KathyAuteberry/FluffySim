@@ -11,7 +11,7 @@ Choose a mechanic, pick your role and strategy, and retry as often as you like. 
 - Individual mechanics with randomized assignments and seven bots.
 - Easy or Hard bot movement, with the simulated party visible or hidden.
 - Role selection and mechanic-specific assignment preferences where supported.
-- **JESUS TAKE THE WHEEL**: automatic spectator practice for every selectable FRU, DSR and TEA scenario, using your selected role and eight bot-controlled participants with a following camera.
+- **JESUS TAKE THE WHEEL**: automatic spectator practice for every selectable FRU, DSR, TEA and native Dancing Mad scenario, using your selected role and eight bot-controlled participants with a following camera.
 - God Mode, Pause/Resume and Restart for repeated practice.
 - Local defensive actions and restored practice cooldowns between isolated attempts.
 - Native bosses, casts, effects and arena environments.
@@ -50,7 +50,7 @@ Closing the interface alone does not leave the simulation.
 
 ## Supported encounters
 
-The catalog contains **52 entries**, including **17 FRU entries**, **12 DSR entries** and **6 TEA entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
+The catalog contains **55 entries**, including **17 FRU entries**, **12 DSR entries**, **6 TEA entries** and **3 native Dancing Mad entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
 
 ### Futures Rewritten (Ultimate)
 
@@ -96,12 +96,24 @@ P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT →
 | P3 Alexander Prime | 3/4 fixed |
 | P4 Perfect Alexander | Nukemaru |
 
+### Dancing Mad (Ultimate) — beta
+
+The native P1 entries use Yan Flash's **Mana** strategy and are a **beta**: built from combat logs and Duty Recorder captures, but still awaiting wider community testing.
+
+| Entry | Covers |
+| --- | --- |
+| P1 Graven Image 1 | Revolting Ruin III tank swap, Mystery Magic, Pulse Wave knockback, Wave Cannon towers and Double Trouble Trap |
+| P1 Graven Image 2 | Second tank swap, Gravitas puddles, Vitrophyre knockbacks, half-room cleaves and Gravity soak |
+| P1 Graven Image 3 | Tele-portents, Double Trouble Trap, confused teleport chase and the final gaze |
+
+At each tank swap the tank taking over must Provoke Kefka during the tankbuster cast; Provoke is graded on time, early, late or missing and does not require tank stance. Graven Image 3 is solo-only (no multiplayer); Graven Image 1 and 2 support multiplayer. Some timings that were never observed in recordings are approximations.
+
 ### Other registered practice
 
 - **The Omega Protocol:** Party Synergy, Delta, Sigma, Omega, Wave Cannon 2.
 - **The Weapon's Refrain:** Ultimate Predation and Ultimate Suppression.
 - **The Unending Coil of Bahamut:** Exaflares.
-- **Dancing Mad:** Tele-trouncing, Forsaken, Limit Cut, Black Hole, Kefka Says, Flood, Celestriad, Exaflares and Forsaken Null. Forsaken Null is a limited visual entry without bot AI or damage resolution.
+- **Dancing Mad (upstream):** Tele-trouncing, Forsaken, Limit Cut, Black Hole, Kefka Says, Flood, Celestriad, Exaflares and Forsaken Null. Forsaken Null is a limited visual entry without bot AI or damage resolution.
 
 ## Practice controls
 

@@ -7,6 +7,7 @@ obj/
 !/docs/encounters/dsr-sanctity-meteors-evidence.md
 !/docs/encounters/dsr-sanctity-meteors-events.json
 !/docs/encounters/dsr-sanctity-tower-height.md
+!/docs/encounters/dmu/
 /Reference/
 bin/
 .idea/
