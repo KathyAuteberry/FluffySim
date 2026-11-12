@@ -1,3 +1,21 @@
+# FluffySim 3.4.0.0 — release prepared
+
+## Added
+
+- **Dancing Mad (Ultimate) P1, Mana beta.** A new FluffySim Native Dancing Mad duty adds three entries that follow Yan Flash's strategy. Graven Image 1 covers the Revolting Ruin III tank swap, Mystery Magic, the Pulse Wave knockback, Wave Cannon towers and Double Trouble Trap. Graven Image 2 covers the second tank swap, Gravitas puddles, Vitrophyre knockbacks, half-room cleaves and the Gravity soak. Graven Image 3 covers Tele-portents, the confused teleport chase and the Ave Maria / Indolent Will gaze. Each entry starts from the recorded state left by the previous one and switches to its own phase music.
+- Tank swaps grade the incoming tank's Provoke against the tankbuster cast bar as on time, early, late or missing. A missing or early Provoke fails the run. Tank stance is not required.
+- Graven Image 1 and 2 support multiplayer. All three support role selection and JESUS TAKE THE WHEEL spectator practice.
+
+## Fixed
+
+- A human tank's local Provoke now registers in the TEA Living Liquid, Alexander Prime and Perfect Alexander tank swaps, which previously responded only to bot Provokes.
+- Safety test hook history formats its times with the invariant culture, so the suite passes on non-English system locales.
+
+## Beta feedback
+
+- Graven Image 3 is solo-only for now. When the player is confused, each paddle carries them along their own chain. The chase pauses briefly at the end of a chain; that pause and the exact teleport distance were never observed in recordings and are approximations.
+- Timings, positions and knockbacks were taken from combat logs and Duty Recorder captures. Community beta testing will help confirm native animations, markers, omen timing and the strategy details where guides disagree.
+
 # FluffySim 3.3.1.0 — release prepared
 
 ## Added
