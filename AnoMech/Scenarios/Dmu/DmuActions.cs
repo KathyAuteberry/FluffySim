@@ -1,5 +1,7 @@
 using System;
 using AnoMech.Core.EnemyActions;
+using AnoMech.Core.Game;
+using AnoMech.Core.SimObjects;
 using static AnoMech.Core.EnemyActions.EnemyActionEffects;
 using static AnoMech.Core.EnemyActions.Severity;
 using static AnoMech.Scenarios.Dmu.DmuConstants;
@@ -154,4 +156,45 @@ public static class DmuActions
     };
 
     public static readonly EnemyAction BlizzardBoss = new(ActionId.BlizzardBoss) { Cast = new() { AnimationLock = 2.1f } };
+
+    public static readonly EnemyAction TeleTrouncing = new(ActionId.TeleTrouncing) { Cast = new() { AnimationLock = 3.1f } };
+    public static readonly EnemyAction StatueGlance = new(ActionId.StatueGlance) { Cast = new() { AnimationLock = 2.1f } };
+
+    public static readonly EnemyAction TeleTrouncingDrop = new(ActionId.TeleTrouncingDrop)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Damage(Harmless)],
+        Timing = new() { DamageDelay = 0.5f },
+    };
+
+    public static readonly EnemyAction IndulgentWill = new(ActionId.IndulgentWill)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Damage(Harmless)],
+        Timing = new() { DamageDelay = 0.6f },
+    };
+
+    public static readonly EnemyAction IdyllicWill = new(ActionId.IdyllicWill)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Damage(Harmless), ApplyStatus(StatusId.Sleep, 6f)],
+        Timing = new() { DamageDelay = 0.6f },
+    };
+
+    // Retail answers a failed gaze with Damage Down, not a death.
+    public static EnemyAction Gaze(bool lookAway, Action<EnemyActionContext, SimCharacter> failed) => new(lookAway ? ActionId.IndolentWill : ActionId.AveMaria)
+    {
+        Cast = new() { CastSecondsOverride = 0f, FaceTarget = false },
+        Effects = [Resolve(ctx =>
+        {
+            var from = ctx.Origin.Position;
+            foreach (var target in ctx.Hits)
+            {
+                var facing = target.Placement();
+                if (lookAway ? facing.IsLookingAt(from) : facing.IsLookingAwayFrom(from)) failed(ctx, target);
+                else ctx.Dodge(target);
+            }
+        })],
+        Timing = new() { DamageDelay = 0.6f },
+    };
 }

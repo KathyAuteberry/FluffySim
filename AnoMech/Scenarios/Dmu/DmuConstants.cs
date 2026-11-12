@@ -46,6 +46,7 @@ public static class DmuConstants
         public const uint SleepStatue = 2015166;
         public const uint ConfusionStatue = 2015167;
         public const uint GravitasPuddle = 2015266;
+        public const uint TelePortent = 2015267;
     }
 
     public static class TetherId
@@ -88,12 +89,27 @@ public static class DmuConstants
         public const uint GravitationalWave = 0xBAB1;
         public const uint IntemperateWill = 0xBAB2;
         public const uint LightOfJudgment = 0xC622;
+        public const uint TeleTrouncing = 0xBAB9;
+        public const uint TeleTrouncingDrop = 0xBABA;
+        public const uint AveMaria = 0xBAB3;
+        public const uint IndolentWill = 0xBAB4;
+        public const uint IndulgentWill = 0xBAB5;
+        public const uint IdyllicWill = 0xBAB6;
+        public const uint StatueGlance = 0xC554;
+        public const uint StatueGlanceEnd = 0xC555;
     }
 
     public static class StatusId
     {
         public const ushort MagicVulnerabilityUp = 0xB7D;
         public const ushort DoubleTroubleTrap = 0x13D6;
+        public const ushort Confused = 0x503;
+        public const ushort Sleep = 0x131E;
+        public const ushort Bind = 0x9D6;
+        public const ushort DamageDown = 0xB5F;
+        // Tele-portent by arrow: N, S, E, W. The second set marks a player's other, turned arrow.
+        public static readonly ushort[] TelePortent = [0x130C, 0x130D, 0x130E, 0x130F];
+        public static readonly ushort[] TelePortentTurned = [0x13D7, 0x13D8, 0x13D9, 0x13DA];
     }
 
     public static class LockonId
@@ -124,6 +140,7 @@ public static class DmuConstants
     }
 
     public const uint GravitasPuddleArg2Base = 0x500003;
+    public const uint TelePortentArg2Base = 0x500003;
 
     // Director 0x800375D2, slot 0: Light of Judgment 1, then 2.
     public const uint FirstJudgmentArena = 0x00080004;

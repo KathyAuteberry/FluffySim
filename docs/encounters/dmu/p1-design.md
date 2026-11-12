@@ -279,3 +279,64 @@ human Provoke graded as Missing. The in-game log showed `local-validation … re
 then `graded grade=Missing`. The swap now listens to both and ignores a Provoke by the current
 holder, which also drops the duplicate. The tests drive the human through `LocalProvokeHandler`
 and fail without the fix. Stance is never required.
+
+### Graven Image 3
+
+- **Tele-portent paddles:**
+  - Each paddle drops where its owner stands when the 7 s or 10 s status expires, facing its arrow.
+  - It arms once nobody stands on it.
+  - Anyone who steps within 2 y (Tele-trouncing's radius), awake and not bound, is carried
+    **6.5 y** along the arrow (UNVERIFIED: Yan's box spacing), bound for 1 s (Bind 0x9D6, 1.00 s,
+    as logged), and the paddle is spent.
+  - Landing on the next paddle chains, as the Pinoy box intends.
+- **Paddle rules, all UNVERIFIED:**
+  - Two paddles dropped within 4 y cancel and count as a mistake.
+  - A paddle left at the end counts as a mistake ("P3 would stay locked"). It is not a wipe
+    (owner decision D5).
+- **Confused chase:** Core's own chase follows the nearest living ally and swings (cone, 2 y) at
+  anyone in reach.
+  - A full four-paddle chain takes about 4 s, which still leaves time to reach a partner. Clean
+    retail pulls never showed that.
+  - So a rider whose chain ends (lands on no paddle) holds **2 s** past the bind (UNVERIFIED, as
+    upstream did).
+  - A short chain, from a misplaced paddle, still leaves the partner exposed.
+- **Teleport spread** (Yan): inner spots at Yan's exact coordinates, MT (−4.2, −4.6),
+  ST (3.7, −4.6), D1 (−4.4, 3.7), D2 (3.4, 3.7). Outer players edge toward their box, to
+  (±8.5, ±8.5), per Kitten's "edge close to the teleporter circle".
+  - Each diagonal partner is then the clearly nearest player.
+  - With Yan's box-centre outer spots and any destination jitter, inner players chased each other,
+    so the bots move there without jitter.
+- **Gazes:**
+  - A failed gaze gives Damage Down (0xB5F, 180 s) and a recorded mistake, as retail does. Core's
+    gaze effect kills instead, so it is not used.
+  - Ave Maria fails when facing away from its statue; Indolent Will fails when facing it.
+- **Final Mystery Magic:** role anchors (Yan) nudged to the nearest point clear of the real lines,
+  with a 1.5 y margin.
+- **Arena at the start:** MapEffects for both Light of Judgments replayed; centre statue at its
+  wind-up beat. One cleave indicator is left at its fire beat; that choice is cosmetic.
+- **Multiplayer:** off for GI3 for now (`SupportsMultiplayer => false`; the replay message and
+  state encoding stay in place).
+  - In a multiplayer run, peers reach their spread spots by movement input and ride paddles with
+    network delay.
+  - The confused chase then caught partners: `ResultMarkTests` recorded deaths.
+  - GI1 and GI2 support multiplayer.
+- **Gaze facing:** bots turn with `TurnTo`. `SetRotation` never reaches a bot-controlled local
+  player.
+
+### Graven Image 3 fix: a confused player rode only one paddle
+
+The owner's first GI3 test: as a confused MT, they rode the North paddle onto the West one and then
+walked off it and killed D3.
+- The log: carried to (−5.7, −13.6), Bind gained; at Bind's end they were at (−7.7, −10.0), and
+  their swing at D3 resolved 14 ms later.
+- `TeleportTo` only sets the engine-side position, so the client's in-flight forced approach toward
+  D3 kept walking them. The release sends only a forced-follow end, not a forced stop.
+- The chase also resumed the moment Bind lifted, before the paddle check.
+
+Fix:
+- Riders are moved with `CarryTo`, a move the client executes itself, as upstream did.
+- While a confused player stands on an armed paddle, the chase is re-held every frame, so the
+  paddle decides when they move on.
+
+The headless player test passes on the old code too, because the fake client doesn't model the
+drift. **Only an in-game check verifies this fix.**
