@@ -18,15 +18,15 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
 {
     // Tele-trouncing's own radius.
     private const float ArrowTrigger = 2f;
-    // UNVERIFIED: at least one paddle to the next (Yan's box spacing, 6.4-7y).
-    private const float ArrowTeleport = 6.5f;
+    // Measured from the paddle's centre, wherever the rider stepped in.
+    private const float ArrowTeleport = 6f;
+    // UNVERIFIED: a lower bound; retail warps come at least this long after the rider is first seen inside.
+    private const float ArrowEntryDelay = 0.3f;
     // UNVERIFIED: two paddles this close cancel each other.
     private const float ArrowsCollide = 4f;
     private const float BindSeconds = 1f;
-    // UNVERIFIED: a rider whose chain ends (lands on no paddle) stays put this long after the bind.
-    // Without it a full chain still leaves time to reach a partner, which clean retail pulls never
-    // showed.
-    private const float ChainEndHold = 2f;
+    // A confused rider whose chain ends (lands on no paddle) stays put this long after the bind.
+    private const float ChainEndHold = 1.6f;
     private const float ArrowObstacleRadius = 2.2f;
     // A confused player on an armed paddle waits for it, not for the chase: re-held every frame.
     private const float PaddleHoldsChase = 0.25f;
@@ -53,6 +53,8 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
     public int ArrowsLost { get; private set; }
     public IReadOnlyDictionary<PartyRole, int> Rides => rides;
     private readonly Dictionary<PartyRole, int> rides = [];
+    public IReadOnlyList<(PartyRole Role, float Time, float Length)> Warps => warps;
+    private readonly List<(PartyRole Role, float Time, float Length)> warps = [];
 
     private static readonly float[] AutoAttacks = [3.2f, 6.2f, 9.2f, 12.3f];
 
@@ -63,6 +65,7 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
         public Arrow Arrow = arrow;
         public CircleObstacle Obstacle = obstacle;
         public bool Armed;
+        public readonly Dictionary<SimCharacter, float> EnteredAt = [];
     }
 
     private readonly DmuGravenImage3SettingsWindow settingsWindow = new();
@@ -86,6 +89,7 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
         confusionRunning = false;
         ArrowsDropped = ArrowsResolved = ArrowsLost = 0;
         rides.Clear();
+        warps.Clear();
 
         if (selectedAi is { } idx && idx < AiStrats.Count)
             ((IScenarioAi<DmuGravenImage3State>)AiStrats[idx]).Run(state, world);
@@ -157,8 +161,11 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
                 if (near.Count == 0) paddle.Armed = true;
                 continue;
             }
+            foreach (var gone in paddle.EnteredAt.Keys.Except(near).ToList()) paddle.EnteredAt.Remove(gone);
+            foreach (var member in near) paddle.EnteredAt.TryAdd(member, elapsed);
             foreach (var waiting in near.Where(m => m.ActorControl.Confused)) waiting.HoldConfusedChase(PaddleHoldsChase);
-            if (near.FirstOrDefault(m => !m.HasStatus(StatusId.Bind) && !m.HasStatus(StatusId.Sleep)) is { } rider) Ride(paddle, rider);
+            var rider = near.FirstOrDefault(m => !m.HasStatus(StatusId.Bind) && !m.HasStatus(StatusId.Sleep) && elapsed - paddle.EnteredAt[m] >= ArrowEntryDelay);
+            if (rider is not null) Ride(paddle, rider);
         }
     }
 
@@ -229,7 +236,11 @@ public sealed class DmuGravenImage3Scenario : IMultiplayerReplayable
         var to = paddle.At + DmuGravenImage3State.Direction(paddle.Arrow) * ArrowTeleport;
         Remove(paddle, lost: false);
         ArrowsResolved++;
-        if (rider is ISimPartyMember { Role: var role }) rides[role] = rides.GetValueOrDefault(role) + 1;
+        if (rider is ISimPartyMember { Role: var role })
+        {
+            rides[role] = rides.GetValueOrDefault(role) + 1;
+            warps.Add((role, world.Events.Elapsed, Vector2.Distance(paddle.At, to)));
+        }
         // A carry is the client's own move, so a player's in-flight chase can't walk them off it.
         rider.CarryTo(new Vector3(to.X, 0f, to.Y));
         rider.AddStatus(StatusId.Bind, BindSeconds);

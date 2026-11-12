@@ -15,8 +15,22 @@ one silently.
 | C3 | **`tools/rtrace.py` row alignment** for keyed kinds (`actor`/`caster` column) | `tools.md` §5 calls the encoding validated by exact byte consumption. Against the 2026-11-11 DMU ACT log only 5/780 casts match unfixed; with value rows taken as key-sorted and the key column and clocks in arrival order, all 780 casts, 2954 actions, 421 headmarkers, 495 tethers, 36 MapEffects and 547 EObj states match (`docs/encounters/dmu/p1-evidence.md` §2.1) | Decoder unchanged; DMU work used a scratch remap | Fix the decoder, add an ACT-aligned test fixture, recheck earlier RaidTrace conclusions |
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
 | C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
-| C6 | **DMU knockback distances** | Sheet: Pulse Wave 13 y (row 72), Double-trouble Trap 14 y (row 240). The static's movement shows about 10–11 y and 11.6–13.8 y | Sheet values in Core; GI2 bots stand 13 y from their puddle so either lands | A Duty Recorder measurement of one knockback from standstill |
 | C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
+
+Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
+`analysis/`, decoded with the C3 remap):
+
+- **C6, DMU knockback distances.** The hit packets name Knockback rows 72 and 240, so the sheet's 13 y
+  and 14 y are what the server applies. Standing trap targets travel 13.9–14.05 y. Pulse Wave targets
+  show 10–14 y only because they were still walking when it hit. The push starts about 0.8 s after
+  the hit packet and ends about 1.5 s after it. The Pulse Wave caster stands at (100, 56).
+- **GI3 Tele-portent teleports.** A paddle warps its rider with ActorControl 241 to exactly 6 y from
+  the paddle's centre in its direction (31 warps: 5.97–6.03 y), wherever the rider entered. Each warp
+  applies Bind (2518) for about 1 s. A landing inside another paddle chains to it as the Bind ends,
+  every 0.98–1.04 s. A confused rider whose chain ends stands still about 2.6 s after the last warp
+  (2.45–3.00 s, the 4 rides that ended mid-confusion). The warp comes at least 0.3 s after the rider
+  is first seen inside; position updates are too sparse to pin the exact delay. `DmuGravenImage3Scenario`
+  now uses 6 y, a 1.6 s hold after the Bind and a 0.3 s entry delay (the last still UNVERIFIED).
 
 Resolved by the owner at handover: FRU Ultimate Relativity has nothing at true south. Everything is
 relative to the hourglasses and their tethers, so the guide macro's "South" for Bind 3 is wrong and

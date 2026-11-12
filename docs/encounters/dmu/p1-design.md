@@ -149,7 +149,7 @@ than one scenario needs belongs in Core"):
 | Wave Cannon + towers | Rect 100×6 from (100, 65) toward 2 rolled supports + 2 rolled DPS. Towers BAAA r4, 3 s, at the targets' spots 0.6 s later. Unsoaked → Unmitigated Explosion (wipe) | §5.2 |
 | Double-trouble Trap | Status 0x13D6. At expiry: BAA7 stack r6 + Knockback row 240 from the holder. Fewer than 3 soakers kill (Kitten; to be confirmed). Passes to 1 support + 1 DPS among those hit (68 s, then 49 s) | §5.2 |
 | GI2 | Tethers from the middle and east statues. Gravitas 2-man r5 stacks → puddle EObj 2015266 with a hazard r5 (stepping in or a Vitrophyre hit = wipe). Vitrophyre r5 + Knockback row 86 (50 y) on bystanders. Cleaves BAB1/BAB2 180° from the centre at h = ∓π/2, with the indicator beats. Gravity III soak | §4.2, §3.3 |
-| Tele-portent | Statuses by direction (§5.3), 7 s / 10 s. Drop arrow EObj 2015267 with the facing. Stepping in (r2, Tele-trouncing range) teleports along the arrow. Distance **UNVERIFIED**: at least paddle to paddle, 6.5–7 y (upstream used 6 y) | §5.3; owner |
+| Tele-portent | Statuses by direction (§5.3), 7 s / 10 s. Drop arrow EObj 2015267 with the facing. Stepping in (r2, Tele-trouncing range) teleports along the arrow. Distance 6 y from the arrow's centre, then Bind 1 s; a landing inside another arrow chains to it (measured, evidence §5.3) | §5.3; owner |
 | Confusion / sleep | Core `ActorControl.SetConfused` + `SimParty` nearest-player chase (already in Core, built for upstream UMAD). Sleep 0x131E, 6 s, no movement | §4.3 |
 | Gazes | Ave Maria BAB3 (look at) / Indolent Will BAB4 (look away) via Core's `Gaze` effect, from the two gaze statues. Failure → Damage Down 0xB5F, 180 s | §4.3 |
 

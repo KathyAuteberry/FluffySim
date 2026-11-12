@@ -840,8 +840,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     private static float PuddleRadius(uint eobjId) => eobjId switch
     {
         EObjId.VoidzoneEarthMissile => Geometry.MissilePuddleRadius,
-        EObjId.VoidzoneIceSmall => Geometry.SmallIceRadius,
-        EObjId.VoidzoneIceLarge => Geometry.LargeIceRadius,
+        EObjId.VoidzoneIceSmall or EObjId.VoidzoneIceLarge => Geometry.LargeIceRadius,
         _ => 0f,
     };
 
