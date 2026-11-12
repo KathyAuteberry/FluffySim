@@ -319,4 +319,25 @@ public class TeaManaP2Tests
         Assert.That(run.Passed, run.ToString);
         Assert.That(checkedDamage, Is.True);
     }
+
+    // The off-tank's ice can land a little short of its spot; the grown ice then reaches the
+    // west Nisi pass spot unless the bots clear it from the first drop.
+    [TestCase(3)] [TestCase(17)]
+    public void TheGrownIceMissesThePartyWhenTheOffTankDropsItShort(int seed)
+    {
+        var frozen = new List<PartyRole>();
+        var run = ScenarioRun.Execute(typeof(TeaP2BjCcScenario), 0, seed, new()
+        {
+            PlayerRole = MainTank, StopAt = 82f,
+            Overrides = o => ((TeaP2BjCcStateOverrides)o).IceTank = OffTank,
+            Takeovers = [new(68.0f, new System.Numerics.Vector2(-12.4f, 9.2f), Bot: OffTank)],
+            Probe = p =>
+            {
+                foreach (var role in AnoMech.Scenarios.PerRole.All)
+                    if (p.Member(role)?.HasStatus(StatusId.Frostbite) == true && !frozen.Contains(role)) frozen.Add(role);
+            },
+        });
+        Assert.That(frozen, Is.Empty, run.ToString);
+        Assert.That(run.Passed, run.ToString);
+    }
 }
