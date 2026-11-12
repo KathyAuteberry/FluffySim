@@ -365,7 +365,13 @@ Direction IDs, from BossMod's names, checked against the arrow EObj facings in P
   - first directions are again N/S/E/W;
   - **which of the two is the 7 s timer is per player**: both orders occur within a single pull.
 - The arrow EObj spawns at the player's position at expiry, facing the arrow direction.
-- Teleport distance when stepping on an arrow was not measured.
+- **Teleports (measured 2026-11-12 from the remapped trace):** an arrow warps its rider with
+  ActorControl 241 (destination packed in params 0/1 as quantised x and z) to 6.00 y from the arrow
+  EObj's centre in its direction (31 warps in 6 pulls: 5.97–6.03 y, sideways ≤ 0.03 y). Each warp
+  applies Bind (status 2518) for about 1 s; a landing inside another arrow (about 2 y) chains to it as
+  the Bind ends, every 0.98–1.04 s. Confused riders' warps: 174.79 (n=9), 175.79, 176.89, 178.00
+  (full rides). After the last warp of a ride ending mid-confusion the rider stands still 2.45–3.00 s.
+  The warp follows the first sample inside the arrow by at least 0.3 s.
 
 ## 6. Provoke windows (Observed)
 
@@ -450,7 +456,7 @@ Cells give the pull numbers in which each variant was seen.
    two final-MM lies were seen (29: shown A, real B; 33: shown B, real A). No final-MM lie on the
    −45° orientation.
 3. Tele-portent: only 6 samples. Every N/S/E/W permutation and timer pattern is plausible but
-   unverified. Teleport distance is unmeasured.
+   unverified. Teleport distance is measured (§5.3).
 4. GI2 and GI3 with a failed or late provoke for RR #1, and the latest working provoke moment
    (§6.3).
 5. Knockback distances measured directly (sheet values used: Pulse Wave 13 y, Trap 14 y,

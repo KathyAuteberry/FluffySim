@@ -53,6 +53,22 @@ public class DmuGravenImage3Tests
         Assert.That(scenario.ArrowsResolved, Is.EqualTo(16), run.ToString);
     }
 
+    // Each paddle puts its rider 6 y on, and a ride lands on the next paddle once the 1 s Bind ends.
+    [TestCase(false)] [TestCase(true)]
+    public void ChainedWarpsAreSixYardsAndOneSecondApart(bool dpsConfused)
+    {
+        var scenario = new DmuGravenImage3Scenario();
+        var run = ScenarioRun.Execute(typeof(DmuGravenImage3Scenario), 0, 21, new()
+        {
+            ScenarioFactory = () => scenario,
+            Overrides = o => ((DmuGravenImage3StateOverrides)o).DpsConfused = dpsConfused,
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(scenario.Warps.Select(w => w.Length).ToList(), Has.Count.EqualTo(16).And.All.InRange(5.99f, 6.01f), run.ToString);
+        var gaps = scenario.Warps.GroupBy(w => w.Role).SelectMany(g => g.Zip(g.Skip(1), (a, b) => b.Time - a.Time)).ToList();
+        Assert.That(gaps, Has.Count.EqualTo(12).And.All.InRange(0.95f, 1.15f), run.ToString);
+    }
+
     [Test]
     public void ATurnedPairGoesToTheQuadrantItsArrowsName()
     {
