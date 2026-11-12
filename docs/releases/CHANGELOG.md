@@ -1,3 +1,10 @@
+# FluffySim 3.4.1.0 — release prepared
+
+## Fixed
+
+- **Dancing Mad (Ultimate) P1, Graven Image 3.** Tele-portent paddles now behave as recorded in retail: a paddle carries its rider 6 y from its centre (it was 6.5 y), fires a moment after the rider steps on, and binds them for 1 s; a rider who lands on the next paddle is carried again when the bind ends. A confused rider whose chain ends now waits 1.6 s after the bind instead of 2 s before the chase resumes.
+- TEA P2 Brute Justice and Cruise Chaser: the bots now keep clear of the ice puddle at its grown size from the moment it drops, so an ice dropped a little short no longer gives a bot Frostbite at the west Nisi pass spot.
+
 # FluffySim 3.4.0.0 — release prepared
 
 ## Added
