@@ -10,12 +10,20 @@ one silently.
 
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
-| C1 | **FRU P5 Paradise Regained, Wings Dark and Light cone** | Tuufless: 225°. BossMod and BMR: half-angle 120°, offset ±60° (240°; related code, not measurements). Kitten: no angle ("half-moon"). Owner's reading of the diagrams (half of one tower, all of one, about a third of the last) fits **~232°** in the sim layout: 240° → ½/1/½, symmetric 225° → ⅓/1/⅓ | 240° (`FruActions.WingsCleaveLight/Dark`, `AreaSpec.Size = 2π/3` half-angle, rotation ±π/3) | The actions have no Omen, so the sheet can't help. The 2026-10-30/31 clears (8 hits) only bound the cone at ≲259°. A replay or log where someone stands about 55–65° off Pandora's facing at the hit would settle it. The logged heading also suggests the cone may be centred behind Pandora rather than offset from the tank, but heading at effect time ≠ snapshot. Unconfirmed |
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
 | C3 | **`tools/rtrace.py` row alignment** for keyed kinds (`actor`/`caster` column) | `tools.md` §5 calls the encoding validated by exact byte consumption. Against the 2026-11-11 DMU ACT log only 5/780 casts match unfixed; with value rows taken as key-sorted and the key column and clocks in arrival order, all 780 casts, 2954 actions, 421 headmarkers, 495 tethers, 36 MapEffects and 547 EObj states match (`docs/encounters/dmu/p1-evidence.md` §2.1) | Decoder unchanged; DMU work used a scratch remap | Fix the decoder, add an ACT-aligned test fixture, recheck earlier RaidTrace conclusions |
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
 | C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
 | C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
+
+Resolved by the owner on 2026-11-14 from RaidTrace's visualisation of a retail hit:
+
+- **C1, Wings Dark and Light.** The drawn cleave measures 225° (edges 9.3° and 35.8° above the
+  horizontal through Pandora, ±1°), as Tuufless says. Shape as the owner describes it: the full half
+  on the wing's side plus 45° past the main-threat side. `WingsCleaveLight/Dark` now use a 112.5°
+  half-angle rotated ±67.5° off the facing. The axis is not re-checked against traces; in the
+  2026-11-10/13 traces the cleave's caster is not where Pandora stands, so its facing cannot be
+  read off directly.
 
 Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
 `analysis/`, decoded with the C3 remap):
@@ -135,8 +143,7 @@ presentation detail added since October still awaits an in-game check. The highe
   `server_time` = 0. The one FRU capture (`20261110-141323-duty1006`, 0.3.0) was checked against the same
   pull's ACT log. Individual field values match (cleave facings 3.14/1.02 vs ACT 3.12/1.02), but
   timing and grouping are scrambled (four cleaves over two minutes in ACT become two pairs 2.4 s
-  apart). **Conflict C1 needs a fresh live FRU capture with tracer 0.3.1 or later.** As of 2026-11-12
-  the only reliable capture is Dancing Mad (`20261111-112002-duty1094`).
+  apart). C1 was settled on 2026-11-14 from a tracer 0.3.1 capture (section 1).
 - `docs/encounters/dsr-sanctity-meteors-events.json` lacks the Eternal Conviction (25568) rows the
   current analyzer adds. **Owner decision (2026-11-12): leave it.** The Meteors implementation is
   considered essentially accurate and needs no further evidence work.
