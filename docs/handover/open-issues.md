@@ -16,7 +16,6 @@ one silently.
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
 | C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
 | C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
-| C8 | **Upstream FRU zone-in snapshot** | `Upstream/FruZone.ArenaMapEffectSnapshot` has slot 23 = 1. Every retail snapshot in the 2026-11-11/12/13 traces (14 of them, zone-in and resets) has all 54 slots = 4 | Left as is: the upstream zone only hosts P2+ scenarios, where slot 23 shown is the right state; custom `FruZone` uses the retail snapshot | Decide whether to align the upstream file or leave it for upstream to fix |
 
 Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
 `analysis/`, decoded with the C3 remap):
@@ -41,6 +40,9 @@ Resolved from the 2026-11-11/12/13 FRU captures (2026-11-13, `docs/research/fru-
   Ultimate Relativity cast to 61.25 s after it; Apocalypse runs in weather 105 with the normal stage.
 - **Darklit water head marker.** A Codex test asserted none; retail shows head marker 62 on both water
   targets just before the Darklit cast.
+- **C8, upstream FRU zone-in snapshot.** Every retail snapshot has all 54 slots hidden; the platform
+  (slot 23) appears with P2. Owner, 2026-11-14: trust our evidence over upstream. The upstream zone now
+  starts all hidden and its P2 phase shows the platform, as the custom zone does.
 
 Resolved by the owner at handover: FRU Ultimate Relativity has nothing at true south. Everything is
 relative to the hourglasses and their tethers, so the guide macro's "South" for Bind 3 is wrong and
