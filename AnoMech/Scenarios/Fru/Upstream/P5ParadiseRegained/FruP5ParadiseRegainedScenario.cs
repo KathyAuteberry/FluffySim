@@ -20,6 +20,7 @@ public sealed class FruP5ParadiseRegainedScenario : IScenario
     public bool SupportsMultiplayer => true;
     public string Name => "Paradise Regained";
     public IPhase Phase => FruZone.P5;
+    public float BgmSecondsAtStart => 52.84f;
 
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruP5ParadiseRegainedAi()];
 

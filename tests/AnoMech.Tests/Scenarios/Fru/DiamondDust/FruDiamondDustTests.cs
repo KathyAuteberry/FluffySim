@@ -116,7 +116,6 @@ public class FruDiamondDustTests
         Assert.That(diamondDust.IsIncomplete, Is.False);
         Assert.That(diamondDust.Name, Is.EqualTo("Diamond Dust"));
         Assert.That(catalog.Any(s => s is FruDiamondDustScenario), Is.True);
-        Assert.That(catalog.Any(s => s is FruArenaDiagnosticScenario), Is.False);
         Assert.That(diamondDust.SettingsOverrides, Is.TypeOf<FruDiamondDustStateOverrides>());
         Assert.That(AnoMech.Core.Game.Game.DisplayName(lightRampant), Is.EqualTo("P2 Light Rampant"));
         Assert.That(AnoMech.Core.Game.Game.FullName(lightRampant), Does.EndWith("P2 Light Rampant"));

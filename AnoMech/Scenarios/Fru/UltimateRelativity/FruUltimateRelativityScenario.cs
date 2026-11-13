@@ -18,6 +18,7 @@ public sealed class FruUltimateRelativityScenario : IScenario
     public string Name => "Ultimate Relativity (Mana)";
     public string DisplayNameOverride => "P3 Ultimate Relativity";
     public IPhase Phase => FruZone.P3;
+    public float BgmSecondsAtStart => 32.85f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruUltimateRelativityAi()];
     private readonly FruUltimateRelativitySettingsWindow settings = new();
     public object SettingsOverrides => settings.Overrides;
@@ -38,6 +39,7 @@ public sealed class FruUltimateRelativityScenario : IScenario
     private SimEnemy iceHelper = null!;
     private SimWorld world = null!;
     private FruUltimateRelativityState state = null!;
+    private bool timeResumed;
     public static readonly ushort[] PlayerStatuses = [2454, 2455, 2456, 2460, 2461, 2462, 2464, 2452, 4163];
 
     public void Run(SimWorld worldParam, int? selectedAi)
@@ -45,16 +47,25 @@ public sealed class FruUltimateRelativityScenario : IScenario
         world = worldParam;
         state = new(world.Rng, settings.Overrides);
         LastState = state;
-        Completed = false;
+        Completed = timeResumed = false;
         returns.Clear(); resolutions.Clear(); tethers.Clear(); laserSnapshots.Clear();
         Array.Clear(glasses); Array.Clear(lasers); Array.Clear(helpers);
         world.Events.Add(0f, SpawnActors);
+        world.Events.Add(2.91f, StopTime);
         world.Events.Add(3f, StartRelativity);
         world.Events.Add(13.83f, AssignStatuses);
-        world.Events.Add(14.38f, SpawnHourglasses);
+        world.Events.Add(13.87f, ShowHourglasses);
+        world.Events.Add(14.13f, SpawnHourglasses);
         world.Events.Add(17.05f, ShowTethers);
         world.Events.Add(17.13f, () => boss.Cast(FruUltimateRelativityActions.Speed));
+        world.Events.Add(21.84f, () => SetHourglasses(_ => true, MapEffect.HourglassFlowing));
         world.Events.Add(22.63f, SpeedEffects);
+        world.Events.Add(23.84f, () => SetHourglasses(i => Wave(i) == 1, MapEffect.HourglassDraining));
+        world.Events.Add(25.85f, () => SetHourglasses(i => Wave(i) == 1, MapEffect.HourglassEmptying));
+        world.Events.Add(28.88f, () => SetHourglasses(i => Wave(i) == 2, MapEffect.HourglassDraining));
+        world.Events.Add(33.87f, () => SetHourglasses(i => Wave(i) == 3, MapEffect.HourglassDraining));
+        world.Events.Add(35.92f, () => SetHourglasses(i => Wave(i) == 2, MapEffect.HourglassEmptying));
+        world.Events.Add(46.88f, () => SetHourglasses(i => Wave(i) == 3, MapEffect.HourglassEmptying));
         world.Events.Add(24.90f, () => ResolveFireAndStack(1));
         world.Events.Add(25.88f, () => RotateHourglasses(1));
         world.Events.Add(25.97f, () => CastHourglasses(1));
@@ -73,7 +84,8 @@ public sealed class FruUltimateRelativityScenario : IScenario
         world.Events.Add(55.30f, Rewind);
         world.Events.Add(56.90f, FinalResolution);
         world.Events.Add(57.83f, () => boss.Cast(FruUltimateRelativityActions.ShellVisual));
-        world.Events.Add(61.10f, ResolveShell);
+        world.Events.Add(61.22f, ResolveShell);
+        world.Events.Add(64.25f, ResumeTime);
         world.Events.Add(65f, Cleanup);
         if (selectedAi is { } index) ((IScenarioAi<FruUltimateRelativityState>)AiStrats[index]).Run(state, world);
     }
@@ -129,13 +141,37 @@ public sealed class FruUltimateRelativityScenario : IScenario
         for (var i = 0; i < 3; i++) world.Party.Get(state.StackTargets[i])!.AddStatus(2454, 11f + i * 10f);
     }
 
+    private void StopTime()
+    {
+        world.Map.AddEffect(MapEffect.OracleStageTimeStop, MapEffect.OracleStage);
+        world.Map.SetWeather(WeatherId.TimeStop, 0f);
+    }
+
+    private void ResumeTime()
+    {
+        timeResumed = true;
+        SetHourglasses(_ => true, MapEffect.Hide);
+        world.Map.AddEffect(MapEffect.OracleStageResume, MapEffect.OracleStage);
+        world.Map.SetWeather(WeatherId.Oracle, 0f);
+    }
+
+    // The scenery's hourglass slots are indexed from true north; state clocks are relative.
+    private byte HourglassSlot(int clock) => (byte)(MapEffect.FirstRelativityHourglass + (clock + state.RelativeNorth) % 8);
+
+    private void SetHourglasses(Func<int, bool> clocks, uint packetFlags)
+    {
+        for (var i = 0; i < 8; i++)
+            if (clocks(i)) world.Map.AddEffect(packetFlags, HourglassSlot(i));
+    }
+
+    private void ShowHourglasses() => SetHourglasses(_ => true, MapEffect.Show);
+
     private void SpawnHourglasses()
     {
         for (var i = 0; i < 8; i++)
         {
             var d = state.Direction(i);
             glasses[i] = Spawn(BNpcBaseId.DelightsHourglass, BNpcNameId.DelightsHourglass, state.Hourglass(i), true, MathF.Atan2(-d.X, -d.Z));
-            world.Map.AddEffect(0x00020001, (byte)(0x1A + i));
         }
     }
 
@@ -276,6 +312,9 @@ public sealed class FruUltimateRelativityScenario : IScenario
         foreach (var actor in glasses.Concat(lasers).Concat(helpers).Append(stackHelper).Append(iceHelper).Append(boss)) actor?.Despawn();
         foreach (var tether in tethers) tether.Despawn();
         tethers.Clear();
+        if (timeResumed) return;
         for (byte i = 0x1A; i <= 0x21; i++) world.Map.AddEffect(0x00040004, i);
+        world.Map.AddEffect(MapEffect.OracleStageResume, MapEffect.OracleStage);
+        world.Map.SetWeather(WeatherId.Oracle, 0f);
     }
 }

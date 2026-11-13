@@ -15,6 +15,7 @@ public sealed class FruPandorasBoxScenario : IScenario
     public bool SupportsMultiplayer => true;
     public string Name => "Pandora's Box";
     public IPhase Phase => FruZone.P5;
+    public float BgmSecondsAtStart => 110.87f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruPandorasBoxAi()];
     public const float CastAt = 1f;
     public const float BotLimitBreakAt = 10f;
@@ -51,5 +52,7 @@ public sealed class FruPandorasBoxScenario : IScenario
                 Placement: new Placement(Vector3.Zero, System.MathF.PI), LayoutId: Constants.LayoutId.PandoraP5));
         });
         world.Events.Add(CastAt, () => pandora?.Cast(Box));
+        world.Events.Add(CastAt + 13.99f, () => world.Map.AddEffect(0x00100008, FruConstants.MapEffect.PandoraArena));
+        world.Events.Add(CastAt + 19.08f, () => world.Map.AddEffect(0x00200001, FruConstants.MapEffect.PandoraArena));
     }
 }

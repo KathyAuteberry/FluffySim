@@ -6,6 +6,7 @@ using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Map;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Scenarios.Fru.FruConstants;
@@ -19,6 +20,7 @@ public sealed class FruLightRampantScenario : IScenario
     public string Name => "Light Rampant";
     public string MenuName => "Light Rampant";
     public IPhase Phase => FruZone.P2;
+    public float BgmSecondsAtStart => 124.82f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruLightRampantAi()];
     public object SettingsOverrides => settings.Overrides;
     public void DrawSettings() => settings.Draw();
@@ -33,6 +35,8 @@ public sealed class FruLightRampantScenario : IScenario
     private readonly List<SimTether> chains = [];
     private readonly List<(Vector3 Position, float From, float Until)> puddles = [];
     private readonly List<SimEventObject> puddleVisuals = [];
+    private readonly List<MapEffectTower> towers = [];
+    private MapEffectTower? centerTower;
     private bool chainsActive;
     private bool chainFailed;
 
@@ -42,6 +46,12 @@ public sealed class FruLightRampantScenario : IScenario
         new(-13.8564f, 0f, 8f), new(0f, 0f, -16f), new(13.8564f, 0f, 8f),
     ];
 
+    private const byte FirstOuterTowerSlot = 9;
+    private const byte CenterTowerSlot = 21;
+    // Outer tower slots run clockwise from north; this maps OuterTowers' order onto them.
+    private static readonly byte[] OuterTowerSlotOffsets = [5, 3, 1, 4, 0, 2];
+    private static float TowerRadius => Natives.Data.Action(ActionId.BrightHunger)!.EffectRange;
+
     public void Run(SimWorld worldParam, int? selectedAi)
     {
         world = worldParam;
@@ -50,6 +60,7 @@ public sealed class FruLightRampantScenario : IScenario
         Completed = false;
         chainsActive = chainFailed = false;
         helpers.Clear(); orbs.Clear(); chains.Clear(); puddles.Clear(); puddleVisuals.Clear();
+        towers.Clear(); centerTower = null;
         world.Events.Add(0f, SpawnActors);
         world.Events.Add(3f, () => boss.Cast(FruActions.LightRampant));
         world.Events.Add(8.81f, Assign);
@@ -65,14 +76,10 @@ public sealed class FruLightRampantScenario : IScenario
         world.Events.Add(20.57f, DropPuddles);
         world.Events.Add(22.13f, DropPuddles);
         world.Events.Add(22.33f, () => CastOrbs(first: true));
-        world.Events.Add(22.47f, () => ShowOrbs(first: false));
+        world.Events.Add(22.37f, () => ShowOrbs(first: false));
         world.Events.Add(24.87f, ResolvePowerfulLight);
         world.Events.Add(25.36f, () => CastOrbs(first: false));
-        world.Events.Add(25.71f, () =>
-        {
-            world.Map.AddEffect(0x00020001, 0x15);
-            world.Map.AddEffect(0x00010004, 0x16);
-        });
+        world.Events.Add(25.71f, ShowCenterTower);
         world.Events.Add(27.80f, ClearChains);
         world.Events.Add(29.02f, () => HideOrbs(first: true));
         world.Events.Add(29.81f, () => boss.PlayActionTimeline(0x1E43));
@@ -147,20 +154,31 @@ public sealed class FruLightRampantScenario : IScenario
 
     private void ShowOuterTowers()
     {
-        for (byte i = 9; i <= 14; ++i)
+        for (var i = 0; i < 6; i++)
         {
-            world.Map.AddEffect(0x00020001, i);
-            world.Map.AddEffect(0x00010004, (byte)(i + 6));
+            var slot = (byte)(FirstOuterTowerSlot + OuterTowerSlotOffsets[i]);
+            world.Map.AddEffect(MapEffect.Show, slot);
+            world.Map.AddEffect(MapEffect.TowerBase, (byte)(slot + 6));
+            towers.Add(new MapEffectTower(world.Map, slot, OuterTowers[i], TowerRadius, [MapEffect.TowerOccupied[0]], MapEffect.TowerEmpty));
         }
     }
 
     private void ResolveOuterTowers()
     {
+        towers.Clear();
         for (var i = 0; i < 6; i++)
         {
             ResolveTower(i, OuterTowers[i], 1);
-            world.Map.AddEffect(0x00080004, (byte)(9 + i));
+            world.Map.AddEffect(MapEffect.Hide, (byte)(FirstOuterTowerSlot + i));
         }
+    }
+
+    private void ShowCenterTower()
+    {
+        world.Map.AddEffect(MapEffect.Show, CenterTowerSlot);
+        world.Map.AddEffect(MapEffect.TowerBase, CenterTowerSlot + 1);
+        // Retail only shows the centre tower filling up, never emptying.
+        centerTower = new MapEffectTower(world.Map, CenterTowerSlot, Vector3.Zero, TowerRadius, MapEffect.TowerOccupied, null);
     }
 
     private void ResolveTower(int helperIndex, Vector3 position, int required)
@@ -249,8 +267,9 @@ public sealed class FruLightRampantScenario : IScenario
 
     private void ResolveCentralTower()
     {
+        centerTower = null;
         ResolveTower(6, Vector3.Zero, 4);
-        world.Map.AddEffect(0x00080004, 0x15);
+        world.Map.AddEffect(MapEffect.Hide, CenterTowerSlot);
     }
 
     private void ResolveBanish()
@@ -292,6 +311,8 @@ public sealed class FruLightRampantScenario : IScenario
     public void Tick(float delta, float elapsed)
     {
         if (Completed) return;
+        foreach (var tower in towers) tower.Tick(world.Party);
+        centerTower?.Tick(world.Party);
         if (chainsActive && !chainFailed && chains.Any(t =>
             t.A is { } a && t.B is { } b && FruLightRampantRules.ChainFails(a.Position, b.Position, a.IsAlive(), b.IsAlive())))
         {
@@ -309,6 +330,7 @@ public sealed class FruLightRampantScenario : IScenario
         foreach (var actor in helpers.Concat(orbs.Values).Append(boss)) actor.Despawn();
         foreach (var visual in puddleVisuals) visual.Despawn();
         helpers.Clear(); orbs.Clear(); puddleVisuals.Clear(); puddles.Clear();
+        towers.Clear(); centerTower = null;
         for (var i = 0; i < 8; i++)
             foreach (var status in new[] { StatusId.Chains, StatusId.Curse, StatusId.WeightOfLight, StatusId.Lightsteeped, StatusId.MarkOfMortality })
                 world.Party.Get(i)?.RemoveStatus(status);

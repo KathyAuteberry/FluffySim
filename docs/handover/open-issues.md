@@ -16,6 +16,7 @@ one silently.
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
 | C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
 | C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
+| C8 | **Upstream FRU zone-in snapshot** | `Upstream/FruZone.ArenaMapEffectSnapshot` has slot 23 = 1. Every retail snapshot in the 2026-11-11/12/13 traces (14 of them, zone-in and resets) has all 54 slots = 4 | Left as is: the upstream zone only hosts P2+ scenarios, where slot 23 shown is the right state; custom `FruZone` uses the retail snapshot | Decide whether to align the upstream file or leave it for upstream to fix |
 
 Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
 `analysis/`, decoded with the C3 remap):
@@ -31,6 +32,15 @@ Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the 
   (2.45–3.00 s, the 4 rides that ended mid-confusion). The warp comes at least 0.3 s after the rider
   is first seen inside; position updates are too sparse to pin the exact delay. `DmuGravenImage3Scenario`
   now uses 6 y, a 1.6 s hold after the Bind and a 0.3 s entry delay (the last still UNVERIFIED).
+
+Resolved from the 2026-11-11/12/13 FRU captures (2026-11-13, `docs/research/fru-retail-audit-2026-11-13.md`):
+
+- **FRU phase music.** Codex chose 800/230/802/801 by track name. Retail's director sends the FRU
+  arrangements 20134/20135/20105/20137 (plus 20136 for the intermission and 1 for silence before P4/P5).
+- **FRU P3 weather and stage.** Time-stop (weather 106, stage slot 40 `0x00200010`) lasts only from the
+  Ultimate Relativity cast to 61.25 s after it; Apocalypse runs in weather 105 with the normal stage.
+- **Darklit water head marker.** A Codex test asserted none; retail shows head marker 62 on both water
+  targets just before the Darklit cast.
 
 Resolved by the owner at handover: FRU Ultimate Relativity has nothing at true south. Everything is
 relative to the hourglasses and their tethers, so the guide macro's "South" for Bind 3 is wrong and
@@ -127,8 +137,8 @@ presentation detail added since October still awaits an in-game check. The highe
 - The earliest FluffySim work (2026-10-09 to 10-12) was done inside `~/Projekty/anomek/AnoMech`,
   which is now treated as a read-only reference; that checkout is clean.
 - Codex built Release locally on 2026-10-09/10 before the Debug-only rule existed (2026-10-11).
-- Arena-diagnostic scenarios (`Fru/FruArenaDiagnosticScenario.cs`, `Fru/FruP3ArenaDiagnosticScenario.cs`,
-  `Dsr/DsrArenaDiagnosticScenario.cs`) are unreferenced dead code.
+- The FRU arena-diagnostic scenarios were removed on 2026-11-13; `Dsr/DsrArenaDiagnosticScenario.cs`
+  remains as unreferenced dead code.
 - RaidTrace captures are readable with `tools/rtrace.py` (`tools.md`), but **only tracer 0.3.1+
   captures are trustworthy**. The owner reports older captures fail on raidtrace.com. Local checks agree:
   tracer 0.2.6 captures hold no actions; most 0.3.0 captures hold none either; and 0.3.0 has

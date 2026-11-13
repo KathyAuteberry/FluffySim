@@ -20,6 +20,7 @@ public sealed class FruP5FulgentBladeScenario : IScenario
     public bool SupportsMultiplayer => true;
     public string Name => "Fulgent Blade";
     public IPhase Phase => FruZone.P5;
+    public float BgmSecondsAtStart => 15.52f;
     public bool SupportsSolo => true;
     internal static float ExalinesCompleteAt => HitAt(GroupCount - 1, MaxHitCount - 1) + Actions.PathOfLightRest.Timing.DamageDelay;
 

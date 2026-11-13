@@ -1,3 +1,8 @@
+## Retail audit — 2026-11-13
+
+Music, arena snapshots, P3 time-stop, hourglass and tower presentation and small timing fixes were
+checked against the November captures; see [fru-retail-audit-2026-11-13.md](../../research/fru-retail-audit-2026-11-13.md).
+
 ## Shared offline party presentation repair — 2026-10-15
 
 Final Debug validation: **13,647 plugin**, **44 relay**, **65 tooling** passed; safety **301 passed / three Windows-native skips** on each modeled backend (overlapping repeat counts). Native offline models, DSR scenery and tower timing still require manual confirmation. Functional repair revision `soxsns` is before the unchanged four-parent `plkqvn` merge; no Release build or version change.

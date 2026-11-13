@@ -12,12 +12,12 @@ namespace AnoMech.Tests;
 
 public class ScenarioMusicTests
 {
-    [TestCase(typeof(AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario), (ushort)800)]
-    [TestCase(typeof(FruLightRampantScenario), (ushort)230)]
-    [TestCase(typeof(FruUltimateRelativityScenario), (ushort)802)]
-    [TestCase(typeof(DsrStrengthScenario), (ushort)921)]
-    [TestCase(typeof(DsrStrength2Scenario), (ushort)921)]
-    public void PlayableScenarioStartsPhaseMusicAndCompletionReleasesIt(Type scenario, ushort track)
+    [TestCase(typeof(AnoMech.Scenarios.Fru.FallOfFaith.FruFallOfFaithScenario), (ushort)20134, 0f)]
+    [TestCase(typeof(FruLightRampantScenario), (ushort)20135, 124.82f)]
+    [TestCase(typeof(FruUltimateRelativityScenario), (ushort)20105, 32.85f)]
+    [TestCase(typeof(DsrStrengthScenario), (ushort)921, 0f)]
+    [TestCase(typeof(DsrStrength2Scenario), (ushort)921, 0f)]
+    public void PlayableScenarioStartsPhaseMusicAndCompletionReleasesIt(Type scenario, ushort track, float secondsIn)
     {
         var music = new FakeBgm();
         var releasedAtEnd = false;
@@ -31,7 +31,7 @@ public class ScenarioMusicTests
             WriteArtifactsOnFailure = false,
         });
         Assert.That(run.Passed, run.ToString);
-        Assert.That(music.Plays, Is.EqualTo(new[] { (track, 0f) }));
+        Assert.That(music.Plays, Is.EqualTo(new[] { (track, secondsIn) }));
         Assert.That(music.CurrentTrack, Is.Zero);
         Assert.That(music.Releases, Is.EqualTo(1));
         Assert.That(releasedAtEnd, Is.True);

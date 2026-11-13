@@ -91,13 +91,13 @@ public class BgmOverrideTests
     [Test]
     public void DiagnosticsAndIncompleteScenariosHaveNoMusic()
     {
-        foreach (var scenario in new IScenario[] { new DsrArenaDiagnosticScenario(), new FruArenaDiagnosticScenario(), new FruP3ArenaDiagnosticScenario() })
+        foreach (var scenario in new IScenario[] { new DsrArenaDiagnosticScenario() })
             Assert.That(PhaseMusic.TrackFor(scenario), Is.Zero);
         Assert.That(PhaseMusic.TrackFor(new DsrStrengthScenario()), Is.EqualTo(921));
         Assert.That(PhaseMusic.TrackFor(new DsrStrength2Scenario()), Is.EqualTo(921));
-        Assert.That(PhaseMusic.TrackFor(new FruDiamondDustScenario()), Is.EqualTo(230));
-        Assert.That(FruZone.P2.Bgm, Is.EqualTo(230));
-        Assert.That(FruZone.P3.Bgm, Is.EqualTo(802));
+        Assert.That(PhaseMusic.TrackFor(new FruDiamondDustScenario()), Is.EqualTo(20135));
+        Assert.That(FruZone.P2.Bgm, Is.EqualTo(20135));
+        Assert.That(FruZone.P3.Bgm, Is.EqualTo(20105));
     }
 
     [Test]

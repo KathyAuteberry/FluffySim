@@ -54,7 +54,7 @@ public class FruDarklitPresentationTests
                         foreach (var member in recipients)
                         {
                             Assert.That(member.FindStatus(2458)!.Snapshot.NativePresentation, Is.True);
-                            Assert.That(member.LastLockonVfxId, Is.Null);
+                            Assert.That(member.LastLockonVfxId, Is.EqualTo(62));
                         }
                         var remaining = recipients.Select(m => m.FindStatus(2458)!.RemainingTime).ToArray();
                         p.Game.Paused = true;

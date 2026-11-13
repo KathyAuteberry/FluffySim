@@ -2,6 +2,49 @@ namespace AnoMech.Scenarios.Fru;
 
 public static class FruConstants
 {
+    // Sent by the content director (DirectorUpdate 0x80000001); 1 silences the music.
+    public static class Bgm
+    {
+        public const ushort Fatebreaker = 20134;
+        public const ushort Usurper = 20135;
+        public const ushort Intermission = 20136;
+        public const ushort Oracle = 20105;
+        public const ushort OracleAndUsurper = 20137;
+        public const ushort Pandora = 20099;
+    }
+
+    public static class WeatherId
+    {
+        public const byte Fatebreaker = 2;
+        public const byte Usurper = 35;
+        public const byte Oracle = 105;
+        public const byte TimeStop = 106;
+        public const byte Pandora = 108;
+    }
+
+    public static class MapEffect
+    {
+        public const ushort Hidden = 4;
+        public const ushort Shown = 1;
+        public const uint Show = 0x00020001;
+        public const uint Hide = 0x00080004;
+        public const byte P2Platform = 23;
+        public const byte OracleStage = 40;
+        public const uint OracleStageTimeStop = 0x00200010;
+        public const uint OracleStageResume = 0x00400001;
+        public const byte OracleFloor = 41;
+        public const byte FragmentOfFate = 46;
+        public const byte PandoraArena = 47;
+        public const byte FirstRelativityHourglass = 26;
+        public const uint HourglassFlowing = 0x00200010;
+        public const uint HourglassDraining = 0x00800040;
+        public const uint HourglassEmptying = 0x02000100;
+        public const uint TowerBase = 0x00010004;
+        public const uint TowerEmpty = 0x00400001;
+        public const uint DarklitTowerEmpty = 0x01000001;
+        public static readonly uint[] TowerOccupied = [0x00200010, 0x00800040, 0x02000100, 0x08000400];
+    }
+
     public static class BNpcBaseId
     {
         public const uint UsurperOfFrost = 17823;

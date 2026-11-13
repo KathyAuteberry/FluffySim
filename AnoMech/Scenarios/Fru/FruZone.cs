@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game;
 using AnoMech.Core.SimObjects;
+using static AnoMech.Scenarios.Fru.FruConstants;
 
 namespace AnoMech.Scenarios.Fru;
 
@@ -9,11 +11,15 @@ public sealed class FruZone : IZone
 {
     public bool SupportsSpectator => true;
     public static readonly FruZone Instance = new();
-    public static readonly Phase P1 = new(Instance, "P1", 2, PhaseMusic.TheLegendaryBeast, init: InitializeP1, clientSetup: HoldP1Layers);
-    public static readonly Phase P2 = new(Instance, "P2", 35, PhaseMusic.FootstepsInTheSnow, init: InitializeP2, clientSetup: HoldP2Layers);
-    public static readonly Phase P3 = new(Instance, "P3", 106, PhaseMusic.TheExtreme, init: InitializeP3, clientSetup: HoldP3Layers);
-    public static readonly Phase P4 = new(Instance, "P4", 105, PhaseMusic.PromisesToKeep, init: InitializeP4, clientSetup: HoldP4Layers);
-    public static readonly Phase P5 = new(Instance, "P5", 108, 20099, init: InitializeP5, clientSetup: HoldP4Layers);
+    public static readonly Phase P1 = new(Instance, "P1", WeatherId.Fatebreaker, Bgm.Fatebreaker, clientSetup: HoldP1Layers);
+    public static readonly Phase P2 = new(Instance, "P2", WeatherId.Usurper, Bgm.Usurper, clientSetup: HoldP2Layers,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [MapEffect.P2Platform] = MapEffect.Shown });
+    public static readonly Phase P3 = new(Instance, "P3", WeatherId.Oracle, Bgm.Oracle, clientSetup: HoldLaterLayers,
+        arenaMapEffectOverrides: OracleStage());
+    public static readonly Phase P4 = new(Instance, "P4", WeatherId.Oracle, Bgm.OracleAndUsurper, clientSetup: HoldLaterLayers,
+        arenaMapEffectOverrides: OracleStage());
+    public static readonly Phase P5 = new(Instance, "P5", WeatherId.Pandora, Bgm.Pandora, clientSetup: HoldLaterLayers,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [MapEffect.PandoraArena] = MapEffect.Shown });
     public string DisplayName => "Futures Rewritten";
     public string Name => "Futures Rewritten (Ultimate)";
     public Core.Map.EntranceBarrier EntranceBarrier => new(2007457, 0xA58C08, 0xA58C07, new(0f, 0f, 15f));
@@ -21,6 +27,10 @@ public sealed class FruZone : IZone
     public uint TerritoryId => 1238;
     public Vector3 Origin => new(100f, 0f, 100f);
     public byte Level => 100;
+
+    // Retail sends every slot hidden at zone-in and on each reset.
+    public IReadOnlyList<ushort> ArenaMapEffectSnapshot { get; } = Enumerable.Repeat(MapEffect.Hidden, 54).ToArray();
+
     public IReadOnlyList<WaymarkLayout> WaymarkPresets { get; } =
         [new("FRU (JP)", [
             new(WaymarkSlot.A, new(0f, 0f, -10f)),
@@ -34,10 +44,12 @@ public sealed class FruZone : IZone
         ])];
     public void Run(SimWorld world) => world.EnforceArenaBoundary(20f);
 
-    private static void InitializeP1(SimWorld world)
+    private static Dictionary<byte, ushort> OracleStage() => new()
     {
-        for (byte index = 0; index < 54; index++) world.Map.AddEffect(0x00040004, index);
-    }
+        [MapEffect.OracleStage] = MapEffect.Shown,
+        [MapEffect.OracleFloor] = MapEffect.Shown,
+    };
+
     private static void HoldP1Layers(SimWorld world)
     {
         for (ushort key = 0x5F88; key <= 0x5F94; key++) world.Map.HoldLayerActive(key, true);
@@ -47,59 +59,17 @@ public sealed class FruZone : IZone
         world.Map.HoldLayerActive(0x5FCB, false);
     }
 
-    private static void InitializeP2(SimWorld world)
-        => InitializeP2Arena(world);
-
-    private static void InitializeP2Arena(SimWorld world)
-    {
-        for (byte index = 0; index < 54; index++)
-            world.Map.AddEffect(0x00040004, index);
-        world.Map.AddEffect(0x00020001, 0x17);
-    }
-
-    private static void InitializeP3(SimWorld world)
-    {
-        for (byte index = 0; index < 54; index++)
-            world.Map.AddEffect(0x00040004, index);
-        world.Map.AddEffect(0x00080004, 0x17);
-        world.Map.AddEffect(0x00020001, 0x28);
-        world.Map.AddEffect(0x00020001, 0x29);
-        world.Map.AddEffect(0x00200010, 0x28);
-    }
-
-    private static void HoldP3Layers(SimWorld world)
-    {
-        for (ushort key = 0x5F88; key <= 0x5F94; key++)
-            world.Map.HoldLayerActive(key, false);
-        world.Map.HoldLayerActive(0x5F9F, false);
-        world.Map.HoldLayerActive(0x5FC9, false);
-    }
-
     private static void HoldP2Layers(SimWorld world)
     {
-        for (ushort key = 0x5F88; key <= 0x5F94; key++)
-            world.Map.HoldLayerActive(key, false);
+        for (ushort key = 0x5F88; key <= 0x5F94; key++) world.Map.HoldLayerActive(key, false);
         world.Map.HoldLayerActive(0x5F9F, false);
         world.Map.HoldLayerActive(0x5FC9, true);
     }
-    private static void InitializeP4(SimWorld world)
-    {
-        for (byte index = 0; index < 54; index++) world.Map.AddEffect(0x00040004, index);
-        world.Map.AddEffect(0x00020001, 0x28);
-        world.Map.AddEffect(0x00020001, 0x29);
-    }
 
-    private static void InitializeP5(SimWorld world)
-    {
-        for (byte index = 0; index < 54; index++)
-            world.Map.AddEffect(index == 47 ? 0x00010001u : 0x00040004u, index);
-    }
-
-    private static void HoldP4Layers(SimWorld world)
+    private static void HoldLaterLayers(SimWorld world)
     {
         for (ushort key = 0x5F88; key <= 0x5F94; key++) world.Map.HoldLayerActive(key, false);
         world.Map.HoldLayerActive(0x5F9F, false);
         world.Map.HoldLayerActive(0x5FC9, false);
     }
-
 }
