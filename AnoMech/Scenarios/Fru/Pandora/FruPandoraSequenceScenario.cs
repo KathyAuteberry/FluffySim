@@ -19,11 +19,12 @@ public sealed class FruPandoraSequenceScenario : IScenario
     public bool SupportsMultiplayer => true;
     public string Name => "Pandora sequence";
     public IPhase Phase => FruZone.P5;
+    public float BgmSecondsAtStart => 15.52f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruPandoraSequenceAi()];
     public object SettingsOverrides => Overrides;
     public FruPandoraSequenceOverrides Overrides { get; } = new();
-    public const float EnrageCastAt = 246.6f;
-    public const float EnrageHitAt = 268.1f;
+    public const float EnrageCastAt = 246.32f;
+    public const float EnrageHitAt = 267.82f;
 
     private SimWorld world = null!;
     private SimEnemy? pandora;
@@ -63,10 +64,10 @@ public sealed class FruPandoraSequenceScenario : IScenario
             Begin(new FruP5FulgentBladeScenario { SharedPandora = pandora }, selectedAi);
         });
         world.Events.Add(37.35f, () => Begin(Paradise(), selectedAi));
-        world.Events.Add(95.45f, () => Begin(new FruPandorasBoxScenario { SharedPandora = pandora }, selectedAi));
-        world.Events.Add(113.15f, () => Begin(new FruP5FulgentBladeScenario { SharedPandora = pandora }, selectedAi));
-        world.Events.Add(154.7f, () => Begin(Paradise(-5.35f), selectedAi));
-        world.Events.Add(203.75f, () => Begin(new FruP5FulgentBladeScenario { SharedPandora = pandora }, selectedAi));
+        world.Events.Add(95.35f, () => Begin(new FruPandorasBoxScenario { SharedPandora = pandora }, selectedAi));
+        world.Events.Add(113.03f, () => Begin(new FruP5FulgentBladeScenario { SharedPandora = pandora }, selectedAi));
+        world.Events.Add(154.46f, () => Begin(Paradise(-5.35f), selectedAi));
+        world.Events.Add(203.55f, () => Begin(new FruP5FulgentBladeScenario { SharedPandora = pandora }, selectedAi));
         world.Events.Add(EnrageCastAt, BeginEnrage);
     }
 

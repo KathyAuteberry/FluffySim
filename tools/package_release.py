@@ -51,6 +51,7 @@ DOCUMENTATION = (
     'docs/research/fru-native-capture-inventory.md',
     'docs/research/fru-native-playtest.md',
     'docs/research/fru-second-clear-audit-2026-11-01.md',
+    'docs/research/fru-retail-audit-2026-11-13.md',
     'docs/safety/OFFLINE-DSR-REPAIR.md',
     'docs/safety/PACKET-FILTER-AUDIT.md',
     'docs/safety/PAUSE-INVESTIGATION.md',

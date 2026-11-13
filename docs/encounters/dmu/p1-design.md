@@ -115,8 +115,8 @@ than one scenario needs belongs in Core"):
 | Step | Time from cast start | Behaviour |
 |---|---|---|
 | Cast start | 0 | Hit-1 target locked to enmity #1 *now*. Tank marker **00DA** on them |
-| Hit 1 (C403) | +5.07 | 90° cone (owner decision) from Kefka toward the **locked** target, wherever enmity now stands |
-| Hit 2 (C4E1, no cast) | +8.20 | 90° cone toward **enmity #2 at this moment** |
+| Hit 1 (C403) | +5.07 | 120° cone from Kefka toward the **locked** target, wherever enmity now stands |
+| Hit 2 (C4E1, no cast) | +8.20 | 120° cone toward **enmity #2 at this moment** |
 
 **Grading** (log tag `[DmuRevoltingRuin]` plus an on-screen `Announce`):
 

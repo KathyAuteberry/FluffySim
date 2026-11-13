@@ -20,6 +20,7 @@ public sealed class FruApocalypseScenario : IScenario
     public bool IsIncomplete=>true;
     public bool EnablePhaseBgm=>true;
     public IPhase Phase=>FruZone.P3;
+    public float BgmSecondsAtStart=>115.59f;
     public IReadOnlyList<IScenarioAi> AiStrats=>[new FruApocalypseAi()];
     public FruApocalypseStateOverrides Overrides { get; }=new();
     public object SettingsOverrides=>Overrides;
@@ -119,7 +120,7 @@ public sealed class FruApocalypseScenario : IScenario
         world.Events.Add(22.87f,()=>ResolveWater(1));
         world.Events.Add(24.95f,ResolveSpirit);
         world.Events.Add(26,()=>boss.MoveTo(Vector3.Zero,12));
-        world.Events.Add(31.03f,()=>
+        world.Events.Add(30.95f,()=>
         {
             boss.Cast(FruApocalypseActions.EruptionCast);
             foreach(var member in world.Party.ActiveMembers())member.AttachLockonVfx(139,5,persistent:false);

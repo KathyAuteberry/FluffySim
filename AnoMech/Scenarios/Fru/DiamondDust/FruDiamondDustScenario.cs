@@ -21,6 +21,7 @@ public sealed class FruDiamondDustScenario : IScenario
     public string Name => "Diamond Dust";
     public bool IsIncomplete => false;
     public IPhase Phase => FruZone.P2;
+    public float BgmSecondsAtStart => 22.94f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruDiamondDustAi()];
     private readonly FruDiamondDustSettingsWindow settings = new();
     public FruDiamondDustStateOverrides Overrides => settings.Overrides;
@@ -49,7 +50,7 @@ public sealed class FruDiamondDustScenario : IScenario
         {
             boss = Spawn(BNpcBaseId.UsurperOfFrost, BNpcNameId.UsurperOfFrost, new(0f, 0f, 5f), true);
             oracle = Spawn(BNpcBaseId.OraclesReflection, BNpcNameId.OraclesReflection, Vector3.Zero, true);
-            oracle.SetModelHidden(true);
+            oracle.SetDrawObjectVisible(false);
             // Packet spawning needs framework ticks before a native cast can be delivered.
             for (var i = 0; i < 28; i++) helpers.Add(Spawn(BNpcBaseId.Helper, BNpcNameId.UsurperOfFrost, Vector3.Zero, false));
         });
@@ -59,7 +60,7 @@ public sealed class FruDiamondDustScenario : IScenario
             world.Map.AddEffect(0x00020001, 0);
             boss.Cast(FruDiamondDustActions.Raidwide);
         });
-        world.Events.Add(9.12f, () => { oracle.SetModelHidden(false); oracle.PlayActionTimeline(0x11D6); });
+        world.Events.Add(9.12f, () => { oracle.SetDrawObjectVisible(true); oracle.PlayActionTimeline(0x11D6); });
         world.Events.Add(12.2f, () => world.Map.AddEffect(0x00080004, 0));
         world.Events.Add(15.78f, () =>
         {
@@ -232,7 +233,7 @@ public sealed class FruDiamondDustScenario : IScenario
         At(42.9f, () => oracle.SetModeAttributeFlags(0xF3));
         At(43f, () => boss.PlayActionTimeline(Upstream.FruConstants.TimelineId.UsurperHide));
         At(43f, () => oracle.VoiceLine(state.Stillness ? Upstream.FruConstants.VoiceLineId.TwinStillness : Upstream.FruConstants.VoiceLineId.TwinSilence));
-        At(43f, () => oracle.Cast(state.Stillness ? Upstream.FruActions.TwinStillnessFirst : Upstream.FruActions.TwinSilenceFirst));
+        At(43.1f, () => oracle.Cast(state.Stillness ? Upstream.FruActions.TwinStillnessFirst : Upstream.FruActions.TwinSilenceFirst));
         At(47.28f, () => oracle.SetModelState(5));
         At(48.57f, () => oracle.SetModeAttributeFlags(0xF0));
         At(48.65f, () => oracle.Cast(state.Stillness ? Upstream.FruActions.TwinStillnessSecond : Upstream.FruActions.TwinSilenceSecond));
@@ -246,7 +247,7 @@ public sealed class FruDiamondDustScenario : IScenario
             boss.SetTargetable(true);
             boss.PlayActionTimeline(ActionTimelineId.WarpEnd);
         });
-        At(54.3f, () => { boss.Cast(40210, animationLock: 2.1f); world.Party.Get(state.RayTarget)?.AttachLockonVfx(525); });
+        At(54.42f, () => { boss.Cast(40210, animationLock: 2.1f); world.Party.Get(state.RayTarget)?.AttachLockonVfx(525); });
         At(59.9f, () =>
         {
             if (world.Party.Get(state.RayTarget) is not { } player) return;

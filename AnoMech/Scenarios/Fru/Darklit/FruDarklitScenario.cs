@@ -6,6 +6,7 @@ using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Map;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Core.EnemyActions.EnemyActionEffects;
@@ -33,6 +34,7 @@ public sealed class FruDarklitScenario : IScenario
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;
     public IPhase Phase => FruZone.P4;
+    public float BgmSecondsAtStart => 23.22f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruDarklitAi()];
     private readonly FruDarklitSettingsWindow settings = new();
     public object SettingsOverrides => settings.Overrides;
@@ -62,7 +64,7 @@ public sealed class FruDarklitScenario : IScenario
     private readonly List<SimEnemy> actors = [];
     private readonly List<SimTether> chains = [];
     private readonly SimEnemy[] helpers = new SimEnemy[16];
-    private readonly uint[] towerStates = [0, 0];
+    private readonly List<MapEffectTower> towers = [];
     private int helperIndex;
     private bool towerVisible, fateActive, fateFailed, lightFailed, ended;
     private SimWorld world = null!;
@@ -87,8 +89,9 @@ public sealed class FruDarklitScenario : IScenario
         Completed = FragmentCompromised = towerVisible = fateActive = fateFailed = lightFailed = WingsVisible = ended = false;
         ResolvedTowers = ResolvedCones = ResolvedSomberHits = helperIndex = 0;
         FragmentHealth = FragmentMaximumHealth;
-        Array.Clear(towerStates);
+        towers.Clear();
         world.Events.Add(0, SpawnActors);
+        world.Events.Add(2.01f, MarkWaterTargets);
         world.Events.Add(2.1f, () => { shiva.Cast(FruDarklitActions.Darklit); oracle.Cast(FruDarklitActions.OracleDarklit); });
         world.Events.Add(7.083f, AssignWater);
         world.Events.Add(7.928f, AssignChains);
@@ -101,13 +104,13 @@ public sealed class FruDarklitScenario : IScenario
         world.Events.Add(21.097f, ShowWaterStacks);
         world.Events.Add(21.25f, () => { spiritTarget = state.SpiritTarget; spiritSnapshot = world.Party.Get(spiritTarget)!.Position; });
         world.Events.Add(21.319f, StartWings);
-        world.Events.Add(21.85f, ResolveSpirit);
-        world.Events.Add(24.392f, () => oracle.Cast(FruDarklitActions.SomberCast));
-                world.Events.Add(26.1f, ResolveWater);
+        world.Events.Add(21.61f, ResolveSpirit);
+        world.Events.Add(24.45f, () => oracle.Cast(FruDarklitActions.SomberCast));
+        world.Events.Add(26.19f, ResolveWater);
         world.Events.Add(26.319f, () => WingsVisible = false);
         world.Events.Add(28.916f, ClearFate);
         world.Events.Add(29.792f, () => ResolveSomber(false));
-        world.Events.Add(32.992f, () => ResolveSomber(true));
+        world.Events.Add(33.05f, () => ResolveSomber(true));
         world.Events.Add(36, () => { Cleanup(); Completed = !FragmentCompromised; });
         if (selectedAi is { } index) ((IScenarioAi<FruDarklitState>)AiStrats[index]).Run(state, world);
     }
@@ -130,6 +133,11 @@ public sealed class FruDarklitScenario : IScenario
     }
     private SimEnemy Helper(Vector3 position)
     { var actor = helpers[helperIndex++]; actor.SetPosition(position); return actor; }
+    private void MarkWaterTargets()
+    {
+        foreach (var role in new[] { state.Pattern.TetherWater, state.Pattern.UntetherWater })
+            world.Party.Get(role)!.AttachLockonVfx(62, 24.18f, persistent: false);
+    }
     private void AssignWater()
     {
         foreach (var role in new[] { state.Pattern.TetherWater, state.Pattern.UntetherWater })
@@ -168,10 +176,10 @@ public sealed class FruDarklitScenario : IScenario
         towerVisible = true;
         for (byte i = 0; i < 2; i++)
         {
-            world.Map.AddEffect(0x00020001, (byte)(0x2A + i));
-            world.Map.AddEffect(0x00010004, (byte)(0x2C + i));
-            world.Map.AddEffect(0x00200010, (byte)(0x2A + i));
-            towerStates[i] = 0x00200010;
+            world.Map.AddEffect(FruConstants.MapEffect.Show, (byte)(0x2A + i));
+            world.Map.AddEffect(FruConstants.MapEffect.TowerBase, (byte)(0x2C + i));
+            towers.Add(new MapEffectTower(world.Map, (byte)(0x2A + i), TowerPositions[i], FruDarklitRules.TowerRadius,
+                FruConstants.MapEffect.TowerOccupied[..2], FruConstants.MapEffect.DarklitTowerEmpty));
         }
     }
     private void ResolveTowers()
@@ -190,6 +198,7 @@ public sealed class FruDarklitScenario : IScenario
             });
             world.Map.AddEffect(0x00080004, (byte)(0x2A + i));
         }
+        towers.Clear();
         towerVisible = false; ResolvedTowers = 2; resolutions.Add((world.Events.Elapsed, 40213));
     }
     public static float PathDistance(Vector3 source, Vector3 target, float sourceRadius, float targetRadius)
@@ -328,19 +337,13 @@ public sealed class FruDarklitScenario : IScenario
             Helper(Vector3.Zero).Cast(new EnemyAction(40215) { Cast = new() { TargetsPartyForPresentation = true } });
             world.Party.WipeAllPlayers(40215, "Refulgent Fate tether too close, too far, or partner lost");
         }
-        if (!towerVisible) return;
-        for (byte i = 0; i < 2; i++)
-        {
-            var flag = world.Party.Find.InsideCircle(TowerPositions[i], FruDarklitRules.TowerRadius).Count == 2 ? 0x00800040u : 0x00200010u;
-            if (flag == towerStates[i]) continue;
-            towerStates[i] = flag; world.Map.AddEffect(flag, (byte)(0x2A + i));
-        }
+        foreach (var tower in towers) tower.Tick(world.Party);
     }
     private void Cleanup()
     {
         ended = true;
         world.PracticeInvulnerability.Clear();
-        ClearFate(); somberVulnerable.Clear(); towerVisible = WingsVisible = false;
+        ClearFate(); somberVulnerable.Clear(); towers.Clear(); towerVisible = WingsVisible = false;
         ClearPathPresentation();
         foreach (var actor in actors) actor.Despawn(); actors.Clear();
         foreach (var member in world.Party.ActiveMembers()) foreach (var id in new ushort[] { 2253, 2255, 2257, 2458, 2461 }) member.RemoveStatus(id);

@@ -9,6 +9,7 @@ internal sealed class FakeMapEffects(SimTimeline timeline) : IMapEffects
     public bool TerritoryReady { get; set; } = true;
     public bool IsTerritoryReady(uint territoryId) => TerritoryReady;
     public List<(uint Flags, byte Index)> Applied { get; } = new();
+    public List<ushort[]> Snapshots { get; } = new();
 
     public bool Apply(uint packetFlags, byte index)
     {
@@ -22,6 +23,7 @@ internal sealed class FakeMapEffects(SimTimeline timeline) : IMapEffects
 
     public bool ApplySnapshot(ReadOnlySpan<ushort> states, bool zoneIn)
     {
+        if (Loaded) Snapshots.Add(states.ToArray());
         if (Loaded)
             timeline.Add("map_effect_snapshot", id: zoneIn ? "5" : "1", name: "MapEffectSnapshot",
                 detail: $"states={string.Join(",", states.ToArray())}");

@@ -73,6 +73,10 @@ def rows_bytes(fields, rows, top=False):
     if top:
         keys = [f for f in fields if f[0] in ('actor', 'caster')][:1]
         fields = keys + [f for f in fields if f not in keys]
+        if keys:
+            key = keys[0][0]
+            return column(keys[0][1], [r[key] for r in rows]) + rows_bytes(
+                fields[1:], sorted(rows, key=lambda r: r[key]))
     out = b''
     for fname, ftype, *children in fields:
         if ftype == GROUP:
@@ -149,6 +153,22 @@ class RTraceTests(unittest.TestCase):
         self.assertEqual(recs[2].values['by_player'], 255)
         self.assertEqual(recs[5].values['payload'], b'\x01\x02')
         self.assertEqual(trace.clock_hz, 1000)
+
+    def test_keyed_rows_realign_values_stored_in_key_order(self):
+        records = [
+            (256, 10, {'server_time': 3, 'caster': 0x40000009, 'action_id': 1, 'facing': 0.5,
+                       'targets': [{'id': 7, 'effects': [{'amount': 70}]}]}),
+            (256, 20, {'server_time': 1, 'caster': 0x10000002, 'action_id': 2, 'facing': -0.5, 'targets': []}),
+            (256, 30, {'server_time': 2, 'caster': 0x40000009, 'action_id': 3, 'facing': 1.5,
+                       'targets': [{'id': 8, 'effects': []}]}),
+            (256, 40, {'server_time': 4, 'caster': 0x10000001, 'action_id': 4, 'facing': 2.5, 'targets': []}),
+        ]
+        recs = list(rtrace.Trace(self.write(build(records))).records())
+        self.assertEqual([(r.clock, r.values['caster'], r.values['action_id']) for r in recs],
+                         [(10, 0x40000009, 1), (20, 0x10000002, 2), (30, 0x40000009, 3), (40, 0x10000001, 4)])
+        self.assertEqual(recs[0].values['targets'][0]['effects'][0]['amount'], 70)
+        self.assertEqual(recs[2].values['targets'][0]['id'], 8)
+        self.assertAlmostEqual(recs[3].values['facing'], 2.5, places=5)
 
     def test_summary_and_cli_redact_identity_by_default(self):
         path = self.sample()

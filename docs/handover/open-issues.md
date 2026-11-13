@@ -10,12 +10,37 @@ one silently.
 
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
-| C1 | **FRU P5 Paradise Regained, Wings Dark and Light cone** | Tuufless: 225°. BossMod and BMR: half-angle 120°, offset ±60° (240°; related code, not measurements). Kitten: no angle ("half-moon"). Owner's reading of the diagrams (half of one tower, all of one, about a third of the last) fits **~232°** in the sim layout: 240° → ½/1/½, symmetric 225° → ⅓/1/⅓ | 240° (`FruActions.WingsCleaveLight/Dark`, `AreaSpec.Size = 2π/3` half-angle, rotation ±π/3) | The actions have no Omen, so the sheet can't help. The 2026-10-30/31 clears (8 hits) only bound the cone at ≲259°. A replay or log where someone stands about 55–65° off Pandora's facing at the hit would settle it. The logged heading also suggests the cone may be centred behind Pandora rather than offset from the tank, but heading at effect time ≠ snapshot. Unconfirmed |
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
-| C3 | **`tools/rtrace.py` row alignment** for keyed kinds (`actor`/`caster` column) | `tools.md` §5 calls the encoding validated by exact byte consumption. Against the 2026-11-11 DMU ACT log only 5/780 casts match unfixed; with value rows taken as key-sorted and the key column and clocks in arrival order, all 780 casts, 2954 actions, 421 headmarkers, 495 tethers, 36 MapEffects and 547 EObj states match (`docs/encounters/dmu/p1-evidence.md` §2.1) | Decoder unchanged; DMU work used a scratch remap | Fix the decoder, add an ACT-aligned test fixture, recheck earlier RaidTrace conclusions |
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
-| C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
-| C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
+
+Resolved 2026-11-14 from the 2026-11-13 DMU capture (ACT log and RaidTrace `20261113-150916-duty1094`):
+
+- **C5, Revolting Ruin III cone. Conflicts with Yan's 「90度扇範囲」.** With positions from the trace's
+  server-timed `actor_move` and the facing in the hit's own `action` record, a player standing still 58°
+  off the axis at 4.2 y was hit, and players standing still 78–79° off it (5–8 y) were missed in three
+  pulls. A dancer walking in was hit 36–54° off it. Treating players as points bounds the cone at
+  116–156°; with a 0.5 y hitbox, 102–146°. 90° is ruled out either way. RaidTrace's drawing of the
+  hit measures about 130°. The code uses BossMod's 120°, inside both bounds. ACT's client-side
+  positions lag behind for players who are moving (ACT put the same dancer at 61°), so use the trace
+  for edge cases like this.
+- **C7, simulator captures.** Owner: ignore every log, trace, replay or recording made at the inn
+  or in The Roost; they are FluffySim/AnoMech runs, not retail.
+
+Resolved 2026-11-14:
+
+- **C3, `tools/rtrace.py` row alignment.** For kinds with an `actor`/`caster` key the key column is
+  in arrival order and the other columns are stably sorted by key. The decoder now realigns them;
+  its output equals the ACT-validated scratch remap on every record of the 2026-11-13 DMU trace. The
+  DMU and FRU RaidTrace analyses already used that remap, so no conclusion changes.
+
+Resolved by the owner on 2026-11-14 from RaidTrace's visualisation of a retail hit:
+
+- **C1, Wings Dark and Light.** The drawn cleave measures 225° (edges 9.3° and 35.8° above the
+  horizontal through Pandora, ±1°), as Tuufless says. Shape as the owner describes it: the full half
+  on the wing's side plus 45° past the main-threat side. `WingsCleaveLight/Dark` now use a 112.5°
+  half-angle rotated ±67.5° off the facing. The axis is not re-checked against traces; in the
+  2026-11-10/13 traces the cleave's caster is not where Pandora stands, so its facing cannot be
+  read off directly.
 
 Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
 `analysis/`, decoded with the C3 remap):
@@ -31,6 +56,18 @@ Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the 
   (2.45–3.00 s, the 4 rides that ended mid-confusion). The warp comes at least 0.3 s after the rider
   is first seen inside; position updates are too sparse to pin the exact delay. `DmuGravenImage3Scenario`
   now uses 6 y, a 1.6 s hold after the Bind and a 0.3 s entry delay (the last still UNVERIFIED).
+
+Resolved from the 2026-11-11/12/13 FRU captures (2026-11-13, `docs/research/fru-retail-audit-2026-11-13.md`):
+
+- **FRU phase music.** Codex chose 800/230/802/801 by track name. Retail's director sends the FRU
+  arrangements 20134/20135/20105/20137 (plus 20136 for the intermission and 1 for silence before P4/P5).
+- **FRU P3 weather and stage.** Time-stop (weather 106, stage slot 40 `0x00200010`) lasts only from the
+  Ultimate Relativity cast to 61.25 s after it; Apocalypse runs in weather 105 with the normal stage.
+- **Darklit water head marker.** A Codex test asserted none; retail shows head marker 62 on both water
+  targets just before the Darklit cast.
+- **C8, upstream FRU zone-in snapshot.** Every retail snapshot has all 54 slots hidden; the platform
+  (slot 23) appears with P2. Owner, 2026-11-14: trust our evidence over upstream. The upstream zone now
+  starts all hidden and its P2 phase shows the platform, as the custom zone does.
 
 Resolved by the owner at handover: FRU Ultimate Relativity has nothing at true south. Everything is
 relative to the hourglasses and their tethers, so the guide macro's "South" for Bind 3 is wrong and
@@ -127,16 +164,15 @@ presentation detail added since October still awaits an in-game check. The highe
 - The earliest FluffySim work (2026-10-09 to 10-12) was done inside `~/Projekty/anomek/AnoMech`,
   which is now treated as a read-only reference; that checkout is clean.
 - Codex built Release locally on 2026-10-09/10 before the Debug-only rule existed (2026-10-11).
-- Arena-diagnostic scenarios (`Fru/FruArenaDiagnosticScenario.cs`, `Fru/FruP3ArenaDiagnosticScenario.cs`,
-  `Dsr/DsrArenaDiagnosticScenario.cs`) are unreferenced dead code.
+- The FRU arena-diagnostic scenarios were removed on 2026-11-13; `Dsr/DsrArenaDiagnosticScenario.cs`
+  remains as unreferenced dead code.
 - RaidTrace captures are readable with `tools/rtrace.py` (`tools.md`), but **only tracer 0.3.1+
   captures are trustworthy**. The owner reports older captures fail on raidtrace.com. Local checks agree:
   tracer 0.2.6 captures hold no actions; most 0.3.0 captures hold none either; and 0.3.0 has
   `server_time` = 0. The one FRU capture (`20261110-141323-duty1006`, 0.3.0) was checked against the same
   pull's ACT log. Individual field values match (cleave facings 3.14/1.02 vs ACT 3.12/1.02), but
   timing and grouping are scrambled (four cleaves over two minutes in ACT become two pairs 2.4 s
-  apart). **Conflict C1 needs a fresh live FRU capture with tracer 0.3.1 or later.** As of 2026-11-12
-  the only reliable capture is Dancing Mad (`20261111-112002-duty1094`).
+  apart). C1 was settled on 2026-11-14 from a tracer 0.3.1 capture (section 1).
 - `docs/encounters/dsr-sanctity-meteors-events.json` lacks the Eternal Conviction (25568) rows the
   current analyzer adds. **Owner decision (2026-11-12): leave it.** The Meteors implementation is
   considered essentially accurate and needs no further evidence work.

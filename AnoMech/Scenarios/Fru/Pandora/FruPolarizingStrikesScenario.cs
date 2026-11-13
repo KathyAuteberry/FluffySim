@@ -11,6 +11,7 @@ public sealed class FruPolarizingStrikesScenario : IScenario
     private readonly FruP5ParadiseRegainedScenario encounter = new();
     public string Name => "Polarizing Strikes";
     public IPhase Phase => FruZone.P5;
+    public float BgmSecondsAtStart => 82.17f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruP5ParadiseRegainedAi(true)];
     public void Run(SimWorld world, int? selectedAi) => encounter.Run(world, selectedAi, true);
     public void Tick(float delta, float elapsed) => encounter.Tick(delta, elapsed);

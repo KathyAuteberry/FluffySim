@@ -190,9 +190,22 @@ def _column(buf: bytes, i: int, ftype: int, count: int) -> tuple[list, int]:
 KEY_FIELDS = ('actor', 'caster')
 
 
+def _key_field(fields: tuple[Field, ...]) -> Field | None:
+    return next((f for f in fields if f.name in KEY_FIELDS), None)
+
+
 def _column_order(fields: tuple[Field, ...]) -> list[Field]:
-    keys = [f for f in fields if f.name in KEY_FIELDS][:1]
+    keys = [f for f in fields if f is _key_field(fields)]
     return keys + [f for f in fields if f not in keys]
+
+
+def _arrival_order(rows: list[dict], key: str) -> list[dict]:
+    """The key column is stored in arrival order, every other column stably sorted by key."""
+    keys = [row[key] for row in rows]
+    out: list[dict] = [{} for _ in rows]
+    for stored, arrival in enumerate(sorted(range(len(rows)), key=keys.__getitem__)):
+        out[arrival] = {**rows[stored], key: keys[arrival]}
+    return out
 
 
 def _rows(buf: bytes, i: int, fields: tuple[Field, ...], count: int, top: bool = False) -> tuple[list[dict], int]:
@@ -239,6 +252,8 @@ def decode_block(data: bytes, kinds: dict[int, Kind]) -> Iterator[Record]:
             decoded = [{'payload': v} for v in values]
         else:
             decoded, end = _rows(body, 0, kind.fields, rows, top=True)
+            if (key := _key_field(kind.fields)) is not None:
+                decoded = _arrival_order(decoded, key.name)
         if end != length:
             raise TraceError(f'kind {kid} section is {length} bytes, decoded {end}')
         sections[kid] = decoded

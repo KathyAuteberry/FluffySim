@@ -88,8 +88,10 @@ public class SimNpc : SimCharacter
     private float? modelScale;
     private bool modelScaleApplied;
     private bool? drawObjectVisible;
+    public bool DrawObjectHidden => drawObjectVisible == false;
 
-    // Hide a staged actor without suppressing creation of its renderer and animation sequencer.
+    // Hide a staged actor without suppressing creation of its renderer and animation sequencer;
+    // SetModelHidden before the DrawObject exists stops the engine from ever creating it.
     public void SetDrawObjectVisible(bool visible)
     {
         drawObjectVisible = visible;

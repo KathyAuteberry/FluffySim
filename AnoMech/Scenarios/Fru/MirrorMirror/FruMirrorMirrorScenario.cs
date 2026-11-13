@@ -20,6 +20,7 @@ public sealed class FruMirrorMirrorScenario : IScenario
     public bool SupportsMultiplayer => true;
     public string Name => "Mirror, Mirror";
     public IPhase Phase => FruZone.P2;
+    public float BgmSecondsAtStart => 89.05f;
     public IReadOnlyList<IScenarioAi> AiStrats => [new FruMirrorMirrorAi()];
     private readonly FruMirrorMirrorStateOverrides settings = new();
     public object SettingsOverrides => settings;

@@ -336,7 +336,7 @@ public class FruDarklitTests
                     Assert.That(bosses.Select(a => a.BNpcBaseId).Order(), Is.EqualTo(new uint[] { 17833, 17835, 17841, 17844, 17845 }));
                     Assert.That(bosses.All(a => a.Proxy!.IsDrawObjectVisible), Is.True);
                     Assert.That(bosses.Single(a => a.BNpcBaseId == 17835).SpawnConfig.Appearance!.BodyModel, Is.EqualTo(65537));
-                    Assert.That(scenario.Phase.Weather, Is.EqualTo(105)); Assert.That(scenario.Phase.Bgm, Is.EqualTo(801));
+                    Assert.That(scenario.Phase.Weather, Is.EqualTo(105)); Assert.That(scenario.Phase.Bgm, Is.EqualTo(20137));
                 }
                 if (p.Crossed(11f))
                 {
@@ -393,7 +393,7 @@ public class FruDarklitTests
     {
         var catalog = ScenarioCatalog.Create().Scenarios;
         Assert.That(catalog[6], Is.TypeOf<FruDarklitScenario>()); Assert.That(catalog[6].IsIncomplete, Is.True);
-        Assert.That(PhaseMusic.TrackFor(catalog[6]), Is.EqualTo(801));
+        Assert.That(PhaseMusic.TrackFor(catalog[6]), Is.EqualTo(20137));
         Assert.That(catalog[6].SettingsOverrides, Is.TypeOf<FruDarklitStateOverrides>());
         Assert.That(catalog[6].Phase.Zone, Is.SameAs(catalog[5].Phase.Zone));
     }

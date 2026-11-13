@@ -127,10 +127,10 @@ public sealed class Game : IDisposable
     }
 
 
-    public void ZoneIn(IZone zone, SessionMode mode, Action<string?>? resolved = null)
+    public void ZoneIn(IZone zone, SessionMode mode, Action<string?>? resolved = null, IPhase? entryPhase = null)
     {
         Natives.Zone.EndSpeedBuffs();
-        Deferred(() => ZoneInNow(zone, mode), resolved);
+        Deferred(() => ZoneInNow(zone, mode, entryPhase), resolved);
     }
 
     public void StartScenario(RunScenarioParams p, Action<string?>? resolved = null)
@@ -159,7 +159,7 @@ public sealed class Game : IDisposable
                 return;
             }
             QueueStart(p, resolved);
-        });
+        }, p.Scenario.Phase);
     }
 
     public void PrepareRun(RunScenarioParams p, Action<string?>? resolved = null)
@@ -244,14 +244,14 @@ public sealed class Game : IDisposable
 
 
     // Null once in the zone, else why not.
-    private string? ZoneInNow(IZone zone, SessionMode mode)
+    private string? ZoneInNow(IZone zone, SessionMode mode, IPhase? entryPhase)
     {
         if (instance is not null)
         {
             Plugin.Log.Warning($"Game: refusing to enter {zone.Name} -- already in {instance.Zone.Name}.");
             return $"already in {instance.Zone.Name}";
         }
-        instance = InstanceSession.Enter(World, zone, mode, out var refusal);
+        instance = InstanceSession.Enter(World, zone, mode, out var refusal, entryPhase);
         if (refusal is not null) Plugin.Log.Warning($"InstanceSession: not entering {zone.Name} -- {refusal}.");
         return refusal;
     }

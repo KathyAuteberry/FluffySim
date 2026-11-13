@@ -137,9 +137,10 @@ unsanitised extracts. Committed evidence (e.g. `docs/encounters/dsr-sanctity-met
 Native arenas (layers, map-effect slots, weather, colliders) were reproduced by diffing
 `/fluffysim snapshot <label>` (also `/anomech snapshot`) taken in a paused Duty Recorder replay of
 the real phase against one taken in the simulator. (Codex's early empty-arena helpers are gone from
-the UI: the `/anomech arena-p3` command was removed and the arena-diagnostic scenarios
-(`Fru/FruArenaDiagnosticScenario.cs`, `Fru/FruP3ArenaDiagnosticScenario.cs`,
-`Dsr/DsrArenaDiagnosticScenario.cs`) remain in source but nothing references them.) A snapshot is one client sample; it cannot see physics broadphase membership, director
+the UI: the `/anomech arena-p3` command was removed, the FRU arena-diagnostic scenarios were deleted
+and `Dsr/DsrArenaDiagnosticScenario.cs` remains in source but nothing references it.) Where a capture
+has the server's MapEffect snapshot (RaidTrace `map_state`), declare it as `IZone.ArenaMapEffectSnapshot`
+plus `IPhase.ArenaMapEffectOverrides` rather than replaying single effects. A snapshot is one client sample; it cannot see physics broadphase membership, director
 managers or the environment-scene selector. Apply presets after native layout readiness, once per
 layout generation. Do not hold layers every frame (that caused the offline DSR flicker).
 

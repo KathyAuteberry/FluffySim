@@ -402,7 +402,7 @@ public class FruLightRampantTests
                     captured.AddRange(orbs);
                     checks++;
                 }
-                if (p.Crossed(22.4f))
+                if (p.Crossed(22.35f))
                 {
                     Assert.That(orbs, Has.Length.EqualTo(3));
                     Assert.That(orbs.Select(e => e.Casting.ActionId), Is.All.EqualTo(AnoMech.Scenarios.Fru.FruConstants.ActionId.Burst));

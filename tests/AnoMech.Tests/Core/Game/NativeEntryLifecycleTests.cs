@@ -122,6 +122,30 @@ public class NativeEntryLifecycleTests
         Assert.That(((FakePartyHud)Natives.PartyHud).Members, Is.Empty);
     }
 
+    [Test]
+    public void ZoneInSnapshotShowsTheEntryPhaseArenaOnTheFirstReadyFrame()
+    {
+        var fake = Install(false, false, true);
+        fake.MapEffects.TerritoryReady = false;
+        using var game = CreateGame();
+        var scenario = ScenarioCatalog.Create().Scenarios.First(s => s.Phase.Zone.ArenaMapEffectSnapshot.Count > 0 && s.Phase.ArenaMapEffectOverrides.Count > 0);
+        var expected = scenario.Phase.Zone.ArenaMapEffectSnapshot.ToArray();
+        foreach (var (slot, state) in scenario.Phase.ArenaMapEffectOverrides) expected[slot] = state;
+        game.EnterAndStart(Parameters(scenario, PartyRole.MainTank), SessionMode.Local);
+        Frames(fake, game, 30);
+        Assert.That(fake.MapEffects.Snapshots, Is.Empty);
+        fake.MapEffects.TerritoryReady = true;
+        Frames(fake, game, 1);
+        Assert.That(game.ActiveScenario, Is.Null);
+        Assert.That(fake.MapEffects.Snapshots, Has.Count.EqualTo(1));
+        Assert.That(fake.MapEffects.Snapshots[0], Is.EqualTo(expected));
+        for (var i = 0; i < 300 && game.ActiveScenario is null; i++) Frames(fake, game, 1);
+        Assert.That(game.ActiveScenario, Is.SameAs(scenario));
+        Assert.That(fake.MapEffects.Snapshots.Last(), Is.EqualTo(expected));
+        game.Leave();
+        Frames(fake, game, 2);
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void BarrierSpawnFailureRetriesWithoutStartingOrLosingTheParty(bool offline)
@@ -270,10 +294,10 @@ public class NativeEntryLifecycleTests
         var holds = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;
         Assert.That(holds[(1238, 0x5F88)], Is.EqualTo(scenario.Phase == FruZone.P1));
         Assert.That(holds[(1238, 0x5FC9)], Is.EqualTo(scenario.Phase == FruZone.P2));
-        var expected = scenario.Phase == FruZone.P1 ? 0x00040004u : scenario.Phase == FruZone.P2 ? 0x00020001u : scenario.Phase == FruZone.P3 ? 0x00080004u : 0x00040004u;
-        Assert.That(fake.MapEffects.Applied.Last(e => e.Index == 0x17).Flags, Is.EqualTo(expected));
-        if (scenario.Phase == FruZone.P3 || scenario.Phase == FruZone.P4)
-            Assert.That(fake.MapEffects.Applied.Last(e => e.Index == 0x29).Flags, Is.EqualTo(0x00020001));
+        var arena = fake.MapEffects.Snapshots.Last();
+        Assert.That(arena[0x17], Is.EqualTo(scenario.Phase == FruZone.P2 ? 1 : 4));
+        Assert.That(arena[0x29], Is.EqualTo(scenario.Phase == FruZone.P3 || scenario.Phase == FruZone.P4 ? 1 : 4));
+        Assert.That(arena[0x2F], Is.EqualTo(scenario.Phase == FruZone.P5 ? 1 : 4));
     }
 
     public class EntryClientState : DispatchProxy

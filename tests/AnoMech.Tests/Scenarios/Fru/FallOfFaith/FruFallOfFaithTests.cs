@@ -286,7 +286,7 @@ public class FruFallOfFaithTests
         Assert.That(catalog[0], Is.TypeOf<FruFallOfFaithScenario>());
         Assert.That(AnoMech.Core.Game.Game.DisplayName(catalog[0]), Is.EqualTo("P1 Fall of Faith"));
         Assert.That(catalog[0].Phase.Weather, Is.EqualTo(2));
-        Assert.That(PhaseMusic.TrackFor(catalog[0]), Is.EqualTo(800));
+        Assert.That(PhaseMusic.TrackFor(catalog[0]), Is.EqualTo(20134));
         Assert.That(catalog[3], Is.TypeOf<AnoMech.Scenarios.Fru.LightRampant.FruLightRampantScenario>());
     }
 
@@ -372,8 +372,8 @@ public class FruFallOfFaithTests
                 for (ushort key = 0x5F88; key <= 0x5F94; key++) Assert.That(holds[(1238, key)], Is.True);
                 Assert.That(holds[(1238, 0x5F9F)], Is.True);
                 Assert.That(holds[(1238, 0x5FC9)], Is.False);
-                Assert.That(native!.MapEffects.Applied, Has.Count.EqualTo(54));
-                Assert.That(native.MapEffects.Applied.All(e => e.Flags == 0x00040004), Is.True);
+                Assert.That(native!.MapEffects.Applied, Is.Empty);
+                Assert.That(native.MapEffects.Snapshots.Last(), Is.EqualTo(Enumerable.Repeat((ushort)4, 54)));
                 seen = true;
             } }, WriteArtifactsOnFailure = false,
         });

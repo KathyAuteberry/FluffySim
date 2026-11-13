@@ -11,18 +11,17 @@ public sealed class FruZone : IZone
 {
     public bool SupportsSpectator => true;
     public static readonly FruZone Instance = new();
-    public static readonly Phase P2 = new(Instance, "P2", WeatherId.Usurper, BgmId.Usurper);
+    public static readonly Phase P2 = new(Instance, "P2", WeatherId.Usurper, BgmId.Usurper,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [MapEffect.P2Platform] = 0x1 });
     public static readonly Phase P3 = new(Instance, "P3", WeatherId.Oracle, BgmId.Oracle,
         arenaMapEffectOverrides: new Dictionary<byte, ushort>
         {
-            [MapEffect.P2Platform] = 0x4,
             [MapEffect.OracleStage] = 0x1,
             [MapEffect.OracleFloor] = 0x1,
         });
     public static readonly Phase P4 = new(Instance, "P4", WeatherId.Oracle, BgmId.OracleAndUsurper,
         arenaMapEffectOverrides: new Dictionary<byte, ushort>
         {
-            [MapEffect.P2Platform] = 0x4,
             [MapEffect.OracleStage] = 0x1,
             [MapEffect.OracleFloor] = 0x1,
             [MapEffect.FragmentOfFate] = 0x1,
@@ -41,7 +40,7 @@ public sealed class FruZone : IZone
 
     public IReadOnlyList<ushort> ArenaMapEffectSnapshot { get; } =
     [
-        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4,
+        4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
         4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
     ];
 

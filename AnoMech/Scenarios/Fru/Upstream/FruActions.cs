@@ -539,12 +539,12 @@ public static class FruActions
         Timing = new() { DamageDelay = 0.36f },
     };
 
-    // 120° either side of a line 60° off the boss's facing; the boss keeps facing the tank, as
-    // the cleave resource carries the turn itself.
+    // 225°: the whole half on the wing's side plus 45° past the facing. The boss keeps facing the
+    // tank, as the cleave resource carries the turn itself.
     public static readonly EnemyAction WingsCleaveLight = new(ActionId.WingsCleaveLight)
     {
-        Cast = new() { AnimationLock = 3.6f, Rotation = MathF.PI / 3f },
-        Area = new() { Size = 2f * MathF.PI / 3f },
+        Cast = new() { AnimationLock = 3.6f, Rotation = 3f * MathF.PI / 8f },
+        Area = new() { Size = 5f * MathF.PI / 8f },
         Effects = [Damage(VulnerableTo(StatusId.PhysicalVulnerabilityUp), TankBuster), ApplyStatus(StatusId.PhysicalVulnerabilityUp, 3.96f, delayToEffectResult: true)],
         Timing = new() { DamageDelay = 0.82f },
     };
@@ -552,7 +552,7 @@ public static class FruActions
     public static readonly EnemyAction WingsCleaveDark = WingsCleaveLight with
     {
         ActionId = ActionId.WingsCleaveDark,
-        Cast = new() { AnimationLock = 3.6f, Rotation = -MathF.PI / 3f },
+        Cast = new() { AnimationLock = 3.6f, Rotation = -3f * MathF.PI / 8f },
         Timing = new() { DamageDelay = 0.74f },
     };
 
