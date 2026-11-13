@@ -105,7 +105,9 @@ the `rea` MCP server, which inspected `Lumina.dll` types twice for DSR P7.
     - other integers, and f32 bit patterns, are zigzag deltas within the column;
     - strings and bytes are length-prefixed;
     - groups are a plain count per row followed by the child columns;
-    - the `actor`/`caster` key column comes first.
+    - the `actor`/`caster` key column comes first and is in arrival order; every other column of
+      a keyed kind is stably sorted by key. `rtrace.py` puts the rows back in arrival order (checked
+      against ACT casts, actions, head markers, tethers and MapEffects).
   - `server_time` is epoch milliseconds; tracer 0.3.0 wrote 0. Kinds 1 and 2 (no schema) are tracer
     metadata JSON.
   - Capture filenames (`YYYYMMDD-HHMMSS-duty<CFC>`) are in **UTC**: `20261110-141323` is 23:13 JST.
