@@ -62,7 +62,7 @@ The owner's brief says the same: the ST provokes during the cast bar.
 |---|---|---|
 | MT | Tanks north of Kefka, about (100, 93.5). Takes both hits (kitchen sink). Shirks after the ST's provoke | Rule (Kitten). Position [static]: MT at (100.0, 93.6) at hit 1 |
 | ST | Provokes **during the cast bar** (cast start to hit 1). Becomes enmity 1; the MT becomes enmity 2 and takes hit 2 | Rule (Kitten, owner). Evidence: works anywhere in the bar |
-| Others | Outside the 90° north cone: behind Kefka (south half) or wide to the sides | Rule (cone 90°, owner decision). The position is Inferred (standard tankbuster spacing) |
+| Others | Outside the 120° north cone: behind Kefka (south half) or wide to the sides | Rule (cone 120°, retail trace; Yan says 90°). The position is Inferred (standard tankbuster spacing) |
 
 Afterwards the ST holds aggro until the GI2 swap.
 
@@ -232,7 +232,7 @@ The owner's brief also says the MT provokes this time.
 |---|---|---|
 | ST (current enmity 1, marked) | Tanks north, about (100, 93). Takes both hits | [static] (99.9, 92.9) at hit 1. Rule (Kitten) |
 | MT | **Provokes during the cast bar** (92.2 → hit 1 at 97.25). Becomes enmity 1 and tanks after | Rule (owner, Kitten). Evidence: the provoke can land as late as just after hit 1 |
-| Everyone | Out of the 90° north cone, then into the half the statue does **not** indicate before 101.25 | Rule (Yan, Kitten) |
+| Everyone | Out of the 120° north cone, then into the half the statue does **not** indicate before 101.25 | Rule (Yan, Kitten) |
 
 Which statue indicates the cleave:
 

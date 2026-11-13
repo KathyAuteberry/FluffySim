@@ -18,7 +18,8 @@ value from them.
   same IDs, same truth/lie rule. Marked UNVERIFIED for MM3.
 - **Thin variants** (final-MM lies, Tele-portent permutations) are extrapolated from the observed
   rules, shipped for practice and corrected when more captures arrive.
-- **Revolting Ruin III cone: 90°** (owner, agreeing with Yan 「90度扇範囲」). Settles C-DMU-4
+- **Revolting Ruin III cone: 90°** (owner, agreeing with Yan 「90度扇範囲」; superseded on 2026-11-14 by
+  the retail trace: 120°, see `docs/handover/open-issues.md`). Settles C-DMU-4
   provisionally. Still UNVERIFIED by a measurement.
 - Knockbacks use the sheet values (13 / 14 / 50 y).
 - Safety is non-negotiable: shipping half-finished mechanics is fine; weakening the firewall or the

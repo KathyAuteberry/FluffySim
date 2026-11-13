@@ -14,8 +14,19 @@ one silently.
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
 | C3 | **`tools/rtrace.py` row alignment** for keyed kinds (`actor`/`caster` column) | `tools.md` §5 calls the encoding validated by exact byte consumption. Against the 2026-11-11 DMU ACT log only 5/780 casts match unfixed; with value rows taken as key-sorted and the key column and clocks in arrival order, all 780 casts, 2954 actions, 421 headmarkers, 495 tethers, 36 MapEffects and 547 EObj states match (`docs/encounters/dmu/p1-evidence.md` §2.1) | Decoder unchanged; DMU work used a scratch remap | Fix the decoder, add an ACT-aligned test fixture, recheck earlier RaidTrace conclusions |
 | C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
-| C5 | **DMU Revolting Ruin III cone** | Yan: 「90度扇範囲」. BossMod: 120°. Kitten: "wide cone". The sheet has no angle | 90° (owner decision), UNVERIFIED | A capture with a player clipped at a known angle |
-| C7 | **DMU 11-04 evidence** | The owner listed `Network_30304_20261104.log` and `DMU-Roost_…` as in-game evidence; both are FluffySim/AnoMech runs in The Roost (bot party names) | Excluded from DMU evidence | Owner confirmation |
+
+Resolved 2026-11-14 from the 2026-11-13 DMU capture (ACT log and RaidTrace `20261113-150916-duty1094`):
+
+- **C5, Revolting Ruin III cone. Conflicts with Yan's 「90度扇範囲」.** With positions from the trace's
+  server-timed `actor_move` and the facing in the hit's own `action` record, a player standing still 58°
+  off the axis at 4.2 y was hit, and players standing still 78–79° off it (5–8 y) were missed in three
+  pulls. A dancer walking in was hit 36–54° off it. Treating players as points bounds the cone at
+  116–156°; with a 0.5 y hitbox, 102–146°. 90° is ruled out either way. RaidTrace's drawing of the
+  hit measures about 130°. The code uses BossMod's 120°, inside both bounds. ACT's client-side
+  positions lag behind for players who are moving (ACT put the same dancer at 61°), so use the trace
+  for edge cases like this.
+- **C7, simulator captures.** Owner: ignore every log, trace, replay or recording made at the inn
+  or in The Roost; they are FluffySim/AnoMech runs, not retail.
 
 Resolved from the 2026-11-11 DMU RaidTrace (2026-11-12, scratch analysis in the evidence snapshot's
 `analysis/`, decoded with the C3 remap):

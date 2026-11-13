@@ -13,8 +13,8 @@ public static class DmuActions
     private static readonly VulnSpec MagicallyVulnerable = VulnerableTo(StatusId.MagicVulnerabilityUp);
     private static readonly IEnemyActionEffect BriefMagicVulnerability = ApplyStatus(StatusId.MagicVulnerabilityUp, 0.96f);
 
-    // UNVERIFIED: 90°; the sheet has no angle.
-    private static readonly AreaSpec RuinCone = new() { Size = MathF.PI / 4f };
+    // 120°: retail places the edge between about 58° and 78° off the axis; the sheet has no angle.
+    private static readonly AreaSpec RuinCone = new() { Size = MathF.PI / 3f };
     // UNVERIFIED: a quadrant; the sheet has no angle.
     private static readonly AreaSpec Quadrant = new() { Size = MathF.PI / 4f };
 
