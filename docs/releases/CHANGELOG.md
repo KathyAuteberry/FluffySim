@@ -1,3 +1,21 @@
+# FluffySim 3.4.2.0 — release prepared
+
+## Improved
+
+- **FRU music.** Every FRU phase now plays the fight's own arrangement, switching where retail does (including the intermission and the P4 and P5 transitions), and each scenario joins its track at the point retail would be playing when the mechanic starts.
+- **FRU arenas.** Zone entry and every phase now set the arena from one snapshot, as retail does. Ultimate Relativity enters and leaves time-stop itself, so Apocalypse now plays on the normal P3 floor. Hourglass sand follows each wave, Light Rampant and Darklit Dragonsong towers light up as players step in, and Pandora's Box shows its arena transitions.
+- Darklit Dragonsong marks both Dark Water targets with the stack marker as the cast starts.
+- Small FRU timing corrections of 0.3 s or less in Diamond Dust, Light Rampant, Ultimate Relativity, Apocalypse, Darklit Dragonsong and the Pandora sequence.
+- Contribution guide and issue templates for bug reports and fight data.
+
+## Fixed
+
+- Diamond Dust no longer cancels a few seconds in with "Native actor setup incomplete": Oracle's Reflection now loads its model while hidden.
+- Entering an arena no longer shows every phase's arena for a second or two before the right one appears.
+- FRU Paradise Regained Wings Dark and Light now cover 225° (the wing's half plus 45° past the facing) instead of 240°.
+- Dancing Mad Revolting Ruin III is now a 120° cone instead of 90°, matching what retail hits and misses.
+- The upstream FRU zone hides the P2 platform at zone entry and shows it only in P2.
+
 # FluffySim 3.4.1.0 — release prepared
 
 ## Fixed
