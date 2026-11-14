@@ -21,6 +21,8 @@ public sealed class InstanceSession
     private IEventObjectProxy? entranceBarrier;
     private float entranceBarrierOpenIn = -1f;
     private bool phaseApplied;
+    private bool arenaSnapshotSent;
+    private readonly IPhase? entryPhase;
     private bool playerPlaced;
     private bool barrierOpened;
 
@@ -33,16 +35,18 @@ public sealed class InstanceSession
     public bool IsLoaded => Natives.Zone.IsActive;
     public bool IsReadyForRun => IsLoaded && Natives.MapEffects.IsTerritoryReady(Zone.TerritoryId) && barrierOpened;
 
-    private InstanceSession(SimWorld world, IZone zone, Vector3 playerSpawnLocal, SessionMode mode)
+    private InstanceSession(SimWorld world, IZone zone, Vector3 playerSpawnLocal, SessionMode mode, IPhase? entryPhase)
     {
         this.world = world;
+        this.entryPhase = entryPhase;
         this.playerSpawnLocal = playerSpawnLocal;
         Zone = zone;
         Mode = mode;
     }
 
     // Null, with why, when the zone load was refused; nothing is set up then.
-    public static InstanceSession? Enter(SimWorld world, IZone zone, SessionMode mode, out string? refusal)
+    // entryPhase, when known, is the phase whose arena the zone-in snapshot shows.
+    public static InstanceSession? Enter(SimWorld world, IZone zone, SessionMode mode, out string? refusal, IPhase? entryPhase = null)
     {
         // Hard gate: scenarios only ever run from an inn, and only from a state the server isn't
         // about to act on. Everything downstream (CharacterManager registration, zone load, doppel
@@ -65,7 +69,7 @@ public sealed class InstanceSession
         }
         if (!Natives.Zone.IsActive) return null;
         world.Map.Enter(zone.TerritoryId);
-        var session = new InstanceSession(world, zone, spawn, mode);
+        var session = new InstanceSession(world, zone, spawn, mode, entryPhase);
         // Before any action mutates it, so Exit can restore it.
         Natives.UserActions.OnSessionStart();
         world.ScenarioOrigin = zone.Origin;
@@ -79,8 +83,18 @@ public sealed class InstanceSession
         var zoneIn = !phaseApplied;
         phaseApplied = true;
         world.Map.SetPhaseWeather(phase.Weather, zoneIn);
-        if (Zone.ArenaMapEffectSnapshot.Count > 0)
-            world.Map.SetEffectSnapshot(ArenaMapEffects(phase), zoneIn);
+        if (Zone.ArenaMapEffectSnapshot.Count == 0) return;
+        world.Map.SetEffectSnapshot(ArenaMapEffects(phase), !arenaSnapshotSent);
+        arenaSnapshotSent = true;
+    }
+
+    // The layout loads with every arena variant shown; the run's own snapshot waits for the
+    // entrance barrier, seconds later. A peer's arena comes from the host.
+    private void SendZoneInSnapshot()
+    {
+        if (arenaSnapshotSent || Mode == SessionMode.Peer || Zone.ArenaMapEffectSnapshot.Count == 0) return;
+        arenaSnapshotSent = true;
+        world.Map.SetEffectSnapshot(entryPhase is null ? Zone.ArenaMapEffectSnapshot.ToArray() : ArenaMapEffects(entryPhase));
     }
 
     // Entering the zone always starts at spawn; later runs only recenter a player standing outside
@@ -137,6 +151,7 @@ public sealed class InstanceSession
     {
         if (fallCloseIn >= 0f && (fallCloseIn -= deltaSeconds) < 0f) CloseFall();
         if (!IsLoaded || !Natives.MapEffects.IsTerritoryReady(Zone.TerritoryId)) return;
+        SendZoneInSnapshot();
         if (!barrierOpened && entranceBarrier is null)
         {
             if (Zone.EntranceBarrier.EObjId == 0) barrierOpened = true;
