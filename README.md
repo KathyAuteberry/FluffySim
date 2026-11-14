@@ -6,9 +6,12 @@ Practice Final Fantasy XIV Ultimate mechanics locally, with simulated party memb
 regional strategies and repeatable practice controls. FluffySim builds on
 [AnoMech](https://github.com/anomek/AnoMech).
 
+<p align="center"><a href="CONTRIBUTING.md"><img src="images/contribute-banner.svg" alt="Would you like to see more fights in FluffySim? Here's how to help" width="900" /></a></p>
+
 - [User guide, supported encounters and practice controls](docs/user-guide/README.md)
 - [Installation and offline setup](docs/user-guide/INSTALLATION.md)
 - [Documentation index](docs/README.md)
+- [Contributing: bug reports and fight data](CONTRIBUTING.md)
 - [Contributor instructions](docs/development/AGENTS.md)
 - [Changelog](docs/releases/CHANGELOG.md)
 - [License](docs/legal/LICENSE.md) and [third-party notices](docs/legal/THIRD-PARTY-NOTICES.md)

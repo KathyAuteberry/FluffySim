@@ -1,0 +1,72 @@
+name: Fight data
+description: Share recordings of real ultimate pulls so FluffySim can add or improve fights.
+title: "[Fight data] "
+labels: ["fight data"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping FluffySim grow! The [contribution guidelines](https://github.com/KathyAuteberry/FluffySim/blob/master/CONTRIBUTING.md#contributing-fight-data) explain how to set up IINACT, A Realm Recorded and RaidTrace **before** your pulls.
+
+        Attach the recordings in the fields below, or zip everything together and attach it to any one of them.
+
+        **Attachments on GitHub are public**, and these files contain the names of everyone in your party. If that's a problem, send the files to `kathy.auteberry` on Discord instead (you can still open this issue without them).
+  - type: dropdown
+    id: duty
+    attributes:
+      label: Duty
+      options:
+        - Dancing Mad (Ultimate)
+        - Futures Rewritten (Ultimate)
+        - The Omega Protocol (Ultimate)
+        - Dragonsong's Reprise (Ultimate)
+        - The Epic of Alexander (Ultimate)
+        - The Weapon's Refrain (Ultimate)
+        - The Unending Coil of Bahamut (Ultimate)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: phases
+    attributes:
+      label: Phases or mechanics covered
+      description: How far your pulls got, and how many pulls there are.
+      placeholder: 12 pulls, up to P3 Ultimate Relativity; one clear
+    validations:
+      required: true
+  - type: textarea
+    id: strategy
+    attributes:
+      label: Strategy
+      description: Write "Tuufless" if you played Tuufless's version. Otherwise give the full URL of every document, spreadsheet, video or macro the party used, and any changes your party made to it.
+    validations:
+      required: true
+  - type: checkboxes
+    id: jp-strategy
+    attributes:
+      label: Japanese strategy
+      options:
+        - label: The party played a Japanese strategy (one used on the Japanese data centres). Where you played doesn't matter.
+          required: true
+        - label: These recordings come from the real duty, not from FluffySim in an inn, The Roost or offline mode.
+          required: true
+  - type: textarea
+    id: iinact
+    attributes:
+      label: IINACT combat log
+      description: Attach the zipped `Network_*.log` file(s), paste a download link, or write "sent on Discord". Leave empty if it's already in a ZIP attached elsewhere in this issue.
+  - type: textarea
+    id: replay
+    attributes:
+      label: Duty Recorder recordings
+      description: Attach the zipped `.dat` files from `replay/autorenamed`, paste a download link, or write "sent on Discord". Leave empty if it's already in a ZIP attached elsewhere in this issue.
+  - type: textarea
+    id: raidtrace
+    attributes:
+      label: RaidTrace traces
+      description: Attach the zipped `.rtrace` files, paste a download link, or write "sent on Discord". Leave empty if it's already in a ZIP attached elsewhere in this issue.
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes
+      description: Optional. Your role, which pulls are the interesting ones, anything unusual that happened.

@@ -1,0 +1,54 @@
+name: Bug report
+description: Something in a FluffySim scenario doesn't work or doesn't match the game.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting! The scenario, role and seed let me replay exactly the run you saw.
+        Prefer to talk privately? Message `kathy.auteberry` on Discord instead.
+  - type: input
+    id: scenario
+    attributes:
+      label: Full scenario name
+      description: Encounter, phase and mechanic exactly as the menu shows them, plus the strategy if the scenario offers more than one.
+      placeholder: Futures Rewritten › P3 › Ultimate Relativity (Mana)
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Role
+      description: The role you played. If the role selector was on Auto, pick the role your job ended up in.
+      options:
+        - MT
+        - OT
+        - H1
+        - H2
+        - M1
+        - M2
+        - R1
+        - R2
+    validations:
+      required: true
+  - type: input
+    id: seed
+    attributes:
+      label: Seed
+      description: In the FluffySim window open "Advanced / RNG Seed" and use Copy next to "Last seed", right after the bugged run (every start rolls a new seed).
+      placeholder: "123456789"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What went wrong
+      description: What happened, and what you expected to happen instead. Mention the moment in the mechanic if you can.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: Optional. FluffySim version, solo or multiplayer, inn or title-screen offline mode, bot difficulty, God Mode, JESUS TAKE THE WHEEL, screenshots or video.

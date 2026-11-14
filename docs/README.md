@@ -6,6 +6,7 @@
 - [Installation and offline setup](user-guide/INSTALLATION.md)
 - [Spectator mode](features/spectator/MODE.md), [coverage](features/spectator/COVERAGE.md)
   and [party projection](features/spectator/PARTY-PROJECTION.md)
+- [Contributing bug reports and fight data](../CONTRIBUTING.md)
 
 ## Development and verification
 

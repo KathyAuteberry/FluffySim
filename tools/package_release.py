@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 DOCUMENTATION = (
     'AGENTS.md',
+    'CONTRIBUTING.md',
     'README.md',
     'docs/integration/POST-3.0.2-UPSTREAM-AUDIT.md',
     'docs/README.md',
@@ -69,6 +70,7 @@ DOCUMENTATION = (
     'docs/verification/COMMUNITY-QA-PARADISE-WROTH.md',
     'docs/verification/COMMUNITY-QA-ROUND-2.md',
     'docs/verification/PLAYTEST-CORRECTIONS-2026-11-11.md',
+    'images/contribute-banner.svg',
     'images/icon.png',
     'tests/SafetyTests/README.md',
 )
