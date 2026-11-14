@@ -1,4 +1,6 @@
-# FluffySim 3.4.2.0 — release prepared
+# FluffySim 3.4.3.0 — release prepared
+
+3.4.2.0 was tagged but never published; this release carries all of its changes.
 
 ## Improved
 
@@ -15,6 +17,7 @@
 - FRU Paradise Regained Wings Dark and Light now cover 225° (the wing's half plus 45° past the facing) instead of 240°.
 - Dancing Mad Revolting Ruin III is now a 120° cone instead of 90°, matching what retail hits and misses.
 - The upstream FRU zone hides the P2 platform at zone entry and shows it only in P2.
+- The release archive includes the FRU retail audit that the documentation links to.
 
 # FluffySim 3.4.1.0 — release prepared
 
