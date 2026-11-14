@@ -16,7 +16,7 @@ internal static class NativeActorReadiness
                 : actor.PacketSpawnPending ? "packet registration pending"
                 : actor.Proxy is not { Exists: true } ? "actor not registered"
                 : actor.SpawnConfig.Visibility != SpawnVisibility.InvisibleHelper && (!actor.Proxy.HasDrawObject || !actor.Proxy.HasLoadedModel) ? "visible model not loaded"
-                : actor.SpawnConfig.Visibility == SpawnVisibility.Visible && !actor.ModelHidden && !actor.Proxy.IsDrawObjectVisible ? "visible model not drawing"
+                : actor.SpawnConfig.Visibility == SpawnVisibility.Visible && !actor.ModelHidden && !actor.DrawObjectHidden && !actor.Proxy.IsDrawObjectVisible ? "visible model not drawing"
                 : null;
             if (reason is null) continue;
             ready = false;

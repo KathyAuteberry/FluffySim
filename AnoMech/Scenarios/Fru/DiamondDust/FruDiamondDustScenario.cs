@@ -49,7 +49,7 @@ public sealed class FruDiamondDustScenario : IScenario
         {
             boss = Spawn(BNpcBaseId.UsurperOfFrost, BNpcNameId.UsurperOfFrost, new(0f, 0f, 5f), true);
             oracle = Spawn(BNpcBaseId.OraclesReflection, BNpcNameId.OraclesReflection, Vector3.Zero, true);
-            oracle.SetModelHidden(true);
+            oracle.SetDrawObjectVisible(false);
             // Packet spawning needs framework ticks before a native cast can be delivered.
             for (var i = 0; i < 28; i++) helpers.Add(Spawn(BNpcBaseId.Helper, BNpcNameId.UsurperOfFrost, Vector3.Zero, false));
         });
@@ -59,7 +59,7 @@ public sealed class FruDiamondDustScenario : IScenario
             world.Map.AddEffect(0x00020001, 0);
             boss.Cast(FruDiamondDustActions.Raidwide);
         });
-        world.Events.Add(9.12f, () => { oracle.SetModelHidden(false); oracle.PlayActionTimeline(0x11D6); });
+        world.Events.Add(9.12f, () => { oracle.SetDrawObjectVisible(true); oracle.PlayActionTimeline(0x11D6); });
         world.Events.Add(12.2f, () => world.Map.AddEffect(0x00080004, 0));
         world.Events.Add(15.78f, () =>
         {

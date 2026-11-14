@@ -22,6 +22,30 @@ public class FruDiamondDustTests
         }
     }
 
+    [Test]
+    public void HiddenOracleStillLoadsItsModelBeforeMirrorImage()
+    {
+        var run = ScenarioRun.Execute(typeof(FruDiamondDustScenario), 0, 0, new()
+        {
+            ScenarioFactory = () => new FruDiamondDustScenario(),
+            ConfigureNative = f =>
+            {
+                f.BattleCharas.PacketSpawnDelayFrames = 5;
+                f.BattleCharas.NpcDrawObjectDelayFrames = 12;
+            },
+            Probe = p =>
+            {
+                if (!p.Crossed(2.9f)) return;
+                var oracle = p.World.Children.OfType<SimEnemy>().Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection);
+                var native = (FakeBattleChara)oracle.Proxy!;
+                Assert.That(native.HasLoadedModel, Is.True);
+                Assert.That(native.IsDrawObjectVisible, Is.False);
+            },
+            WriteArtifactsOnFailure = false,
+        });
+        Assert.That(run.Passed, run.ToString);
+    }
+
     private static IEnumerable<TestCaseData> Variants() =>
         from axe in new[] { false, true }
         from supports in new[] { false, true }
@@ -248,7 +272,7 @@ public class FruDiamondDustTests
                 if (p.Crossed(1f))
                 {
                     Assert.That(actors, Has.Count.EqualTo(30));
-                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).ModelHidden, Is.True);
+                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).DrawObjectHidden, Is.True);
                     Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).SpawnConfig.EnemyList, Is.EqualTo(EnemyListMode.OnlyWhenVisible));
                     boss = (FakeBattleChara)actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.UsurperOfFrost).Proxy!;
                     oracle = (FakeBattleChara)actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).Proxy!;
@@ -259,7 +283,7 @@ public class FruDiamondDustTests
                 if (p.Crossed(17.2f))
                 {
                     Assert.That(oracle!.Timelines, Does.Contain((ushort)0x11D6));
-                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).ModelHidden, Is.False);
+                    Assert.That(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.OraclesReflection).DrawObjectHidden, Is.False);
                     Assert.That(oracle.AnimationStates, Does.Contain((0xF9, 0)));
                     var mirror = boss!.ReceivedEffects.Single(e => e.ActionId == 40180);
                     Assert.That(mirror.Targets!.Single().Id, Is.EqualTo(actors.Single(e => e.BNpcBaseId == FruConstants.BNpcBaseId.UsurperOfFrost).GameObjectId));
