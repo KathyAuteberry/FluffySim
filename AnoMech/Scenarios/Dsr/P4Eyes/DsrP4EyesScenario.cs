@@ -137,8 +137,7 @@ public sealed class DsrP4EyesScenario : IScenario
         }
         world.Events.Add(76.00f, TryDefeatBlueEye);
         world.Events.Add(84.90f, TryDefeatBlueEye);
-        world.Events.Add(79.10f, () => leftEye?.Cast(ActionId.SteepInRage));
-        world.Events.Add(85.05f, SteepInRage);
+        world.Events.Add(79.10f, SteepInRage);
         world.Events.Add(86.30f, () => leftEye?.Defeat());
         world.Events.Add(89.20f, Unbind);
         world.Events.Add(92.00f, DespawnAll);
@@ -449,10 +448,19 @@ public sealed class DsrP4EyesScenario : IScenario
     }
     private void SteepInRage()
     {
-        var bothEyes = rightEye is { Dead: false };
-        Hit(leftEye!, ActionId.SteepInRage, AliveMembers(), (ctx, hit) =>
+        leftEye?.Cast(new EnemyAction(ActionId.SteepInRage)
         {
-            if (bothEyes) ctx.Kill(hit, "both eyes alive at Steep in Rage");
+            Area = new() { AdjustTargets = (_, _) => AliveMembers().ToArray() },
+            Timing = new() { DamageDelay = CastSpec.ActionEffectOffset },
+            Effects = [Resolve(ctx =>
+            {
+                var bothEyes = rightEye is { Dead: false };
+                foreach (var hit in ctx.Hits)
+                {
+                    ctx.ShowDamage(hit, 30000, DamageKind.Magic);
+                    if (bothEyes) ctx.Kill(hit, "both eyes alive at Steep in Rage");
+                }
+            })],
         });
     }
 

@@ -104,11 +104,10 @@ public sealed class DsrP5DeathScenario : IScenario
         world.Events.Add(30.50f, SpawnPlaystation);
         world.Events.Add(32.05f, MarkSymbols);
         world.Events.Add(32.14f, () => { mage.Cast(ActionId.Heavensflame); boss.Cast(ActionId.DragonsGaze); });
-        world.Events.Add(33.26f, () => { meteorKnight.Cast(ActionId.HolyMeteor); knockbackKnight.Cast(ActionId.FaithUnmoving); });
+        world.Events.Add(33.26f, () => { meteorKnight.Cast(ActionId.HolyMeteor); knockbackKnight.Cast(new EnemyAction(ActionId.FaithUnmoving) { Effects = [Damage(), EnemyActionEffects.Knockback(169)], Timing = new() { DamageDelay = CastSpec.ActionEffectOffset } }); });
         world.Events.Add(34.30f, OpenPuddles);
         world.Events.Add(36.06f, TetherChains);
         world.Events.Add(37.22f, DragonsGaze);
-        world.Events.Add(37.23f, () => knockbackKnight.Cast(Instant(ActionId.FaithUnmoving, Damage(), EnemyActionEffects.Knockback(169, 0))));
         world.Events.Add(38.16f, () => world.Map.AddEffect(0x00400020, state.EyeSlot));
         world.Events.Add(39.18f, ResolveChains);
         world.Events.Add(39.77f, Heavensflame);

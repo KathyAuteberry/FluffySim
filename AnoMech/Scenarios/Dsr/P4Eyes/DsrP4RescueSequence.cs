@@ -26,6 +26,7 @@ public sealed class DsrP4RescueSequence(SimWorld world)
     private float start;
     public bool Completed { get; private set; }
     public bool FriendSaved => protectedFriend && friendHealth > 0;
+    private const float SpearImpactAt = 29.44f;
     public static readonly float[] BrightwingTimes = [35.3f, 40.3f, 45.3f, 50.3f];
     private static readonly HashSet<uint> Heals = [120, 135, 140, 185, 190, 189, 3594, 3610, 3614, 3570, 7434, 16556, 24284, 24291, 24296, 24303];
 
@@ -35,15 +36,16 @@ public sealed class DsrP4RescueSequence(SimWorld world)
         world.ActionResolved += OnAction;
         world.OnDespawn(() => world.ActionResolved -= OnAction);
         world.Events.Add(at, PrepareArena);
+        world.Events.Add(at + 19.46f, SpawnKnight);
         world.Events.Add(at + 19.9f, SpawnCharibert);
         world.Events.Add(at + 20.3f, SpawnPrison);
         world.Events.Add(at + 21.85f, () => prisonActive = true);
         world.Events.Add(at + 55.6f, ReleasePrison);
-        world.Events.Add(at + 20f, () => charibert.Cast(25316));
-        world.Events.Add(at + 26.6f, SpawnFriend);
-        world.Events.Add(at + 26.9f, BotLimitBreak);
-        world.Events.Add(at + 27.5f, SpearImpact);
-        for (var t = 29f; t < 55f; t += 1.1f)
+        world.Events.Add(at + 20f, () => charibert.Cast(new EnemyAction(25316) { Effects = [Damage()], Timing = new() { DamageDelay = CastSpec.ActionEffectOffset } }));
+        world.Events.Add(at + 28.55f, SpawnFriend);
+        world.Events.Add(at + 28.84f, BotLimitBreak);
+        world.Events.Add(at + SpearImpactAt, SpearImpact);
+        for (var t = 30.1f; t < 55f; t += 1.1f)
             world.Events.Add(at + t, () => spear.Cast(new EnemyAction(protectedFriend ? 25368u : 25315u) { Effects = [Damage()], Timing = new() { DamageDelay = 0 } }));
         foreach (var t in BrightwingTimes) world.Events.Add(at + t, Brightwing);
         for (var t = 30f; t < 54f; t += 2.5f) world.Events.Add(at + t, BotHealing);
@@ -109,11 +111,15 @@ public sealed class DsrP4RescueSequence(SimWorld world)
         world.Map.DirectorUpdate(0x8000001F, 758);
     }
 
+    private void SpawnKnight()
+    {
+        knight = Spawn(12592, 3633, new(22, 0, 0));
+        knight.Cast(25314);
+    }
+
     private void SpawnCharibert()
     {
         charibert = Spawn(12603, 3642, new(-11, 0, 5), targetable: true);
-        knight = Spawn(12592, 3633, new(22, 0, 0));
-        knight.Cast(25314);
         spear = Spawn(11810, 3633, new(3, 0, 0));
         world.Party.LimitBreak.Set(3);
     }
@@ -134,7 +140,6 @@ public sealed class DsrP4RescueSequence(SimWorld world)
 
     private void SpearImpact()
     {
-        knight.Cast(new EnemyAction(25314) { Cast = new() { CastSecondsOverride = 0 } }, friend);
         friendHealth = protectedFriend ? .2f : 0;
         friend.SetHealthFraction(friendHealth);
         if (!protectedFriend) Fail(25314, "Haurchefant was not protected by tank LB3");
@@ -145,7 +150,7 @@ public sealed class DsrP4RescueSequence(SimWorld world)
         if (!active || actor.Dead) return;
         var role = (actor as ISimPartyMember)?.Role;
         if (role is PartyRole.MainTank or PartyRole.OffTank && Natives.Data.Action(id)?.ActionCategory == 9 &&
-            world.Events.Elapsed < start + 27.5f && world.Party.LimitBreak.FilledBars == 3)
+            world.Events.Elapsed < start + SpearImpactAt && world.Party.LimitBreak.FilledBars == 3)
             protectedFriend = true;
         if (target == (ulong)friend.GameObjectId && Heals.Contains(id) && protectedFriend && friendHealth > 0)
         {
@@ -197,7 +202,6 @@ public sealed class DsrP4RescueSequence(SimWorld world)
     private void PureOfHeart()
     {
         charibert.SetHealthFraction(.25f);
-        charibert.Cast(new EnemyAction(25316) { Cast = new() { CastSecondsOverride = 0 }, Effects = [Damage()], Timing = new() { DamageDelay = 0 } });
         if (friendHealth < .65f) { friendHealth = 0; Fail(25316, "Haurchefant needed healing before Pure of Heart"); }
         else friendHealth -= .64f;
         friend.SetHealthFraction(friendHealth);

@@ -33,7 +33,6 @@ public sealed class DsrP1KnightsScenario : IScenario
     private SimEventObject? prison;
     private bool imprisoned, hallowing, interrupted;
     private float elapsed;
-    private SimCharacter? heavensblazeTarget;
     private int interruptIndex;
 
     public void Run(SimWorld value, int? selectedAi)
@@ -47,8 +46,7 @@ public sealed class DsrP1KnightsScenario : IScenario
         world.Events.Add(14.26f, () => grinnaux.Cast(DimensionCast(Dimension.Empty)));
         world.Events.Add(19.25f, () => DimensionHit(Dimension.Empty));
         world.Events.Add(19.29f, OpeningBash);
-        world.Events.Add(19.29f, () => { heavensblazeTarget = FarthestFrom(charibert.Position); charibert.Cast(0x62DD, heavensblazeTarget); });
-        world.Events.Add(24.28f, () => charibert.Cast(Instant(0x62DD, Damage(split: Distribution.Stack(7))), heavensblazeTarget));
+        world.Events.Add(19.29f, () => charibert.Cast(new EnemyAction(0x62DD) { Effects = [Damage(split: Distribution.Stack(7))], Timing = new() { DamageDelay = CastSpec.ActionEffectOffset } }, FarthestFrom(charibert.Position)));
         world.Events.Add(34.62f, () => { adelphel.SetTargetable(false); adelphel.SetModelHidden(true); grinnaux.SetPosition(Vector3.Zero); MarkSlashes(state.FirstSlashTargets); });
         world.Events.Add(34.71f, () => grinnaux.Cast(0x62D6));
         world.Events.Add(40.86f, () => Slashes(state.FirstSlashTargets));
@@ -89,7 +87,8 @@ public sealed class DsrP1KnightsScenario : IScenario
                     member.CarryTo(DsrP1KnightsState.PrisonCentre + new Vector3(0, 0, 1));
             }
         });
-        world.Events.Add(112.84f, () => charibert.Cast(0x62E4));
+        world.Events.Add(112.30f, () => zephirin.Cast(0x62E2));
+        world.Events.Add(112.84f, () => charibert.Cast(new EnemyAction(0x62E4) { Effects = [Damage()], Timing = new() { DamageDelay = CastSpec.ActionEffectOffset } }));
         world.Events.Add(114.26f, () => imprisoned = true);
         world.Events.Add(115.28f, () => prison?.EObjSetState(1, 0));
         world.Events.Add(121.39f, () =>
@@ -97,7 +96,6 @@ public sealed class DsrP1KnightsScenario : IScenario
             haurchefant = Spawn(13117, 1455, new Vector3(-19, 0, 0));
             haurchefant.PlayActionTimeline(0x1E4C);
         });
-        world.Events.Add(122.28f, () => zephirin.Cast(0x62E2, haurchefant));
         world.Events.Add(122.3f, () => Spawn(11810, 11320, new Vector3(-16, 0, 0)));
         for (var i = 0; i < 7; i++) world.Events.Add(124.11f + i * 1.07f, () => zephirin.Cast(Instant(0x62E3, Damage())));
         foreach (var bait in new[] { 128.16f, 133.2f, 138.23f, 143.27f }) world.Events.Add(bait, Brightwing);
@@ -105,7 +103,6 @@ public sealed class DsrP1KnightsScenario : IScenario
         world.Events.Add(145.32f, () => { imprisoned = false; foreach (var member in world.Party.ActiveMembers()) member.RemoveStatus(0xA66); });
         world.Events.Add(147.7f, () => charibert.SetHealthFraction(.29f));
         world.Events.Add(148.14f, () => prison?.Despawn());
-        world.Events.Add(148.31f, () => charibert.Cast(Instant(0x62E4, Damage())));
         world.Events.Add(150, () => { foreach (var actor in actors) actor.Despawn(); Completed = true; });
         world.ActionResolved += ActionResolved;
         world.OnDespawn(() => world.ActionResolved -= ActionResolved);

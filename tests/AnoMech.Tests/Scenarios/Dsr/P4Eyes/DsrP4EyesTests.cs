@@ -136,11 +136,11 @@ public class DsrP4EyesTests
         var pressed = false;
         var run = ScenarioRun.Execute(typeof(DsrP4EyesScenario), 0, 0, new()
         {
-            PlayerRole = PartyRole.MainTank, StopAt = 120,
-            Takeovers = [new(118.5f, null)], WriteArtifactsOnFailure = false,
+            PlayerRole = PartyRole.MainTank, StopAt = 122,
+            Takeovers = [new(120.44f, null)], WriteArtifactsOnFailure = false,
             Probe = p =>
             {
-                if (!useLb || !p.Crossed(119.1f)) return;
+                if (!useLb || !p.Crossed(121.04f)) return;
                 p.World.NotifyActionResolved(p.Member(PartyRole.MainTank)!, 199, 0);
                 pressed = true;
             },

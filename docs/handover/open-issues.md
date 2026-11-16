@@ -11,13 +11,24 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
-| C11 | **DSR visual cast plus override-0 carrier** | Retail sends one effect per cast (Pure of Heart: cast 35.20 s, hit +35.46–35.48 s, n=3) | Heavensblaze, Pure of Heart, P5 Faith Unmoving, Spear of the Fury and Steep in Rage send two effects from the same caster | In-game check whether the doubled animation shows; then move the effects onto the visual cast |
-| C12 | **DSR Spear of the Fury timing** | Retail (n=3 intermission pulls): Spear cast starts 0.54 s before Pure of Heart, impact at PoH + 9.44 s | P4 rescue sequence lands the impact at PoH + 7.5 s; `DsrP1KnightsScenario` starts the *cast* at PoH + 9.44 s | Owner decision; more intermission pulls |
 
 The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
 and every other P3–P7 override are unchecked.
 
 Resolved 2026-11-16:
+
+- **C11, DSR visual cast plus carrier.** Retail sends one effect per cast. Owner, 2026-11-17: fix it.
+  Heavensblaze, Pure of Heart (P1 and the P4 rescue), P5 Faith Unmoving and Steep in Rage are now a
+  single cast that carries its own effects; Spear of the Fury no longer sends a second effect.
+  Who is hit is now decided at bar end, 0.25–0.3 s earlier than the old carrier; damage, deaths and
+  the Faith Unmoving knockback still show at the effect. The helper-cast carriers (Empty/Full
+  Dimension, P1 Faith Unmoving, Cauterize, Akh Morn, Hot Wing/Tail) are unchanged. Not checked in game.
+- **C12, DSR Spear of the Fury timing.** Retail (3 intermission pulls): the cast starts 0.54 s before
+  Pure of Heart and hits at Pure of Heart + 9.44 s. Owner, 2026-11-17: fix it. P1 now starts the cast
+  at 112.30 instead of at the hit time. The P4 rescue starts it at +19.46 and lands the impact at
+  +29.44 (was +27.5). Haurchefant's appearance and the bot tank LB moved with it (+28.55, +28.84),
+  keeping P1's 0.89 s lead, and the first Spear follow-up tick at +29.0 was dropped. UNVERIFIED for
+  the rescue itself: no retail capture of that sequence exists; its times are carried over from P1.
 
 - **C10, FRU Fall of Faith cast length.** Retail: bar 8.70 s, hit 8.94–9.02 s after cast start (472
   casts, 27 logs). The scenario counted its bar down from 9.0 s, so the effect landed at reveal +
