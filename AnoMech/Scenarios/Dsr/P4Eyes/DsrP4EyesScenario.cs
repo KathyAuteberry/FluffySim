@@ -123,13 +123,13 @@ public sealed class DsrP4EyesScenario : IScenario
         world.Events.Add(19.30f, () => { ysayle?.FadeOut(); haurchefant?.FadeOut(); });
         world.Events.Add(24.70f, Resentment);
 
-        world.Events.Add(30.02f, () => { CastSelf(leftEye, ActionId.Hatebound, 2.7f); CastSelf(rightEye, ActionId.Hatebound, 2.7f); });
+        world.Events.Add(30.02f, () => { leftEye?.Cast(ActionId.Hatebound); rightEye?.Cast(ActionId.Hatebound); });
         world.Events.Add(OrbSpawnTime, SpawnOrbs);
         world.Events.Add(33.75f, BindEveryone);
         world.Events.Add(OrbSpawnTime + Orbs.GildedBursts, () => BurstUnpopped(gilded: true));
         world.Events.Add(OrbSpawnTime + Orbs.AzureBursts, () => BurstUnpopped(gilded: false));
 
-        world.Events.Add(56.10f, () => { CastSelf(leftEye, ActionId.MirageDiveWindup, 2.7f); CastSelf(rightEye, ActionId.MirageDiveWindup, 2.7f); });
+        world.Events.Add(56.10f, () => { leftEye?.Cast(ActionId.MirageDiveWindup); rightEye?.Cast(ActionId.MirageDiveWindup); });
         for (var i = 0; i < DiveTimes.Length; i++)
         {
             var dive = i;
@@ -137,7 +137,7 @@ public sealed class DsrP4EyesScenario : IScenario
         }
         world.Events.Add(76.00f, TryDefeatBlueEye);
         world.Events.Add(84.90f, TryDefeatBlueEye);
-        world.Events.Add(79.10f, () => CastSelf(leftEye, ActionId.SteepInRage, 5.7f));
+        world.Events.Add(79.10f, () => leftEye?.Cast(ActionId.SteepInRage));
         world.Events.Add(85.05f, SteepInRage);
         world.Events.Add(86.30f, () => leftEye?.Defeat());
         world.Events.Add(89.20f, Unbind);
@@ -492,9 +492,6 @@ public sealed class DsrP4EyesScenario : IScenario
             if (party.Get(slot) is { } member && !member.Dead)
                 yield return member;
     }
-
-    private static void CastSelf(SimEnemy? caster, uint actionId, float castSeconds) =>
-        caster?.Cast(new EnemyAction(actionId) { Cast = new() { CastSecondsOverride = castSeconds } });
 
     private static void PlayEffect(SimEnemy? caster, uint actionId, float animationLock, Vector3? at = null) =>
         caster?.Cast(new EnemyAction(actionId) { Cast = new() { CastSecondsOverride = 0, AnimationLock = animationLock }, Timing = new() { DamageDelay = 0 } }, at is { } spot ? (CastTarget)spot : default);

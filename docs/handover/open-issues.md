@@ -11,7 +11,20 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
-| C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
+| C9 | **`CastSecondsOverride = 0` on sheet-instant actions** | Retail sends no cast for them and shows the effect at the hit (DSR P1/P2 instants, 16 DMU action IDs, Provoke). `EnemyActionHandler` sends the ActionEffect `ActionEffectOffset` after any overridden bar, 0 included | 18 override lines plus four `Instant`/`Hit` helpers in DSR and DMU show the effect 0.3 s after the hit; damage timing is right | Owner decision: drop the overrides (or treat a 0 override as instant in the handler). `docs/verification/CAST-OVERRIDE-AUDIT-2026-11-16.md` |
+| C10 | **FRU Fall of Faith cast length** | Retail: bar 8.70 s, hit 8.94–9.02 s after cast start (472 casts, 27 logs) | `FruFallOfFaithScenario` overrides the bar to the time remaining of 9.0 s, so the effect lands at reveal + 9.3 s | Owner decision: base the remaining time on 8.7 s |
+| C11 | **DSR visual cast plus override-0 carrier** | Retail sends one effect per cast (Pure of Heart: cast 35.20 s, hit +35.46–35.48 s, n=3) | Heavensblaze, Pure of Heart, P5 Faith Unmoving, Spear of the Fury and Steep in Rage send two effects from the same caster | In-game check whether the doubled animation shows; then move the effects onto the visual cast |
+| C12 | **DSR Spear of the Fury timing** | Retail (n=3 intermission pulls): Spear cast starts 0.54 s before Pure of Heart, impact at PoH + 9.44 s | P4 rescue sequence lands the impact at PoH + 7.5 s; `DsrP1KnightsScenario` starts the *cast* at PoH + 9.44 s | Owner decision; more intermission pulls |
+
+The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
+and every other P3–P7 override are unchecked.
+
+Resolved 2026-11-16:
+
+- **C4, ACT timestamps.** They are the packet header time, not receive time: in the DMU capture they
+  equal RaidTrace `server_time` to the millisecond across about 4,700 records. They are still not the
+  server's snapshot time, so positions and headings in `21/22` rows can be stale. `workflow.md` §3.2
+  and §3.3 are reworded.
 
 Resolved 2026-11-14 from the 2026-11-13 DMU capture (ACT log and RaidTrace `20261113-150916-duty1094`):
 
@@ -164,8 +177,8 @@ presentation detail added since October still awaits an in-game check. The highe
 - The earliest FluffySim work (2026-10-09 to 10-12) was done inside `~/Projekty/anomek/AnoMech`,
   which is now treated as a read-only reference; that checkout is clean.
 - Codex built Release locally on 2026-10-09/10 before the Debug-only rule existed (2026-10-11).
-- The FRU arena-diagnostic scenarios were removed on 2026-11-13; `Dsr/DsrArenaDiagnosticScenario.cs`
-  remains as unreferenced dead code.
+- The FRU arena-diagnostic scenarios were removed on 2026-11-13 and `Dsr/DsrArenaDiagnosticScenario.cs`
+  on 2026-11-16.
 - RaidTrace captures are readable with `tools/rtrace.py` (`tools.md`), but **only tracer 0.3.1+
   captures are trustworthy**. The owner reports older captures fail on raidtrace.com. Local checks agree:
   tracer 0.2.6 captures hold no actions; most 0.3.0 captures hold none either; and 0.3.0 has

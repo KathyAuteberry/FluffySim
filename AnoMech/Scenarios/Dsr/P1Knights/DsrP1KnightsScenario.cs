@@ -228,7 +228,7 @@ public sealed class DsrP1KnightsScenario : IScenario
     private void Hallowing()
     {
         var generation = ++interruptIndex; hallowing = true; interrupted = false;
-        adelphel.Cast(new EnemyAction(0x62D0) { Cast = new() { CastSecondsOverride = 3.7f, Interruptible = true } }, grinnaux);
+        adelphel.Cast(new EnemyAction(0x62D0) { Cast = new() { Interruptible = true } }, grinnaux);
         var assigned = DsrP1KnightsState.HallowingInterrupters[Math.Min(generation - 1, 2)];
         world.Events.Add(1.6f, () =>
         {
