@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
@@ -193,19 +194,19 @@ public sealed class DsrP5DeathAi : IScenarioAi<DsrP5DeathState>
         foreach (var role in state.Dooms)
         {
             if (world.Party.Get(role) is not { } member || state.Puddles.Count == 0) continue;
-            var at = Flat(member.Position);
-            spots[(int)role] = state.Puddles.Select(Flat).OrderBy(p => Vector2.Distance(p, at)).First();
+            var at = Planar.Flat(member.Position);
+            spots[(int)role] = state.Puddles.Select(Planar.Flat).OrderBy(p => Vector2.Distance(p, at)).First();
         }
         return spots;
     }
 
     private void FaceAwayFromBothGazes()
     {
-        var sources = new[] { Flat(state.ThordanSpot), Flat(state.EyeSpot) };
+        var sources = new[] { Planar.Flat(state.ThordanSpot), Planar.Flat(state.EyeSpot) };
         foreach (var role in Enum.GetValues<PartyRole>())
         {
             if (world.Party.Get(role) is not { } member || !world.Party.IsBotDriven(member)) continue;
-            var at = Flat(member.Position);
+            var at = Planar.Flat(member.Position);
             var bestFacing = 0f;
             var bestMargin = -1f;
             for (var degrees = 0f; degrees < 360f; degrees += 5f)
@@ -221,17 +222,16 @@ public sealed class DsrP5DeathAi : IScenarioAi<DsrP5DeathState>
         }
     }
 
-    private Vector2 WarriorFrame(float radius, float bearing) => Flat(AtBearing(state.WarriorBearing + bearing, radius));
+    private Vector2 WarriorFrame(float radius, float bearing) => Planar.Flat(AtBearing(state.WarriorBearing + bearing, radius));
 
     private Vector2 Local(float towardWarrior, float east)
     {
-        var u = Flat(AtBearing(state.WarriorBearing, 1f));
-        var v = Flat(AtBearing(state.WarriorBearing + 90f, 1f));
+        var u = Planar.Flat(AtBearing(state.WarriorBearing, 1f));
+        var v = Planar.Flat(AtBearing(state.WarriorBearing + 90f, 1f));
         return u * towardWarrior + v * east;
     }
 
     private static Vector2?[] Stacked(Vector2 centre) =>
         Enumerable.Range(0, 8).Select(i => (Vector2?)(centre + new Vector2(0.5f * (i % 3 - 1), 0.5f * (i / 3 - 1)))).ToArray();
 
-    private static Vector2 Flat(Vector3 p) => new(p.X, p.Z);
 }

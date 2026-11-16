@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AnoMech.Core.Game;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 
@@ -99,7 +100,7 @@ public sealed class DsrP1KnightsState
         return role > partner;
     }
 
-    public Vector3 AdelphelLanding => DsrP1Constants.AtBearing(AdelphelLandingBearing, DsrP1Constants.Geometry.ArenaHalfWidth);
+    public Vector3 AdelphelLanding => Planar.AtBearing(AdelphelLandingBearing, DsrP1Constants.Geometry.ArenaHalfWidth);
 
     public IReadOnlyList<Vector3> AdelphelDashPath()
     {
@@ -108,11 +109,11 @@ public sealed class DsrP1KnightsState
         var r = DsrP1Constants.Geometry.ArenaHalfWidth;
         return
         [
-            DsrP1Constants.AtBearing(a, r),
-            DsrP1Constants.AtBearing(b, r),
-            DsrP1Constants.AtBearing(b + 180f, r),
-            DsrP1Constants.AtBearing(a + 180f, r),
-            DsrP1Constants.AtBearing(a, r),
+            Planar.AtBearing(a, r),
+            Planar.AtBearing(b, r),
+            Planar.AtBearing(b + 180f, r),
+            Planar.AtBearing(a + 180f, r),
+            Planar.AtBearing(a, r),
         ];
     }
 

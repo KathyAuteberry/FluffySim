@@ -34,20 +34,14 @@ public sealed class DmuGravenImage3Ai : IScenarioAi<DmuGravenImage3State>
         world.Events.Add(41.1f, FaceTheGaze);
     }
 
-    private static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
-    {
-        var coords = new Vector2?[8];
-        foreach (var (role, spot) in spots) coords[(int)role] = spot;
-        return AiMove.Create(coords).NaturalOrder();
-    }
 
-    private static IAiMove StartPositions() => ByRole(
+    private static IAiMove StartPositions() => AiMove.ByRole(
         (MainTank, new(0f, -6f)), (OffTank, new(-3f, -2f)),
         (RegenHealer, new(-3f, 3f)), (ShieldHealer, new(3f, 3f)),
         (MeleeDpsA, new(-1.5f, 2f)), (MeleeDpsB, new(1.5f, 2f)),
         (PhysRangedDps, new(-3f, 4.5f)), (CasterDps, new(3f, 4.5f)));
 
-    private IAiMove DropSpots(bool early) => ByRole(PerRole.All.Select(role =>
+    private IAiMove DropSpots(bool early) => AiMove.ByRole(PerRole.All.Select(role =>
     {
         var (first, second) = DmuGravenImage3State.DropSpots(state.Arrows8[role]);
         return (role, early ? first : second);
@@ -56,7 +50,7 @@ public sealed class DmuGravenImage3Ai : IScenarioAi<DmuGravenImage3State>
     private bool HoldsTrap(PartyRole role)
         => world.Party.Get(role) is { } member && (member.HasStatus(DmuConstants.StatusId.DoubleTroubleTrap) || member.ShowsStatus(DmuConstants.StatusId.DoubleTroubleTrap));
 
-    private IAiMove TrapStacks() => ByRole(PerRole.All.Select(role =>
+    private IAiMove TrapStacks() => AiMove.ByRole(PerRole.All.Select(role =>
     {
         var side = role.IsDps() ? 1f : -1f;
         return (role, new Vector2(side * (HoldsTrap(role) ? 8f : 4.5f), 0f));
@@ -70,7 +64,7 @@ public sealed class DmuGravenImage3Ai : IScenarioAi<DmuGravenImage3State>
         RegenHealer => new(-8.5f, 8.5f), _ => new(8.5f, 8.5f),
     };
 
-    private static IAiMove TeleportSpread() => ByRole(PerRole.All.Select(role => (role, SpreadSpot(role))).ToArray());
+    private static IAiMove TeleportSpread() => AiMove.ByRole(PerRole.All.Select(role => (role, SpreadSpot(role))).ToArray());
 
     private static Vector2 SpreadAnchor(PartyRole role) => role switch
     {
@@ -83,7 +77,7 @@ public sealed class DmuGravenImage3Ai : IScenarioAi<DmuGravenImage3State>
     private IAiMove FinalMysteryMagic()
     {
         bool Safe(Vector2 p) => DmuMysteryMagic.SafeFromThunder(p, state.Thunder, margin: 1.5f);
-        return ByRole(PerRole.All.Select(role =>
+        return AiMove.ByRole(PerRole.All.Select(role =>
         {
             var anchor = state.Fire.Stacks ? role.IsDps() ? new Vector2(-7.5f, -7.5f) : new Vector2(6f, 6f) : SpreadAnchor(role);
             return (role, DmuMysteryMagic.NearestSafe(anchor, Safe, reach: 19f));

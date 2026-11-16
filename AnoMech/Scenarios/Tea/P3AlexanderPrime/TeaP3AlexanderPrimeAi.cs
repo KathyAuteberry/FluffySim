@@ -10,6 +10,7 @@ using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using static AnoMech.Core.Game.Party.PartyRole;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P3AlexanderPrime;
 
@@ -178,7 +179,7 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         _ => new(2.2f, 8.4f),
     };
 
-    private static Vector2 MidRing(PartyRole role) => Polar(45f * (int)role, RingRadius);
+    private static Vector2 MidRing(PartyRole role) => Geometry.Polar(45f * (int)role, RingRadius);
 
     protected virtual Vector2 SecondSetSpot(PartyRole role) => role switch
     {
@@ -199,7 +200,7 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         _ => new(-1.8f, 6.6f),
     };
 
-    private static Vector2 AddStackSpot(PartyRole role, Vector2 centre) => centre + Polar(45f * (int)role, 0.9f);
+    private static Vector2 AddStackSpot(PartyRole role, Vector2 centre) => centre + Geometry.Polar(45f * (int)role, 0.9f);
 
     protected static Vector2 InceptionWaitSpot(PartyRole role) => role switch
     {
@@ -364,15 +365,15 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         var sacrament = 22.5f + 45f * sacramentSpotSeen;
         var left = sacrament - 90f;
         var right = sacrament + 90f;
-        SprintIfFar(MainTank, Polar(left - 3.6f, WingRadius));
-        SprintIfFar(OffTank, Polar(left + 3.6f, WingRadius));
-        SprintIfFar(state.SharedSentence, Polar(left, WingRadius - 1.0f));
-        SprintIfFar(state.RestrainingOrderDps, Polar(right, WingRadius));
+        SprintIfFar(MainTank, Geometry.Polar(left - 3.6f, WingRadius));
+        SprintIfFar(OffTank, Geometry.Polar(left + 3.6f, WingRadius));
+        SprintIfFar(state.SharedSentence, Geometry.Polar(left, WingRadius - 1.0f));
+        SprintIfFar(state.RestrainingOrderDps, Geometry.Polar(right, WingRadius));
         var assaulted = state.AggravatedAssault.ToList();
-        SprintIfFar(assaulted[0], Polar(right - 3.6f, WingRadius));
-        SprintIfFar(assaulted[1], Polar(right + 3.6f, WingRadius));
-        SprintIfFar(RegenHealer, Polar(right - 2.2f, WingRadius - 1.6f));
-        SprintIfFar(ShieldHealer, Polar(right + 2.2f, WingRadius - 1.6f));
+        SprintIfFar(assaulted[0], Geometry.Polar(right - 3.6f, WingRadius));
+        SprintIfFar(assaulted[1], Geometry.Polar(right + 3.6f, WingRadius));
+        SprintIfFar(RegenHealer, Geometry.Polar(right - 2.2f, WingRadius - 1.6f));
+        SprintIfFar(ShieldHealer, Geometry.Polar(right + 2.2f, WingRadius - 1.6f));
     }
 
     protected virtual void TakeSwordAndJumpSpots()
@@ -761,17 +762,8 @@ public class TeaP3AlexanderPrimeAi : IScenarioAi<TeaP3AlexanderPrimeState>
         return true;
     }
 
-    private static float DistanceToSegment(Vector2 point, Vector2 from, Vector2 to)
-    {
-        var leg = to - from;
-        var lengthSquared = leg.LengthSquared();
-        var t = lengthSquared < 1e-6f ? 0f : Math.Clamp(Vector2.Dot(point - from, leg) / lengthSquared, 0f, 1f);
-        return Vector2.Distance(from + leg * t, point);
-    }
 
     protected SimCharacter? Member(PartyRole role) => world.Party.Get(role) is { } member && member.IsAlive() ? member : null;
 
-    private static Vector2 Polar(float degrees, float radius) => Flat(Geometry.OnCompass(degrees, radius));
 
-    protected static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

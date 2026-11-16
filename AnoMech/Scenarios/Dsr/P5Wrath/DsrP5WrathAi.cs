@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Geometry;
 using AnoMech.Core;
@@ -86,7 +87,7 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
             if (spots[(int)role] is not { } goal || world.Party.Get(role) is not { } member || !member.IsAlive() || !world.Party.IsBotDriven(member)) continue;
             var version = routeVersions.GetValueOrDefault(role) + 1;
             routeVersions[role] = version;
-            var start = Flat(member.Position);
+            var start = Planar.Flat(member.Position);
             var hazards = state.Twisters.Select(t => t.Hazard).ToArray();
             var clockwise = state.Marked.Contains(role);
             IReadOnlyList<Vector2>? RouteTo(Vector2 target)
@@ -125,13 +126,13 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
             {
                 if (routeVersions.GetValueOrDefault(role) != version || !member.IsAlive() || !world.Party.IsBotDriven(member) || index >= route.Count) return;
                 var next = route[index];
-                if (!TimedCircleRoute.SegmentClear(Flat(member.Position), next, world.Events.Elapsed, AiManager.SprintSpeed, state.Twisters.Select(t => t.Hazard).ToArray()))
+                if (!TimedCircleRoute.SegmentClear(Planar.Flat(member.Position), next, world.Events.Elapsed, AiManager.SprintSpeed, state.Twisters.Select(t => t.Hazard).ToArray()))
                 {
                     DiagnosticLog.Info($"[Wrath] Hazard changed on route for {role}; replanning");
                     NavigateTwisters(Only(role, goal));
                     return;
                 }
-                var duration = Vector2.Distance(Flat(member.Position), next) / AiManager.SprintSpeed;
+                var duration = Vector2.Distance(Planar.Flat(member.Position), next) / AiManager.SprintSpeed;
                 member.MoveTo(new(next.X, 0, next.Y), speed: AiManager.SprintSpeed);
                 world.Events.Add(duration + .02f, () => Walk(index + 1));
             }
@@ -292,21 +293,21 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
         return last.Y < 0f ? -1f : 1f;
     }
 
-    private Vector2 DragonFrame(float relativeBearing, float radius) => Flat(AtBearing(state.DragonBearing + relativeBearing, radius));
+    private Vector2 DragonFrame(float relativeBearing, float radius) => Planar.Flat(AtBearing(state.DragonBearing + relativeBearing, radius));
 
-    private Vector2 WarriorFrame(float radius, float angle) => Flat(AtBearing(state.WarriorBearing + angle, radius));
+    private Vector2 WarriorFrame(float radius, float angle) => Planar.Flat(AtBearing(state.WarriorBearing + angle, radius));
 
     private Vector2 Local(Vector2 frame)
     {
-        var u = Flat(AtBearing(state.WarriorBearing, 1f));
-        var v = Flat(AtBearing(state.WarriorBearing + 90f, 1f));
+        var u = Planar.Flat(AtBearing(state.WarriorBearing, 1f));
+        var v = Planar.Flat(AtBearing(state.WarriorBearing + 90f, 1f));
         return u * frame.X + v * frame.Y;
     }
 
     private Vector2 WarriorLocal(Vector2 world2)
     {
-        var u = Flat(AtBearing(state.WarriorBearing, 1f));
-        var v = Flat(AtBearing(state.WarriorBearing + 90f, 1f));
+        var u = Planar.Flat(AtBearing(state.WarriorBearing, 1f));
+        var v = Planar.Flat(AtBearing(state.WarriorBearing + 90f, 1f));
         return new Vector2(Vector2.Dot(world2, u), Vector2.Dot(world2, v));
     }
 
@@ -322,5 +323,4 @@ public sealed class DsrP5WrathAi : IScenarioAi<DsrP5WrathState>
     private static Vector2?[] Stacked(Vector2 centre) =>
         Enumerable.Range(0, 8).Select(i => (Vector2?)(centre + new Vector2(0.5f * (i % 3 - 1), 0.5f * (i / 3 - 1)))).ToArray();
 
-    private static Vector2 Flat(Vector3 p) => new(p.X, p.Z);
 }

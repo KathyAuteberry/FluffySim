@@ -1,11 +1,12 @@
 using System;
 using System.Numerics;
+using AnoMech.Core.Game;
 
 namespace AnoMech.Scenarios.Dsr;
 
 public static class DsrP5Constants
 {
-    public static Vector3 AtBearing(float degrees, float radius) => new(radius * MathF.Sin(degrees * MathF.PI / 180), 0, -radius * MathF.Cos(degrees * MathF.PI / 180));
+    public static Vector3 AtBearing(float degrees, float radius) => Planar.AtBearing(degrees, radius);
     public static class BNpcBaseId
     {
         public const uint Dummy = 9020;

@@ -7,6 +7,7 @@ using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using static AnoMech.Core.Game.Party.PartyRole;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P1LivingLiquid;
 
@@ -262,7 +263,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
         var turn = ((Bearing(exit - centre) - from + 540f) % 360f) - 180f;
         if (AngleBetween(Bearing(d), from + turn / 2f) < MathF.Abs(turn) / 2f) turn -= MathF.CopySign(360f, turn);
         var steps = Math.Max(1, (int)MathF.Ceiling(MathF.Abs(turn) / 30f));
-        return [.. Enumerable.Range(0, steps + 1).Select(i => centre + TornadoT.Polar(from + turn * i / steps, ring))];
+        return [.. Enumerable.Range(0, steps + 1).Select(i => centre + TeaConstants.Geometry.Polar(from + turn * i / steps, ring))];
     }
 
     private Vector2[] OutToTheSouthTornado()
@@ -358,7 +359,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
         var all = live.Concat(puddles).ToList();
         bool Clear(Vector2 a, Vector2 b) => all.All(k => SegmentDistance(a, b, k.A, k.B) >= k.Radius);
         var candidates = live
-            .SelectMany(k => new[] { k.A, k.B, (k.A + k.B) / 2f }.Distinct().SelectMany(c => ((float[])[0.7f, 2f]).SelectMany(extra => Enumerable.Range(0, 24).Select(i => c + TornadoT.Polar(i * 15f, k.Radius + extra)))))
+            .SelectMany(k => new[] { k.A, k.B, (k.A + k.B) / 2f }.Distinct().SelectMany(c => ((float[])[0.7f, 2f]).SelectMany(extra => Enumerable.Range(0, 24).Select(i => c + TeaConstants.Geometry.Polar(i * 15f, k.Radius + extra)))))
             .Where(c => c.Length() <= 18.5f && all.All(k => DistanceToSegment(c, k.A, k.B) >= k.Radius + 0.1f))
             .ToList();
         var single = candidates.Where(c => Clear(from, c) && Clear(c, to)).OrderBy(c => Vector2.Distance(from, c) + Vector2.Distance(c, to)).ToList();
@@ -448,7 +449,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
         for (var cx = -6f; cx <= 6f; cx += 1.5f)
         for (var cz = -6f; cz <= 6f; cz += 1.5f)
         {
-            var axis = TornadoT.Polar(bearing, 1f);
+            var axis = TeaConstants.Geometry.Polar(bearing, 1f);
             var centre = new Vector2(cx, cz);
             var livingLiquidEnd = centre + axis * (BossesApartForPrayer / 2f);
             var handEnd = centre - axis * (BossesApartForPrayer / 2f);
@@ -542,7 +543,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
                 for (var bearing = 0f; bearing < 360f; bearing += 15f)
                 {
                     if (AngleBetween(bearing, swing) < 75f) continue;
-                    var spot = meet + TornadoT.Polar(bearing, distance);
+                    var spot = meet + TeaConstants.Geometry.Polar(bearing, distance);
                     if (Standable(spot, 15.5f) && (party is null || Clear(spot) > partyClearance))
                         (party, partyClearance) = (spot, Clear(spot));
                 }
@@ -590,7 +591,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
     {
         var relativeTornado = tornado switch { TornadoT.West => new Vector2(-TornadoT.Radius, 0f), TornadoT.East => new Vector2(TornadoT.Radius, 0f), _ => new Vector2(0f, TornadoT.Radius) };
         var towardCentre = tornado switch { TornadoT.West => 90f, TornadoT.East => 270f, _ => 0f };
-        return frame.Abs(relativeTornado + TornadoT.Polar(towardCentre + degrees, distance));
+        return frame.Abs(relativeTornado + TeaConstants.Geometry.Polar(towardCentre + degrees, distance));
     }
 
     private Vector2 MeleeBesideDoll(PartyRole role)
@@ -600,9 +601,9 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
         return doll + Vector2.Normalize(doll - nearest) * 1.6f;
     }
 
-    private Vector2 MeleeOnDoll(PartyRole role) => TornadoT.Polar(DollBearing(role), 7.3f);
+    private Vector2 MeleeOnDoll(PartyRole role) => TeaConstants.Geometry.Polar(DollBearing(role), 7.3f);
 
-    private Vector2 DollSpot(PartyRole role) => TornadoT.Polar(DollBearing(role), 7f);
+    private Vector2 DollSpot(PartyRole role) => TeaConstants.Geometry.Polar(DollBearing(role), 7f);
 
     private float DollBearing(PartyRole role)
     {
@@ -684,7 +685,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
     private static Vector2 BesideFacing(Vector2 side, Vector2 facing)
     {
         var turn = ((Bearing(side) - Bearing(facing) + 540f) % 360f) - 180f;
-        return MathF.Abs(turn) >= FeedOutsideBossFacing ? side : TornadoT.Polar(Bearing(facing) + MathF.CopySign(FeedOutsideBossFacing, turn), 1f);
+        return MathF.Abs(turn) >= FeedOutsideBossFacing ? side : TeaConstants.Geometry.Polar(Bearing(facing) + MathF.CopySign(FeedOutsideBossFacing, turn), 1f);
     }
 
     private Vector2? HoldSpotClearOfBosses(SimCharacter member)
@@ -695,7 +696,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
         for (var bearing = 0f; bearing < 360f; bearing += 15f)
         foreach (var radius in (float[])[8f, 10f, 12f])
         {
-            var spot = TornadoT.Polar(bearing, radius);
+            var spot = TeaConstants.Geometry.Polar(bearing, radius);
             if (!Dry(spot) || !PathClearOfEmboli(at, spot, member.HitboxRadius)) continue;
             if (bosses.Any(b => DistanceToSegment(b, at, spot) < DollTooCloseToBoss)) continue;
             var clearance = MathF.Min(BossClearance(spot), HoldClearOfBosses);
@@ -746,21 +747,14 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
     }
 
     private Vector2 AroundLivingLiquid(TornadoT frame, float relativeBearing, float radius)
-        => Flat(state.Objects.LivingLiquid?.Position ?? Vector3.Zero) + frame.Abs(TornadoT.Polar(relativeBearing, radius));
+        => Flat(state.Objects.LivingLiquid?.Position ?? Vector3.Zero) + frame.Abs(TeaConstants.Geometry.Polar(relativeBearing, radius));
 
     private Vector2 AroundLiquidHand(TornadoT frame, float relativeBearing, float radius)
-        => Flat(state.Objects.LiquidHand?.Position ?? Vector3.Zero) + frame.Abs(TornadoT.Polar(relativeBearing, radius));
+        => Flat(state.Objects.LiquidHand?.Position ?? Vector3.Zero) + frame.Abs(TeaConstants.Geometry.Polar(relativeBearing, radius));
 
     private Vector2 AroundFacing(float degreesFromFacing, float radius)
-        => Flat(state.Objects.LivingLiquid?.Position ?? Vector3.Zero) + TornadoT.Polar(proteanFacing + degreesFromFacing, radius);
+        => Flat(state.Objects.LivingLiquid?.Position ?? Vector3.Zero) + TeaConstants.Geometry.Polar(proteanFacing + degreesFromFacing, radius);
 
-    private static float DistanceToSegment(Vector2 p, Vector2 a, Vector2 b)
-    {
-        var ab = b - a;
-        if (ab.LengthSquared() < 1e-6f) return Vector2.Distance(p, a);
-        var t = Math.Clamp(Vector2.Dot(p - a, ab) / ab.LengthSquared(), 0f, 1f);
-        return Vector2.Distance(p, a + ab * t);
-    }
 
     private static float SegmentDistance(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
     {
@@ -786,9 +780,7 @@ public sealed class TeaP1LivingLiquidAptAi : IScenarioAi<TeaP1LivingLiquidState>
 
     private static float AngleBetween(float a, float b) => MathF.Abs(((a - b + 540f) % 360f) - 180f);
 
-    private static Vector2 Forward(float rotation) => new(MathF.Sin(rotation), MathF.Cos(rotation));
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 
     private static float OrbRadius(SimEnemy orb) => orb.PacketSpawnPending ? TeaConstants.Geometry.EmbolusRadius : orb.HitboxRadius;
 }

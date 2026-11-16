@@ -20,18 +20,12 @@ public readonly record struct TornadoT(int OpenSide)
 
     public float Bearing(float relative) => OpenSide + relative;
 
-    public Vector2 Tornado(int index) => Abs(Polar(RelativeBearings[index], Radius));
+    public Vector2 Tornado(int index) => Abs(Geometry.Polar(RelativeBearings[index], Radius));
 
     public Vector2 Abs(Vector2 relative)
     {
         var radians = float.DegreesToRadians(OpenSide);
         var (cos, sin) = (MathF.Cos(radians), MathF.Sin(radians));
         return new Vector2(relative.X * cos - relative.Y * sin, relative.X * sin + relative.Y * cos);
-    }
-
-    public static Vector2 Polar(float bearing, float radius)
-    {
-        var p = Geometry.OnCompass(bearing, radius);
-        return new Vector2(p.X, p.Z);
     }
 }

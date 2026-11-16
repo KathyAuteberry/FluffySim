@@ -106,7 +106,7 @@ public sealed class DsrSanctity2State
             var index = rng.Next(remaining.Count); FirstTowers[(int)role] = 12+remaining[index]; remaining.RemoveAt(index);
         }
     }
-    public static Vector3 Direction(float angle) => new(MathF.Sin(angle),0,-MathF.Cos(angle));
+    public static Vector3 Direction(float angle) => AnoMech.Core.Game.Planar.Direction(angle);
     public static Vector3 TowerPosition(int index) => index < 12
         ? Direction((index/3*90+(index%3-1)*30)*MathF.PI/180)*18f
         : Direction(((index-12)*90+45)*MathF.PI/180)*6f;

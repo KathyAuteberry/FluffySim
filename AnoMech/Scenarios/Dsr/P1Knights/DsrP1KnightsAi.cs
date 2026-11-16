@@ -6,6 +6,7 @@ using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Dsr.P1Knights;
 
@@ -105,15 +106,15 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
 
     private Vector2?[] GroupOppositeAdelphel()
     {
-        var opposite = Flat(DsrP1Constants.AtBearing(state.AdelphelLandingBearing + 180f, 5f));
+        var opposite = Flat(Planar.AtBearing(state.AdelphelLandingBearing + 180f, 5f));
         return Enumerable.Repeat<Vector2?>(opposite, 8).ToArray();
     }
 
     private Vector2?[] GroupInSafeQuadrantMainTankPastThem()
     {
         var bearing = state.SafeQuadrantBearing();
-        var spots = Enumerable.Repeat<Vector2?>(Flat(DsrP1Constants.AtBearing(bearing, SafeQuadrantRadius)), 8).ToArray();
-        spots[(int)PartyRole.OffTank] = Flat(DsrP1Constants.AtBearing(bearing, ExecutionBaitRadius));
+        var spots = Enumerable.Repeat<Vector2?>(Flat(Planar.AtBearing(bearing, SafeQuadrantRadius)), 8).ToArray();
+        spots[(int)PartyRole.OffTank] = Flat(Planar.AtBearing(bearing, ExecutionBaitRadius));
         return spots;
     }
 
@@ -124,12 +125,12 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
         {
             var bearing = state.ChainBearing(role);
             var radius = bearing % 90f == 0f ? CardinalChainStart : DiagonalChainStart;
-            spots[(int)role] = Flat(DsrP1Constants.AtBearing(bearing, radius));
+            spots[(int)role] = Flat(Planar.AtBearing(bearing, radius));
         }
         return spots;
     }
 
-    private Vector2?[] ChainEdges() => Enum.GetValues<PartyRole>().Select(role => (Vector2?)Flat(DsrP1Constants.AtBearing(state.ChainBearing(role), 20f))).ToArray();
+    private Vector2?[] ChainEdges() => Enum.GetValues<PartyRole>().Select(role => (Vector2?)Flat(Planar.AtBearing(state.ChainBearing(role), 20f))).ToArray();
 
     private static Vector2?[] MaxMeleeAroundGrinnaux()
     {
@@ -139,7 +140,7 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
         float[] southBearings = [165f, 195f, 150f, 210f, 175f, 185f];
         PartyRole[] rest = [PartyRole.RegenHealer, PartyRole.ShieldHealer, PartyRole.MeleeDpsA, PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps];
         for (var i = 0; i < rest.Length; i++)
-            spots[(int)rest[i]] = Flat(DsrP1Constants.AtBearing(southBearings[i], FullDimensionRadius));
+            spots[(int)rest[i]] = Flat(Planar.AtBearing(southBearings[i], FullDimensionRadius));
         return spots;
     }
 
@@ -177,5 +178,4 @@ public sealed class DsrP1KnightsAi : IScenarioAi<DsrP1KnightsState>
         return spots;
     }
 
-    private static Vector2 Flat(Vector3 p) => new(p.X, p.Z);
 }

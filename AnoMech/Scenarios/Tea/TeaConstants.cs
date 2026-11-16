@@ -501,5 +501,7 @@ public static class TeaConstants
             var heading = float.DegreesToRadians(degrees);
             return new Vector3(radius * MathF.Sin(heading), 0f, -radius * MathF.Cos(heading));
         }
+
+        public static Vector2 Polar(float degrees, float radius) => Planar.Flat(OnCompass(degrees, radius));
     }
 }

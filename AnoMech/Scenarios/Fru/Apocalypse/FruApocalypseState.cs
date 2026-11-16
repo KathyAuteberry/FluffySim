@@ -73,7 +73,7 @@ public sealed class FruApocalypseState
         BaitTank=o.Advanced ? o.BaitTank??defaultBait : defaultBait;
     }
     public int Order(PartyRole role)=>Distributions[Permutation][(int)role];
-    public static Vector3 Direction(float angle)=>new(MathF.Sin(angle),0,-MathF.Cos(angle));
+    public static Vector3 Direction(float angle)=>AnoMech.Core.Game.Planar.Direction(angle);
     public IReadOnlyList<Vector3> Wave(int wave)
     {
         var result=new List<Vector3>();

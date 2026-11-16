@@ -10,6 +10,7 @@ using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using static AnoMech.Core.Game.Party.PartyRole;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P4PerfectAlexander;
 
@@ -513,5 +514,4 @@ public abstract class TeaP4PerfectAlexanderAiBase : IScenarioAi<TeaP4PerfectAlex
 
     private SimCharacter? Member(PartyRole role) => world.Party.Get(role) is { } member && member.IsAlive() ? member : null;
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

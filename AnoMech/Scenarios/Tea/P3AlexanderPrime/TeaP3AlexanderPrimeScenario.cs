@@ -12,6 +12,7 @@ using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using AnoMech.Multiplayer;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P3AlexanderPrime;
 
@@ -1311,5 +1312,4 @@ public sealed class TeaP3AlexanderPrimeScenario : IMultiplayerReplayable
 
     private static string RoleName(SimCharacter member) => (member as ISimPartyMember)?.Role.ToString() ?? "?";
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

@@ -38,23 +38,17 @@ public sealed class DmuGravenImage1Ai : IScenarioAi<DmuGravenImage1State>
         ai.Move(50.3f, MysteryMagic2Dodge, sprint: true);
     }
 
-    private static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
-    {
-        var coords = new Vector2?[8];
-        foreach (var (role, spot) in spots) coords[(int)role] = spot;
-        return AiMove.Create(coords).NaturalOrder();
-    }
 
-    private static IAiMove PullPositions() => ByRole(
+    private static IAiMove PullPositions() => AiMove.ByRole(
         (MainTank, new(0f, -6.5f)), (OffTank, new(-5f, 0.5f)),
         (RegenHealer, new(-3f, 6f)), (ShieldHealer, new(3f, 6f)),
         (MeleeDpsA, new(-2f, 3f)), (MeleeDpsB, new(2f, 3f)),
         (PhysRangedDps, new(-5f, 8f)), (CasterDps, new(5f, 8f)));
 
-    private static IAiMove OffTankTakesNorth() => ByRole((OffTank, new(0f, -6.5f)), (MainTank, new(-6f, -1f)));
+    private static IAiMove OffTankTakesNorth() => AiMove.ByRole((OffTank, new(0f, -6.5f)), (MainTank, new(-6f, -1f)));
 
     private bool Tethered(PartyRole role) => role.IsDps() == state.DpsTethered;
-    private IAiMove BeforeMysteryMagic() => ByRole(PerRole.All.Select(role =>
+    private IAiMove BeforeMysteryMagic() => AiMove.ByRole(PerRole.All.Select(role =>
         (role, new Vector2(role.IsDps() ? 4f : -4f, Tethered(role) ? -10f : 0f))).ToArray());
     private Vector2 FinalSpot(PartyRole role)
     {
@@ -82,10 +76,10 @@ public sealed class DmuGravenImage1Ai : IScenarioAi<DmuGravenImage1State>
         return start.Length() > ArenaReach ? Vector2.Normalize(start) * ArenaReach : start;
     }
 
-    private IAiMove MysteryMagicApproach() => ByRole(PerRole.All.Select(role =>
+    private IAiMove MysteryMagicApproach() => AiMove.ByRole(PerRole.All.Select(role =>
         (role, Tethered(role) ? BeforeKnockback(FinalSpot(role)) : FinalSpot(role))).ToArray());
 
-    private IAiMove MysteryMagicSpots() => ByRole(PerRole.All.Select(role => (role, FinalSpot(role))).ToArray());
+    private IAiMove MysteryMagicSpots() => AiMove.ByRole(PerRole.All.Select(role => (role, FinalSpot(role))).ToArray());
 
     private static readonly (PartyRole Role, float X)[] Line =
     [
@@ -93,7 +87,7 @@ public sealed class DmuGravenImage1Ai : IScenarioAi<DmuGravenImage1State>
         (MeleeDpsA, 3.5f), (MeleeDpsB, 8.5f), (PhysRangedDps, 13.5f), (CasterDps, 18.5f),
     ];
 
-    private static IAiMove WaveCannonLine() => ByRole(Line.Select(l => (l.Role, new Vector2(l.X, 0f))).ToArray());
+    private static IAiMove WaveCannonLine() => AiMove.ByRole(Line.Select(l => (l.Role, new Vector2(l.X, 0f))).ToArray());
     private IAiMove TowerSoaks()
     {
         var spots = new List<(PartyRole, Vector2)>();
@@ -105,9 +99,9 @@ public sealed class DmuGravenImage1Ai : IScenarioAi<DmuGravenImage1State>
             for (var i = 0; i < free.Count && i < beamed.Count; i++) spots.Add((free[i].Role, new(beamed[i].X, 0f)));
             foreach (var b in beamed) spots.Add((b.Role, new(b.X, 6f)));
         }
-        return ByRole(spots.ToArray());
+        return AiMove.ByRole(spots.ToArray());
     }
-    private IAiMove TrapStacks() => ByRole(PerRole.All.Select(role =>
+    private IAiMove TrapStacks() => AiMove.ByRole(PerRole.All.Select(role =>
     {
         var east = role.IsDps() ? 1f : -1f;
         var holder = role == state.TrapSupport || role == state.TrapDps;
@@ -118,7 +112,7 @@ public sealed class DmuGravenImage1Ai : IScenarioAi<DmuGravenImage1State>
     {
         bool Safe(Vector2 p) => DmuMysteryMagic.SafeFromIce(p, state.Ice2) && DmuMysteryMagic.SafeFromThunder(p, state.Thunder2, margin: 1.5f)
                                 && Math.Abs(p.X) > 1.5f && Math.Abs(p.Y) > 1.5f;
-        return ByRole(PerRole.All.Select(role =>
+        return AiMove.ByRole(PerRole.All.Select(role =>
         {
             var at = world.Party.Get(role) is { } m ? new Vector2(m.Position.X, m.Position.Z) : Vector2.Zero;
             return (role, DmuMysteryMagic.NearestSafe(at, Safe));
