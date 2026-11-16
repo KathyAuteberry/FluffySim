@@ -11,7 +11,6 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
-| C10 | **FRU Fall of Faith cast length** | Retail: bar 8.70 s, hit 8.94–9.02 s after cast start (472 casts, 27 logs) | `FruFallOfFaithScenario` overrides the bar to the time remaining of 9.0 s, so the effect lands at reveal + 9.3 s | Owner decision: base the remaining time on 8.7 s |
 | C11 | **DSR visual cast plus override-0 carrier** | Retail sends one effect per cast (Pure of Heart: cast 35.20 s, hit +35.46–35.48 s, n=3) | Heavensblaze, Pure of Heart, P5 Faith Unmoving, Spear of the Fury and Steep in Rage send two effects from the same caster | In-game check whether the doubled animation shows; then move the effects onto the visual cast |
 | C12 | **DSR Spear of the Fury timing** | Retail (n=3 intermission pulls): Spear cast starts 0.54 s before Pure of Heart, impact at PoH + 9.44 s | P4 rescue sequence lands the impact at PoH + 7.5 s; `DsrP1KnightsScenario` starts the *cast* at PoH + 9.44 s | Owner decision; more intermission pulls |
 
@@ -19,6 +18,12 @@ The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running ins
 and every other P3–P7 override are unchecked.
 
 Resolved 2026-11-16:
+
+- **C10, FRU Fall of Faith cast length.** Retail: bar 8.70 s, hit 8.94–9.02 s after cast start (472
+  casts, 27 logs). The scenario counted its bar down from 9.0 s, so the effect landed at reveal +
+  9.3 s. Owner, 2026-11-17: fix it. The bar now counts down from the sheet's cast time less the
+  0.3 s effect offset (8.7 s). The tethers, Fetters, charges and impacts run on their own timeline
+  and did not move. Not checked in game.
 
 - **C9, `CastSecondsOverride = 0`.** Retail sends no cast for sheet-instant actions and shows the
   effect at the hit, while an overridden bar of 0 still sent the ActionEffect 0.3 s later. Owner,
