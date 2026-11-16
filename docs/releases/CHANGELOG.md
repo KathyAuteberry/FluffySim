@@ -1,3 +1,24 @@
+# FluffySim 3.4.4.0 — release prepared
+
+## Added
+
+- **Dancing Mad P2: Forsaken** (Mana "Yan"). The party lines up in four columns of partners south of Kefka and uses the P1 waymarks. After the third tower, the tower group self-marks with Chain 1/2 (cone) or Ignore 1/2 (AoE) at random: 1s take the left tower and 2s the right one in the last set. Timings and positions are provisional until retail logs are available. Supports multiplayer; the self-marks show only on the host's screen.
+
+## Fixed
+
+- **Instant attacks land on time.** In Dragonsong's Reprise and Dancing Mad, attacks that retail fires without a cast bar now play their animation and show their damage at the hit, instead of 0.3 s after it.
+- **One hit animation per cast.** Dragonsong Heavensblaze, Pure of Heart, the Death of the Heavens Faith Unmoving and Steep in Rage no longer play their effect twice. Who is hit is now decided when the cast bar ends.
+- **Spear of the Fury.** In Dragonsong P1 the cast now starts just before Pure of Heart, as in retail, instead of at the moment of the hit. In the Haurchefant rescue the spear lands 1.9 s later than before, so the tank limit break window is longer by the same amount.
+- FRU Fall of Faith cast bars now run 8.7 s instead of 9 s, matching retail.
+- Entering a FRU arena no longer shows every arena variant until the entrance barrier opens.
+
+## Internal
+
+- Every scenario action, status and NPC name ID is now checked against the game's data sheets by the test suite.
+- Geometry and bot-positioning helpers that were copied between TEA, Dragonsong, Dancing Mad and FRU scenarios are shared.
+- The unused Dragonsong arena diagnostic scenario was removed.
+- A cast-time audit against retail logs was added to the repository's verification notes.
+
 # FluffySim 3.4.3.0 — release prepared
 
 3.4.2.0 was tagged but never published; this release carries all of its changes.

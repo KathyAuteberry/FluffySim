@@ -1,5 +1,6 @@
 .vs/
 obj/
+/AnoMech.Relay.Host/publish/*
 /logs/
 /docs/*
 !/docs/encounters/
