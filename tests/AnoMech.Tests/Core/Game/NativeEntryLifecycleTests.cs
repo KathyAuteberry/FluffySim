@@ -260,6 +260,23 @@ public class NativeEntryLifecycleTests
         Assert.That(((FakePartyHud)Natives.PartyHud).Members, Is.Empty);
     }
 
+    [Test]
+    public void FruLayerHoldsAreRegisteredBeforeTheEntranceBarrierOpens()
+    {
+        var fake = Install(false, false, true);
+        fake.MapEffects.TerritoryReady = false;
+        using var game = CreateGame();
+        var scenario = ScenarioCatalog.Create().Scenarios.First(s => s.Phase == FruZone.P2);
+        game.EnterAndStart(Parameters(scenario, Enum.GetValues<PartyRole>()[0]), SessionMode.Local);
+        Frames(fake, game, 2);
+        Assert.That(game.ActiveScenario, Is.Null);
+        var held = ((FakeLayoutFunctions)Natives.Layout).HeldLayerStates;
+        Assert.That(held[(FruZone.Instance.TerritoryId, 0x5F88)], Is.False);
+        Assert.That(held[(FruZone.Instance.TerritoryId, 0x5FC9)], Is.True);
+        game.Leave();
+        Frames(fake, game, 2);
+    }
+
     private static FakeGame Install(bool offline, bool hard, bool visible)
     {
         var fake = FakeGame.Install();
