@@ -12,6 +12,7 @@ using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using AnoMech.Multiplayer;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P1LivingLiquid;
 
@@ -779,7 +780,6 @@ public class TeaP1LivingLiquidScenario : IMultiplayerReplayable
 
     private static float Heading(Vector3 from, Vector3 to) => MathF.Atan2(to.X - from.X, to.Z - from.Z);
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }
 
 public sealed class TeaP1LivingLiquidFullTimelineScenario : TeaP1LivingLiquidScenario

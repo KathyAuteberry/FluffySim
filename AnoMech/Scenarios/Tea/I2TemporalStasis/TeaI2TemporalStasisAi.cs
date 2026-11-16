@@ -34,7 +34,7 @@ public sealed class TeaI2TemporalStasisAi : IScenarioAi<TeaI2TemporalStasisState
         ai.Move(10.5f, TakeStasisSpots);
     }
 
-    private static IAiMove GatherSouthOfCentre() => ByRole(
+    private static IAiMove GatherSouthOfCentre() => AiMove.ByRole(
         (MainTank, new Vector2(-1.5f, 1.5f)), (OffTank, new Vector2(1.5f, 1.5f)),
         (RegenHealer, new Vector2(-3f, 3.5f)), (ShieldHealer, new Vector2(3f, 3.5f)),
         (MeleeDpsA, new Vector2(-1f, 3f)), (MeleeDpsB, new Vector2(1f, 3f)),
@@ -45,7 +45,7 @@ public sealed class TeaI2TemporalStasisAi : IScenarioAi<TeaI2TemporalStasisState
         var bruteJusticeSide = state.Objects.BruteJustice is { IsActive: true } bruteJustice
             ? MathF.Sign(bruteJustice.Position.X)
             : state.BruteJusticeEast ? 1f : -1f;
-        return ByRole(PerRole.All.Select(role => (role, SpotFor(role, bruteJusticeSide == 0f ? 1f : bruteJusticeSide))).ToArray());
+        return AiMove.ByRole(PerRole.All.Select(role => (role, SpotFor(role, bruteJusticeSide == 0f ? 1f : bruteJusticeSide))).ToArray());
     }
 
     private Vector2 SpotFor(PartyRole role, float bruteJusticeSide)
@@ -73,10 +73,4 @@ public sealed class TeaI2TemporalStasisAi : IScenarioAi<TeaI2TemporalStasisState
         return member.ShowsStatus(StatusId.RestrainingOrder) ? StasisDebuff.RestrainingOrder : StasisDebuff.None;
     }
 
-    private static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
-    {
-        var coords = new Vector2?[8];
-        foreach (var (role, spot) in spots) coords[(int)role] = spot;
-        return AiMove.Create(coords).NaturalOrder();
-    }
 }

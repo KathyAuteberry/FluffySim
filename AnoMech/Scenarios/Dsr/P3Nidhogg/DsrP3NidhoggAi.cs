@@ -6,6 +6,7 @@ using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Scenarios.Dsr.P3Nidhogg.DsrP3NidhoggState;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Dsr.P3Nidhogg;
 
@@ -346,5 +347,4 @@ public sealed class DsrP3NidhoggAi : IScenarioAi<DsrP3NidhoggState>
     private static Vector2?[] Stacked(Vector2 centre) =>
         Enumerable.Range(0, 8).Select(i => (Vector2?)(centre + new Vector2(0.5f * (i % 3 - 1), 0.5f * (i / 3 - 1)))).ToArray();
 
-    private static Vector2 Flat(Vector3 p) => new(p.X, p.Z);
 }

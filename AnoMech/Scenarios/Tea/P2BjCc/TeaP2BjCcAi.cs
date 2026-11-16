@@ -9,6 +9,7 @@ using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using static AnoMech.Core.Game.Party.PartyRole;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P2BjCc;
 
@@ -94,7 +95,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
 
         ai.Move(0.3f, TakeClockSpots);
         ai.Move(5.1f, LureRobotsToCentre, jitter: 0f);
-        ai.Move(8.0f, () => ByRole((MainTank, ClockSpot(MainTank)), (OffTank, ClockSpot(OffTank))));
+        ai.Move(8.0f, () => AiMove.ByRole((MainTank, ClockSpot(MainTank)), (OffTank, ClockSpot(OffTank))));
 
         world.Events.Add(25.3f, PickEdgeSpots);
         world.Events.Add(25.35f, RunToEdgeSpots);
@@ -199,9 +200,9 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
 
     private static PartyRole OtherHealer(PartyRole healer) => healer == RegenHealer ? ShieldHealer : RegenHealer;
 
-    private IAiMove TakeClockSpots() => ByRole(PerRole.All.Select(r => (r, ClockSpot(r))).ToArray());
+    private IAiMove TakeClockSpots() => AiMove.ByRole(PerRole.All.Select(r => (r, ClockSpot(r))).ToArray());
 
-    private IAiMove LureRobotsToCentre() => ByRole(
+    private IAiMove LureRobotsToCentre() => AiMove.ByRole(
         (MainTank, LureSpot(state.Objects.BruteJustice, MainTank, new Vector2(-0.5f, -0.3f))),
         (OffTank, LureSpot(state.Objects.CruiseChaser, OffTank, new Vector2(0.8f, 0.4f))));
 
@@ -241,11 +242,11 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
         for (var step = 0; step <= 40; step++)
         {
             var offset = (step + 1) / 2 * 2f * (step % 2 == 0 ? 1f : -1f);
-            var spot = Polar(bearing + offset, EdgeRadius);
+            var spot = Geometry.Polar(bearing + offset, EdgeRadius);
             if (dashes.All(d => MathF.Abs(Cross(d.Along, spot - d.From)) >= ClearOfDash) && taken.All(t => Vector2.Distance(t, spot) >= EdgeGap))
                 return spot;
         }
-        return Polar(bearing, EdgeRadius);
+        return Geometry.Polar(bearing, EdgeRadius);
     }
 
     private void RunToEdgeSpots()
@@ -438,7 +439,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     {
         if (state.Objects.CruiseChaser is not { } cruiseChaser || Member(OffTank) is not { } offTank) return new Vector2(1.1f, 7.2f);
         var stop = cruiseChaser.HitboxRadius + offTank.HitboxRadius + RobotReach;
-        return Flat(cruiseChaser.Position) + Polar(ShieldFacing, 1f) * (stop - 0.9f);
+        return Flat(cruiseChaser.Position) + Geometry.Polar(ShieldFacing, 1f) * (stop - 0.9f);
     }
 
     private void BaitTheFlarethrower()
@@ -989,14 +990,7 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
     private NisiLetter? JudgmentOf(PartyRole role)
         => Member(role) is { } member ? Enum.GetValues<NisiLetter>().Where(l => member.ShowsStatus(StatusId.FinalJudgment(l))).Cast<NisiLetter?>().FirstOrDefault() : null;
 
-    private static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
-    {
-        var coords = new Vector2?[8];
-        foreach (var (role, spot) in spots) coords[(int)role] = spot;
-        return AiMove.Create(coords).NaturalOrder();
-    }
 
-    private static Vector2 Polar(float degrees, float radius) => Flat(Geometry.OnCompass(degrees, radius));
 
     private static Vector2 Rotate(Vector2 v, float degrees)
     {
@@ -1007,7 +1001,5 @@ public sealed class TeaP2BjCcAi : IScenarioAi<TeaP2BjCcState>
 
     private static float Cross(Vector2 a, Vector2 b) => a.X * b.Y - a.Y * b.X;
 
-    private static Vector2 Forward(float rotation) => new(MathF.Sin(rotation), MathF.Cos(rotation));
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

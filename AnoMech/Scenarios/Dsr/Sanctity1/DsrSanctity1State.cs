@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Party;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Dsr.Sanctity1;
 
@@ -101,7 +102,6 @@ public sealed class DsrSanctity1State
         return [p[0], Vector3.Lerp(p[0],p[1],.5f), p[1], Vector3.Lerp(p[1],p[2],1f/3),
             Vector3.Lerp(p[1],p[2],2f/3), p[2], Vector3.Lerp(p[2],p[3],1f/3), Vector3.Lerp(p[2],p[3],2f/3),p[3]];
     }
-    public static Vector3 Direction(float clockwiseFromNorth) => new(MathF.Sin(clockwiseFromNorth),0,-MathF.Cos(clockwiseFromNorth));
     private static int Roll(Rng rng, int? value, int count) => value is { } n
         ? n >= 0 && n < count ? n : throw new ArgumentOutOfRangeException(nameof(value)) : rng.Next(count);
 }

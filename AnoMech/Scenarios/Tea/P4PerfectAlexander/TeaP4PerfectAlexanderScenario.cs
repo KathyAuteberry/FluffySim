@@ -12,6 +12,7 @@ using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using AnoMech.Multiplayer;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P4PerfectAlexander;
 
@@ -1191,7 +1192,6 @@ public class TeaP4PerfectAlexanderScenario : IMultiplayerReplayable
         }
     }
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }
 
 public sealed class TeaP4PerfectAlexanderLegacyScenario : TeaP4PerfectAlexanderScenario

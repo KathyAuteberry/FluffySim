@@ -40,6 +40,13 @@ public sealed class AiMove : IAssignStep, ISwapStep, IAiRoles, IAiPositions
 
     public static IAssignStep Create(params Vector2?[] coords) => new AiMove(coords);
 
+    public static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
+    {
+        var coords = new Vector2?[Size];
+        foreach (var (role, spot) in spots) coords[(int)role] = spot;
+        return Create(coords).NaturalOrder();
+    }
+
     public static IPositionStep All(Vector2 position) =>
         new AiMove(Enumerable.Range(0, Size).Select(_ => new Vector2?(position)).ToArray());
 

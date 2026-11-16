@@ -4,6 +4,7 @@ using AnoMech.Core.Game.Ai;
 using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.I1LimitCut;
 
@@ -189,7 +190,5 @@ public sealed class TeaI1LimitCutLegacyAi : IScenarioAi<TeaI1LimitCutState>
 
     private Vector2 Polar(int number, float degrees, float radius) => Flat(Geometry.OnCompass(GroupHeading(number) + degrees, radius));
 
-    private static Vector2 Forward(float rotation) => new(MathF.Sin(rotation), MathF.Cos(rotation));
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

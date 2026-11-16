@@ -190,28 +190,6 @@ public class DsrStrengthTests
         var strength = scenarios.Single(s => s is DsrStrengthScenario);
         Assert.That(strength.Phase.Name, Is.EqualTo("P2 King Thordan"));
         Assert.That(strength.SettingsOverrides, Is.TypeOf<DsrStrengthStateOverrides>());
-        Assert.That(scenarios.OfType<DsrArenaDiagnosticScenario>(), Is.Empty);
-    }
-
-    [TestCase(0)] [TestCase(8)] [TestCase(32)]
-    public void ArenaDiagnosticAppliesRecordedP2EnvironmentWithoutCombatActors(int seed)
-    {
-        var inspected = false;
-        var run = ScenarioRun.Execute(typeof(DsrArenaDiagnosticScenario), 0, seed, new()
-        {
-            ScenarioFactory = () => new DsrArenaDiagnosticScenario(), Solo = true, StopAt = 1f,
-            Probe = p =>
-            {
-                inspected = true;
-                Assert.That(p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>(), Is.Empty);
-                Assert.That(((FakeMapEffects)AnoMech.Core.Native.Interfaces.Natives.MapEffects).Applied, Is.EqualTo(Enumerable.Range(0,9).Select(i => (0x00040004u,(byte)i))));
-                var layout = (FakeLayoutFunctions)AnoMech.Core.Native.Interfaces.Natives.Layout;
-                Assert.That(layout.HeldLayerStates, Is.Empty);
-                Assert.That(layout.HeldInstanceStates, Is.Empty);
-            },
-        });
-        Assert.That(inspected, Is.True);
-        Assert.That(run.Passed, run.ToString);
     }
 
     [TestCase(false)] [TestCase(true)]

@@ -41,14 +41,8 @@ public sealed class DmuGravenImage2Ai : IScenarioAi<DmuGravenImage2State>
         ai.Move(46.7f, IntoPuddles, sprint: true);
     }
 
-    private static IAiMove ByRole(params (PartyRole Role, Vector2 Spot)[] spots)
-    {
-        var coords = new Vector2?[8];
-        foreach (var (role, spot) in spots) coords[(int)role] = spot;
-        return AiMove.Create(coords).NaturalOrder();
-    }
 
-    private static IAiMove StartPositions() => ByRole(
+    private static IAiMove StartPositions() => AiMove.ByRole(
         (OffTank, new(0f, -7f)), (MainTank, new(-4f, 1f)),
         (RegenHealer, new(-3f, 5f)), (ShieldHealer, new(3f, 5f)),
         (MeleeDpsA, new(-2f, 3f)), (MeleeDpsB, new(2f, 3f)),
@@ -57,11 +51,11 @@ public sealed class DmuGravenImage2Ai : IScenarioAi<DmuGravenImage2State>
     private Vector2 SouthStackSpot => new(state.Ice.RealSouthwestNortheast ? StackOffAxis : -StackOffAxis, StackDepth);
     private static readonly Vector2 NorthStackSpot = new(0f, -StackDepth);
 
-    private IAiMove SouthStack() => ByRole(PerRole.All.Select(role => (role, SouthStackSpot)).ToArray());
+    private IAiMove SouthStack() => AiMove.ByRole(PerRole.All.Select(role => (role, SouthStackSpot)).ToArray());
 
-    private static IAiMove NorthStack() => ByRole(PerRole.All.Select(role => (role, NorthStackSpot)).ToArray());
+    private static IAiMove NorthStack() => AiMove.ByRole(PerRole.All.Select(role => (role, NorthStackSpot)).ToArray());
 
-    private IAiMove SetSpots(int set) => ByRole(PerRole.All.Select(role =>
+    private IAiMove SetSpots(int set) => AiMove.ByRole(PerRole.All.Select(role =>
         (role, state.SpreadsInSet(role, set) ? SpreadSlot(role, set) : Vector2.Zero)).ToArray());
 
     private static Vector2 SpreadSlot(PartyRole role, int set)
@@ -76,13 +70,13 @@ public sealed class DmuGravenImage2Ai : IScenarioAi<DmuGravenImage2State>
         };
     }
 
-    private static IAiMove BehindKefkaForRevoltingRuin() => ByRole(PerRole.All.Select(role =>
+    private static IAiMove BehindKefkaForRevoltingRuin() => AiMove.ByRole(PerRole.All.Select(role =>
         (role, role == OffTank ? new Vector2(0f, -7f) : role == MainTank ? new Vector2(-3f, 2.5f) : new Vector2(0f, 3f))).ToArray());
 
     private static IAiMove SafeHalf(bool cleaveEast, PartyRole? tanking)
     {
         var side = cleaveEast ? -1f : 1f;
-        return ByRole(PerRole.All.Select(role =>
+        return AiMove.ByRole(PerRole.All.Select(role =>
             (role, role == tanking ? new Vector2(side * 2.5f, -6.5f) : new Vector2(side * 5f, role.IsDps() ? 1.5f : 0f))).ToArray());
     }
 
@@ -92,12 +86,12 @@ public sealed class DmuGravenImage2Ai : IScenarioAi<DmuGravenImage2State>
     private bool HoldsTrap(PartyRole role)
         => world.Party.Get(role) is { } member && (member.HasStatus(DmuConstants.StatusId.DoubleTroubleTrap) || member.ShowsStatus(DmuConstants.StatusId.DoubleTroubleTrap));
 
-    private IAiMove TrapPass() => ByRole(PerRole.All.Select(role =>
+    private IAiMove TrapPass() => AiMove.ByRole(PerRole.All.Select(role =>
     {
         var (puddles, toward) = role.IsDps() ? (SouthPuddles, TowardSouthPuddles) : (NorthPuddles, TowardNorthPuddles);
         var group = puddles - toward * PassDistance;
         return (role, HoldsTrap(role) ? group - toward * PassHolderBehind : group);
     }).ToArray());
 
-    private IAiMove IntoPuddles() => ByRole(PerRole.All.Select(role => (role, role.IsDps() ? SouthPuddles : NorthPuddles)).ToArray());
+    private IAiMove IntoPuddles() => AiMove.ByRole(PerRole.All.Select(role => (role, role.IsDps() ? SouthPuddles : NorthPuddles)).ToArray());
 }

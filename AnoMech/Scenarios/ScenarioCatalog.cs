@@ -100,6 +100,7 @@ public sealed class ScenarioCatalog
         new Dmu.GravenImage1.DmuGravenImage1Scenario(),
         new Dmu.GravenImage2.DmuGravenImage2Scenario(),
         new Dmu.GravenImage3.DmuGravenImage3Scenario(),
+        new Dmu.Forsaken.DmuForsakenScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

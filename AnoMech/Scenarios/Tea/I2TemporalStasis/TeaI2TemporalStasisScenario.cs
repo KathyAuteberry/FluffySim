@@ -11,6 +11,7 @@ using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using AnoMech.Multiplayer;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.I2TemporalStasis;
 
@@ -322,5 +323,4 @@ public sealed class TeaI2TemporalStasisScenario : IMultiplayerReplayable
         helpers.Clear();
     }
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

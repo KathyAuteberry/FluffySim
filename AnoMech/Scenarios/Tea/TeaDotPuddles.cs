@@ -6,6 +6,7 @@ using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.SimObjects;
 using AnoMech.Core.UserActions;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea;
 
@@ -87,5 +88,4 @@ public sealed class TeaDotPuddles
     private static bool Invulnerable(SimCharacter member)
         => Mitigation.Effective(member.ActiveStatusSnapshot.Select(s => s.StatusId), DamageKind.Unique) >= 1f;
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

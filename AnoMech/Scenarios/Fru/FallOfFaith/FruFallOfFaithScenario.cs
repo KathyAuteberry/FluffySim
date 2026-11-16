@@ -6,6 +6,7 @@ using AnoMech.Core.EnemyActions;
 using AnoMech.Core.Game;
 using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
+using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
 using static AnoMech.Core.EnemyActions.EnemyActionEffects;
 
@@ -100,8 +101,10 @@ public sealed class FruFallOfFaithScenario : IScenario
             presentationStarted[i] = true;
             var target = world.Party.Get(state.Targets[i])!;
             tethers[i] = world.Tether(source, target, state.Fire(i) ? (ushort)249 : (ushort)287);
-            var remaining = MathF.Max(.3f, FruFallOfFaithTiming.Reveal[i] + 9 - elapsed);
-            source.Cast(new EnemyAction(state.Fire(i) ? 40137u : 40140u) { Cast = new() { CastSecondsOverride = remaining } });
+            var actionId = state.Fire(i) ? 40137u : 40140u;
+            var bar = (Natives.Data.Action(actionId)?.CastSeconds ?? 0f) - CastSpec.ActionEffectOffset;
+            var remaining = MathF.Max(.3f, FruFallOfFaithTiming.Reveal[i] + bar - elapsed);
+            source.Cast(new EnemyAction(actionId) { Cast = new() { CastSecondsOverride = remaining } });
         }
     }
     private void Immobilize(int order)

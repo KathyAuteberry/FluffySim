@@ -175,7 +175,7 @@ public sealed partial class MultiplayerManager
         {
             if (refusal != null) OnPeerStageSet(refusal);
             else if (peerRunParams is { } p) Plugin.Game.PrepareRun(p, OnPeerStageSet);
-        });
+        }, peerRunParams?.Scenario.Phase);
     }
 
     private void OnPeerStageSet(string? refusal)

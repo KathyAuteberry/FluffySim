@@ -69,6 +69,10 @@ public sealed class InstanceSession
         }
         if (!Natives.Zone.IsActive) return null;
         world.Map.Enter(zone.TerritoryId);
+        // Layer holds registered only at run start would leave every arena variant drawn until
+        // the entrance barrier opens.
+        zone.RunClientSetup(world);
+        entryPhase?.RunClientSetup(world);
         var session = new InstanceSession(world, zone, spawn, mode, entryPhase);
         // Before any action mutates it, so Exit can restore it.
         Natives.UserActions.OnSessionStart();

@@ -12,6 +12,7 @@ using AnoMech.Core.SimObjects;
 using AnoMech.Multiplayer;
 using static AnoMech.Core.Game.Party.PartyRole;
 using static AnoMech.Scenarios.Tea.TeaConstants;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Tea.P2BjCc;
 
@@ -962,5 +963,4 @@ public class TeaP2BjCcScenario : IMultiplayerReplayable
 
     private static string RoleName(SimCharacter member) => (member as ISimPartyMember)?.Role.ToString() ?? "?";
 
-    private static Vector2 Flat(Vector3 v) => new(v.X, v.Z);
 }

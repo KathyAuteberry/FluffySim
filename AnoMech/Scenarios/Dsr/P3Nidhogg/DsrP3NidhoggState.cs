@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Party;
 using static AnoMech.Scenarios.Dsr.P3Nidhogg.DsrP3NidhoggState;
+using static AnoMech.Core.Game.Planar;
 
 namespace AnoMech.Scenarios.Dsr.P3Nidhogg;
 
@@ -11,12 +12,6 @@ public enum DiveArrow { Circle, Up, Down }
 
 public sealed class DsrP3NidhoggState
 {
-    public static Vector3 AtBearing(float degrees, float radius)
-    {
-        var radians = degrees * MathF.PI / 180f;
-        return new(radius * MathF.Sin(radians), 0, -radius * MathF.Cos(radians));
-    }
-
     public const float ArrowDiveDistance = 14f;
     public const int Dives = 3;
 

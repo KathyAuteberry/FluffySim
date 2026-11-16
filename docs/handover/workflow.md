@@ -112,8 +112,8 @@ unsanitised extracts. Committed evidence (e.g. `docs/encounters/dsr-sanctity-met
    statuses, `25` deaths, `27` head markers, `35` tethers, `257` MapEffect, `261/270/271`
    positions. Coalesce multi-target rows of one release.
 3. Compare several executions. Keep cast start, target selection, snapshot, effect receipt,
-   visible animation/omen and cleanup separate. All ACT times are **receive times**: tens of ms of
-   jitter, no server snapshot. Positions in `21/22` rows can be stale, and the heading in an effect
+   visible animation/omen and cleanup separate. ACT times are the packet header time (they equal RaidTrace
+   `server_time` to the ms), not the server's snapshot time. Positions in `21/22` rows can be stale, and the heading in an effect
    row is not necessarily the snapshot heading.
 4. If the extraction will be reused, put it in a sanitised `tools/<encounter>_<mechanic>_evidence.py`
    with a test under `tools/tests/`, following the existing scripts.
@@ -127,7 +127,7 @@ unsanitised extracts. Committed evidence (e.g. `docs/encounters/dsr-sanctity-met
   32 bytes, action ID at +0 and +4, cast duration float at +8.
 - Align a replay to an ACT log by voting on `ACT epoch − replay_ms/1000` over matching casts.
   Keep only unique matches within 0.5 s and take the median (`tea_evidence.align_casts`). This
-  aligns two receive clocks, typically to ±25 ms.
+  aligns two packet-time clocks, typically to ±25 ms.
 - `tools/replay_export_duty_init.py` extracts the entrance barrier, resting MapEffect states and
   RSV/RSF strings into a zone's `DutyInitData` C# file.
 - ActorCast byte 3: see the open conflict in `open-issues.md` before using it as an omen delay.
@@ -137,8 +137,7 @@ unsanitised extracts. Committed evidence (e.g. `docs/encounters/dsr-sanctity-met
 Native arenas (layers, map-effect slots, weather, colliders) were reproduced by diffing
 `/fluffysim snapshot <label>` (also `/anomech snapshot`) taken in a paused Duty Recorder replay of
 the real phase against one taken in the simulator. (Codex's early empty-arena helpers are gone from
-the UI: the `/anomech arena-p3` command was removed, the FRU arena-diagnostic scenarios were deleted
-and `Dsr/DsrArenaDiagnosticScenario.cs` remains in source but nothing references it.) Where a capture
+the UI: the `/anomech arena-p3` command was removed, the FRU and DSR arena-diagnostic scenarios were deleted.) Where a capture
 has the server's MapEffect snapshot (RaidTrace `map_state`), declare it as `IZone.ArenaMapEffectSnapshot`
 plus `IPhase.ArenaMapEffectOverrides` rather than replaying single effects. A snapshot is one client sample; it cannot see physics broadphase membership, director
 managers or the environment-scene selector. Apply presets after native layout readiness, once per

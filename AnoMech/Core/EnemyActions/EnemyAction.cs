@@ -40,7 +40,8 @@ public sealed record CastSpec
     public float OmenDelay { get; init; }
 
     // Only for the rare case where the in-game cast time differs from the sheet's: the bar retail
-    // shows. The ActionEffect still follows it by ActionEffectOffset.
+    // shows. The ActionEffect still follows it by ActionEffectOffset. 0 makes the action an
+    // instant: no bar, and the ActionEffect goes out at once.
     public float? CastSecondsOverride { get; init; }
 
     // Turns the omen, the animation and the area from the caster's facing, in radians.

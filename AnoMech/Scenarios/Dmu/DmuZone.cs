@@ -13,6 +13,10 @@ public sealed class DmuZone : IZone
     // 77 between pulls; a pull turns it to 78 over 4s.
     public static readonly Phase P1 = new(Instance, "P1", 78, DmuConstants.Bgm.Opening);
 
+    // UNVERIFIED: weather, track and arena slot come from upstream's P2, not a retail capture.
+    public static readonly Phase P2 = new(Instance, "P2", 79, DmuConstants.Bgm.Forsaken,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [0x00] = 0x40 });
+
     public bool SupportsSpectator => true;
     public string DisplayName => "Dancing Mad";
     public string Name => "Dancing Mad (Ultimate)";

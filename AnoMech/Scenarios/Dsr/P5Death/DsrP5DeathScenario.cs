@@ -104,11 +104,10 @@ public sealed class DsrP5DeathScenario : IScenario
         world.Events.Add(30.50f, SpawnPlaystation);
         world.Events.Add(32.05f, MarkSymbols);
         world.Events.Add(32.14f, () => { mage.Cast(ActionId.Heavensflame); boss.Cast(ActionId.DragonsGaze); });
-        world.Events.Add(33.26f, () => { meteorKnight.Cast(ActionId.HolyMeteor); knockbackKnight.Cast(ActionId.FaithUnmoving); });
+        world.Events.Add(33.26f, () => { meteorKnight.Cast(ActionId.HolyMeteor); knockbackKnight.Cast(new EnemyAction(ActionId.FaithUnmoving) { Effects = [Damage(), EnemyActionEffects.Knockback(169)], Timing = new() { DamageDelay = CastSpec.ActionEffectOffset } }); });
         world.Events.Add(34.30f, OpenPuddles);
         world.Events.Add(36.06f, TetherChains);
         world.Events.Add(37.22f, DragonsGaze);
-        world.Events.Add(37.23f, () => knockbackKnight.Cast(Instant(ActionId.FaithUnmoving, Damage(), EnemyActionEffects.Knockback(169, 0))));
         world.Events.Add(38.16f, () => world.Map.AddEffect(0x00400020, state.EyeSlot));
         world.Events.Add(39.18f, ResolveChains);
         world.Events.Add(39.77f, Heavensflame);
@@ -117,7 +116,7 @@ public sealed class DsrP5DeathScenario : IScenario
         world.Events.Add(42f, BotLimitBreak);
         for (var at = 43f; at <= 47; at++) world.Events.Add(at, BotMeteorDamage);
         world.Events.Add(49f, ResolveMeteors);
-        world.Events.Add(50f, () => { boss.SetPosition(Vector3.Zero); boss.SetTargetable(true); boss.Cast(Instant(ActionId.AncientQuaga, Damage()) with { Cast = new() { CastSecondsOverride = 5.7f } }); });
+        world.Events.Add(50f, () => { boss.SetPosition(Vector3.Zero); boss.SetTargetable(true); boss.Cast(new EnemyAction(ActionId.AncientQuaga) { Effects = [Damage()], Timing = new() { DamageDelay = 0 } }); });
         world.Events.Add(61f, () => TankSwap!.Heel());
         foreach (var at in new[] { 68f, 69.65f, 71.30f }) world.Events.Add(at, () => TankSwap!.Cleave());
         world.Events.Add(74.4f, () => boss.Cast(Instant(ActionId.ThordanAttack, OnTarget(Damage()), OnOthers(Damage(Severity.Lethal))) with { Area = new() { Size = MathF.PI / 4 } }, world.Party.Get(TankSwap!.Holder)));

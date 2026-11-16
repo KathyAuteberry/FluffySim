@@ -1078,7 +1078,7 @@ public sealed partial class MultiplayerManager : IDisposable
             {
                 if (refusal != null) OnHostStartResolved(refusal);
                 else Plugin.Game.PrepareRun(p, OnHostStageSet);
-            });
+            }, scenario.Phase);
         LobbyChanged?.Invoke();
     }
 

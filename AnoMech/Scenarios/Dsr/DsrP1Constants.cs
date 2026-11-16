@@ -27,11 +27,4 @@ public static class DsrP1Constants
 
     public static Vector3 Phase1Waymark(WaymarkSlot slot) => Phase1Waymarks.First(w => w.Slot == slot).Offset;
 
-    // Compass degrees: 0 = north (-Z), 90 = east (+X).
-    public static Vector3 AtBearing(float bearingDegrees, float radius)
-    {
-        var rad = bearingDegrees * MathF.PI / 180f;
-        return new Vector3(radius * MathF.Sin(rad), 0f, -radius * MathF.Cos(rad));
-    }
-
 }

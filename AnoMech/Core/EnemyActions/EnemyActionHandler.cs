@@ -59,7 +59,9 @@ internal sealed class EnemyActionHandler(SimCharacter caster, SimCast cast, SimW
         // Resolve goes first: an instant action runs both inline, and the ActionEffect carries the hits.
         var delivery = new Delivery();
         var resolveAt = castTime + action.Timing.ResolveSnapshotOffset;
-        var releaseAt = action.Cast.CastSecondsOverride is { } bar ? bar + CastSpec.ActionEffectOffset : sheetCastTime;
+        var releaseAt = action.Cast.CastSecondsOverride is { } bar
+            ? bar > 0f ? bar + CastSpec.ActionEffectOffset : 0f
+            : sheetCastTime;
         if (action.Effects.Count > 0)
             Schedule(resolveAt, () =>
             {

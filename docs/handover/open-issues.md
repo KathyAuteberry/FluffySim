@@ -11,7 +11,42 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
-| C4 | **ACT timestamps**: receive time or not | `workflow.md` §3.2: receive times. In the DMU capture ACT times equal RaidTrace `server_time` (packet header time) to the ms across about 4,700 records | Nothing depends on it | Reword §3.2: packet header time, still not the server's snapshot |
+
+The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
+and every other P3–P7 override are unchecked.
+
+Resolved 2026-11-16:
+
+- **C11, DSR visual cast plus carrier.** Retail sends one effect per cast. Owner, 2026-11-17: fix it.
+  Heavensblaze, Pure of Heart (P1 and the P4 rescue), P5 Faith Unmoving and Steep in Rage are now a
+  single cast that carries its own effects; Spear of the Fury no longer sends a second effect.
+  Who is hit is now decided at bar end, 0.25–0.3 s earlier than the old carrier; damage, deaths and
+  the Faith Unmoving knockback still show at the effect. The helper-cast carriers (Empty/Full
+  Dimension, P1 Faith Unmoving, Cauterize, Akh Morn, Hot Wing/Tail) are unchanged. Not checked in game.
+- **C12, DSR Spear of the Fury timing.** Retail (3 intermission pulls): the cast starts 0.54 s before
+  Pure of Heart and hits at Pure of Heart + 9.44 s. Owner, 2026-11-17: fix it. P1 now starts the cast
+  at 112.30 instead of at the hit time. The P4 rescue starts it at +19.46 and lands the impact at
+  +29.44 (was +27.5). Haurchefant's appearance and the bot tank LB moved with it (+28.55, +28.84),
+  keeping P1's 0.89 s lead, and the first Spear follow-up tick at +29.0 was dropped. UNVERIFIED for
+  the rescue itself: no retail capture of that sequence exists; its times are carried over from P1.
+
+- **C10, FRU Fall of Faith cast length.** Retail: bar 8.70 s, hit 8.94–9.02 s after cast start (472
+  casts, 27 logs). The scenario counted its bar down from 9.0 s, so the effect landed at reveal +
+  9.3 s. Owner, 2026-11-17: fix it. The bar now counts down from the sheet's cast time less the
+  0.3 s effect offset (8.7 s). The tethers, Fetters, charges and impacts run on their own timeline
+  and did not move. Not checked in game.
+
+- **C9, `CastSecondsOverride = 0`.** Retail sends no cast for sheet-instant actions and shows the
+  effect at the hit, while an overridden bar of 0 still sent the ActionEffect 0.3 s later. Owner,
+  2026-11-16: fix it. `EnemyActionHandler` now treats a 0 override as an instant, so every such site
+  (DSR, DMU) sends its effect at once. This includes the sites that suppress a real cast bar or
+  carry the effects of a separate visual cast (C11); their effect also moved 0.3 s earlier.
+  Not checked in game.
+
+- **C4, ACT timestamps.** They are the packet header time, not receive time: in the DMU capture they
+  equal RaidTrace `server_time` to the millisecond across about 4,700 records. They are still not the
+  server's snapshot time, so positions and headings in `21/22` rows can be stale. `workflow.md` §3.2
+  and §3.3 are reworded.
 
 Resolved 2026-11-14 from the 2026-11-13 DMU capture (ACT log and RaidTrace `20261113-150916-duty1094`):
 
@@ -126,6 +161,14 @@ presentation detail added since October still awaits an in-game check. The highe
     P1 buster facing, Limit Cut outward facing, P3 baits, P4 Motion visibility.
   - Reproducibility: `tools/tea_evidence.py` does not regenerate `docs/tea/evidence-summary.json`;
     part of it came from scratch scripts (recovered, see `tools.md` §3).
+- **DMU**
+  - P2 Forsaken (native, Mana/Yan): no retail capture yet. Timeline, tower times, shapes, weather,
+    BGM (20292) and the P2 arena slot are copied from upstream's UMAD Forsaken. Only three things
+    differ from upstream: the Mana waymarks, the opening lineup and the final tower. The lineup
+    (four columns, two rows, south of Kefka) is read off Kitten's lineup figure. The final-tower
+    self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
+    owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
+    tower when the towers sit south. Soft markers render only on the host.
 - **Cross-cutting**
   - Spectator camera POV and HUD/DelvUI are unverified.
   - Offline party consumers (native HUD names, Dalamud party list, DelvUI) are separate checkpoints and were never all confirmed.
@@ -164,8 +207,8 @@ presentation detail added since October still awaits an in-game check. The highe
 - The earliest FluffySim work (2026-10-09 to 10-12) was done inside `~/Projekty/anomek/AnoMech`,
   which is now treated as a read-only reference; that checkout is clean.
 - Codex built Release locally on 2026-10-09/10 before the Debug-only rule existed (2026-10-11).
-- The FRU arena-diagnostic scenarios were removed on 2026-11-13; `Dsr/DsrArenaDiagnosticScenario.cs`
-  remains as unreferenced dead code.
+- The FRU arena-diagnostic scenarios were removed on 2026-11-13 and `Dsr/DsrArenaDiagnosticScenario.cs`
+  on 2026-11-16.
 - RaidTrace captures are readable with `tools/rtrace.py` (`tools.md`), but **only tracer 0.3.1+
   captures are trustworthy**. The owner reports older captures fail on raidtrace.com. Local checks agree:
   tracer 0.2.6 captures hold no actions; most 0.3.0 captures hold none either; and 0.3.0 has
