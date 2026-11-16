@@ -66,7 +66,7 @@ internal static class SimAssets
                     {
                         if (field.GetValue(null) is EnemyAction action) numbers[SimAssetKind.Action].Add(action.ActionId);
                     }
-                    catch (Exception) { }
+                    catch (Exception e) { DiagnosticLog.Warn($"[SimAssets] Could not read {type.Name}.{field.Name}: {e.GetBaseException().Message}"); }
                     continue;
                 }
                 var kind = KindFor(field.Name) ?? typeKind;

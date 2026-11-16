@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Native.Implementations;
 using AnoMech.Scenarios;
 using AnoMech.Scenarios.Dsr;
@@ -91,7 +93,7 @@ public class BgmOverrideTests
     [Test]
     public void DiagnosticsAndIncompleteScenariosHaveNoMusic()
     {
-        foreach (var scenario in new IScenario[] { new DsrArenaDiagnosticScenario() })
+        foreach (var scenario in new IScenario[] { new SilentScenario() })
             Assert.That(PhaseMusic.TrackFor(scenario), Is.Zero);
         Assert.That(PhaseMusic.TrackFor(new DsrStrengthScenario()), Is.EqualTo(921));
         Assert.That(PhaseMusic.TrackFor(new DsrStrength2Scenario()), Is.EqualTo(921));
@@ -105,5 +107,15 @@ public class BgmOverrideTests
     {
         Assert.That(new Configuration().SuppressBgm, Is.False);
         Assert.That(Newtonsoft.Json.JsonConvert.DeserializeObject<Configuration>("{\"SuppressBgm\":true}")!.SuppressBgm, Is.True);
+    }
+
+    sealed class SilentScenario : IScenario
+    {
+        public string Name => "Silent";
+        public IPhase Phase => DsrZone.P2;
+        public bool SupportsSolo => true;
+        public bool EnablePhaseBgm => false;
+        public IReadOnlyList<IScenarioAi> AiStrats => [];
+        public void Run(AnoMech.Core.SimObjects.SimWorld world, int? selectedAi) { }
     }
 }
