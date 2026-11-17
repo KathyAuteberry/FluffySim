@@ -11,6 +11,8 @@ public static class DmuConstants
         public const uint Kefka = 19504;
         public const uint GravenImage = 19505;
         public const uint Helper = 9020;
+        public const uint GodKefka = 19506;
+        public const uint KefkaClone = 19513;
     }
 
     public static class BNpcNameId
@@ -32,6 +34,8 @@ public static class DmuConstants
         public const uint EastCleaveStatue = 0xBC1792;
         public const uint SleepStatue = 0xBC1793;
         public const uint IndolentWillStatue = 0xBC1794;
+        public const uint GodKefka = 0xBC1728;
+        public const uint KefkaClone = 0xBC172F;
         public const uint ConfusionStatue = 0xBC1795;
         public const uint AveMariaStatue = 0xBC1796;
     }
@@ -97,6 +101,21 @@ public static class DmuConstants
         public const uint IdyllicWill = 0xBAB6;
         public const uint StatueGlance = 0xC554;
         public const uint StatueGlanceEnd = 0xC555;
+        public const uint Forsaken = 0xBABC;
+        public const uint ForsakenLightOfJudgment = 0xBABD;
+        public const uint ThePathOfLight = 0xBABE;
+        public const uint TheRiverOfLight = 0xBABF;
+        public const uint Spelldriver = 0xBAC0;
+        public const uint Spellscatter = 0xBAC1;
+        public const uint Spellwave = 0xBAC2;
+        public const uint FuturesEnd = 0xBAD2;
+        public const uint PastsEnd = 0xBAD3;
+        public const uint FuturesEndResolve = 0xBAD6;
+        public const uint PastsEndResolve = 0xBAD7;
+        public const uint FuturesEndCloneResolve = 0xBAD8;
+        public const uint PastsEndCloneResolve = 0xBAD9;
+        public const uint AllThingsEndingFuture = 0xBADC;
+        public const uint AllThingsEndingPast = 0xBADD;
     }
 
     public static class StatusId
@@ -110,6 +129,8 @@ public static class DmuConstants
         // Tele-portent by arrow: N, S, E, W. The second set marks a player's other, turned arrow.
         public static readonly ushort[] TelePortent = [0x130C, 0x130D, 0x130E, 0x130F];
         public static readonly ushort[] TelePortentTurned = [0x13D7, 0x13D8, 0x13D9, 0x13DA];
+        public const ushort SpellsTrouble = 0x13DB;
+        public const ushort Unknown13DC = 0x13DC;
     }
 
     public static class LockonId
@@ -123,6 +144,9 @@ public static class DmuConstants
         public const uint IceTruth = 0x2A4;
         public const uint ThunderLie = 0x2A5;
         public const uint ThunderTruth = 0x2A6;
+        public const uint ForsakenStack = 715;
+        public const uint ForsakenChariot = 716;
+        public const uint ForsakenCone = 717;
     }
 
     public static class KnockbackId
@@ -137,6 +161,8 @@ public static class DmuConstants
         public const ushort Opening = 20289;
         public const ushort AfterFirstJudgment = 20290;
         public const ushort AfterSecondJudgment = 20291;
+        // UNVERIFIED: upstream's P2 track; never seen in a retail capture.
+        public const ushort Forsaken = 20292;
     }
 
     public const uint GravitasPuddleArg2Base = 0x500003;

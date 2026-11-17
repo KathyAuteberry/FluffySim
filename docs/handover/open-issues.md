@@ -126,6 +126,14 @@ presentation detail added since October still awaits an in-game check. The highe
     P1 buster facing, Limit Cut outward facing, P3 baits, P4 Motion visibility.
   - Reproducibility: `tools/tea_evidence.py` does not regenerate `docs/tea/evidence-summary.json`;
     part of it came from scratch scripts (recovered, see `tools.md` §3).
+- **DMU**
+  - P2 Forsaken (native, Mana/Yan): no retail capture yet. Timeline, tower times, shapes, weather,
+    BGM (20292) and the P2 arena slot are copied from upstream's UMAD Forsaken. Only three things
+    differ from upstream: the Mana waymarks, the opening lineup and the final tower. The lineup
+    (four columns, two rows, south of Kefka) is read off Kitten's lineup figure. The final-tower
+    self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
+    owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
+    tower when the towers sit south. Soft markers render only on the host.
 - **Cross-cutting**
   - Spectator camera POV and HUD/DelvUI are unverified.
   - Offline party consumers (native HUD names, Dalamud party list, DelvUI) are separate checkpoints and were never all confirmed.
