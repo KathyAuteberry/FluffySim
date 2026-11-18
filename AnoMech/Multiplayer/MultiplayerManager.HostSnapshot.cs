@@ -78,6 +78,35 @@ public sealed partial class MultiplayerManager
         pendingRolesSend = Send(new RolesSnapshotMessage(roles));
     }
 
+    private List<SoftMarkerState> sentSoftMarkers = [];
+
+    private void BroadcastSoftMarkers()
+    {
+        var world = Plugin.Game.World;
+        var markers = world.SoftMarkers.Assigned
+            .Select(marker => new SoftMarkerState(marker.Key, ResolveEnd(world, marker.Value) switch
+            {
+                (_, { } role) => PacketActor.Seat(role),
+                var (enemy, _) => enemy,
+            }))
+            .Where(marker => marker.Actor != PacketActor.None)
+            .OrderBy(marker => marker.Sign)
+            .ToList();
+        if (markers.SequenceEqual(sentSoftMarkers)) return;
+        sentSoftMarkers = markers;
+        _ = Send(new SoftMarkersMessage(markers));
+    }
+
+    private MpMessage? sentOverlay;
+
+    private void SendScenarioOverlay()
+    {
+        if (Plugin.Game.ActiveScenario is not IMultiplayerOverlay scenario) return;
+        if (scenario.BuildOverlayMessage() is not { } overlay || overlay == sentOverlay) return;
+        sentOverlay = overlay;
+        _ = Send(overlay);
+    }
+
     // An enemy goes by its entity id on the host, as its packets name it.
     private static (uint Enemy, PartyRole? Role) ResolveEnd(SimWorld world, SimCharacter? c)
     {

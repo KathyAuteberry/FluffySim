@@ -494,6 +494,12 @@ public sealed partial class MultiplayerManager
             case AnnouncementMessage announcement when PeerInRun:
                 Plugin.Game.World.Announce(NetGuard.Clean(announcement.Text));
                 break;
+            case SoftMarkersMessage softMarkers when PeerInRun:
+                OnSoftMarkersReceived(softMarkers);
+                break;
+            case MpMessage overlay when PeerInRun && overlay is IScenarioOverlayMessage:
+                hostOverlay = overlay;
+                break;
             // Every IMultiplayerReplayable scenario routes through these two cases.
             case MpMessage genericMsg when !IsHost && genericMsg is IScenarioReplayStateMessage:
                 pendingGenericReplayState = genericMsg;
