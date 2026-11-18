@@ -101,6 +101,8 @@ public sealed class ScenarioCatalog
         new Dmu.GravenImage2.DmuGravenImage2Scenario(),
         new Dmu.GravenImage3.DmuGravenImage3Scenario(),
         new Dmu.Forsaken.DmuForsakenScenario(),
+        new TopNative.PartySynergy.TopPartySynergyScenario(),
+        new TopNative.LimitlessSynergy.TopLimitlessSynergyScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),
