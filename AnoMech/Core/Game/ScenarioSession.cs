@@ -161,6 +161,7 @@ public sealed class ScenarioSession
         zone.RunClientSetup(world);
         phase.RunClientSetup(world);
         instance.ApplyPhase(phase);
+        instance.NoteRunStarted();
         Natives.Director.Commence();
         // zone.Run also creates the arena boundary PlacePlayer's out-of-arena check reads, so that
         // check no-ops for a peer.

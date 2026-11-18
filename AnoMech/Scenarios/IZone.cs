@@ -34,6 +34,10 @@ public interface IZone
     // merged with IPhase.ArenaMapEffectOverrides. Empty = the zone has no MapEffect slots.
     IReadOnlyList<ushort> ArenaMapEffectSnapshot => DutyInitData?.MapEffectSnapshot ?? Array.Empty<ushort>();
 
+    // Layout instances the client switches off by itself seconds after the zone-in snapshot. They
+    // stay hidden from the first frame, then the client owns them again.
+    IReadOnlyList<(ushort Layer, uint Instance)> ZoneInSettlingInstances => Array.Empty<(ushort, uint)>();
+
     // When a tank LB3's status lands; null: on its recipients at the press.
     StatusLanding? TankLimitBreakLanding => null;
 

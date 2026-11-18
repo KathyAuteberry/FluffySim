@@ -322,6 +322,9 @@ public sealed class Game : IDisposable
         instance?.Tick(deltaSeconds);
         if (pendingStart is not null)
         {
+            // The world does not tick during preparation, and the zone draws every phase's arena
+            // until the entry phase's holds reach the layout.
+            World.Map.ReassertLayerHolds();
             TickPreparation(deltaSeconds);
             return;
         }
