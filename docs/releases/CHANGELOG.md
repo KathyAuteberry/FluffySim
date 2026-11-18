@@ -1,3 +1,14 @@
+# FluffySim 3.4.6.0 — release prepared
+
+## Changed
+
+- **Catgirl party.** Solo bots and every multiplayer seat now appear as female Miqo'te, each with a distinct look, instead of Lalafell. Your own character is unchanged.
+
+## Fixed
+
+- **Local markers in multiplayer.** Every player now sees the markers the host's run places, including the Dancing Mad Forsaken self-marks. Before, they showed only on the host's screen.
+- **Apocalypse overlay in multiplayer.** The local light and trail overlay in FRU P3 Apocalypse now works for every player, not just the host.
+
 # FluffySim 3.4.5.0 — release prepared
 
 ## Added

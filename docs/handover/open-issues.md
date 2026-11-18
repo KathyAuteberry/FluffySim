@@ -169,7 +169,7 @@ presentation detail added since October still awaits an in-game check. The highe
     (four columns, two rows, south of Kefka) is read off Kitten's lineup figure. The final-tower
     self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
     owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
-    tower when the towers sit south. Soft markers render only on the host.
+    tower when the towers sit south.
 - **TOP (native Elemental, P1–P3)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
