@@ -146,6 +146,59 @@ public class NativeEntryLifecycleTests
         Frames(fake, game, 2);
     }
 
+    [Test]
+    public void FirstLocalRunKeepsTheZoneInSnapshotAndARestartResetsTheArena()
+    {
+        var fake = Install(false, false, true);
+        using var game = CreateGame();
+        var scenario = ScenarioCatalog.Create().Scenarios.First(s => s.Phase == FruZone.P3);
+        game.EnterAndStart(Parameters(scenario, PartyRole.MainTank), SessionMode.Local);
+        for (var i = 0; i < 300 && game.ActiveScenario is null; i++) Frames(fake, game, 1);
+        Assert.That(game.ActiveScenario, Is.SameAs(scenario));
+        Assert.That(fake.MapEffects.Snapshots, Has.Count.EqualTo(1));
+        game.Reset();
+        Frames(fake, game, 2);
+        game.StartScenario(Parameters(scenario, PartyRole.MainTank));
+        Frames(fake, game, 2);
+        Assert.That(fake.MapEffects.Snapshots, Has.Count.EqualTo(2));
+        game.Leave();
+        Frames(fake, game, 2);
+    }
+
+    [Test]
+    public void EntryPhaseLayerHoldsReachTheLayoutWhileTheRunIsBeingPrepared()
+    {
+        var fake = Install(false, false, true);
+        fake.MapEffects.TerritoryReady = false;
+        using var game = CreateGame();
+        var layout = (FakeLayoutFunctions)Natives.Layout;
+        var scenario = ScenarioCatalog.Create().Scenarios.First(s => s.Phase == FruZone.P3);
+        game.EnterAndStart(Parameters(scenario, PartyRole.MainTank), SessionMode.Local);
+        Frames(fake, game, 5);
+        Assert.That(game.ActiveScenario, Is.Null);
+        Assert.That(layout.ReassertCount, Is.GreaterThan(0));
+        fake.MapEffects.TerritoryReady = true;
+        game.Leave();
+        Frames(fake, game, 2);
+    }
+
+    [Test]
+    public void FirstRunOfAnotherPhaseStillReplacesTheZoneInSnapshot()
+    {
+        var fake = Install(false, false, true);
+        using var game = CreateGame();
+        var scenario = ScenarioCatalog.Create().Scenarios.First(s => s.Phase == FruZone.P3);
+        game.ZoneIn(FruZone.Instance, SessionMode.Local);
+        Frames(fake, game, 2);
+        Assert.That(fake.MapEffects.Snapshots, Has.Count.EqualTo(1));
+        game.EnterAndStart(Parameters(scenario, PartyRole.MainTank), SessionMode.Local);
+        for (var i = 0; i < 300 && game.ActiveScenario is null; i++) Frames(fake, game, 1);
+        Assert.That(game.ActiveScenario, Is.SameAs(scenario));
+        Assert.That(fake.MapEffects.Snapshots, Has.Count.EqualTo(2));
+        game.Leave();
+        Frames(fake, game, 2);
+    }
+
     [TestCase(false)]
     [TestCase(true)]
     public void BarrierSpawnFailureRetriesWithoutStartingOrLosingTheParty(bool offline)
@@ -277,7 +330,7 @@ public class NativeEntryLifecycleTests
         Frames(fake, game, 2);
     }
 
-    private static FakeGame Install(bool offline, bool hard, bool visible)
+    internal static FakeGame Install(bool offline, bool hard, bool visible)
     {
         var fake = FakeGame.Install();
         var client = DispatchProxy.Create<IClientState, EntryClientState>();
@@ -288,14 +341,14 @@ public class NativeEntryLifecycleTests
         return fake;
     }
 
-    private static Game CreateGame()
+    internal static Game CreateGame()
     {
         var game = new Game();
         DalamudServices.Install(nameof(Plugin.Game), game);
         return game;
     }
     private static RunScenarioParams Parameters(IScenario scenario, PartyRole role) => new(scenario, new LocalPartyProvider { RoleOverride = role }, 0, 0, 123);
-    private static void Frames(FakeGame fake, Game game, int count)
+    internal static void Frames(FakeGame fake, Game game, int count)
     {
         for (var i = 0; i < count; i++) fake.Frame(1f / 60f, game.Tick);
     }

@@ -54,6 +54,7 @@ public sealed class MapController
     }
 
     private PendingSnapshot? pendingSnapshot;
+    private ushort[]? restingStates;
 
     private struct PendingDirectorUpdate
     {
@@ -84,6 +85,11 @@ public sealed class MapController
         if (InSim(nameof(HoldLayerActive))) Natives.Layout.HoldLayerActive(TerritoryId, layerKey, active);
     }
 
+    public void ReleaseInstanceHold(ushort layerKey, uint instanceKey)
+    {
+        if (InSim(nameof(ReleaseInstanceHold))) Natives.Layout.ReleaseInstanceHold(TerritoryId, layerKey, instanceKey);
+    }
+
     public void SuppressLayer(ushort layerKey)
     {
         if (InSim(nameof(SuppressLayer))) Natives.Layout.SuppressLayer(layerKey);
@@ -109,15 +115,21 @@ public sealed class MapController
         Natives.MapEffects.Loaded = false;
         pendingEffects.Clear();
         pendingSnapshot = null;
+        restingStates = null;
         pendingDirectorUpdates.Clear();
         pendingBattleTalks.Clear();
         layerDumpFrame = int.MaxValue;
     }
 
+    internal void ReassertLayerHolds()
+    {
+        if (IsInInstance) Natives.Layout.ReassertSuppressedLayers();
+    }
+
     // Per-frame poll. Called from SimWorld.Tick.
     internal void Tick()
     {
-        if (IsInInstance) Natives.Layout.ReassertSuppressedLayers();
+        ReassertLayerHolds();
         if (IsInInstance && layerDumpFrame <= LayerDumpFrames[^1])
         {
             layerDumpFrame++;
@@ -132,7 +144,7 @@ public sealed class MapController
 
         if (pendingSnapshot != null)
         {
-            if (CanApplyMapEffects() && Natives.MapEffects.ApplySnapshot(pendingSnapshot.States, pendingSnapshot.ZoneIn))
+            if (CanApplyMapEffects() && DeliverSnapshot(pendingSnapshot.States, pendingSnapshot.ZoneIn))
                 pendingSnapshot = null;
             else if (--pendingSnapshot.FramesLeft <= 0)
             {
@@ -206,11 +218,19 @@ public sealed class MapController
         }
     }
 
+    private bool DeliverSnapshot(ushort[] states, bool zoneIn)
+    {
+        if (!Natives.MapEffects.ApplySnapshot(states, zoneIn)) return false;
+        restingStates = states;
+        return true;
+    }
+
     // Once the zone is loaded.
     public void Enter(uint territoryId)
     {
         pendingEffects.Clear();
         pendingSnapshot = null;
+        restingStates = null;
         pendingDirectorUpdates.Clear();
         Natives.Layout.ClearSuppressedLayers();
         IsInInstance = true;
@@ -245,6 +265,7 @@ public sealed class MapController
     public void AddEffect(uint packetFlags, byte index)
     {
         if (!InSim(nameof(AddEffect))) return;
+        restingStates = null;
         // Behind a pending call for the same slot, or it would land first and be overwritten.
         var behind = !CanApplyMapEffects() || pendingSnapshot != null || pendingEffects.Exists(p => p.Index == index);
         if ((behind || !Natives.MapEffects.Apply(packetFlags, index)) && TryReserveRetrySlot(pendingEffects.Count, "MapEffect"))
@@ -262,12 +283,16 @@ public sealed class MapController
         if (!InSim(nameof(SetEffectSnapshot))) return;
         pendingEffects.Clear();
         pendingSnapshot = null;
-        if (!CanApplyMapEffects() || !Natives.MapEffects.ApplySnapshot(states, zoneIn))
+        restingStates = null;
+        if (!CanApplyMapEffects() || !DeliverSnapshot(states, zoneIn))
         {
             DiagnosticLog.Warn("[MapEffect] snapshot not ready yet -- queued for retry.");
             pendingSnapshot = new PendingSnapshot { States = states, ZoneIn = zoneIn };
         }
     }
+
+    // True only once the client took exactly these states and no single effect has followed.
+    public bool IsRestingIn(ReadOnlySpan<ushort> states) => restingStates is { } resting && states.SequenceEqual(resting);
 
     public void LogArena(string label)
     {

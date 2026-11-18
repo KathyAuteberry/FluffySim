@@ -11,6 +11,7 @@ public interface ILayoutFunctions
     int SuppressLayer(ushort layerKey);
     void HoldLayerActive(uint territoryId, ushort layerKey, bool active);
     void HoldInstanceActive(uint territoryId, ushort layerKey, uint instanceKey, bool active);
+    void ReleaseInstanceHold(uint territoryId, ushort layerKey, uint instanceKey);
     void ReassertSuppressedLayers();
     void ClearSuppressedLayers();
 

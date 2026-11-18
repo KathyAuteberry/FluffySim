@@ -22,6 +22,9 @@ internal sealed unsafe class LayoutFunctions : ILayoutFunctions
     public void HoldInstanceActive(uint territoryId, ushort layerKey, uint instanceKey, bool active)
         => heldInstanceStates[(territoryId, layerKey, instanceKey)] = active;
 
+    public void ReleaseInstanceHold(uint territoryId, ushort layerKey, uint instanceKey)
+        => heldInstanceStates.Remove((territoryId, layerKey, instanceKey));
+
     public void HoldLayerActive(uint territoryId, ushort layerKey, bool active)
         => heldLayerStates[(territoryId, layerKey)] = active;
 

@@ -22,9 +22,14 @@ public sealed class InstanceSession
     private float entranceBarrierOpenIn = -1f;
     private bool phaseApplied;
     private bool arenaSnapshotSent;
+    private bool runStarted;
+    private float settlingInstancesLeft = SettlingInstanceSeconds;
     private readonly IPhase? entryPhase;
     private bool playerPlaced;
     private bool barrierOpened;
+
+    // The client has settled about 4.6 s after the zone-in snapshot.
+    private const float SettlingInstanceSeconds = 6f;
 
     public IZone Zone { get; }
 
@@ -73,6 +78,8 @@ public sealed class InstanceSession
         // the entrance barrier opens.
         zone.RunClientSetup(world);
         entryPhase?.RunClientSetup(world);
+        foreach (var (layer, instance) in zone.ZoneInSettlingInstances)
+            world.Map.HoldInstanceActive(layer, instance, false);
         var session = new InstanceSession(world, zone, spawn, mode, entryPhase);
         // Before any action mutates it, so Exit can restore it.
         Natives.UserActions.OnSessionStart();
@@ -88,9 +95,15 @@ public sealed class InstanceSession
         phaseApplied = true;
         world.Map.SetPhaseWeather(phase.Weather, zoneIn);
         if (Zone.ArenaMapEffectSnapshot.Count == 0) return;
-        world.Map.SetEffectSnapshot(ArenaMapEffects(phase), !arenaSnapshotSent);
+        var states = ArenaMapEffects(phase);
+        // Retail's first reset follows a wipe, never the zone-in. Peers still need the host's copy:
+        // their zone can finish loading after the zone-in snapshot went out.
+        if (!runStarted && Mode == SessionMode.Local && world.Map.IsRestingIn(states)) return;
+        world.Map.SetEffectSnapshot(states, !arenaSnapshotSent);
         arenaSnapshotSent = true;
     }
+
+    public void NoteRunStarted() => runStarted = true;
 
     // The layout loads with every arena variant shown; the run's own snapshot waits for the
     // entrance barrier, seconds later. A peer's arena comes from the host.
@@ -156,6 +169,7 @@ public sealed class InstanceSession
         if (fallCloseIn >= 0f && (fallCloseIn -= deltaSeconds) < 0f) CloseFall();
         if (!IsLoaded || !Natives.MapEffects.IsTerritoryReady(Zone.TerritoryId)) return;
         SendZoneInSnapshot();
+        ReleaseSettlingInstances(deltaSeconds);
         if (!barrierOpened && entranceBarrier is null)
         {
             if (Zone.EntranceBarrier.EObjId == 0) barrierOpened = true;
@@ -165,6 +179,13 @@ public sealed class InstanceSession
         if (entranceBarrierOpenIn < 0 || (entranceBarrierOpenIn -= deltaSeconds) >= 0) return;
         entranceBarrier?.ActorControl(DirectorEObjModCategory, EntranceBarrierOpenState);
         barrierOpened = true;
+    }
+
+    private void ReleaseSettlingInstances(float deltaSeconds)
+    {
+        if (settlingInstancesLeft <= 0f || (settlingInstancesLeft -= deltaSeconds) > 0f) return;
+        foreach (var (layer, instance) in Zone.ZoneInSettlingInstances)
+            world.Map.ReleaseInstanceHold(layer, instance);
     }
 
     // Back to the inn.

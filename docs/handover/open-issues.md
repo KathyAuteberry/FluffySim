@@ -11,6 +11,7 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
+| C13 | **TOP P2 Optimized Bladedance cone width** | BossMod guesses 90° (`AOEShapeCone(100, 45.Degrees())`). Retail (2026-11-17, pull 44): a tank 31° off the clone-to-centre line missed the party standing in the middle, so the cone is at most ~62° wide | Native Limitless Synergy uses a 60° cone, UNVERIFIED; the bots hold tethers 56° clockwise so either width misses the party | RaidTrace visualisation of a Bladedance, or a retail pull where someone stands 31–45° off its axis |
 
 The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
 and every other P3–P7 override are unchecked.
@@ -169,6 +170,48 @@ presentation detail added since October still awaits an in-game check. The highe
     self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
     owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
     tower when the towers sit south. Soft markers render only on the host.
+- **TOP (native Elemental, P1–P3)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
+  (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
+  checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
+  Party Synergy, Limitless Synergy and Hello World looked right; bot movement fixes followed. Pantokrator
+  showed telegraphs only on the first run (helper lists were never cleared between runs; also fixed in
+  Limitless Synergy and the P3 transition) and needs another pass. Zone-in flashes every phase's arena for a
+  second or two, as FRU does.
+  - Program Loop: a bot only intercepts a Blaster tether when its number is due; the human always can.
+  - Hello World: a Nisi passes only to a player without one, bots accept it only in their strat's
+    receiving window, and touching is 1.2y. One retail sample per loop shape; tether break distance 10y
+    is upstream's P5 value.
+  - Oversampled Wave Cannon: one retail sample, a wipe; the Astoh spots are derived from the guide's
+    diagram with every player 7y+ apart.
+  - UNVERIFIED: Flame Thrower and Ballistic Impact damage, the Sagittarius Arrow aiming at the closest
+    player at cast start, Bladedance width (C13), and every native presentation detail.
+- **Zone-in arena flicker (FRU, native TOP), open since 2026-11-18.** Every phase's arena shows and flashes
+  for a second or two after zone-in. The cause is not confirmed.
+  - Measured on TOP (two stays, Dalamud log of 2026-11-18): layout ready at +0.7 s, run start at +2.7 s, and
+    11 arena layers still fully active at +3.7 to +4.3 s (layer `0x2304` 97/97). They settle by +5.5 to +6.0 s
+    (19/97). The dumps are too sparse to show what triggers the change.
+  - Ruled out: the `CanApplyMapEffects` territory gate (FRU has it and flickers; TOP's snapshot already waits for
+    `IsTerritoryReady`) and FRU's layer holds (native TOP has none and flickers).
+  - Retail (both TOP replays of 2026-11-17) sends one zone-in snapshot, header 5, 1.7 s into the recording, and
+    its first reset, header 1, only after a wipe. On a cold start the simulator sent two more snapshots, from run
+    preparation and run start, inside the flicker window. Local first runs now skip both when the client already
+    rests in the same states.
+    Host and peer runs keep it, because a peer's zone can finish loading after the zone-in snapshot.
+  - Owner's in-game pass with that change (2026-11-18): FRU P1 under 0.5 s; FRU P2 several arenas for over 1 s;
+    FRU P3 to P5 several arenas under 0.5 s, then a P1-like arena for about 1 s, then the right one; TOP P1
+    unchanged at 1 to 2 s. The trace shows a single snapshot on every first run, so the resends were not the main cause.
+  - FRU: the phase's layer holds were registered at zone-in, but only the world tick applied them, and the world does
+    not tick during the roughly 2 s of run preparation. P1 hid this because its layers are the zone's default. Holds are
+    now applied during preparation. UNVERIFIED in game.
+    Owner's in-game pass: every FRU phase now clears in under 0.1 s, which the owner accepts.
+  - TOP: the zone has no holds. In the traced stays nine layers drop at snapshot +4.6 s (`0x2304` 97 to 19) and two at
+    +3.6 s, at different frame counts, so the change follows a timer. No scenario event is due then (Program Loop's
+    first cast is at 10.4 s). The trigger is unknown. `[ZoneInTrace]` cannot see the first 2 s after the snapshot,
+    because it also runs from the world tick.
+  - TOP now hides the 128 instances that are off once P1 has settled, from the first layout frame until 6 s after the
+    layout is ready, then hands them back to the client. The list comes from one settled P1 arena snapshot.
+    Owner's in-game pass (2026-11-18): the TOP P1 flash is much shorter but not gone, and not down to FRU's 0.1 s. The
+    owner accepts this for now. UNVERIFIED: whether P2 and P3 entries settle to the same set.
 - **Cross-cutting**
   - Spectator camera POV and HUD/DelvUI are unverified.
   - Offline party consumers (native HUD names, Dalamud party list, DelvUI) are separate checkpoints and were never all confirmed.

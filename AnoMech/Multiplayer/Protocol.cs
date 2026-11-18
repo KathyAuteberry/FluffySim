@@ -71,6 +71,13 @@ namespace AnoMech.Multiplayer;
 [JsonDerivedType(typeof(DmuGravenImage3AiReplayStateMessage), "dmuGravenImage3AiReplayState")]
 [JsonDerivedType(typeof(DmuForsakenAiReplayStateMessage), "dmuForsakenAiReplayState")]
 [JsonDerivedType(typeof(DmuForsakenLockonsUpdateMessage), "dmuForsakenLockonsUpdate")]
+[JsonDerivedType(typeof(TopProgramLoopAiReplayStateMessage), "topProgramLoopAiReplayState")]
+[JsonDerivedType(typeof(TopPantokratorAiReplayStateMessage), "topPantokratorAiReplayState")]
+[JsonDerivedType(typeof(TopPartySynergyAiReplayStateMessage), "topPartySynergyAiReplayState")]
+[JsonDerivedType(typeof(TopLimitlessSynergyAiReplayStateMessage), "topLimitlessSynergyAiReplayState")]
+[JsonDerivedType(typeof(TopTransitionAiReplayStateMessage), "topTransitionAiReplayState")]
+[JsonDerivedType(typeof(TopHelloWorldAiReplayStateMessage), "topHelloWorldAiReplayState")]
+[JsonDerivedType(typeof(TopOversampledWaveCannonAiReplayStateMessage), "topOversampledWaveCannonAiReplayState")]
 [JsonDerivedType(typeof(TeaP3AlexanderPrimeAiReplayStateMessage), "teaP3AlexanderPrimeAiReplayState")]
 [JsonDerivedType(typeof(TeaP4PerfectAlexanderAiReplayStateMessage), "teaP4PerfectAlexanderAiReplayState")]
 [JsonDerivedType(typeof(TopP5DeltaBeyondDefenseUpdateMessage), "topP5DeltaBeyondDefenseUpdate")]
@@ -339,6 +346,19 @@ public sealed record DmuGravenImage3AiReplayStateMessage(bool[] Flags, PartyRole
 public sealed record DmuForsakenAiReplayStateMessage(
     uint[] EndAttacks, float NewNorthRadians, int Rotation, Dictionary<PartyRole, uint> Lockons, bool[] Flags) : MpMessage, IScenarioReplayStateMessage;
 public sealed record DmuForsakenLockonsUpdateMessage(Dictionary<PartyRole, uint> Lockons) : MpMessage, IScenarioMidRunUpdateMessage;
+
+// TOP native: In Line numbers by role, and the eight tower spots in set order.
+public sealed record TopProgramLoopAiReplayStateMessage(Dictionary<PartyRole, int> Numbers, int[] Towers) : MpMessage, IScenarioReplayStateMessage;
+public sealed record TopPantokratorAiReplayStateMessage(Dictionary<PartyRole, int> Numbers, int FirstFlameBearing, int Rotation, PartyRole[] FirstWaveCannon) : MpMessage, IScenarioReplayStateMessage;
+
+public sealed record TopPartySynergyAiReplayStateMessage(
+    PartyRole[] Order, PartyRole[] Stacks, float NewNorthARadians, float NewNorthBRadians,
+    float AttackDirRadians, bool GlitchIsFar, bool AttackMIsSword, bool AttackFIsStaff) : MpMessage, IScenarioReplayStateMessage;
+public sealed record TopLimitlessSynergyAiReplayStateMessage(float[] Bearings, bool[] Flags, PartyRole[] TetherSeeds, PartyRole[] Flares) : MpMessage, IScenarioReplayStateMessage;
+
+public sealed record TopTransitionAiReplayStateMessage(Dictionary<PartyRole, AnoMech.Scenarios.TopNative.Transition.SniperDebuff> Debuffs, bool FirstArmsNorth) : MpMessage, IScenarioReplayStateMessage;
+public sealed record TopHelloWorldAiReplayStateMessage(Dictionary<PartyRole, int> Pair, bool OverflowWithBlue, bool[] Intercardinal, int[] Rotation) : MpMessage, IScenarioReplayStateMessage;
+public sealed record TopOversampledWaveCannonAiReplayStateMessage(bool OmegaCleavesEast, Dictionary<PartyRole, bool> MonitorRight) : MpMessage, IScenarioReplayStateMessage;
 
 // Every roll; the chakrams' and Incinerating Heat's targets are picked live and the peer reads them
 // off its own screen. Aggravated Assault is the two DPS left over.

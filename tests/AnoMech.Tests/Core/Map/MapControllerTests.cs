@@ -78,6 +78,51 @@ public class MapControllerTests
     }
 
     [Test]
+    public void RestingStatesAreKnownOnlyAfterTheClientTookTheSnapshot()
+    {
+        var (map, effects) = Enter();
+        ushort[] states = [1, 4];
+        map.SetEffectSnapshot(states);
+        Assert.That(map.IsRestingIn(states), Is.False);
+        effects.TerritoryReady = true;
+        map.Tick();
+        Assert.That(map.IsRestingIn(states), Is.True);
+        Assert.That(map.IsRestingIn(new ushort[] { 4, 4 }), Is.False);
+        map.BeginPhase();
+        Assert.That(map.IsRestingIn(states), Is.True);
+        map.Unload();
+    }
+
+    [Test]
+    public void ASnapshotDroppedByANewPhaseIsNotResting()
+    {
+        var (map, effects) = Enter();
+        ushort[] states = [1, 4];
+        map.SetEffectSnapshot(states);
+        map.BeginPhase();
+        effects.TerritoryReady = true;
+        map.Tick();
+        Assert.That(effects.Snapshots, Is.Empty);
+        Assert.That(map.IsRestingIn(states), Is.False);
+        map.Unload();
+    }
+
+    [Test]
+    public void ASingleEffectOrANewStayForgetsTheRestingStates()
+    {
+        var (map, effects) = Enter();
+        effects.TerritoryReady = true;
+        ushort[] states = [1, 4];
+        map.SetEffectSnapshot(states);
+        map.AddEffect(0x00020001, 1);
+        Assert.That(map.IsRestingIn(states), Is.False);
+        map.SetEffectSnapshot(states);
+        map.Enter(1238);
+        Assert.That(map.IsRestingIn(states), Is.False);
+        map.Unload();
+    }
+
+    [Test]
     public void HeldLayerStatesAreSessionScopedAndReentryDoesNotRetainOldRequests()
     {
         FakeGame.Install();
