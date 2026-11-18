@@ -11,6 +11,7 @@ one silently.
 | # | Topic | Sources | Current code | What would settle it |
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
+| C13 | **TOP P2 Optimized Bladedance cone width** | BossMod guesses 90° (`AOEShapeCone(100, 45.Degrees())`). Retail (2026-11-17, pull 44): a tank 31° off the clone-to-centre line missed the party standing in the middle, so the cone is at most ~62° wide | Native Limitless Synergy uses a 60° cone, UNVERIFIED; the bots hold tethers 56° clockwise so either width misses the party | RaidTrace visualisation of a Bladedance, or a retail pull where someone stands 31–45° off its axis |
 
 The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
 and every other P3–P7 override are unchecked.
@@ -169,6 +170,21 @@ presentation detail added since October still awaits an in-game check. The highe
     self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
     owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
     tower when the towers sit south. Soft markers render only on the host.
+- **TOP (native Elemental, P1–P3)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
+  (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
+  checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
+  Party Synergy, Limitless Synergy and Hello World looked right; bot movement fixes followed. Pantokrator
+  showed telegraphs only on the first run (helper lists were never cleared between runs; also fixed in
+  Limitless Synergy and the P3 transition) and needs another pass. Zone-in flashes every phase's arena for a
+  second or two, as FRU does.
+  - Program Loop: a bot only intercepts a Blaster tether when its number is due; the human always can.
+  - Hello World: a Nisi passes only to a player without one, bots accept it only in their strat's
+    receiving window, and touching is 1.2y. One retail sample per loop shape; tether break distance 10y
+    is upstream's P5 value.
+  - Oversampled Wave Cannon: one retail sample, a wipe; the Astoh spots are derived from the guide's
+    diagram with every player 7y+ apart.
+  - UNVERIFIED: Flame Thrower and Ballistic Impact damage, the Sagittarius Arrow aiming at the closest
+    player at cast start, Bladedance width (C13), and every native presentation detail.
 - **Cross-cutting**
   - Spectator camera POV and HUD/DelvUI are unverified.
   - Offline party consumers (native HUD names, Dalamud party list, DelvUI) are separate checkpoints and were never all confirmed.
