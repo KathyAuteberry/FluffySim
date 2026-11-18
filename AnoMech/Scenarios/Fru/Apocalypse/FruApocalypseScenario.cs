@@ -8,12 +8,15 @@ using AnoMech.Core.Game.Ai;
 using AnoMech.Core.Game.Party;
 using AnoMech.Core.Native.Interfaces;
 using AnoMech.Core.SimObjects;
+using AnoMech.Multiplayer;
 using Dalamud.Bindings.ImGui;
 
 namespace AnoMech.Scenarios.Fru.Apocalypse;
 
-public sealed class FruApocalypseScenario : IScenario
+public sealed class FruApocalypseScenario : IScenario, IMultiplayerOverlay
 {
+    private static readonly float[] WaveTimes=[33.28f,35.29f,37.3f,39.31f,41.32f,43.33f];
+    private const float ExplosionShownSeconds=.3f;
     public bool SupportsMultiplayer => true;
     public string Name=>"Apocalypse (Mana)";
     public string DisplayNameOverride=>"P3 Apocalypse";
@@ -25,6 +28,7 @@ public sealed class FruApocalypseScenario : IScenario
     public FruApocalypseStateOverrides Overrides { get; }=new();
     public object SettingsOverrides=>Overrides;
     public FruApocalypseState? LastState { get; private set; }
+    public FruApocalypseLights? Lights { get; private set; }
     public bool Completed { get; private set; }
     public int ResolvedWaves { get; private set; }
     public int ResolvedWaters { get; private set; }
@@ -47,7 +51,7 @@ public sealed class FruApocalypseScenario : IScenario
     {
         get
         {
-            if(!HasLightTelegraphs)return [];
+            if(!HasLightTelegraphs || Lights is not { } pattern)return [];
             var lights=new List<Vector3>();
             for(var pair=0;pair<3;pair++)
             {
@@ -55,7 +59,7 @@ public sealed class FruApocalypseScenario : IScenario
                 if(elapsed<0)continue;
                 var outward=pair==0?1:Math.Clamp(elapsed/2,0,1);
                 var travel=pair==0?elapsed:MathF.Max(0,elapsed-2);
-                var p=FruApocalypseState.Direction((state.Axis+(state.Clockwise?1:-1)*travel/2)*MathF.PI/4)*14*outward;
+                var p=FruApocalypseState.Direction((pattern.Axis+(pattern.Clockwise?1:-1)*travel/2)*MathF.PI/4)*14*outward;
                 lights.Add(p);lights.Add(-p);
             }
             return lights;
@@ -63,7 +67,6 @@ public sealed class FruApocalypseScenario : IScenario
     }
     public bool HasLightTelegraphs=>LightElapsed>=0 && LightElapsed<10;
     public IReadOnlyList<Vector3> CurrentExplosion { get; private set; }=[];
-    private float lastExplosion=-1;
     public void DrawSettings()
     {
         ImGui.TextWrapped("Mana Permaswap / Coloured Apocalypse. Read the initial exterior lights and follow their rotation; swaps remain permanent. Use Practice invulnerability when baiting Darkest Dance.");
@@ -94,6 +97,7 @@ public sealed class FruApocalypseScenario : IScenario
         world=worldParam;world.PracticeInvulnerability.Start();Completed=false;ResolvedWaters=0;ResolvedWaves=0;DanceTarget=null;actors.Clear();resolutions.Clear();CurrentPulse=[];CurrentExplosion=[];LightElapsed=-1;
         var paladin=world.Party.ActiveMembers().FirstOrDefault(m=>m.Proxy?.ClassJob==19);
         state=LastState=new(world.Rng,Overrides,world.Party.PlayerRole,paladin is ISimPartyMember pm?pm.Role:PartyRole.OffTank);
+        Lights=state.Lights;
         helperIndex=0;
         world.Events.Add(0,()=>
         {
@@ -125,16 +129,15 @@ public sealed class FruApocalypseScenario : IScenario
             boss.Cast(FruApocalypseActions.EruptionCast);
             foreach(var member in world.Party.ActiveMembers())member.AttachLockonVfx(139,5,persistent:false);
         });
-        world.Events.Add(33.28f,()=>ResolveWave(0));
-        world.Events.Add(35.29f,()=>ResolveWave(1));
+        for(var wave=0;wave<WaveTimes.Length;wave++)
+        {
+            var resolved=wave;
+            world.Events.Add(WaveTimes[wave],()=>ResolveWave(resolved));
+        }
         world.Events.Add(35.78f,()=>ShowStack(2));
         world.Events.Add(36.03f,ResolveSpreads);
-        world.Events.Add(37.3f,()=>ResolveWave(2));
         world.Events.Add(38.65f,()=>boss.Cast(FruApocalypseActions.DanceCast));
-        world.Events.Add(39.31f,()=>ResolveWave(3));
-        world.Events.Add(41.32f,()=>ResolveWave(4));
         world.Events.Add(41.86f,()=>ResolveWater(2));
-        world.Events.Add(43.33f,()=>ResolveWave(5));
         world.Events.Add(44.1f,ResolveDance);
         world.Events.Add(45.23f,()=>world.Map.AddEffect(0x00080001,0x29));
         world.Events.Add(45.78f,()=>ShowStack(3));
@@ -199,7 +202,7 @@ public sealed class FruApocalypseScenario : IScenario
     }
     private void ResolveWave(int wave)
     {
-        CurrentExplosion=state.Wave(wave);lastExplosion=world.Events.Elapsed;
+        CurrentExplosion=state.Wave(wave);
         foreach(var p in CurrentExplosion)Helper(p).Cast(FruApocalypseActions.Explosion);
         ++ResolvedWaves;resolutions.Add((world.Events.Elapsed,40297));
     }
@@ -216,14 +219,20 @@ public sealed class FruApocalypseScenario : IScenario
     }
     public void Tick(float delta,float elapsed)
     {
-        if(Completed)return;
-        if(elapsed>=22 && elapsed<32)
-        {
-            LightElapsed=elapsed-22;
-            CurrentPulse=state.Wave(Math.Clamp((int)(LightElapsed/2),0,5));
-        }
-        else {LightElapsed=-1;CurrentPulse=[];}
-        if(elapsed-lastExplosion>.3f)CurrentExplosion=[];
+        if(!Completed)TickOverlay(elapsed);
+    }
+    public MpMessage? BuildOverlayMessage()=>Lights is { } lights?new FruApocalypseOverlayMessage(lights.Axis,lights.Clockwise):null;
+    public void ApplyOverlayMessage(MpMessage message)
+    {
+        if(message is FruApocalypseOverlayMessage overlay)Lights=new(((overlay.Axis%4)+4)%4,overlay.Clockwise);
+    }
+    public void TickOverlay(float elapsed)
+    {
+        var lightsShown=Lights!=null && elapsed>=22 && elapsed<32;
+        LightElapsed=lightsShown?elapsed-22:-1;
+        CurrentPulse=lightsShown?Lights!.Wave(Math.Clamp((int)(LightElapsed/2),0,5)):[];
+        var wave=Array.FindLastIndex(WaveTimes,time=>elapsed>=time);
+        CurrentExplosion=Lights!=null && wave>=0 && elapsed-WaveTimes[wave]<=ExplosionShownSeconds?Lights.Wave(wave):[];
     }
     private sealed class ResolveEffect(Action<EnemyActionContext> effect) : IEnemyActionEffect
     { public void Apply(EnemyActionContext context, System.Collections.Generic.IReadOnlyList<SimCharacter> hits)=>effect(context); }

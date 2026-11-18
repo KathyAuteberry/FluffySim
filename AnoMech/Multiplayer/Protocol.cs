@@ -48,6 +48,8 @@ namespace AnoMech.Multiplayer;
 [JsonDerivedType(typeof(P2AiReplayStateMessage), "p2AiReplayState")]
 [JsonDerivedType(typeof(P2LockonsUpdateMessage), "p2LockonsUpdate")]
 [JsonDerivedType(typeof(AnnouncementMessage), "announcement")]
+[JsonDerivedType(typeof(SoftMarkersMessage), "softMarkers")]
+[JsonDerivedType(typeof(FruApocalypseOverlayMessage), "fruApocalypseOverlay")]
 [JsonDerivedType(typeof(P4AiReplayStateMessage), "p4AiReplayState")]
 [JsonDerivedType(typeof(P5AiReplayStateMessage), "p5AiReplayState")]
 [JsonDerivedType(typeof(TopP6WaveCannon2AiReplayStateMessage), "topP6Wc2AiReplayState")]
@@ -138,6 +140,7 @@ internal interface IPeerMessage
 // One generic Dispatch case per interface instead of one per scenario (see IMultiplayerReplayable).
 internal interface IScenarioReplayStateMessage : IHostOnlyMessage;
 internal interface IScenarioMidRunUpdateMessage : IHostOnlyMessage;
+internal interface IScenarioOverlayMessage : IHostOnlyMessage;
 
 // Peer -> host on connect. Version/Checksum catch a build mismatch before it desyncs. Stream*: the
 // peer's stream (a new epoch for each join) and how far it has taken the host's, -1 if not yet.
@@ -271,6 +274,14 @@ public sealed record P2LockonsUpdateMessage(Dictionary<PartyRole, uint> Lockons)
 
 // Replay of SimWorld.Announce: a scenario's own mid-run message to the party.
 public sealed record AnnouncementMessage(string Text) : MpMessage, IHostOnlyMessage;
+
+// Actor names the marker's bearer as a GamePacket does.
+public sealed record SoftMarkerState(Sign Sign, uint Actor);
+
+// Every marker the host's run shows, whenever any of them changes.
+public sealed record SoftMarkersMessage(List<SoftMarkerState> Markers) : MpMessage, IHostOnlyMessage;
+
+public sealed record FruApocalypseOverlayMessage(int Axis, bool Clockwise) : MpMessage, IScenarioOverlayMessage;
 
 // The subset UmadP4KefkaSaysAi reads (UmadP4KefkaSaysState.FromNetworkReplay); MysteryCast
 // reduced to its three scalars.

@@ -18,6 +18,8 @@ public sealed partial class MultiplayerManager
         hostRunParams = null;
         pendingEntered = null;
         hostStageSetFor = null;
+        sentSoftMarkers = [];
+        sentOverlay = null;
         DebugBotControl.Enabled = false;
         Plugin.Game.PartyMemberKilled -= OnPartyMemberKilledHost;
         Session.Started = false; // or the Start button stays disabled
@@ -277,6 +279,8 @@ public sealed partial class MultiplayerManager
             if (!aiReplayStateSent) TrySendAiReplayState();
             SendMidRunUpdate();
             SendForcedMoves();
+            BroadcastSoftMarkers();
+            SendScenarioOverlay();
             BroadcastRoles();
         }
         else
@@ -290,6 +294,8 @@ public sealed partial class MultiplayerManager
                 return;
             }
             replay?.Tick();
+            ShowHostSoftMarkers();
+            ShowHostOverlay();
             TickDebugBotReplay(deltaSeconds);
             SyncClockToHost();
             CatchUpClockToHost();

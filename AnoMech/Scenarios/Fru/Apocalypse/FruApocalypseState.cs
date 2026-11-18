@@ -20,6 +20,21 @@ public sealed class FruApocalypseStateOverrides
     public PartyRole? BaitTank { get; set; }
 }
 
+public sealed record FruApocalypseLights(int Axis, bool Clockwise)
+{
+    public IReadOnlyList<Vector3> Wave(int wave)
+    {
+        var result=new List<Vector3>();
+        if(wave<2) {result.Add(Vector3.Zero);result.Add(Vector3.Zero);}
+        for(var offset=Math.Max(0,wave-2);offset<=wave;offset++)
+        {
+            var p=FruApocalypseState.Direction((Axis+(Clockwise?offset:-offset))*MathF.PI/4)*14;
+            result.Add(p);result.Add(-p);
+        }
+        return result;
+    }
+}
+
 public sealed class FruApocalypseState
 {
     public static readonly PartyRole[] Roles = Enum.GetValues<PartyRole>();
@@ -74,15 +89,6 @@ public sealed class FruApocalypseState
     }
     public int Order(PartyRole role)=>Distributions[Permutation][(int)role];
     public static Vector3 Direction(float angle)=>AnoMech.Core.Game.Planar.Direction(angle);
-    public IReadOnlyList<Vector3> Wave(int wave)
-    {
-        var result=new List<Vector3>();
-        if(wave<2) {result.Add(Vector3.Zero);result.Add(Vector3.Zero);}
-        for(var offset=Math.Max(0,wave-2);offset<=wave;offset++)
-        {
-            var p=Direction((Axis+(Clockwise?offset:-offset))*MathF.PI/4)*14;
-            result.Add(p);result.Add(-p);
-        }
-        return result;
-    }
+    public FruApocalypseLights Lights=>new(Axis,Clockwise);
+    public IReadOnlyList<Vector3> Wave(int wave)=>Lights.Wave(wave);
 }

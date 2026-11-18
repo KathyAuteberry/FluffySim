@@ -160,6 +160,8 @@ public sealed partial class MultiplayerManager
         }
         earlyPackets.Clear();
         reportedAttacks.Clear();
+        hostSoftMarkers = [];
+        hostOverlay = null;
         peerEnteredInstance = false;
         peerRunStarted = false;
         peerEntryQueued = true;
@@ -276,6 +278,33 @@ public sealed partial class MultiplayerManager
         if (Plugin.Game.World.Map.IsInInstance) Plugin.Game.Leave();
     }
 
+    private List<SoftMarkerState> hostSoftMarkers = [];
+
+    private void OnSoftMarkersReceived(SoftMarkersMessage msg)
+        => hostSoftMarkers = NetGuard.Cap(msg.Markers, Enum.GetValues<Sign>().Length)
+            .Where(marker => marker != null && SoftMarkers.HasIcon(marker.Sign))
+            .ToList();
+
+    // Every frame: a bearer whose spawn packet is still on its way takes its marker once it's here.
+    private void ShowHostSoftMarkers()
+    {
+        var markers = Plugin.Game.World.SoftMarkers;
+        if (hostSoftMarkers.Count == 0 && markers.Count == 0) return;
+        markers.Replace(hostSoftMarkers
+            .Select(marker => (marker.Sign, Bearer: replay?.MirrorOfHost(marker.Actor)))
+            .Where(marker => marker.Bearer != null)
+            .Select(marker => (marker.Sign, marker.Bearer!)));
+    }
+
+    private MpMessage? hostOverlay;
+
+    private void ShowHostOverlay()
+    {
+        if (Plugin.Game.ActiveScenario is not IMultiplayerOverlay scenario) return;
+        if (hostOverlay != null) scenario.ApplyOverlayMessage(hostOverlay);
+        scenario.TickOverlay(Plugin.Game.World.Events.Elapsed);
+    }
+
     // The players' seats as the host has them; a bot's seat moves with its packets instead.
     private void OnRolesSnapshotReceived(RolesSnapshotMessage snap)
     {
@@ -367,6 +396,9 @@ public sealed partial class MultiplayerManager
         if (NetGuard.Clean(msg.Reason) is { Length: > 0 } reason) AnnounceRunEnded(reason);
         running = false;
         peerRunStarted = false;
+        hostSoftMarkers = [];
+        hostOverlay = null;
+        Plugin.Game.World.SoftMarkers.Clear();
         StopDebugBotReplay();
         replay?.Clear();
         // Leave() assumes a zone was entered: an end that beats our queued entry is acted on by
