@@ -225,8 +225,14 @@ test hosts or Debug check ZIPs. Keep AnoMech attribution and matching source ava
 
 ### Ongoing feature and integration workflow (jj 0.46)
 
+**Every piece of work must always be integrated immediately.** As soon as a work commit exists,
+add it as a parent of the current unpublished `chore: integration commit`, or start the next
+integration generation if the latest one is published. Never leave work on a side branch to
+integrate later: unintegrated heads are forgotten and miss releases. This covers local integration
+only; moving `master`, release preparation, pushing and tagging still need the owner's authorization.
+
 Develop on anonymous feature branches from `master@origin`. Follow-up commits can remain on
-an existing feature branch; do not create a bookmark for every task or commit. Use `codex/*`
+an existing feature branch; do not create a bookmark for every task or commit. Use `claude/*`
 bookmarks only when a branch needs a durable name. Prefer a working change supplied by the owner.
 
 For an upcoming release, local `master` points to its release-preparation change and `master-`
