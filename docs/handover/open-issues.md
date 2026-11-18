@@ -206,8 +206,8 @@ presentation detail added since October still awaits an in-game check. The highe
     Owner's in-game pass: every FRU phase now clears in under 0.1 s, which the owner accepts.
   - TOP: the zone has no holds. In the traced stays nine layers drop at snapshot +4.6 s (`0x2304` 97 to 19) and two at
     +3.6 s, at different frame counts, so the change follows a timer. No scenario event is due then (Program Loop's
-    first cast is at 10.4 s). The trigger is unknown. `[ZoneInTrace]` cannot see the first 2 s after the snapshot,
-    because it also runs from the world tick.
+    first cast is at 10.4 s). The trigger is unknown. The temporary layer trace, removed before 3.4.5.0, could not see the first 2 s after the
+    snapshot, because it ran from the world tick.
   - TOP now hides the 128 instances that are off once P1 has settled, from the first layout frame until 6 s after the
     layout is ready, then hands them back to the client. The list comes from one settled P1 arena snapshot.
     Owner's in-game pass (2026-11-18): the TOP P1 flash is much shorter but not gone, and not down to FRU's 0.1 s. The

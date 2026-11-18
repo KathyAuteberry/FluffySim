@@ -1,3 +1,19 @@
+# FluffySim 3.4.5.0 — release prepared
+
+## Added
+
+- **The Omega Protocol P1 to P3** (Elemental, beta). Seven native scenarios: Program Loop, Pantokrator, Party Synergy, Limitless Synergy, the P3 transition, Hello World and Oversampled Wave Cannon. They are built from retail combat logs and support multiplayer. Oversampled Wave Cannon rests on a single retail sample, so its timing and positions are provisional.
+- **Choose your number.** Program Loop and Pantokrator can now set your number from the solo scenario settings.
+- **Pantokrator adjusting pairs.** Each numbered pair can be forced to adjust sides or stay put.
+
+## Fixed
+
+- **Zone-in arena flash.** Every FRU phase now settles on the right arena in under 0.1 s, instead of showing other arenas for a second or more.
+
+## Known issues
+
+- The Omega Protocol P1 still shows a short arena flash at zone-in. P2 and P3 entries have not been checked for it yet.
+
 # FluffySim 3.4.4.0 — release prepared
 
 ## Added
