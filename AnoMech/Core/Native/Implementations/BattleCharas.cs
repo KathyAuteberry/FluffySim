@@ -17,9 +17,6 @@ namespace AnoMech.Core.Native.Implementations;
 
 internal sealed unsafe class BattleCharas : IBattleCharas
 {
-    private const byte RaceLalafell = 3;
-    private const byte TribePlainsfolk = 5;
-    private const byte SexFemale = 1;
     private const byte BodyTypeAdult = 1;
 
     private const uint DoppelMaxHealth = 100_000;
@@ -185,7 +182,7 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         common.ClassJobId = preset.ClassJob;
         common.Position = placement.Position;
         common.Rotation = MathUtil.QuantizeRotation(MathUtil.NormalizeRotation(placement.Rotation));
-        WriteCustomize(ref common.CustomizeData);
+        WriteCustomize(ref common.CustomizeData, preset.Look);
         WriteEquipment(&packet, preset, Plugin.DataManager.GetExcelSheet<Item>());
         // SpawnPlayerPacket.Common (+0x20) . _name (+0x232, 32 bytes)
         GameObjectHelper.WriteName((byte*)&packet + 0x20 + 0x232, 32, preset.Name);
@@ -239,27 +236,30 @@ internal sealed unsafe class BattleCharas : IBattleCharas
         Id = (ushort)model, Variant = (byte)(model >> 16), Stain = (byte)(model >> 24),
     };
 
-    private static void WriteCustomize(ref CustomizeData c)
+    private static void WriteCustomize(ref CustomizeData c, PartyMemberLook look)
     {
-        c.Race = RaceLalafell;
-        c.Sex = SexFemale;
+        c.Race = PartyMemberLook.RaceMiqote;
+        c.Sex = PartyMemberLook.SexFemale;
         c.BodyType = BodyTypeAdult;
-        c.Height = 50;
-        c.Tribe = TribePlainsfolk;
-        c.Face = 1;
-        c.Hairstyle = 1;
-        c.SkinColor = 1;
-        c.EyeColorRight = 1;
-        c.EyeColorLeft = 1;
-        c.HairColor = 1;
-        c.HighlightsColor = 1;
+        c.Height = look.Height;
+        c.Tribe = look.Tribe;
+        c.Face = look.Face;
+        c.Hairstyle = look.Hairstyle;
+        c.Highlights = true;
+        c.SkinColor = look.SkinColor;
+        c.EyeColorRight = look.EyeColor;
+        c.EyeColorLeft = look.EyeColor;
+        c.HairColor = look.HairColor;
+        c.HighlightsColor = look.HighlightsColor;
         c.TattooColor = 1;
-        c.Eyebrows = 1;
-        c.Nose = 1;
-        c.Jaw = 1;
+        c.Eyebrows = look.Eyebrows;
+        c.EyeShape = look.EyeShape;
+        c.Nose = look.Nose;
+        c.Jaw = look.Jaw;
+        c.Mouth = look.Mouth;
         c.LipColorFurPattern = 1;
         c.MuscleMass = 50;
-        c.TailShape = 1;
+        c.TailShape = look.TailShape;
         c.BustSize = 50;
         c.FacePaintColor = 1;
     }

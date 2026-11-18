@@ -14,7 +14,7 @@ public interface IBattleCharas
     // slot stays reserved until ReleaseSlot. Null when a sheet row is missing or no slot is free.
     IBattleCharaProxy? SpawnBattleNpcFromPacket(EnemySpawnConfig config, Placement placement, out uint entityId);
 
-    // A Lalafell party doppel wearing the preset's gear, built by the engine's own PlayerSpawn
+    // A female Miqo'te party doppel wearing the preset's gear, built by the engine's own PlayerSpawn
     // handler; arrives and reserves its slot like SpawnBattleNpcFromPacket.
     IBattleCharaProxy? SpawnDoppel(PartyMemberPreset preset, byte level, Placement placement, out uint entityId);
 

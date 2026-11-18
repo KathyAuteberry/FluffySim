@@ -12,6 +12,8 @@ internal sealed class DataminingGameData(FakeRsvFunctions rsv) : IGameData
     private static readonly Lazy<Sheet> Actions = Load("Action");
     private static readonly Lazy<Sheet> BNpcBases = Load("BNpcBase");
     private static readonly Lazy<Sheet> BNpcNames = Load("BNpcName");
+    private static readonly Lazy<Sheet> CharaMakeCustomizes = Load("CharaMakeCustomize");
+    private static readonly Lazy<Sheet> CharaMakeTypes = Load("CharaMakeType");
     private static readonly Lazy<Sheet> ClassJobs = Load("ClassJob");
     private static readonly Lazy<Sheet> Knockbacks = Load("Knockback");
     private static readonly Lazy<Sheet> ModelCharas = Load("ModelChara");
@@ -41,6 +43,25 @@ internal sealed class DataminingGameData(FakeRsvFunctions rsv) : IGameData
             row.Bool("TargetArea"),
             row.Bool("IsPlayerAction"));
     }
+
+    // The character creator's list options for one body, keyed by customize byte index.
+    public static IReadOnlyDictionary<byte, uint[]> CharaMakeOptions(byte race, byte tribe, byte gender)
+    {
+        const int Menus = 28, MenuParams = 100;
+        var id = CharaMakeTypes.Value.Ids.Single(rowId => CharaMakeTypes.Value.Row(rowId) is { } candidate
+            && candidate.Byte("Race") == race && candidate.Byte("Tribe") == tribe && candidate.Byte("Gender") == gender);
+        var row = CharaMakeTypes.Value.Row(id)!.Value;
+        var options = new Dictionary<byte, uint[]>();
+        for (var menu = 0; menu < Menus; menu++)
+        {
+            if (row.UInt($"CharaMakeStruct[{menu}].Menu") == 0) continue;
+            options.TryAdd(row.Byte($"CharaMakeStruct[{menu}].Customize"), Enumerable.Range(0, MenuParams)
+                .Select(i => row.UInt($"CharaMakeStruct[{menu}].SubMenuParam[{i}]")).Where(value => value != 0).ToArray());
+        }
+        return options;
+    }
+
+    public static byte CharaMakeFeatureId(uint customizeRow) => CharaMakeCustomizes.Value.Row(customizeRow)!.Value.Byte("FeatureID");
 
     // Every action a player presses outside PvP.
     public static IEnumerable<uint> PlayerActionIds()
