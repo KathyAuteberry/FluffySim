@@ -82,6 +82,7 @@ class BrandingMetadataTests(unittest.TestCase):
         project = ET.parse(module.ROOT / 'AnoMech/AnoMech.csproj')
         self.assertEqual(manifest['Name'], 'FluffySim')
         self.assertIn('AnoMech', manifest['Description'])
+        self.assertIn('AnoMech', manifest['Author'])
         self.assertEqual(project.findtext('.//AssemblyName'), 'FluffySim')
         self.assertEqual(project.findtext('.//RootNamespace'), 'AnoMech')
         self.assertIsNone(project.find('.//Version'))

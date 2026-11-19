@@ -3,10 +3,10 @@
 
   <Import Project="../FluffySim.Version.props" />
   <PropertyGroup>
-    <Authors>FluffySim contributors; Anomek and AnoMech contributors</Authors>
+    <Authors>Kathy Auteberry (fork of AnoMech by Anomek)</Authors>
     <AssemblyName>FluffySim</AssemblyName>
     <Product>FluffySim</Product>
-    <Description>FluffySim — an FFXIV mechanic simulator extending AnoMech with playable DSR and FRU Ultimate encounters.</Description>
+    <Description>Practice FFXIV Ultimate mechanics inside the game, solo with simulated party members or in multiplayer.</Description>
     <RootNamespace>AnoMech</RootNamespace>
     <PackageProjectUrl>https://github.com/KathyAuteberry/FluffySim</PackageProjectUrl>
     <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>

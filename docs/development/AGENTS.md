@@ -212,6 +212,9 @@ FluffySim.Version.props is the only plugin version source (three parts; assembly
 docs/releases/CHANGELOG.md supplies reviewed GitHub release notes through tools/release_notes.py.
 .github/workflows/publish-fluffysim.yml verifies tags/ancestry/scenarios, tests, builds Release
 only on an isolated runner, packages, publishes, then updates plogons/master with PLOGONS_TOKEN.
+Plogons metadata other than version, API level and links (author, description, punchline, tags,
+URLs, short changelog) comes from master's AnoMech/FluffySim.json and CHANGELOG via
+sync-plogons-metadata.yml, so it changes without a release; pushing master still needs authorization.
 The old release-plugin.yml is only the inherited manual Debug package check. Exact setup,
 versioning, publication and partial-failure recovery are in docs/releases/RELEASING.md.
 

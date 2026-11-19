@@ -91,6 +91,22 @@ it as the GitHub release body; it does not substitute generated PR notes.
 The public release is created before metadata changes. Its downloaded ZIP supplies the
 manifest; the updater validates identity/API/version and constructs exact release URLs in
 plogons/mostly-harmless.json. Other plugins survive; versions never decrease.
+The same job then runs the updater's `metadata` mode against a checkout of master, which adds
+the short changelog for the new version.
+
+## Metadata without a release
+
+Author, punchline, description, tags, repository/icon URLs and the plogons `Changelog` come from
+master, not from the release ZIP. `AnoMech/FluffySim.json` holds them; the changelog is a
+plain-text summary of the docs/releases/CHANGELOG.md entry for the version plogons already
+publishes (section headings, then each bullet's bold lead-in and first sentence; `## Internal`
+is left out). Pushing a change to either file on master runs `sync-plogons-metadata.yml`, which
+updates only those fields in plogons; version, API level and download links stay as released.
+Run it by hand with `gh workflow run sync-plogons-metadata.yml --ref master`. Preview the result
+locally from a plogons checkout:
+`python tools/update_manifest.py metadata --plugin FluffySim --source ../FluffySim --print-changelog`, then discard
+the manifest change unless publishing it is authorized.
+Pushing master for a metadata change still needs the owner's authorization, like any push.
 
 Subscription: https://raw.githubusercontent.com/KathyAuteberry/plogons/master/mostly-harmless.json
 
