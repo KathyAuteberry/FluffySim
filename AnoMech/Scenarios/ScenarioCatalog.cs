@@ -101,6 +101,7 @@ public sealed class ScenarioCatalog
         new Dmu.GravenImage2.DmuGravenImage2Scenario(),
         new Dmu.GravenImage3.DmuGravenImage3Scenario(),
         new Dmu.Forsaken.DmuForsakenScenario(),
+        new Dmu.Trine.DmuTrineScenario(),
         new TopNative.ProgramLoop.TopProgramLoopScenario(),
         new TopNative.Pantokrator.TopPantokratorScenario(),
         new TopNative.PartySynergy.TopPartySynergyScenario(),
