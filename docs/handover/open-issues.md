@@ -163,13 +163,33 @@ presentation detail added since October still awaits an in-game check. The highe
   - Reproducibility: `tools/tea_evidence.py` does not regenerate `docs/tea/evidence-summary.json`;
     part of it came from scratch scripts (recovered, see `tools.md` §3).
 - **DMU**
-  - P2 Forsaken (native, Mana/Yan): no retail capture yet. Timeline, tower times, shapes, weather,
-    BGM (20292) and the P2 arena slot are copied from upstream's UMAD Forsaken. Only three things
-    differ from upstream: the Mana waymarks, the opening lineup and the final tower. The lineup
-    (four columns, two rows, south of Kefka) is read off Kitten's lineup figure. The final-tower
-    self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
-    owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
-    tower when the towers sit south.
+  - P2 Forsaken (native, Mana/Yan): checked on 2026-11-21 against the 2026-11-20 session (ACT
+    `Network_30305_20261120.log`, ten Forsaken pulls; RaidTraces `20261120-120759` and `-144808`).
+    Upstream's tower, lockon, End and All Things Ending times, the weather (79 → 89 → 79), the BGM
+    (20292), the P2 arena slot and the shapes all match retail within about 0.1 s. Fixed from the logs:
+    clones land 4 y short of the player they jump on (they used to stay at the centre); each All Things
+    Ending aims at one party member's spot at cast start (random per caster, not the End target and not
+    always the human); the hidden shape statuses 0x13DC/0x13DD/0x13DE follow each player's lockon
+    (everyone used to get 0x13DC); two auto-attacks moved. With clones landing off-centre, two Yan bot
+    spots near the centre were inside the shifted cleave; they moved about 1.5 y deeper. **Check against
+    Kitten's figures** that the moved helper spot (−1.0, −3.6) and the second stack soaker (−5.0, −3.6)
+    still read as the strat.
+    - Kefka's autos target the off-tank (upstream's choice); in retail they hit whoever holds aggro.
+    - The lineup and the final-tower self-marks still follow Kitten and the owner as before.
+  - P2 Trine (native, Yan Flash = Elemental since 2026-11-19): built 2026-11-21 from three retail Trines
+    (pulls at 22:27, 22:42 and 23:56 JST on 2026-11-20). Observed: the seven telegraph positions never
+    change (six outer triangles alternating direction plus a centre one), waves of 3/1/3 triangles burst
+    15.87/17.88/19.88 s after Trine's cast starts, the centre triangle bursts in wave 3 and points either
+    way, Wings of Destruction (left, Kefka facing north) resolves at 10.11 s, the closest and farthest
+    players take r7 busters at 20.37 s, Ultimate Embrace follows at 22.55 s. Bots follow BossMod Reborn's
+    and the owner's rule: party to the first wave-1 triangle clockwise from north, tanks to the first one
+    counter-clockwise from north-west, off-tank at the edge, main tank at the closest safe spot to Kefka
+    within 60° of the tanks' triangle.
+    - UNVERIFIED: the wave distribution (any split is rolled; three pulls showed three different ones),
+      the right-wing cleave (only the left was seen), Ultimate Embrace's damage split, and the arena
+      map-effect states before Trine (slot 0x13 turns off 6.5 s before Trine in retail; not reproduced).
+    - Native presentation needs an in-game look: the telegraph EObjs (2015154/2015155) and their beats,
+      Kefka's wing animation state (ActorControl 0x3E 0/2/3), burst VFX.
 - **TOP (native Elemental, P1–P3)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
