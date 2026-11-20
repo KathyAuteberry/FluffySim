@@ -130,7 +130,10 @@ public static class DmuConstants
         public static readonly ushort[] TelePortent = [0x130C, 0x130D, 0x130E, 0x130F];
         public static readonly ushort[] TelePortentTurned = [0x13D7, 0x13D8, 0x13D9, 0x13DA];
         public const ushort SpellsTrouble = 0x13DB;
-        public const ushort Unknown13DC = 0x13DC;
+        // Hidden, one per Forsaken lockon: the shape a player's next tower casts.
+        public const ushort ForsakenStackShape = 0x13DC;
+        public const ushort ForsakenChariotShape = 0x13DD;
+        public const ushort ForsakenConeShape = 0x13DE;
     }
 
     public static class LockonId
@@ -161,7 +164,6 @@ public static class DmuConstants
         public const ushort Opening = 20289;
         public const ushort AfterFirstJudgment = 20290;
         public const ushort AfterSecondJudgment = 20291;
-        // UNVERIFIED: upstream's P2 track; never seen in a retail capture.
         public const ushort Forsaken = 20292;
     }
 

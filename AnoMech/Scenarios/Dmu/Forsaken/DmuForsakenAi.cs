@@ -23,12 +23,12 @@ public sealed class DmuForsakenAi : IScenarioAi<DmuForsakenState>
     [
         new(5.66f, -4.66f),
         new(5.66f, -8.66f),
-        new(-5.4f, -2.4f),
+        new(-5.0f, -3.6f),
         new(-5.66f, -9.16f),
         new(5.66f, -10.66f),
-        new(2.5f, -2.5f),
-        new(-3.5f, -1.9f),
-        new(-3.5f, -1.9f),
+        new(1.0f, -3.9f),
+        new(-1.0f, -3.6f),
+        new(-1.0f, -3.6f),
     ];
 
     private static readonly Vector2?[] EvenTowerSpots =
