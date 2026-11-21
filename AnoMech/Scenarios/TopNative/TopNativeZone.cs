@@ -14,6 +14,8 @@ public sealed class TopNativeZone : IZone
     public static readonly Phase P2 = new(Instance, "P2", WeatherId.P2, Bgm.P2,
         arenaMapEffectOverrides: new Dictionary<byte, ushort> { [MapEffect.P2Floor] = MapEffect.Shown });
     public static readonly Phase P3 = new(Instance, "P3", WeatherId.P3, Bgm.P3);
+    public static readonly Phase P4 = new(Instance, "P4", WeatherId.P4, Bgm.P3,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [MapEffect.P4Arena] = MapEffect.Shown });
 
     public bool SupportsSpectator => true;
     public string DisplayName => "The Omega Protocol";

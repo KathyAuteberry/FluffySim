@@ -1,6 +1,6 @@
-# TOP native Elemental scenarios, P1–P3
+# TOP native Elemental scenarios, P1–P4
 
-Seven scenarios under `AnoMech/Scenarios/TopNative/` (zone `TopNativeZone`, sidebar "FluffySim Native"),
+Eight scenarios under `AnoMech/Scenarios/TopNative/` (zone `TopNativeZone`, sidebar "FluffySim Native"),
 following the Tuufless Elemental guide (`ffxiv.tuufless.com/elemental/top/`, mirrored locally in
 `~/Projekty/Tuufless/FFXIV-Elemental-raid-macros/_elemental/top/`; the mirror is newer than every TOP
 commit upstream). Built 2026-11-18; the owner's first in-game pass the same day drove the fixes noted
@@ -15,9 +15,14 @@ A friend running Elemental captured two lockouts on 2026-11-17 (timestamps UTC+8
 | `Network_30305_20261117.log` | IINACT log, 53 pulls in territory 1122 |
 | `20261117-130520-duty908.rtrace`, `20261117-144120-duty908.rtrace` | RaidTrace 0.3.1, one per lockout |
 | `the Omega Protocol (Ultimate) 2026.11.17 22.30.51.dat`, `… 2026.11.18 00.07.57.dat` | Duty Recorder replays (not decoded yet) |
+| `Network_30305_20261120.log` | IINACT log, 44 pulls, from a second static member's session on 2026-11-20 |
+| `20261120-130144-duty908.rtrace`, `20261120-141632-duty908.rtrace` | RaidTrace 0.3.1, one per lockout |
+| `the Omega Protocol (Ultimate) 2026.11.20 22.06.48.dat`, `… 2026.11.21 00.04.29.dat` | Duty Recorder replays (not decoded yet) |
 
-Pulls reaching each mechanic: Program Loop 53, Pantokrator 45, Party Synergy ~22, Limitless Synergy 7,
-Hello World 5, Oversampled Wave Cannon 1 (a wipe). Party in the captures, mapped to Elemental roles by
+Pulls reaching each mechanic, 2026-11-17 + 2026-11-20: Program Loop 53 + 41, Pantokrator 45 + 34, Party
+Synergy ~22 + 21, Limitless Synergy 7 + 10, Hello World 5 + 8, Oversampled Wave Cannon 1 + 4, P4 0 + 3 (one
+cleared into P5). Every P1–P3 boss event in the 2026-11-20 log lands within 0.05 s of the earlier log and the
+scenarios; only the Oversampled Wave Cannon spots changed. Party in the captures, mapped to Elemental roles by
 the P1 wave-cannon spread spots: H1 SCH, H2 SGE, D1 SAM, D2 VPR, D3 DNC/BRD, D4 BLM, tanks WAR and DRK.
 Positions come from the traces' server-timed `actor_move`/`position_report`; events from the ACT log.
 Analysis scripts were scratch only (not committed).
@@ -119,6 +124,23 @@ One retail sample (cast, monitors −0.09 s, fire +10.07). Astoh spots are deriv
 (line-up H1 H2 MT ST D1 D2 D3 D4) so each monitor has exactly its two targets on its side and everyone is
 7 y+ apart; monitors turn to face. Each monitor picks two on its side, as upstream's P5 monitors do.
 
+## P4 Blue Screen
+
+Three retail pulls from 2026-11-20, all with the same boss sequence. Times from Omega's reboot (the untargeted
+31610 action, Omega targetable again; the scenario puts it at 2 s): Wave Cannon cast +9.35 (5 s sheet, 4.7 s bar);
+three waves of line-stack markers (helper action 22393 on two random players) +11.86 / +21.98 / +32.2, delayed
+lines (31616, 5.3 s, one per player along their bearing at cast time) +14.40 / +24.57 / +34.78, proteans (31614,
+instant, one per player) 0.54 s after each, line stacks (31615, width 6, four players) +19.86 / +30.0 / +40.23;
+Wave Repeater casts +17.36 and +34.78 with rings at +7.07, +9.12 and +11.18; Blue Screen +47.03 (8 s sheet).
+Weather 89 and MapEffect slot 20 at the transition; no BGM change was seen, so P3's 950 is kept.
+
+Elemental (guide and macro): spreads along Omega's sides, north to south tanks, ranged, healers, melee, west
+MT D3 H1 D1 and east ST D4 H2 D2 (the guide's example: MT and H1 marked, so H1 and D2 swap), at 13.7 y and
+bearings 293/270/245/225 and 67/90/115/135 as the three pulls stood. Two markers on one side: the lower one swaps; a side with none sends its melee. Stacks at 163° and 200°,
+about 13 y out. Wave 2 gathers inside 12 y before the third ring, wave 3 after the second ring.
+
+Simplification: the scenario ends with Blue Screen's cast; the DPS check and melee LB3 are not simulated.
+
 ## Check in game
 
 Still open after the first pass: arenas from every phase flash for a second or two at zone-in, the same as
@@ -128,3 +150,5 @@ FRU (a shared zone-load issue, not TOP-specific); Pantokrator past the telegraph
 - Clone looks and warps in Limitless Synergy; Omega-M's shield look.
 - Transition arms and rings; Hello World tower omens, tethers and statuses; monitor VFX.
 - Bot movement looks sane at every step; the human-only rules above feel right.
+- P4: the line-stack marker (helper action 22393) shows on its targets; delayed line and protean telegraphs;
+  the arena with MapEffect slot 20 and weather 89.

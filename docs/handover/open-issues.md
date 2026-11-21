@@ -170,7 +170,7 @@ presentation detail added since October still awaits an in-game check. The highe
     self-marks follow Kitten (Chain = cone, Ignore = AoE circle, overriding priority in Mana) and the
     owner (random 1/2 macro, applied after tower 3). Kitten's set-8 figure puts the 1s on the west
     tower when the towers sit south.
-- **TOP (native Elemental, P1–P3)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
+- **TOP (native Elemental, P1–P4)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
   Party Synergy, Limitless Synergy and Hello World looked right; bot movement fixes followed. Pantokrator
@@ -181,8 +181,11 @@ presentation detail added since October still awaits an in-game check. The highe
   - Hello World: a Nisi passes only to a player without one, bots accept it only in their strat's
     receiving window, and touching is 1.2y. One retail sample per loop shape; tether break distance 10y
     is upstream's P5 value.
-  - Oversampled Wave Cannon: one retail sample, a wipe; the Astoh spots are derived from the guide's
-    diagram with every player 7y+ apart.
+  - Oversampled Wave Cannon: five retail samples since the 2026-11-20 log; spots follow its four pulls.
+  - P4 Blue Screen (2026-11-21, three retail pulls from 2026-11-20): ends with Blue Screen's cast, the DPS
+    check is not simulated. UNVERIFIED: the delayed Wave Cannon lines are lethal; the line-stack marker is
+    retail's helper action 22393 and its look in the sim is unchecked; MapEffect slot 20's look; P3's BGM
+    continuing.
   - UNVERIFIED: Flame Thrower and Ballistic Impact damage, the Sagittarius Arrow aiming at the closest
     player at cast start, Bladedance width (C13), and every native presentation detail.
 - **Zone-in arena flicker (FRU, native TOP), open since 2026-11-18.** Every phase's arena shows and flashes

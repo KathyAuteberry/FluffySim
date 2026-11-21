@@ -247,4 +247,36 @@ public static class TopNativeActions
         Effects = [Damage(MagicVulns), ApplyStatus(StatusId.MagicVulnerabilityUp, 5f), ApplyRuin(ComeRuin, 2, 7f)],
         DeathExplanation = "hit by two monitors",
     };
+
+    // -- P4 Blue Screen --
+
+    public static readonly EnemyAction WaveCannonP4StackMarker = new(ActionId.WaveCannonP4StackMarker)
+    {
+        Cast = new() { CastSecondsOverride = 0f, AnimationLock = 0.1f },
+    };
+
+    public static readonly EnemyAction WaveCannonP4Protean = new(ActionId.WaveCannonP4Protean)
+    {
+        Cast = new() { CastSecondsOverride = 0f, AnimationLock = 0.1f },
+        Timing = new() { DamageDelay = 0.6f },
+        Effects = [Damage(MagicVulns), ApplyStatus(StatusId.MagicVulnerabilityUp, 2f)],
+        DeathExplanation = "Wave Cannon protean overlapped another",
+    };
+
+    // UNVERIFIED: treated as lethal; no retail sample of anyone left in one was checked.
+    public static readonly EnemyAction WaveCannonP4Line = new(ActionId.WaveCannonP4Line)
+    {
+        Cast = new() { AnimationLock = 0.1f, FaceTarget = false },
+        Timing = new() { DamageDelay = 0.6f },
+        Effects = [Damage(Lethal)],
+        DeathExplanation = "Wave Cannon line",
+    };
+
+    public static readonly EnemyAction WaveCannonP4Stack = new(ActionId.WaveCannonP4Stack)
+    {
+        Cast = new() { CastSecondsOverride = 0f, AnimationLock = 0.1f },
+        Timing = new() { DamageDelay = 0.6f },
+        Effects = [Damage(MagicVulns, split: Stack(4)), ApplyStatus(StatusId.MagicVulnerabilityUp, 2f)],
+        DeathExplanation = "Wave Cannon line stack needs four",
+    };
 }

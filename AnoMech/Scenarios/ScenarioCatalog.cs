@@ -108,6 +108,7 @@ public sealed class ScenarioCatalog
         new TopNative.Transition.TopTransitionScenario(),
         new TopNative.HelloWorld.TopHelloWorldScenario(),
         new TopNative.OversampledWaveCannon.TopOversampledWaveCannonScenario(),
+        new TopNative.BlueScreen.TopBlueScreenScenario(),
         new UmadP1TeleTrouncingScenario(),
         new UmadP2ForsakenScenario(),
         new UmadP3LimitCutScenario(),

@@ -50,7 +50,7 @@ Closing the interface alone does not leave the simulation.
 
 ## Supported encounters
 
-The catalog contains **62 entries**, including **17 FRU entries**, **12 DSR entries**, **6 TEA entries**, **7 native The Omega Protocol entries** and **3 native Dancing Mad entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
+The catalog contains **63 entries**, including **17 FRU entries**, **12 DSR entries**, **6 TEA entries**, **8 native The Omega Protocol entries** and **3 native Dancing Mad entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
 
 ### Futures Rewritten (Ultimate)
 
@@ -98,15 +98,16 @@ P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT →
 
 ### The Omega Protocol (Ultimate) — beta
 
-The native P1 to P3 entries use the **Elemental** strategy and are a **beta**: built from retail combat logs and still awaiting wider testing. All of them support multiplayer.
+The native P1 to P4 entries use the **Elemental** strategy and are a **beta**: built from retail combat logs and still awaiting wider testing. All of them support multiplayer.
 
 | Phase | Entries |
 | --- | --- |
 | P1 | Program Loop; Pantokrator |
 | P2 | Party Synergy; Limitless Synergy |
 | P3 | Transition; Hello World; Oversampled Wave Cannon |
+| P4 | Blue Screen |
 
-Program Loop and Pantokrator let you choose your number. Pantokrator can also force which numbered pairs adjust sides; adjusting pairs always come in twos. Oversampled Wave Cannon is based on a single retail sample.
+Program Loop and Pantokrator let you choose your number. Pantokrator can also force which numbered pairs adjust sides; adjusting pairs always come in twos. Blue Screen can force who gets each wave's stack marker, and ends when Omega casts Blue Screen: the DPS check itself is not simulated.
 
 ### Dancing Mad (Ultimate) — beta
 
