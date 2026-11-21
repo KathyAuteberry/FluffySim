@@ -115,9 +115,11 @@ player can swap a Nisi. Bots move along arcs, tether players (Local, Remote) on 
 
 ## Oversampled Wave Cannon
 
-One retail sample (cast, monitors −0.09 s, fire +10.07). Astoh spots are derived from the guide's diagrams
-(line-up H1 H2 MT ST D1 D2 D3 D4) so each monitor has exactly its two targets on its side and everyone is
-7 y+ apart; monitors turn to face. Each monitor picks two on its side, as upstream's P5 monitors do.
+Five retail samples (cast, monitors −0.09 s, fire +10.07, Ion Efflux +16.11; all five agree to 0.01 s). Astoh
+spots follow the four 2026-11-20 pulls, normalised to a west cleave: north and south players about 19 y out,
+centre (−4, 0), west (−15.5, 0), south-middle (2, 10.5), monitors (9.4, −11.5), (14, −3.4) and (13.5, 6.8)
+(line-up H1 H2 MT ST D1 D2 D3 D4); monitors turn to face. Each monitor picks two on its side, as upstream's P5
+monitors do.
 
 ## Check in game
 

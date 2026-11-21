@@ -19,8 +19,8 @@ public sealed class TopOversampledWaveCannonAi : IScenarioAi<TopOversampledWaveC
         PartyRole.MeleeDpsA, PartyRole.MeleeDpsB, PartyRole.PhysRangedDps, PartyRole.CasterDps,
     ];
 
-    private static readonly Vector2[] OthersWhenOmegaCleavesWest = [new(1f, -16f), new(-1.5f, 0f), new(-15f, 0f), new(1f, 9.5f), new(1f, 17.5f)];
-    private static readonly Vector2[] MonitorsWhenOmegaCleavesWest = [new(10f, -12f), new(11f, -3f), new(11f, 6f)];
+    private static readonly Vector2[] OthersWhenOmegaCleavesWest = [new(1.6f, -19f), new(-4f, 0f), new(-15.5f, 0f), new(2f, 10.5f), new(1.3f, 19f)];
+    private static readonly Vector2[] MonitorsWhenOmegaCleavesWest = [new(9.4f, -11.5f), new(14f, -3.4f), new(13.5f, 6.8f)];
     private static readonly Vector2[] FireWhenOmegaCleavesWest = [new(0.9f, 0.1f), new(0.2f, -0.98f), new(0f, 1f)];
 
     private TopOversampledWaveCannonState state = null!;
