@@ -1,3 +1,23 @@
+# FluffySim 3.4.7.0 — release prepared
+
+## Added
+
+- **Dancing Mad P2: Trine** (Mana "Yan", beta). Built from three retail pulls: three waves of Trine, Wings of Destruction, the tankbusters on the closest and farthest player, and Ultimate Embrace. The bots play Yan Flash's current strat, the same as Elemental since 2026-11-19. The party takes the first safe triangle clockwise from north, and the tanks the first counter-clockwise from north-west. The main tank turns toward Kefka so the two busters never clip. Supports multiplayer.
+- **The Omega Protocol P4: Blue Screen** (Elemental, beta). Built from three retail pulls. You can force who gets each wave's stack marker. The scenario ends when Omega casts Blue Screen: the DPS check is not simulated. Supports multiplayer.
+
+## Changed
+
+- **No headgear on the party.** Simulated party members no longer wear hats, so each seat's hair and ears stay visible.
+
+## Fixed
+
+- **Forsaken matches retail.** Dancing Mad P2 Forsaken is now checked against ten retail pulls; its tower, debuff and End timings already matched. The clones now land just short of the player they hit and face them, as in retail. All Things Ending now aims at a random party member instead of always at you. Each player's hidden stack, AoE or cone status now follows their marker. Two Yan bot spots moved slightly deeper to stay clear of the clones' new positions.
+- **Oversampled Wave Cannon positions.** In TOP P3, the bot positions now follow four retail pulls instead of the guide's diagram.
+
+## Known issues
+
+- Trine: retail showed a different burst pattern in each of three pulls, so which triangles burst in which wave is random. The telegraph and wing animations have not been checked in game yet.
+
 # FluffySim 3.4.6.0 — release prepared
 
 ## Changed
