@@ -50,7 +50,7 @@ Closing the interface alone does not leave the simulation.
 
 ## Supported encounters
 
-The catalog contains **62 entries**, including **17 FRU entries**, **12 DSR entries**, **6 TEA entries**, **7 native The Omega Protocol entries** and **3 native Dancing Mad entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
+The catalog contains **65 entries**, including **17 FRU entries**, **12 DSR entries**, **6 TEA entries**, **8 native The Omega Protocol entries** and **5 native Dancing Mad entries**. Some FRU mechanics have separate regional implementations listed as separate catalog entries.
 
 ### Futures Rewritten (Ultimate)
 
@@ -98,27 +98,30 @@ P4 includes the Haurchefant rescue continuation. P5 uses the conventional MT →
 
 ### The Omega Protocol (Ultimate) — beta
 
-The native P1 to P3 entries use the **Elemental** strategy and are a **beta**: built from retail combat logs and still awaiting wider testing. All of them support multiplayer.
+The native P1 to P4 entries use the **Elemental** strategy and are a **beta**: built from retail combat logs and still awaiting wider testing. All of them support multiplayer.
 
 | Phase | Entries |
 | --- | --- |
 | P1 | Program Loop; Pantokrator |
 | P2 | Party Synergy; Limitless Synergy |
 | P3 | Transition; Hello World; Oversampled Wave Cannon |
+| P4 | Blue Screen |
 
-Program Loop and Pantokrator let you choose your number. Pantokrator can also force which numbered pairs adjust sides; adjusting pairs always come in twos. Oversampled Wave Cannon is based on a single retail sample.
+Program Loop and Pantokrator let you choose your number. Pantokrator can also force which numbered pairs adjust sides; adjusting pairs always come in twos. Blue Screen can force who gets each wave's stack marker, and ends when Omega casts Blue Screen: the DPS check itself is not simulated.
 
 ### Dancing Mad (Ultimate) — beta
 
-The native P1 entries use Yan Flash's **Mana** strategy and are a **beta**: built from combat logs and Duty Recorder captures, but still awaiting wider community testing.
+The native P1 and P2 entries use Yan Flash's **Mana** strategy and are a **beta**: built from combat logs and Duty Recorder captures, but still awaiting wider community testing.
 
 | Entry | Covers |
 | --- | --- |
 | P1 Graven Image 1 | Revolting Ruin III tank swap, Mystery Magic, Pulse Wave knockback, Wave Cannon towers and Double Trouble Trap |
 | P1 Graven Image 2 | Second tank swap, Gravitas puddles, Vitrophyre knockbacks, half-room cleaves and Gravity soak |
 | P1 Graven Image 3 | Tele-portents, Double Trouble Trap, confused teleport chase and the final gaze |
+| P2 Forsaken | Eight tower sets with stack, AoE and cone debuffs, the Future's and Past's End baits and the final-tower self-marks |
+| P2 Trine | Three Trine waves, Wings of Destruction, the closest-and-farthest tankbusters and Ultimate Embrace |
 
-At each tank swap the tank taking over must Provoke Kefka during the tankbuster cast; Provoke is graded on time, early, late or missing and does not require tank stance. Graven Image 3 is solo-only (no multiplayer); Graven Image 1 and 2 support multiplayer. Some timings that were never observed in recordings are approximations.
+At each tank swap the tank taking over must Provoke Kefka during the tankbuster cast; Provoke is graded on time, early, late or missing and does not require tank stance. Graven Image 3 is solo-only (no multiplayer); every other native entry supports multiplayer. Since 2026-11-19 Yan Flash's Trine follows Elemental: the party takes the first safe triangle clockwise from north, the tanks the first counter-clockwise from north-west. Some timings that were never observed in recordings are approximations.
 
 ### Other registered practice
 

@@ -7,8 +7,6 @@ using static AnoMech.Scenarios.Dmu.DmuConstants;
 
 namespace AnoMech.Scenarios.Dmu.Forsaken;
 
-// Shapes and timings follow upstream's UMAD Forsaken; none of them has been checked against a
-// retail capture yet.
 public static class DmuForsakenActions
 {
     public const float AllThingsEndingHalfCone = MathF.PI / 2;

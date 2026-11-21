@@ -266,7 +266,6 @@ internal sealed unsafe class BattleCharas : IBattleCharas
 
     private static void WriteEquipment(SpawnPlayerPacket* packet, PartyMemberPreset preset, ExcelSheet<Item> itemSheet)
     {
-        ApplyItem(packet, DrawDataContainer.EquipmentSlot.Head, preset.Head, itemSheet);
         ApplyItem(packet, DrawDataContainer.EquipmentSlot.Body, preset.Body, itemSheet);
         ApplyItem(packet, DrawDataContainer.EquipmentSlot.Hands, preset.Hands, itemSheet);
         ApplyItem(packet, DrawDataContainer.EquipmentSlot.Legs, preset.Legs, itemSheet);

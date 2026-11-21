@@ -14,14 +14,15 @@ using static AnoMech.Scenarios.Dmu.DmuConstants;
 
 namespace AnoMech.Scenarios.Dmu.Forsaken;
 
-// Upstream's UMAD Forsaken timeline, unchanged until a retail capture replaces it: every time
-// below is UNVERIFIED. Scenario time 0 is Kefka's spawn, before Forsaken's cast.
+// Scenario time 0 is Kefka's spawn, 2.46 s before Forsaken.
 public sealed class DmuForsakenScenario : IMultiplayerReplayable
 {
     private static readonly float[] TowerTimes = [22.66f, 32.67f, 43.71f, 53.72f, 64.76f, 74.77f, 85.81f, 95.82f];
     private static readonly float[] TowerShownTimes = [12.51f, 22.53f, 33.56f, 43.58f, 54.61f, 64.63f, 75.67f, 85.68f];
     private static readonly float[] KefkaEndTimes = [25.61f, 46.75f, 67.76f, 88.81f];
     private static readonly float[] CloneEndTimes = [32.35f, 53.59f, 74.61f, 95.51f];
+    private const float CloneLandDelay = 0.67f;
+    private const float CloneLandsShortOfTarget = 4f;
 
     public string Name => "Forsaken";
     public IPhase Phase => DmuZone.P2;
@@ -58,7 +59,7 @@ public sealed class DmuForsakenScenario : IMultiplayerReplayable
         SpawnClones();
         ArenaEvents();
         world.Events.Add(11.04f, () => party.ForEachActive(p => p.AddStatus(StatusId.SpellsTrouble, duration: 999f, stacks: 4, overrideStacks: true)));
-        world.Events.Add(11.04f, () => party.ForEachActive(p => p.AddStatus(StatusId.Unknown13DC)));
+        world.Events.Add(11.04f, () => party.ForEachActive(p => p.AddStatus(ShapeStatus(state.Lockons[((ISimPartyMember)p).Role]), duration: 9999f)));
         world.Events.Add(11.04f, () => party.ForEachActive(c => c.AttachLockonVfx(state.Lockons[((ISimPartyMember)c).Role])));
     }
 
@@ -89,7 +90,7 @@ public sealed class DmuForsakenScenario : IMultiplayerReplayable
         kefka = world.SpawnEnemy(new EnemySpawnConfig(BNpcBaseId: BNpcBaseId.GodKefka, NameId: BNpcNameId.Kefka, Level: Level,
             Targetable: true, EnemyList: EnemyListMode.Always, Visibility: SpawnVisibility.Visible, LayoutId: LayoutId.GodKefka,
             Placement: new Placement(Vector3.Zero, 0f)));
-        foreach (var at in new[] { 1.30f, 11.35f, 14.39f, 17.43f, 20.47f, 24.50f, 109.47f })
+        foreach (var at in new[] { 1.30f, 11.35f, 14.39f, 17.43f, 20.47f, 23.43f, 109.73f })
             world.Events.Add(at, () => kefka?.Cast(DmuActions.AutoAttack, party.Get(PartyRole.OffTank)));
         world.Events.Add(2.46f, () => kefka?.Cast(DmuForsakenActions.Forsaken));
         world.Events.Add(10.38f, () => world.Map.SetWeather(89, transition: 2f));
@@ -108,7 +109,7 @@ public sealed class DmuForsakenScenario : IMultiplayerReplayable
             endAttackTargets = party.Find.ClosestN(kefka.Position, 4);
             if (endAttackTargets.Count > 0) kefka.Cast(end.KefkaHit, endAttackTargets[0]);
         });
-        world.Events.Add(start + 12.8f, () => kefka?.Face(party.Player));
+        world.Events.Add(start + 12.8f, () => AimAllThingsEnding(kefka, index, 0));
         world.Events.Add(start + 12.9f, () => kefka?.Cast(end.AllThingsEnding));
         world.Events.Add(start + 18f, () => kefka?.Face(party.Get(PartyRole.OffTank)));
     }
@@ -162,10 +163,23 @@ public sealed class DmuForsakenScenario : IMultiplayerReplayable
             var role = ((ISimPartyMember)ordered[i]).Role;
             var lockon = ordered[i].HasStatus(StatusId.SpellsTrouble) ? lockons[deal[i]] : 0u;
             if (lockon != 0) ordered[i].AttachLockonVfx(lockon);
+            var previous = state.Lockons[role];
+            if (previous != lockon)
+            {
+                if (previous != 0) ordered[i].RemoveStatus(ShapeStatus(previous));
+                if (lockon != 0) ordered[i].AddStatus(ShapeStatus(lockon), duration: 9999f);
+            }
             state.Lockons[role] = lockon;
         }
         DiagnosticLog.Info($"[DmuForsaken] Tower {index + 1} lockons {string.Join(",", ordered.Select(c => $"{((ISimPartyMember)c).Role}={state.Lockons[((ISimPartyMember)c).Role]}"))}");
     }
+
+    private static ushort ShapeStatus(uint lockon) => lockon switch
+    {
+        LockonId.ForsakenStack => StatusId.ForsakenStackShape,
+        LockonId.ForsakenChariot => StatusId.ForsakenChariotShape,
+        _ => StatusId.ForsakenConeShape,
+    };
 
     private void ResolveSpell(SimCharacter character, int helperIndex)
     {
@@ -208,11 +222,35 @@ public sealed class DmuForsakenScenario : IMultiplayerReplayable
         world.Events.Add(start - 0.5f, () => clone?.SetPosition(Vector3.Zero));
         world.Events.Add(start, () =>
         {
-            if (endAttackTargets.Count > index + 1) clone?.Cast(end.CloneHit, endAttackTargets[index + 1]);
+            if (clone == null || endAttackTargets.Count <= index + 1) return;
+            var target = endAttackTargets[index + 1];
+            clone.Cast(end.CloneHit, target);
+            var landing = LandingShortOf(clone.Position, target.Position);
+            world.Events.Add(CloneLandDelay, () => clone.SetPosition(landing));
         });
-        world.Events.Add(start + 6f, () => clone?.Face(party.Player));
+        world.Events.Add(start + 6f, () => AimAllThingsEnding(clone, number, index + 1));
         world.Events.Add(start + 6.1f, () => clone?.Cast(end.AllThingsEnding));
         world.Events.Add(start + 14.1f, () => clone?.PlayActionTimeline(ActionTimelineId.WarpStart));
+    }
+
+    // A clone lands short of the player it jumped on, facing them; one already within reach stays put.
+    private static Placement LandingShortOf(Vector3 from, Vector3 target)
+    {
+        var offset = new Vector3(target.X - from.X, 0f, target.Z - from.Z);
+        var distance = offset.Length();
+        var landing = distance > CloneLandsShortOfTarget ? from + offset * ((distance - CloneLandsShortOfTarget) / distance) : from;
+        return new Placement(landing with { Y = 0f }, 0f).Face(target);
+    }
+
+    // Each All Things Ending aims at one party member's spot as its cast starts: Future's End's half
+    // covers them, Past's End's the other half.
+    private void AimAllThingsEnding(SimEnemy? caster, int end, int source)
+    {
+        if (caster == null) return;
+        var aimed = party.Get(state.AllThingsEndingAims[end][source]) is { } member && member.IsAlive()
+            ? member
+            : party.ActiveMembers().FirstOrDefault(m => m.IsAlive());
+        caster.Face(aimed);
     }
 
     public MpMessage? BuildReplayStateMessage()

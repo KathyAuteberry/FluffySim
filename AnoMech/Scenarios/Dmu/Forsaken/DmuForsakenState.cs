@@ -14,7 +14,7 @@ namespace AnoMech.Scenarios.Dmu.Forsaken;
 // Only CastBarAction goes over the wire; FromCastBarAction maps it back to the static instance.
 public sealed record EndAttack(uint CastBarAction)
 {
-    // Future's End cleaves the half facing the player as the cast starts, Past's End the other half.
+    // Future's End cleaves the half facing its aimed player as the cast starts, Past's End the other half.
     public static readonly EndAttack FuturesEnd = new(ActionId.FuturesEnd)
     {
         KefkaHit = EndHit(ActionId.FuturesEndResolve),
@@ -71,6 +71,8 @@ public sealed class DmuForsakenState
     // happened to stand.
     public int[][] LockonDeals { get; }
     public Dictionary<PartyRole, uint> Lockons = [];
+    // Per end attack, per caster (Kefka, then the three clones): whose spot its All Things Ending aims at.
+    public PartyRole[][] AllThingsEndingAims { get; }
 
     // The self-marking macro's coin: false gives the first holder in role order the 1.
     public bool FinalConeMarksSwapped { get; }
@@ -95,6 +97,9 @@ public sealed class DmuForsakenState
         LockonDeals = Enumerable.Range(0, Towers)
             .Select(_ => overrides.ReassignLockonsInRoleOrder ? new[] { 0, 1, 2, 3 } : rng.Shuffle(0, 1, 2, 3).ToArray())
             .ToArray();
+        AllThingsEndingAims = Enumerable.Range(0, EndAttacks.Length)
+            .Select(_ => Enumerable.Range(0, 4).Select(_ => rng.NextRole()).ToArray())
+            .ToArray();
         DiagnosticLog.Info($"[DmuForsaken] Lockons {string.Join(",", Enum.GetValues<PartyRole>().Select(r => Lockons[r]))}");
     }
 
@@ -103,6 +108,7 @@ public sealed class DmuForsakenState
     {
         EndAttacks = endAttacks;
         LockonDeals = [];
+        AllThingsEndingAims = [];
         NewNorth = newNorth;
         Rotation = rotation;
         Lockons = lockons;

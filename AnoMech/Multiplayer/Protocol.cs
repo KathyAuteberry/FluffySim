@@ -80,6 +80,7 @@ namespace AnoMech.Multiplayer;
 [JsonDerivedType(typeof(TopTransitionAiReplayStateMessage), "topTransitionAiReplayState")]
 [JsonDerivedType(typeof(TopHelloWorldAiReplayStateMessage), "topHelloWorldAiReplayState")]
 [JsonDerivedType(typeof(TopOversampledWaveCannonAiReplayStateMessage), "topOversampledWaveCannonAiReplayState")]
+[JsonDerivedType(typeof(TopBlueScreenAiReplayStateMessage), "topBlueScreenAiReplayState")]
 [JsonDerivedType(typeof(TeaP3AlexanderPrimeAiReplayStateMessage), "teaP3AlexanderPrimeAiReplayState")]
 [JsonDerivedType(typeof(TeaP4PerfectAlexanderAiReplayStateMessage), "teaP4PerfectAlexanderAiReplayState")]
 [JsonDerivedType(typeof(TopP5DeltaBeyondDefenseUpdateMessage), "topP5DeltaBeyondDefenseUpdate")]
@@ -370,6 +371,7 @@ public sealed record TopLimitlessSynergyAiReplayStateMessage(float[] Bearings, b
 public sealed record TopTransitionAiReplayStateMessage(Dictionary<PartyRole, AnoMech.Scenarios.TopNative.Transition.SniperDebuff> Debuffs, bool FirstArmsNorth) : MpMessage, IScenarioReplayStateMessage;
 public sealed record TopHelloWorldAiReplayStateMessage(Dictionary<PartyRole, int> Pair, bool OverflowWithBlue, bool[] Intercardinal, int[] Rotation) : MpMessage, IScenarioReplayStateMessage;
 public sealed record TopOversampledWaveCannonAiReplayStateMessage(bool OmegaCleavesEast, Dictionary<PartyRole, bool> MonitorRight) : MpMessage, IScenarioReplayStateMessage;
+public sealed record TopBlueScreenAiReplayStateMessage(PartyRole[] Markers) : MpMessage, IScenarioReplayStateMessage;
 
 // Every roll; the chakrams' and Incinerating Heat's targets are picked live and the peer reads them
 // off its own screen. Aggravated Assault is the two DPS left over.

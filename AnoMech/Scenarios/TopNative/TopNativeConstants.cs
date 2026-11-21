@@ -59,6 +59,7 @@ public static class TopNativeConstants
         public const byte P1 = 77;
         public const byte P2 = 78;
         public const byte P3 = 79;
+        public const byte P4 = 89;
         public const byte HelloWorld = 176;
     }
 
@@ -70,6 +71,7 @@ public static class TopNativeConstants
         public const ushort Hidden = 4;
         public const byte P1Floor = 9;
         public const byte P2Floor = 10;
+        public const byte P4Arena = 20;
     }
 
     public static class ActionId
@@ -124,6 +126,12 @@ public static class TopNativeConstants
         public const uint OversampledWaveCannonL = 31596;
         public const uint OversampledWaveCannonAoe = 31597;
         public const uint IonEfflux = 31560;
+        public const uint BlueScreen = 31611;
+        public const uint WaveCannonP4 = 31617;
+        public const uint WaveCannonP4Protean = 31614;
+        public const uint WaveCannonP4Stack = 31615;
+        public const uint WaveCannonP4Line = 31616;
+        public const uint WaveCannonP4StackMarker = 22393;
         public const uint CriticalSynchronizationBug = 31574;
         public const uint CriticalOverflowBug = 31575;
         public const uint LatentSynchronizationDefect = 31576;

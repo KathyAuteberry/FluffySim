@@ -38,6 +38,14 @@ public static class DmuConstants
         public const uint KefkaClone = 0xBC172F;
         public const uint ConfusionStatue = 0xBC1795;
         public const uint AveMariaStatue = 0xBC1796;
+        // Trine telegraphs, clockwise from north, then the centre one.
+        public const uint TrineNorth = 0xBC17E6;
+        public const uint TrineEast = 0xBC17E3;
+        public const uint TrineSoutheast = 0xBC17F1;
+        public const uint TrineSouth = 0xBC17E0;
+        public const uint TrineWest = 0xBC17ED;
+        public const uint TrineNorthwest = 0xBC17F5;
+        public const uint TrineCentre = 0xBC17E1;
     }
 
     // The multiplayer allowlist harvests these by class name.
@@ -51,6 +59,8 @@ public static class DmuConstants
         public const uint ConfusionStatue = 2015167;
         public const uint GravitasPuddle = 2015266;
         public const uint TelePortent = 2015267;
+        public const uint TrinePointingEast = 2015154;
+        public const uint TrinePointingWest = 2015155;
     }
 
     public static class TetherId
@@ -116,6 +126,13 @@ public static class DmuConstants
         public const uint PastsEndCloneResolve = 0xBAD9;
         public const uint AllThingsEndingFuture = 0xBADC;
         public const uint AllThingsEndingPast = 0xBADD;
+        public const uint Trine = 0xBADF;
+        public const uint TrineBurst = 0xBAE0;
+        public const uint WingsOfDestructionLeft = 0xBACD;
+        public const uint WingsOfDestructionRight = 0xBACE;
+        public const uint WingsOfDestructionBuster = 0xBACF;
+        public const uint WingsOfDestructionBusterCast = 0xC487;
+        public const uint UltimateEmbrace = 0xC24C;
     }
 
     public static class StatusId
@@ -130,7 +147,10 @@ public static class DmuConstants
         public static readonly ushort[] TelePortent = [0x130C, 0x130D, 0x130E, 0x130F];
         public static readonly ushort[] TelePortentTurned = [0x13D7, 0x13D8, 0x13D9, 0x13DA];
         public const ushort SpellsTrouble = 0x13DB;
-        public const ushort Unknown13DC = 0x13DC;
+        // Hidden, one per Forsaken lockon: the shape a player's next tower casts.
+        public const ushort ForsakenStackShape = 0x13DC;
+        public const ushort ForsakenChariotShape = 0x13DD;
+        public const ushort ForsakenConeShape = 0x13DE;
     }
 
     public static class LockonId
@@ -147,6 +167,7 @@ public static class DmuConstants
         public const uint ForsakenStack = 715;
         public const uint ForsakenChariot = 716;
         public const uint ForsakenCone = 717;
+        public const uint UltimateEmbrace = 0x103;
     }
 
     public static class KnockbackId
@@ -161,7 +182,6 @@ public static class DmuConstants
         public const ushort Opening = 20289;
         public const ushort AfterFirstJudgment = 20290;
         public const ushort AfterSecondJudgment = 20291;
-        // UNVERIFIED: upstream's P2 track; never seen in a retail capture.
         public const ushort Forsaken = 20292;
     }
 

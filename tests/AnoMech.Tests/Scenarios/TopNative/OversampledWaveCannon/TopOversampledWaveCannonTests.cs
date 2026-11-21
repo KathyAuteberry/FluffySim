@@ -32,6 +32,6 @@ public class TopOversampledWaveCannonTests
     public void StandingOnTheMiddlePlayerDoublesTheirHit()
         => Negative<TopOversampledWaveCannonScenario>(RegenHealer)
             .Overrides<TopOversampledWaveCannonStateOverrides>(o => { o.Monitor.Mine = false; o.OmegaCleavesEast = false; })
-            .TeleportAt(TopOversampledWaveCannonScenario.WaveCannonCast + 6f, to: new Vector2(-0.5f, 0f))
+            .TeleportAt(TopOversampledWaveCannonScenario.WaveCannonCast + 6f, to: new Vector2(-3.5f, 0f))
             .ShouldKillSomeone(ActionId.OversampledWaveCannonAoe);
 }
