@@ -1,3 +1,13 @@
+# FluffySim 3.4.8.0 — release prepared
+
+## Added
+
+- **Supported encounters page.** A new [supported encounters](../user-guide/SUPPORTED-ENCOUNTERS.md) page lists every Ultimate's major mechanics by phase, with their Elemental and Mana status (verified, playable or not implemented) and where to find each one in the menu. Every missing mechanic links to a fight data form, already filled in. The user guide now points to it.
+
+## Fixed
+
+- **Crystallize Time matches retail.** FRU P4 Crystallize Time is now checked against 60 retail sequences; nearly all of its timeline already matched. The dragon heads now start moving 0.1 s earlier and fly slightly slower, as in retail. Before, they ran about a yalm ahead by the end of their path. Morn Afah now starts and lands about 0.75 s earlier.
+
 # FluffySim 3.4.7.0 — release prepared
 
 ## Added

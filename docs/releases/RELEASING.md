@@ -50,7 +50,7 @@ Published releases through **3.0.0.0** are immutable. Do not move their tags or 
 The 3.0 preparation keeps the shared DSR integration below a separate release-preparation child.
 Local preparation does not authorize pushing master, tagging, publishing or changing plogons.
 The final P4 rescue carry still requires native confirmation before publication approval.
-Prepared version: **3.4.7.0**. `FluffySim.Version.props` contains `3.4.7`; assembly/file/tag
+Prepared version: **3.4.8.0**. `FluffySim.Version.props` contains `3.4.8`; assembly/file/tag
 versions append `.0`. Revision stays zero.
 
 Both GitHub default branches are master. FluffySim's Actions repository secret must be named
