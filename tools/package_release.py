@@ -66,6 +66,7 @@ DOCUMENTATION = (
     'docs/tea/evidence-summary.json',
     'docs/user-guide/INSTALLATION.md',
     'docs/user-guide/README.md',
+    'docs/user-guide/SUPPORTED-ENCOUNTERS.md',
     'docs/verification/COMMUNITY-QA-CT-WRATH-RETEST.md',
     'docs/verification/COMMUNITY-QA-NATIVE-RETEST.md',
     'docs/verification/COMMUNITY-QA-PARADISE-WROTH.md',

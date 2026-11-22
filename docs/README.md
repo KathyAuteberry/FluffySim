@@ -2,7 +2,8 @@
 
 ## Using FluffySim
 
-- [User guide and supported practice](user-guide/README.md)
+- [User guide](user-guide/README.md)
+- [Supported encounters](user-guide/SUPPORTED-ENCOUNTERS.md)
 - [Installation and offline setup](user-guide/INSTALLATION.md)
 - [Spectator mode](features/spectator/MODE.md), [coverage](features/spectator/COVERAGE.md)
   and [party projection](features/spectator/PARTY-PROJECTION.md)
