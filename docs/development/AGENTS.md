@@ -99,7 +99,9 @@ communicate that with user and try to verify first.
   or hidden in a family's helper class.
 - **Structure.** `IZone` (territory, origin, waymarks) ← `IPhase` (weather, BGM) ← `IScenario`.
   Each scenario points up at its phase, and `ScenarioCatalog` builds the menu tree from that. Register new
-  scenarios in `ScenarioCatalog`. A family folder (`Scenarios/Top/`) holds `<Family>Zone.cs`,
+  scenarios in `ScenarioCatalog`. Whenever a scenario is added, removed, renamed or re-verified, update
+  `docs/user-guide/SUPPORTED-ENCOUNTERS.md` in the same change: its mechanic rows, status, menu
+  entry, notes and overview counts. A family folder (`Scenarios/Top/`) holds `<Family>Zone.cs`,
   `<Family>Constants.cs` (IDs) and `<Family>Actions.cs` (`EnemyAction` definitions). Each scenario
   folder holds `*Scenario` (timeline, spawns, casts), `*Ai` (party strats), `*State` (per-run
   rolls) and `*StateOverrides` + `*SettingsWindow` (user-forced rolls).

@@ -53,7 +53,7 @@ of a Japanese strategy counts.
 
 The data doesn't have to match what FluffySim has today. Recordings of a Japanese strategy that
 FluffySim doesn't offer yet, or of an ultimate or phase it doesn't cover yet, are especially
-welcome (see the [supported encounters](docs/user-guide/README.md#supported-encounters)). Clears
+welcome (see the [supported encounters](docs/user-guide/SUPPORTED-ENCOUNTERS.md)). Clears
 and wipes are both useful, and several pulls are better than one.
 
 Only recordings from the **real duty** help. Recordings of FluffySim itself (made in an inn, in The
