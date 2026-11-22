@@ -168,9 +168,9 @@ public sealed class FruP4CrystallizeTimeScenario : IScenario
         world.Events.Add(64f, () => oracle?.Cast(ActionId.AkhMornOracle, animationLock: 4.1f));
         for (var hit = 0; hit < 4; hit++)
             world.Events.Add(69f + 1.05f * hit, AkhMorn);
-        world.Events.Add(72.9f, () => usurper?.Cast(40249, animationLock: 0.9f));
-        world.Events.Add(72.9f, () => oracle?.Cast(40304, animationLock: 0.9f));
-        world.Events.Add(79.8f, () => CastAt(tidalHelpers[0], FruP4CrystallizeTimeActions.MornAfah, world.Party.Get(PartyRole.MainTank)));
+        world.Events.Add(72.2f, () => usurper?.Cast(40249, animationLock: 0.9f));
+        world.Events.Add(72.2f, () => oracle?.Cast(40304, animationLock: 0.9f));
+        world.Events.Add(79.0f, () => CastAt(tidalHelpers[0], FruP4CrystallizeTimeActions.MornAfah, world.Party.Get(PartyRole.MainTank)));
     }
 
     // TODO: the Fragment's HP bar empties when it's hit; a spawned enemy's HP can't be set.

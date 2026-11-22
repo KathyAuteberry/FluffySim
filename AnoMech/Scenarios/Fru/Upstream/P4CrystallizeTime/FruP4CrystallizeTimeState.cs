@@ -19,7 +19,7 @@ public sealed class FruP4CrystallizeTimeState
 {
     public const float DebuffsAt = 11.8f;
     public const float DragonsSpawnAt = 15.3f;
-    public const float DragonsMoveAt = 20.2f;
+    public const float DragonsMoveAt = 20.1f;
     public const float RedIceCleanseBy = 28.8f;
     public const float CleanseBy = 51.8f;
     public const float ReturnSavedAt = 44.8f;
@@ -103,7 +103,7 @@ public sealed class FruP4CrystallizeTimeState
     }
 
     private const float DragonStartAngle = 0.1526f;
-    private const float DragonAngularSpeed = 0.237f;
+    private const float DragonAngularSpeed = 0.2275f;
     public const float DragonSpeed = 12.6f * DragonAngularSpeed;
     public const float DragonsReachSouthAt = DragonsMoveAt + (3.1415927f - DragonStartAngle) / DragonAngularSpeed;
 

@@ -16,6 +16,24 @@ one silently.
 The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
 and every other P3–P7 override are unchecked.
 
+Resolved 2026-11-22 from every FRU capture with a Crystallize Time (ACT logs 2026-10-24 to 2026-11-21: 66 CT
+starts inside territory 1238, 60 reaching Akh Morn, 51 reaching Morn Afah; 32 dragon tracks from the 11-11 to
+11-21 RaidTraces, server-timed). Times are scenario time, where the Usurper's Crystallize Time cast starts at 1.0 s:
+
+- **Crystallize Time timeline.** Debuffs (11.8), hourglasses, Edge of Oblivion, tethers and Speed (15.1–15.2),
+  Quicken/Slow (20.8), the three Maelstroms (21.5/27.0/32.0), Dark Water (23.9), Eruption/Blizzard/Aero
+  (25.9), Unholy Darkness (28.8), both Tidal Light waves (29.3/35.7), Quietus (42.9), Return (44.8), Spirit
+  Taker (45.1), Hallowed Wings (47.5), the stun (51.8–60.8), both Wings knockbacks (53.7/58.3), Akh Morn's
+  cast (64.0) and its four hits (69.0 + 1.05 s steps; retail 68.9/69.9/71.0/72.1) already matched the retail
+  medians within about 0.15 s. Retail's 9D37/9D6E resolution at 68.0 s targets the bosses themselves and
+  deals no damage.
+- **Dragons.** RaidTrace `actor_move`: they start moving at 20.1 s (20.06–20.14), from 0.1526 rad off north,
+  on a 12.55 y radius, at 0.2275 rad/s, reaching south at 33.2 s. The scenario used 20.2 s and 0.237 rad/s,
+  which put the heads about 1 y ahead of retail by the end of the run. Now 20.1 s and 0.2275 rad/s; the
+  radius stays 12.6 y. (ACT's own position polls lag by about 0.45 s and would suggest 20.56 s.)
+- **Morn Afah.** Retail starts the casts at 72.2 s and the stack hits at 79.0 s; the scenario had 72.9 s and
+  79.8 s. Moved to match.
+
 Resolved 2026-11-16:
 
 - **C11, DSR visual cast plus carrier.** Retail sends one effect per cast. Owner, 2026-11-17: fix it.
@@ -127,10 +145,14 @@ presentation detail added since October still awaits an in-game check. The highe
     Fragment memory poses are unresolved. Native cones are validated.
   - Diamond Dust: Thin Ice sliding for the human and the earliest puddle damage are inferred.
   - Mirror: colours and orb tells are unverified.
-  - Crystallize Time:
-    - No complete CT sequence exists in the local captures.
+  - Crystallize Time (timeline checked against retail on 2026-11-22, see §1):
     - The Wings mitigation model approximates the Mana plan.
     - Wind/Return/Tidal visual onset is unverified.
+    - Rewind: ACT's position polls see players settle at their Return spots at about 53.6 s (scenario time),
+      which fits the scenario's carry from 52.8 s; ACT cannot time the carry's start more closely.
+    - Retail shows the Usurper's two Return II timers ending at 51.8 s (the one applied at 28.8 s) and 56.8 s
+      (the one applied at 34.8 s); the scenario has the same end times on the opposite applications.
+      Display only.
   - P5: no full threat swaps, mitigation budgets, exaline resistance or DPS race.
   - Native particles keep animating during Pause (logical time is frozen).
 - **DSR**
