@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
 """Read-only decoder for RaidTrace captures (.rtrace, written by the RaidtraceTracer plugin).
 
-Layout, as observed in tracer 0.3.x files:
-  "RAIDTRCE", varint kind count, then per kind: varint id, length-prefixed name, field count and
+Layout, as observed in tracer 0.3.x files (format 2) and 0.4.0.0 files (format 3):
+  "RAIDTRCE" (format 2) or "RAIDTRACE" plus a format byte (3), then a varint kind count, then per kind: varint id, length-prefixed name, field count and
   fields (length-prefixed name, type byte; type 8 is a nested group followed by its own field count
-  and fields). Kinds without a schema (e.g. 1 = tracer metadata JSON) are opaque.
+  and fields). Kinds without a schema (e.g. 1 = tracer metadata JSON) are opaque. Format 3 moves the
+  tracer metadata into the `start` and `written` kinds.
   Blocks: "RTBK", u32 body length, u32 CRC-32 of the body, body = varint codec (2 = zstd), varint
   decompressed size, compressed bytes. A trailing "RTIX" index is not needed for reading.
   Decompressed block: varint row count, one varint kind per row, one zigzag-delta varint local
-  clock per row, then per kind present: varint kind, varint rows, varint byte length and a
+  clock per row, in format 3 two more per-row varint columns (see decode_block), then per kind present: varint kind, varint rows, varint byte length and a
   column-major body. Columns: u8 = raw byte; u16/u32/u64 = zigzag varint deltas from the previous
   value in the column; f32 = the same applied to the IEEE-754 bit pattern; string/bytes = varint
   length + data; group = plain varint count per row, then the child columns over all children.
   A top-level key field (`actor` or `caster`) is written as the first column; the remaining
   columns follow schema order. `server_time` is epoch milliseconds (0 in tracer 0.3.0 captures);
-  the per-row clock ticks at the metadata's clockFrequency (100 kHz).
+  the per-row clock ticks at the metadata's clockFrequency (100 kHz). Rows are in recording order,
+  which is not clock order: pre-roll state (zone, party, character) follows the run start.
 
 Output contains other players' names and account/content IDs unless redacted (the default).
 Never commit raw captures or unredacted output.
@@ -34,11 +36,14 @@ from pathlib import Path
 from typing import Iterator
 
 MAGIC = b'RAIDTRCE'
+MAGIC3 = b'RAIDTRACE'
+FORMATS = (2, 3)
 BLOCK = b'RTBK'
 INDEX = b'RTIX'
 CODEC_ZSTD = 2
 U8, U16, U32, U64, F32, STR, BYTES, GROUP = 0, 1, 2, 3, 4, 5, 6, 8
 METADATA_KIND = 1
+START_KINDS = ('recording', 'start')
 DEFAULT_CLOCK_HZ = 100_000
 IDENTIFYING_FIELDS = frozenset({'name', 'account_id', 'content_id'})
 
@@ -67,6 +72,8 @@ class Record:
     name: str
     clock: int
     values: dict = field(default_factory=dict)
+    bundle: int = 0
+    repeats: int = 0
 
 
 def varint(buf: bytes, i: int) -> tuple[int, int]:
@@ -105,10 +112,27 @@ def _fields(buf: bytes, i: int, count: int) -> tuple[tuple[Field, ...], int]:
     return tuple(out), i
 
 
-def parse_schema(buf: bytes) -> tuple[dict[int, Kind], int]:
-    if not buf.startswith(MAGIC):
+def parse_header(buf: bytes) -> tuple[int, dict[int, Kind], int]:
+    """Returns the format, the schema and the offset of the first block."""
+    if buf.startswith(MAGIC3):
+        fmt, i = buf[len(MAGIC3)], len(MAGIC3) + 1
+        if fmt not in FORMATS:
+            raise TraceError(f'unsupported RaidTrace format {fmt}')
+    elif buf.startswith(MAGIC):
+        fmt, i = 2, len(MAGIC)
+    else:
         raise TraceError('not a RaidTrace file')
-    count, i = varint(buf, len(MAGIC))
+    kinds, i = _schema(buf, i)
+    return fmt, kinds, i
+
+
+def parse_schema(buf: bytes) -> tuple[dict[int, Kind], int]:
+    _, kinds, i = parse_header(buf)
+    return kinds, i
+
+
+def _schema(buf: bytes, i: int) -> tuple[dict[int, Kind], int]:
+    count, i = varint(buf, i)
     kinds = {}
     for _ in range(count):
         kid, i = varint(buf, i)
@@ -228,7 +252,15 @@ def _rows(buf: bytes, i: int, fields: tuple[Field, ...], count: int, top: bool =
     return rows, i
 
 
-def decode_block(data: bytes, kinds: dict[int, Kind]) -> Iterator[Record]:
+def decode_block(data: bytes, kinds: dict[int, Kind], fmt: int = 2) -> Iterator[Record]:
+    """Format 3 adds two per-row columns after the clocks, from the tracer's `trace::file::Arrival`:
+    - bundle: the network bundle the row was decoded from, 0 for rows that did not come from a
+      server bundle (client-side state, own packets, tracer records). Stored as 0 for none, else
+      zigzag(bundle - previous non-zero bundle in the block) + 1.
+    - repeats: plain varint count of further rows with the same kind, bundle and byte-identical
+      payload that the writer folded into this one; the row stands for repeats + 1 copies and
+      keeps the first copy's clock.
+    """
     count, i = varint(data, 0)
     order = []
     for _ in range(count):
@@ -239,6 +271,16 @@ def decode_block(data: bytes, kinds: dict[int, Kind]) -> Iterator[Record]:
         delta, i = varint(data, i)
         clock += unzigzag(delta)
         clocks.append(clock)
+    bundles, repeats = [0] * count, [0] * count
+    if fmt >= 3:
+        last = 0
+        for n in range(count):
+            value, i = varint(data, i)
+            if value:
+                last += unzigzag(value - 1)
+                bundles[n] = last
+        for n in range(count):
+            repeats[n], i = varint(data, i)
     sections: dict[int, list[dict]] = {}
     while i < len(data):
         kid, i = varint(data, i)
@@ -262,36 +304,56 @@ def decode_block(data: bytes, kinds: dict[int, Kind]) -> Iterator[Record]:
         if len(sections.get(kid, ())) != n:
             raise TraceError(f'kind {kid}: {n} rows ordered, {len(sections.get(kid, ()))} decoded')
     cursor = collections.Counter()
-    for kid, clk in zip(order, clocks):
+    for kid, clk, bundle, repeat in zip(order, clocks, bundles, repeats):
         row = sections[kid][cursor[kid]]
         cursor[kid] += 1
         name = kinds[kid].name if kid in kinds else f'opaque_{kid}'
-        yield Record(kid, name, clk, row)
+        yield Record(kid, name, clk, row, bundle, repeat)
 
 
 class Trace:
     def __init__(self, path: Path | str):
         self.path = Path(path)
         self.data = self.path.read_bytes()
-        self.kinds, self.body_start = parse_schema(self.data)
+        self.format, self.kinds, self.body_start = parse_header(self.data)
         self._metadata = None
 
     def records(self) -> Iterator[Record]:
         for block in iter_blocks(self.data, self.body_start):
-            yield from decode_block(block, self.kinds)
+            yield from decode_block(block, self.kinds, self.format)
 
     @property
     def metadata(self) -> dict:
+        """Tracer metadata under the format 2 JSON keys (plugin, clockFrequency, game, …)."""
         if self._metadata is None:
             self._metadata = {}
-            for rec in self.records():
-                if rec.kind == METADATA_KIND:
-                    try:
-                        self._metadata = json.loads(rec.values['payload'])
-                    except (ValueError, KeyError):
-                        pass
-                    break
+            if self.format >= 3:
+                self._metadata = self._start_metadata()
+            else:
+                for rec in self.records():
+                    if rec.kind == METADATA_KIND:
+                        try:
+                            self._metadata = json.loads(rec.values['payload'])
+                        except (ValueError, KeyError):
+                            pass
+                        break
         return self._metadata
+
+    def _start_metadata(self) -> dict:
+        meta: dict = {}
+        for rec in self.records():
+            if rec.name == 'start' and 'plugin' not in meta:
+                v = rec.values
+                meta.update(plugin=v.get('tracer'), host=v.get('host'), framework=v.get('framework'),
+                            game=v.get('game'), platform=v.get('platform'))
+            elif rec.name == 'written' and 'format' not in meta:
+                v = rec.values
+                meta.update(format=v.get('format'), writer=v.get('writer'))
+                if v.get('clock_frequency'):
+                    meta['clockFrequency'] = v['clock_frequency']
+            if 'plugin' in meta and 'format' in meta:
+                break
+        return {k: v for k, v in meta.items() if v not in (None, '')}
 
     @property
     def clock_hz(self) -> int:
@@ -337,11 +399,14 @@ def summary(trace: Trace) -> dict:
         counts[rec.name] += 1
         first = rec.clock if first is None else min(first, rec.clock)
         last = rec.clock if last is None else max(last, rec.clock)
-        if rec.name == 'recording' and start is None:
+        if rec.name in START_KINDS and start is None:
             start = rec.clock
             runs = rec.values.get('run') or []
             run = runs[0] if runs else None
-    meta = {k: v for k, v in trace.metadata.items() if k in ('clockFrequency', 'dalamud', 'game', 'platform', 'plugin')}
+        elif rec.name == 'zone_init' and run is None and start is not None:
+            run = {k: rec.values.get(k) for k in ('server', 'territory', 'instance', 'content')}
+    meta = {k: v for k, v in trace.metadata.items()
+            if k in ('clockFrequency', 'dalamud', 'framework', 'game', 'platform', 'plugin', 'format', 'writer')}
     begin = start if start is not None else first
     warnings = []
     if _version(meta.get('plugin', '0')) < MIN_RELIABLE_PLUGIN:
@@ -354,6 +419,7 @@ def summary(trace: Trace) -> dict:
         'run': run,
         'duration_s': None if begin is None else round((last - begin) / trace.clock_hz, 3),
         'records': dict(counts.most_common()),
+        'format': trace.format,
         'kinds_in_schema': len(trace.kinds),
     }
 
@@ -382,7 +448,12 @@ def main(argv=None) -> int:
         for rec in trace.records():
             if rec.name not in wanted:
                 continue
-            row = {'kind': rec.name, 'clock_s': round(rec.clock / hz, 5), **redact(rec.values, not args.no_redact)}
+            row = {'kind': rec.name, 'clock_s': round(rec.clock / hz, 5)}
+            if rec.bundle:
+                row['bundle'] = rec.bundle
+            if rec.repeats:
+                row['repeats'] = rec.repeats
+            row.update(redact(rec.values, not args.no_redact))
             print(json.dumps(_jsonable(row), ensure_ascii=False))
             emitted += 1
             if args.limit and emitted >= args.limit:

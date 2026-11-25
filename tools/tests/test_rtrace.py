@@ -45,6 +45,12 @@ def fields_bytes(fields):
     return out
 
 
+START_SCHEMA = [
+    (7, 'start', [('tracer', STR), ('host', STR), ('framework', STR), ('game', STR), ('platform', STR),
+                  ('capture_session', U64)]),
+    (8, 'written', [('format', U32), ('writer', STR), ('clock_frequency', U32), ('history', GROUP, [('note', STR)])]),
+]
+
 SCHEMA = [
     (6, 'pause', [('by_player', U8)]),
     (256, 'action', [
@@ -52,6 +58,7 @@ SCHEMA = [
         ('targets', GROUP, [('id', U32), ('effects', GROUP, [('amount', U32)])]),
     ]),
     (291, 'party', [('members', GROUP, [('actor', U32), ('name', STR)]), ('leader', U8)]),
+    (296, 'zone_init', [('server_time', U64), ('server', U16), ('territory', U16), ('instance', U16), ('content', U16)]),
     (4095, 'packet', [('server_time', U64), ('entity', U32), ('opcode', U16), ('payload', BYTES)]),
 ]
 
@@ -87,10 +94,12 @@ def rows_bytes(fields, rows, top=False):
     return out
 
 
-def build(records, metadata=None, corrupt_crc=False):
-    """records: list of (kind_id, clock, values); kind 1 rows carry raw metadata bytes."""
-    header = rtrace.MAGIC + uvar(len(SCHEMA))
-    for kid, kname, fields in SCHEMA:
+def build(records, metadata=None, corrupt_crc=False, fmt=2, arrivals=None):
+    """records: list of (kind_id, clock, values); kind 1 rows carry raw metadata bytes.
+    Format 3 also writes one (bundle, repeats) arrival per record (default (0, 0))."""
+    kinds = SCHEMA + (START_SCHEMA if fmt >= 3 else [])
+    header = (rtrace.MAGIC3 + bytes([fmt]) if fmt >= 3 else rtrace.MAGIC) + uvar(len(kinds))
+    for kid, kname, fields in kinds:
         header += uvar(kid) + name(kname) + bytes([len(fields)]) + fields_bytes(fields)
     if metadata is not None:
         records = [(1, records[0][1] if records else 0, metadata)] + records
@@ -99,7 +108,14 @@ def build(records, metadata=None, corrupt_crc=False):
     for _, clock, _ in records:
         data += zig(clock - prev)
         prev = clock
-    schema = {kid: fields for kid, _, fields in SCHEMA}
+    if fmt >= 3:
+        arrivals = arrivals or [(0, 0)] * len(records)
+        last = 0
+        for bundle, _ in arrivals:
+            data += uvar(0) if not bundle else uvar(((bundle - last) << 1 ^ (bundle - last) >> 63) + 1)
+            last = bundle or last
+        data += b''.join(uvar(repeats) for _, repeats in arrivals)
+    schema = {kid: fields for kid, _, fields in kinds}
     for kid in dict.fromkeys(k for k, _, _ in records):
         rows = [v for k, _, v in records if k == kid]
         body = column(BYTES, rows) if kid not in schema else rows_bytes(schema[kid], rows, top=True)
@@ -181,6 +197,66 @@ class RTraceTests(unittest.TestCase):
         self.assertEqual(summary['records']['action'], 2)
         self.assertEqual(summary['duration_s'], 1.7)
         self.assertTrue(any('unreliable' in w for w in summary['warnings']))
+
+    def sample3(self):
+        records = [
+            (7, 5000, {'tracer': '0.4.0.0', 'host': 'dalamud', 'framework': 'Dalamud 15.0.4.1',
+                       'game': '2026.11.03.0000.0000', 'platform': 'linux', 'capture_session': 77}),
+            (8, 5000, {'format': 3, 'writer': 'raidtrace-tracer 0.4.0.0', 'clock_frequency': 1000, 'history': []}),
+            (291, 1000, {'members': [{'actor': 0x10000001, 'name': 'Someone Real'}], 'leader': 0}),
+            (296, 5000, {'server_time': 1_795_000_000_000, 'server': 31, 'territory': 1363, 'instance': 19,
+                         'content': 1094}),
+            (256, 5300, {'server_time': 1_795_000_000_300, 'caster': 0x40000005, 'action_id': 40315,
+                         'facing': 0.25, 'targets': []}),
+            (6, 5300, {'by_player': 1}),
+            (256, 5400, {'server_time': 1_795_000_000_400, 'caster': 0x40000005, 'action_id': 40316,
+                         'facing': 0.5, 'targets': []}),
+            (4095, 8000, {'server_time': 1_795_000_003_000, 'entity': 0x40000005, 'opcode': 7, 'payload': b''}),
+        ]
+        arrivals = [(0, 0), (0, 0), (0, 0), (0, 0), (45229, 0), (0, 0), (45229, 2), (45231, 0)]
+        return self.write(build(records, fmt=3, arrivals=arrivals))
+
+    def test_format3_header_and_arrival_columns(self):
+        trace = rtrace.Trace(self.sample3())
+        self.assertEqual(trace.format, 3)
+        recs = list(trace.records())
+        self.assertEqual([r.name for r in recs],
+                         ['start', 'written', 'party', 'zone_init', 'action', 'pause', 'action', 'packet'])
+        self.assertEqual([r.bundle for r in recs], [0, 0, 0, 0, 45229, 0, 45229, 45231])
+        self.assertEqual([r.repeats for r in recs], [0, 0, 0, 0, 0, 0, 2, 0])
+        self.assertEqual(recs[6].values['action_id'], 40316)
+        self.assertEqual(recs[7].values['opcode'], 7)
+
+    def test_format3_metadata_and_summary_come_from_start_and_zone_init(self):
+        trace = rtrace.Trace(self.sample3())
+        self.assertEqual(trace.metadata['plugin'], '0.4.0.0')
+        self.assertEqual(trace.clock_hz, 1000)
+        summary = rtrace.summary(trace)
+        self.assertEqual(summary['warnings'], [])
+        self.assertEqual(summary['format'], 3)
+        self.assertEqual(summary['metadata']['writer'], 'raidtrace-tracer 0.4.0.0')
+        self.assertEqual(summary['run'], {'server': 31, 'territory': 1363, 'instance': 19, 'content': 1094})
+        self.assertEqual(summary['duration_s'], 3.0)
+
+    def test_format3_cli_emits_arrival_and_redacts(self):
+        path = self.sample3()
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            self.assertEqual(rtrace.main([path, '--kind', 'action', '--kind', 'party']), 0)
+        rows = [json.loads(line) for line in buf.getvalue().splitlines()]
+        self.assertEqual(rows[0]['members'][0]['name'], '<redacted>')
+        self.assertNotIn('bundle', rows[0])
+        self.assertEqual((rows[1]['bundle'], rows[1].get('repeats')), (45229, None))
+        self.assertEqual((rows[2]['bundle'], rows[2]['repeats'], rows[2]['clock_s']), (45229, 2, 5.4))
+
+    def test_format2_has_no_arrival_columns(self):
+        recs = list(rtrace.Trace(self.sample()).records())
+        self.assertTrue(all(r.bundle == 0 and r.repeats == 0 for r in recs))
+        self.assertEqual(rtrace.Trace(self.sample()).format, 2)
+
+    def test_unknown_format_is_rejected(self):
+        with self.assertRaises(rtrace.TraceError):
+            rtrace.parse_header(rtrace.MAGIC3 + bytes([9]) + uvar(0))
 
     def test_corrupt_block_is_rejected(self):
         path = self.write(build([(6, 1, {'by_player': 0})], corrupt_crc=True))
