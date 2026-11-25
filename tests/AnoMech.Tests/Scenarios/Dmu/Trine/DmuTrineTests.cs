@@ -35,6 +35,33 @@ public class DmuTrineTests
         Assert.That(byDistance.Last(), Is.EqualTo(OffTank));
     }
 
+    [TestCase(false, 210f, 1)]
+    [TestCase(false, 210f, 2)]
+    [TestCase(false, 210f, 3)]
+    [TestCase(true, 270f, 1)]
+    [TestCase(true, 270f, 2)]
+    [TestCase(true, 270f, 3)]
+    public void TheMainTankHeadsSquareOffTheFirstCentreSideCounterClockwiseFromNorthWest(bool centrePointsEast,
+        float expectedBearing, int seed)
+    {
+        var bearing = float.NaN;
+        var run = ScenarioRun.Execute(typeof(DmuTrineScenario), 0, seed, new()
+        {
+            Overrides = o => ((DmuTrineStateOverrides)o).CentrePointsEast = centrePointsEast,
+            Probe = p =>
+            {
+                if (!p.Crossed(BustersLand - 0.05f)) return;
+                var position = p.Member(MainTank)!.Position;
+                bearing = DmuTrineLayout.Bearing(new Vector2(position.X, position.Z));
+            },
+            WriteArtifactsOnFailure = false,
+        });
+
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(bearing, Is.EqualTo(expectedBearing).Within(60f));
+        Assert.That((315f - bearing + 360f) % 360f, Is.LessThanOrEqualTo(180f));
+    }
+
     [Test]
     public void TheLayoutIsSixAlternatingTrianglesAroundTheCentre()
     {

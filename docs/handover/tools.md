@@ -17,7 +17,7 @@ repository root (`python -B tools/<tool>.py …`). Nothing here writes to its in
 | `dsr_meteors_evidence.py` | Codex | `TOOL LOG` (JSON on stdout) | Short Meteors inventory |
 | `dsr_meteors_reconstruction.py` | Codex | `TOOL LOG --output OUT.json` | Produced `docs/encounters/dsr-sanctity-meteors-events.json` (from `Logy/Network_30303_20261016.log`) |
 | `fru_native_audit.py` | Codex | `TOOL LOG --native-replay DAT [--native-replay DAT] --output OUT.json` | FRU cast/MapEffect receive-time audit (→ `docs/research/fru-native-audit-2026-10-24.md`) |
-| `rtrace.py` | Claude (2026-11-12) | `rtrace.py TRACE` prints a summary (tracer metadata, run territory/content, duration, record counts); `--schema` prints the embedded schema; `--kind NAME [--kind …] [--limit N]` emits JSON lines (`clock_s` plus fields). Player names and account/content IDs are redacted unless `--no-redact`. Library: `Trace(path).records()` → `Record(kind, name, clock, values)`. Needs the `zstd` CLI or the `zstandard` module | `.rtrace` → decoded records. Output is identifying without redaction; never commit it |
+| `rtrace.py` | Claude (2026-11-12) | `rtrace.py TRACE` prints a summary (tracer metadata, run territory/content, duration, record counts); `--schema` prints the embedded schema; `--kind NAME [--kind …] [--limit N]` emits JSON lines (`clock_s`, format 3 `bundle`/`repeats` when non-zero, plus fields). Player names and account/content IDs are redacted unless `--no-redact`. Library: `Trace(path).records()` → `Record(kind, name, clock, values, bundle, repeats)`; reads tracer 0.3.x and 0.4.0.0 captures. Needs the `zstd` CLI or the `zstandard` module | `.rtrace` → decoded records. Output is identifying without redaction; never commit it |
 | `tea_evidence.py` | Codex | `TOOL LOG --replay DAT --replay DAT --output OUT.json` | TEA (territory 887, build 14155597): pulls, NPC IDs, events, numbered motion, replay casts/waymarks/alignment. **Does not regenerate `docs/tea/evidence-summary.json` verbatim**; that summary was post-processed by scratch scripts (§3) |
 | `package_release.py`, `release_notes.py` | Codex | Used by CI and the release procedure only | Do not run or change without release authorization |
 | `tools/tests/` | Codex | `python -m unittest discover -s tools/tests` | Regression tests for the tools above. Fixture `tests/fixtures/dsr_meteors_complete_failed.log` |
@@ -82,8 +82,10 @@ the `rea` MCP server, which inspected `Lumina.dll` types twice for DSR P7.
   table, then segments. Opcodes are build-specific.
 - **BossMod Reborn replay**: `BLCB` (brotli binary), `BLOG` (raw binary) or BMR text (its own
   schema). None of them is ACT format, and `parser.py` silently returns nothing on them.
-- **RaidTrace `.rtrace`** (RaidtraceTracer 0.3.1, uploads to raidtrace.com when enabled): magic
-  `RAIDTRCE`, then a self-describing schema (record types with typed fields), then records.
+- **RaidTrace `.rtrace`** (RaidtraceTracer 0.3.1 and 0.4.0.0, uploads to raidtrace.com when enabled):
+  magic `RAIDTRCE` (file format 2, tracer 0.3.x) or `RAIDTRACE` plus a format byte `0x03` (file format 3,
+  tracer 0.4.0.0, captures from 2026-11-24 on), then a self-describing schema (record types with typed
+  fields), then records.
   Record types: `action` (server_time, caster, animation target, action ID/variation/animation,
   global/source sequence, **facing, animation_lock, position**, targets, effects), `effect_result`
   (HP, shield, statuses), `status_list`, `cast` (cast_time, target, facing, position), `movement`
@@ -91,7 +93,8 @@ the `rea` MCP server, which inspected `Lumina.dll` types twice for DSR P7.
   `system_message`, `gauge`, `spawn` (model, customize, tethers, owner/parent, position, player
   identity fields), plus `tether`, `headmarker`, `map_state`, `weather`, `waymark`,
   `party_positions`, `actor_move`, `object_spawn`, `zone_init`, `rsv`/`rsf`, own `position_report` and
-  `action_request`, and raw `packet` fallbacks (70 kinds in 0.3.x).
+  `action_request`, and raw `packet` fallbacks (70 kinds in 0.3.x, 80 in 0.4.0.0, which adds e.g. `start`,
+  `written`, `mark`, `forced_move`, `movement_input`, `control_settings`, `equipment`; `recording` is gone).
   Encoding (reverse-engineered on 2026-11-12 from the captures and the tracer's unstripped Rust symbols,
   crate `trace::{file,columns,schema}`; validated by exact byte consumption on all 16 local captures):
   - **Schema:** varint kind count; per kind a varint ID, a length-prefixed name, a field count and
@@ -100,7 +103,17 @@ the `rea` MCP server, which inspected `Lumina.dll` types twice for DSR P7.
   - **Blocks:** `RTBK`, u32 length, u32 CRC-32, then a body of varint codec (2 = zstd), varint
     decompressed size and the zstd data. The file ends with an `RTIX` index.
   - **Inflated block:** varint row count, a kind ID per row, and a zigzag-delta local clock per row
-    (100 kHz). Then per kind a varint ID, row count and byte length, followed by a column-major body:
+    (100 kHz). Format 3 then has two more per-row columns, the tracer's `trace::file::Arrival`
+    (read from the 0.4.0.0 tracer's unstripped `trace::file::{get_bundle,put_bundle}` and
+    `LiveWriter::{push_arrived,lay_out}`; checked against all 14 local format 3 captures):
+    - **bundle:** the server network bundle the row was decoded from. 0 for rows that did not come
+      from a bundle (tracer, client-side and own-packet kinds). Otherwise it is stored as
+      zigzag(bundle − previous non-zero bundle) + 1, and the delta restarts in each block. Rows from one
+      bundle share the id and lie within a few ticks of each other.
+    - **repeats:** a plain varint. The writer folds a row into the previous one when both have the same
+      kind, the same bundle and a byte-identical payload. Such a row stands for repeats + 1 copies and
+      keeps the first copy's clock. This is mostly `actor_move`, occasionally `gauge`/`limit_break`.
+    Then per kind a varint ID, row count and byte length, followed by a column-major body:
     - u8 is a raw byte;
     - other integers, and f32 bit patterns, are zigzag deltas within the column;
     - strings and bytes are length-prefixed;
@@ -112,7 +125,12 @@ the `rea` MCP server, which inspected `Lumina.dll` types twice for DSR P7.
     `movement` positions are plain f32. The FRU content director's BGM change is `director_command`
     `0x80000001` with the BGM row in `params[0]`.
   - `server_time` is epoch milliseconds; tracer 0.3.0 wrote 0. Kinds 1 and 2 (no schema) are tracer
-    metadata JSON.
+    metadata JSON. In format 3, kind 2 only lists the running capture sources. The tracer version,
+    framework, game and platform are in the `start` record, and the format, writer and clock frequency
+    are in `written`. `rtrace.py` maps them onto the format 2 metadata keys (`plugin`, `clockFrequency`, …).
+  - Rows are in recording order, not clock order: in format 3 the pre-roll state (`zone`, `party`,
+    `character`, …) follows `start` with earlier clocks. The run is `recording.run` in format 2. In
+    format 3 it is the first `zone_init` after `start`, and the duration is measured from `start`.
   - Capture filenames (`YYYYMMDD-HHMMSS-duty<CFC>`) are in **UTC**: `20261110-141323` is 23:13 JST.
   - **Only tracer ≥ 0.3.1 captures are reliable.** Earlier ones decode, but their content is
     incomplete or scrambled; `rtrace.py`'s summary warns about them. The `duty_recorder` kind's
