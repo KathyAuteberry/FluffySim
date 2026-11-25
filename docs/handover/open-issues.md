@@ -205,8 +205,14 @@ presentation detail added since October still awaits an in-game check. The highe
     way, Wings of Destruction (left, Kefka facing north) resolves at 10.11 s, the closest and farthest
     players take r7 busters at 20.37 s, Ultimate Embrace follows at 22.55 s. Bots follow BossMod Reborn's
     and the owner's rule: party to the first wave-1 triangle clockwise from north, tanks to the first one
-    counter-clockwise from north-west, off-tank at the edge, main tank at the closest safe spot to Kefka
-    within 60° of the tanks' triangle.
+    counter-clockwise from north-west, off-tank at the edge. Main tank (owner, 2026-11-25): out from Kefka
+    at right angles to a side of the centre triangle, the first such direction counter-clockwise from
+    north-west (SW when it points west, W when it points east), at the closest spot within 45° clear of
+    the third wave and the busters, never clockwise of north-west; the bot waits beside Kefka until the
+    second wave bursts.
+    - UNVERIFIED: when the third wave covers that whole side (centre pointing west with S and W in wave
+      3), the main tank takes the next direction counter-clockwise; the owner's rule names only the
+      first direction, and no retail pull has shown this pattern.
     - UNVERIFIED: the wave distribution (any split is rolled; three pulls showed three different ones),
       the right-wing cleave (only the left was seen), Ultimate Embrace's damage split, and the arena
       map-effect states before Trine (slot 0x13 turns off 6.5 s before Trine in retail; not reproduced).

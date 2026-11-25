@@ -49,7 +49,7 @@ Mana follows Yan Flash's guide. P1 and P2 are native beta scenarios, built from 
 
 - **Graven Image 1–3** cover Revolting Ruin III tank swaps, Mystery Magic, Pulse Wave, Wave Cannon towers, Double Trouble Trap, Gravitas, Vitrophyre, the Tele-portent chase and the final gaze (upstream calls this part Tele-trouncing). At each tank swap the incoming tank must Provoke Kefka during the tankbuster cast. Graven Image 3 is solo-only.
 - **Forsaken** covers all eight tower sets, the Future's and Past's End baits and the final-tower self-marks.
-- **Trine**: since 2026-11-19 Yan Flash uses Elemental's Trine (the party takes the first safe triangle clockwise from north, the tanks the first counter-clockwise from north-west), so one scenario serves both.
+- **Trine**: since 2026-11-19 Yan Flash uses Elemental's Trine (the party takes the first safe triangle clockwise from north, the tanks the first counter-clockwise from north-west; the main tank steps out from Kefka square to the first side of the centre triangle counter-clockwise from north-west), so one scenario serves both.
 - Upstream practice for P1–P5 is listed under [Upstream practice](#upstream-practice).
 
 [dmu-p1-graven-image-1-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P1%20Graven%20Image%201%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P1%20Graven%20Image%201&strategy=Elemental%3A%20
