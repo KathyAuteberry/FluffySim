@@ -1,3 +1,24 @@
+# FluffySim 3.4.9.0 — release prepared
+
+## Added
+
+- **Dancing Mad P3: Elements** (Mana "Yan", alpha). Runs from Definition of Insanity to the second elements' Cyclones, built from three retail pulls. The crystal layout is random (any of eight), and the bots play Yan Flash's TLB3 method on spots set by the wind and water crystals. The Chaos tank pulls Chaos to the edge facing the middle; the Exdeath tank invulns the Thunder III buster. Ultima Blaster and Vacuum Wave are not included yet. Supports multiplayer.
+- **Dancing Mad P3: Limit Cut** (Mana, alpha). A native copy of the upstream scenario with multiplayer and JESUS TAKE THE WHEEL. Thunder III defaults to a shared buster, main tank first.
+- **Dancing Mad P3: Black Hole** (Mana "Selfmark", alpha). A native copy of the upstream scenario with multiplayer and JESUS TAKE THE WHEEL. Beams follow self-markers: first in each line presses Attack (1–3), second Bind (1–3), third Ignore (1–2). Thunder III defaults to an off-tank invuln for the first set and a shared buster, main tank first, for the second. Needs a full party.
+- **Choose who tanks Chaos.** Every P3 scenario has a Tanks setting: main tank on Exdeath and off-tank on Chaos (default), or the reverse.
+
+## Fixed
+
+- **Trine main tank spot.** The main tank now steps out from Kefka square to the first side of the centre triangle counter-clockwise from north-west.
+
+## Known issues
+
+- P3 is an alpha. The Elements bot spots were read off Yan Flash's figures, and its wind knockback distances, Cyclone delay and Longitudinal Implosion are estimates. Limit Cut and Black Hole keep upstream's timings, not yet checked against retail.
+
+## Internal
+
+- The RaidTrace reader accepts the format 3 captures written by tracer 0.4.0.0.
+
 # FluffySim 3.4.8.0 — release prepared
 
 ## Added
