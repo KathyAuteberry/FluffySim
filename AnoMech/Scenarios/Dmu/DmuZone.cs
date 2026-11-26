@@ -16,6 +16,9 @@ public sealed class DmuZone : IZone
     public static readonly Phase P2 = new(Instance, "P2", 79, DmuConstants.Bgm.Forsaken,
         arenaMapEffectOverrides: new Dictionary<byte, ushort> { [0x00] = 0x40 });
 
+    public static readonly Phase P3 = new(Instance, "P3", 174, DmuConstants.Bgm.ChaosAndExdeath,
+        arenaMapEffectOverrides: new Dictionary<byte, ushort> { [0x00] = 0x200, [0x13] = 4 });
+
     public bool SupportsSpectator => true;
     public string DisplayName => "Dancing Mad";
     public string Name => "Dancing Mad (Ultimate)";

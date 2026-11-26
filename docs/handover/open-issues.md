@@ -12,6 +12,7 @@ one silently.
 |---|---|---|---|---|
 | C2 | **ActorCast byte 3**: omen delay or base cast time | Codex read it as omen delay (tenths). BossMod `ServerIPC.cs` names it `BaseCastTime100ms` | DSR Spiral Thrust `OmenDelay = 5.0f` (byte 50 in 123 casts, cast 5.7 s); DSR P3 Geirskogul `OmenDelay = 3.5f` (byte 35, cast 4.2 s → 0.7 s warning). TEA casts show 0 and no TEA value depends on it | Watch either telegraph in a Duty Recorder replay: does the omen appear ~0.7 s before cast end? |
 | C13 | **TOP P2 Optimized Bladedance cone width** | BossMod guesses 90° (`AOEShapeCone(100, 45.Degrees())`). Retail (2026-11-17, pull 44): a tank 31° off the clone-to-centre line missed the party standing in the middle, so the cone is at most ~62° wide | Native Limitless Synergy uses a 60° cone, UNVERIFIED; the bots hold tethers 56° clockwise so either width misses the party | RaidTrace visualisation of a Bladedance, or a retail pull where someone stands 31–45° off its axis |
+| C14 | **DMU P3: what clears a wind** | BossMod (awgil, `UMAD/P3BowelsOfAgony.cs`): only the crystal shots (Inferno, Tsunami) and Vacuum Wave clear a wind, by knocking back every wind carrier they catch except the shot's own target; a Cyclone follows per cleared wind. Yan Flash's 正攻法 agrees (the opposite element's holders take the crystal shot to clear their wind). Retail 2026-11-26 is mixed: in one pull single Stray Flames hits cleared nothing until a Cyclone landed, in another the players caught by two overlapping Stray Flames lost their wind about 0.65 s later | BossMod's model (owner's choice, 2026-11-27); `DmuElementsActions.WindExposure` only on the crystal shots | A clean retail pull, or one where a single holder's burst catches a wind carrier and the status loss is timed |
 
 The same audit found no retail log for DSR P3–P7, so Hot Wing/Tail running instant (sheet 6.5 s)
 and every other P3–P7 override are unchecked.
@@ -212,6 +213,23 @@ presentation detail added since October still awaits an in-game check. The highe
       map-effect states before Trine (slot 0x13 turns off 6.5 s before Trine in retail; not reproduced).
     - Native presentation needs an in-game look: the telegraph EObjs (2015154/2015155) and their beats,
       Kefka's wing animation state (ActorControl 0x3E 0/2/3), burst VFX.
+  - P3 Elements (native, Yan Flash TLB3式, owner's choice 2026-11-27): built 2026-11-27 from the three P3 pulls of
+    2026-11-26 (ACT `Network_30305_20261126.log`, pulls 7, 13 and 25; RaidTraces `20261126-111546` and `-132632`). Every
+    pull wiped at the second elements, so the timeline is retail but no clean execution was seen. Observed, relative to
+    Bowels of Agony's cast: Definition of Insanity −24.6 s, Decisive Battle −17.4 s (Hero statuses −14.4 s), elements
+    and winds at 5.0 s (Entropy or Dynamic Fluid 19 s and the other 46 s, one tank or healer and one DPS each, winds
+    68 s on everyone), crystals at 5.2 s on intercardinals 14 y out, Thunder III circle 17.2 s (hit 24.1 s), first
+    bursts 24.07 s, crystal shots 25.1 s, buster 28.3 s (hits 33.3 s and 36.3 s on the player closest to Exdeath),
+    Latitudinal Implosion 41.2 s (cones 47.0 s and 49.0 s), second bursts 51.1 s, shots 52.1 s. The Decisive Battle
+    split goes by distance to Chaos in the sim (Yan: closeness).
+    - UNVERIFIED: fire and water on the NW-SE diagonal (retail showed SW-NE three times), Longitudinal Implosion
+      (only Latitudinal seen), the knockback distances (10/20/40 y from the status text, 20 y base), the Cyclone's
+      delay (1.7 s; retail 1.0 to 3.5 s) and target rule (BossMod: one per cleared wind on the players nearest the
+      wind crystal), Exdeath's buster simplified to two plain tankbusters.
+    - Bot spots read off Yan's TLB3 figures (fire start, water NW, wind NE): tanks and healers stack 6 y toward the
+      wind crystal, D1/D2 18 y out past it, D3/D4 flank the water crystal; Exdeath sits in the empty corner for Thunder
+      III, Chaos at the wind crystal. Needs the owner's in-game look against the figures.
+    - Not included: Umbra Smash, Ultima Blaster, Vacuum Wave with tank LB3, the final Cyclones.
 - **TOP (native Elemental, P1–P4)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:

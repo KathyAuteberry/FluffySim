@@ -18,7 +18,7 @@ Mechanics with an Elemental or Mana scenario, out of the major mechanics listed 
 
 | Ultimate | Elemental | Mana |
 | --- | --- | --- |
-| [Dancing Mad (Ultimate)](#dancing-mad-ultimate) | ✅ 1 / 12 | ✅ 5 / 12 |
+| [Dancing Mad (Ultimate)](#dancing-mad-ultimate) | ✅ 1 / 13 | ✅ 5 · 🟢 1 / 13 |
 | [Futures Rewritten (Ultimate)](#futures-rewritten-ultimate) | — 0 / 12 | ✅ 12 / 12 |
 | [The Omega Protocol (Ultimate)](#the-omega-protocol-ultimate) | ✅ 8 / 16 | — 0 / 16 |
 | [Dragonsong's Reprise (Ultimate)](#dragonsongs-reprise-ultimate) | ✅ 7 · 🟢 16 / 23 | — 0 / 23 |
@@ -30,7 +30,7 @@ Don't see your strategy? FluffySim accepts fight data from any Japanese strategy
 
 ## Dancing Mad (Ultimate)
 
-Mana follows Yan Flash's guide. P1 and P2 are native beta scenarios, built from retail combat logs and Duty Recorder captures. The phases after P2 are listed as far as the upstream catalog covers them, so this list may still be missing mechanics.
+Mana follows Yan Flash's guide. P1, P2 and P3's Elements are native beta scenarios, built from retail combat logs and Duty Recorder captures. The phases after P2 are listed as far as the upstream catalog covers them, so this list may still be missing mechanics.
 
 | Phase | Mechanic | Elemental | Mana | Menu entry |
 | --- | --- | --- | --- | --- |
@@ -39,7 +39,8 @@ Mana follows Yan Flash's guide. P1 and P2 are native beta scenarios, built from 
 |  | Graven Image 3 | [⬜ Not implemented][dmu-p1-graven-image-3-e] | ✅ Verified | P1 › Graven Image 3 |
 | **P2** | Forsaken | [⬜ Not implemented][dmu-p2-forsaken-e] | ✅ Verified | P2 › Forsaken |
 |  | Trine | ✅ Verified | ✅ Verified | P2 › Trine |
-| **P3** | Limit Cut | [⬜ Not implemented][dmu-p3-limit-cut-e] | [⬜ Not implemented][dmu-p3-limit-cut-m] | — |
+| **P3** | Elements | [⬜ Not implemented][dmu-p3-elements-e] | 🟢 Playable | P3 › Elements |
+|  | Limit Cut | [⬜ Not implemented][dmu-p3-limit-cut-e] | [⬜ Not implemented][dmu-p3-limit-cut-m] | — |
 |  | Black Hole | [⬜ Not implemented][dmu-p3-black-hole-e] | [⬜ Not implemented][dmu-p3-black-hole-m] | — |
 | **P4** | Kefka Says | [⬜ Not implemented][dmu-p4-kefka-says-e] | [⬜ Not implemented][dmu-p4-kefka-says-m] | — |
 | **P5** | Flood | [⬜ Not implemented][dmu-p5-flood-e] | [⬜ Not implemented][dmu-p5-flood-m] | — |
@@ -50,12 +51,14 @@ Mana follows Yan Flash's guide. P1 and P2 are native beta scenarios, built from 
 - **Graven Image 1–3** cover Revolting Ruin III tank swaps, Mystery Magic, Pulse Wave, Wave Cannon towers, Double Trouble Trap, Gravitas, Vitrophyre, the Tele-portent chase and the final gaze (upstream calls this part Tele-trouncing). At each tank swap the incoming tank must Provoke Kefka during the tankbuster cast. Graven Image 3 is solo-only.
 - **Forsaken** covers all eight tower sets, the Future's and Past's End baits and the final-tower self-marks.
 - **Trine**: since 2026-11-19 Yan Flash uses Elemental's Trine (the party takes the first safe triangle clockwise from north, the tanks the first counter-clockwise from north-west), so one scenario serves both.
+- **Elements** (P3, Bowels of Agony) runs from Definition of Insanity to the second elements' Cyclones and follows Yan Flash's TLB3 method: everyone stands on fixed spots set by the wind and water crystals, so no wind is cleared before Vacuum Wave. The timeline comes from three retail pulls; the bot spots come from Yan's figures and still need an in-game check. Ultima Blaster and Vacuum Wave are not included yet.
 - Upstream practice for P1–P5 is listed under [Upstream practice](#upstream-practice).
 
 [dmu-p1-graven-image-1-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P1%20Graven%20Image%201%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P1%20Graven%20Image%201&strategy=Elemental%3A%20
 [dmu-p1-graven-image-2-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P1%20Graven%20Image%202%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P1%20Graven%20Image%202&strategy=Elemental%3A%20
 [dmu-p1-graven-image-3-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P1%20Graven%20Image%203%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P1%20Graven%20Image%203&strategy=Elemental%3A%20
 [dmu-p2-forsaken-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P2%20Forsaken%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P2%20Forsaken&strategy=Elemental%3A%20
+[dmu-p3-elements-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P3%20Elements%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P3%20Elements&strategy=Elemental%3A%20
 [dmu-p3-limit-cut-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P3%20Limit%20Cut%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P3%20Limit%20Cut&strategy=Elemental%3A%20
 [dmu-p3-limit-cut-m]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P3%20Limit%20Cut%20%28Mana%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P3%20Limit%20Cut&strategy=Mana%3A%20
 [dmu-p3-black-hole-e]: https://github.com/KathyAuteberry/FluffySim/issues/new?template=fight-data.yml&title=%5BFight%20data%5D%20DMU%20P3%20Black%20Hole%20%28Elemental%29&duty=Dancing%20Mad%20%28Ultimate%29&phases=P3%20Black%20Hole&strategy=Elemental%3A%20

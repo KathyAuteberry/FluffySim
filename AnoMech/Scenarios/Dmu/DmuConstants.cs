@@ -13,12 +13,18 @@ public static class DmuConstants
         public const uint Helper = 9020;
         public const uint GodKefka = 19506;
         public const uint KefkaClone = 19513;
+        public const uint ChaosP3 = 19508;
+        public const uint Exdeath = 19509;
+        // Cyclone's caster-side VFX needs a skeleton, which the 9020 helpers lack.
+        public const uint ChaosVfxHelper = 19507;
     }
 
     public static class BNpcNameId
     {
         public const uint Kefka = 7131;
         public const uint GravenImage = 7132;
+        public const uint Chaos = 7691;
+        public const uint Exdeath = 6052;
     }
 
     public static class LayoutId
@@ -46,6 +52,10 @@ public static class DmuConstants
         public const uint TrineWest = 0xBC17ED;
         public const uint TrineNorthwest = 0xBC17F5;
         public const uint TrineCentre = 0xBC17E1;
+        public const uint ChaosP3 = 0xBC172A;
+        public const uint Exdeath = 0xBC172B;
+        // P3 crystals by corner, whatever their element: NE, SE, SW, NW.
+        public static readonly uint[] Crystal = [0xBC1925, 0xBC1926, 0xBC1927, 0xBC1928];
     }
 
     // The multiplayer allowlist harvests these by class name.
@@ -61,11 +71,15 @@ public static class DmuConstants
         public const uint TelePortent = 2015267;
         public const uint TrinePointingEast = 2015154;
         public const uint TrinePointingWest = 2015155;
+        public const uint FireCrystal = 2015290;
+        public const uint WaterCrystal = 2015291;
+        public const uint WindCrystal = 2015292;
     }
 
     public static class TetherId
     {
         public const ushort GravenImage = 0x2D;
+        public const ushort ExdeathVoid = 0x40;
     }
 
     public static class EventId
@@ -133,6 +147,23 @@ public static class DmuConstants
         public const uint WingsOfDestructionBuster = 0xBACF;
         public const uint WingsOfDestructionBusterCast = 0xC487;
         public const uint UltimateEmbrace = 0xC24C;
+        public const uint DefinitionOfInsanity = 0xBAE2;
+        public const uint DecisiveBattleChaos = 0xC2E2;
+        public const uint DecisiveBattleExdeath = 0xC2E3;
+        public const uint ExdeathAutoAttack = 0xC250;
+        public const uint ChaosAutoAttack = 0xC252;
+        public const uint BowelsOfAgony = 0xBAF2;
+        public const uint StrayFlames = 0xBAF3;
+        public const uint Inferno = 0xBAF4;
+        public const uint Tsunami = 0xBAF5;
+        public const uint StraySpray = 0xBAF6;
+        public const uint Cyclone = 0xBAF8;
+        public const uint LongitudinalImplosion = 0xBAFD;
+        public const uint LatitudinalImplosion = 0xBAFE;
+        public const uint Shockwave = 0xBAFF;
+        public const uint ThunderIIIBusterCast = 0xBB09;
+        public const uint ThunderIIIBuster = 0xBB0C;
+        public const uint ThunderIIICircle = 0xBB12;
     }
 
     public static class StatusId
@@ -151,6 +182,16 @@ public static class DmuConstants
         public const ushort ForsakenStackShape = 0x13DC;
         public const ushort ForsakenChariotShape = 0x13DD;
         public const ushort ForsakenConeShape = 0x13DE;
+        public const ushort EpicHero = 0x1060;
+        public const ushort EpicVillain = 0x1061;
+        public const ushort FatedHero = 0x1062;
+        public const ushort FatedVillain = 0x1063;
+        public const ushort Entropy = 0x640;
+        public const ushort DynamicFluid = 0x641;
+        public const ushort Headwind = 0x642;
+        public const ushort Tailwind = 0x643;
+        public const ushort WindResistanceDownII = 0x41C;
+        public const ushort LightningResistanceDownII = 0xBB6;
     }
 
     public static class LockonId
@@ -183,6 +224,7 @@ public static class DmuConstants
         public const ushort AfterFirstJudgment = 20290;
         public const ushort AfterSecondJudgment = 20291;
         public const ushort Forsaken = 20292;
+        public const ushort ChaosAndExdeath = 20293;
     }
 
     public const uint GravitasPuddleArg2Base = 0x500003;
@@ -191,6 +233,10 @@ public static class DmuConstants
     // Director 0x800375D2, slot 0: Light of Judgment 1, then 2.
     public const uint FirstJudgmentArena = 0x00080004;
     public const uint SecondJudgmentArena = 0x00200010;
+
+    public const uint FireCrystalArg2 = 0x410003;
+    public const uint WaterCrystalArg2 = 0x420003;
+    public const uint WindCrystalArg2 = 0x430003;
 
     // Local to the arena centre; Y is height. The spawn packets' own values.
     public sealed record Statue(uint EObjId, uint LayoutId, Vector3 Position, uint Arg2);
