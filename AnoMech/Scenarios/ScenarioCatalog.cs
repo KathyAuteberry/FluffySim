@@ -103,6 +103,8 @@ public sealed class ScenarioCatalog
         new Dmu.Forsaken.DmuForsakenScenario(),
         new Dmu.Trine.DmuTrineScenario(),
         new Dmu.Elements.DmuElementsScenario(),
+        new Dmu.LimitCut.DmuLimitCutScenario(),
+        new Dmu.BlackHole.DmuBlackHoleScenario(),
         new TopNative.ProgramLoop.TopProgramLoopScenario(),
         new TopNative.Pantokrator.TopPantokratorScenario(),
         new TopNative.PartySynergy.TopPartySynergyScenario(),
