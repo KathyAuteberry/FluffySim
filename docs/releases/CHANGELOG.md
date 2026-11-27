@@ -1,3 +1,15 @@
+# FluffySim 3.4.10.0 — release prepared
+
+## Changed
+
+- **Elements boss positions.** Once the Epic and Fated Heroes are assigned, the tanks hold both bosses in the middle. When the crystals appear, they wait about two seconds before dragging the bosses to their edges, instead of reacting to crystals nobody can see yet.
+- **Limit Cut needs a tank LB3.** The Cyclones after Vacuum Wave now kill the party unless a tank LB3 covers them. The party stacks tightly before Vacuum Wave, so everyone lands together for the Cyclones.
+- **Black Hole follows Yan's tethers and Stomp-a-Mole.** With Kefka as north, Attack 1 now pulls the first tether counter-clockwise; the second set stays clockwise, Attack 1 first. Stomp-a-Mole now starts with everyone in the middle.
+
+## Fixed
+
+- **ISSIS invulns are enforced.** In Elements the Exdeath tank must invuln the Thunder III buster, and in Black Hole (and in Limit Cut, if chosen) the tank a Thunder III plan names must invuln its set. Missing the invuln now fails the run, whatever the mitigation setting. Bot tanks press theirs in time. Swapping which tank holds Chaos in Black Hole moves the invuln with the boss.
+
 # FluffySim 3.4.9.0 — release prepared
 
 ## Added
