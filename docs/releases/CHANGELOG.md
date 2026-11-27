@@ -1,3 +1,23 @@
+# FluffySim 3.4.11.0 — release prepared
+
+## Added
+
+- **Time to walk in before the fight starts.** Limit Cut and the four DSR P2 scenarios (Strength of the Ward 1 and 2, Sanctity of the Ward 1 and 2) now give you three seconds before anything happens, so you can reach your opening spot. In Limit Cut the bosses already stand at their spot, so the tank can walk to them before they start following anyone; in DSR P2 the arena stays empty until the fight begins. The start message in chat says when the fight begins.
+
+## Changed
+
+- **Limit Cut timed to retail.** Limit Cut now follows our first retail pull that reached it. The clone appearances, the charges, Chaos landing after Umbra Smash, the Cyclones and Aetherlink were up to a quarter of a second off. Chaos now waits where it lands for about two and a half seconds before turning back to its tank. Events after the Thunder III that follows the charges still use upstream's timings.
+- **Limit Cut Thunder III asks for realistic mitigation.** Its first hit now passes on Rampart and two short mitigations instead of needing a 40% cooldown on top. A tank can also take the second hit on Rampart and a 40% cooldown, where it used to need an invulnerability. Black Hole's Thunder III sets are unchanged.
+
+## Known issues
+
+- P3 is still an alpha. Elements matched the same retail pull closely, but its bot spots and wind knockback distances are still estimates. Black Hole and the end of Limit Cut keep upstream's timings.
+
+## Internal
+
+- CI runs the scenario test suite split across three Linux jobs, and releases reuse that run instead of repeating it.
+- Scenarios can declare a lead-in (`IScenario.LeadInSeconds`, with `RunLeadIn` for what already stands in the arena). The event clock holds at zero during it, so fight timings stay as written.
+
 # FluffySim 3.4.10.0 — release prepared
 
 ## Changed
