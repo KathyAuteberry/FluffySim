@@ -34,6 +34,15 @@ public interface IScenario
     // The track at this scenario's start where the fight has moved past the phase's own.
     ushort? Bgm => null;
 
+    // Seconds between the start and Run, for walking into the opening positions. The world
+    // ticks but the event clock holds at 0, so the fight's times stay as written.
+    float LeadInSeconds => 0f;
+    const float OpeningLeadInSeconds = 3f;
+
+    // What already stands in the arena during the lead-in, e.g. bosses whose spot the tanks
+    // must read. Host only, before Run.
+    void RunLeadIn(SimWorld world) { }
+
     void Run(SimWorld world, int? selectedAi);
     void Tick(float delta, float elapsed) { }
 

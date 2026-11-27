@@ -47,6 +47,7 @@ public sealed class ScenarioSession
     private readonly IReadOnlyList<PartySlot?> roster;
 
     private float elapsed;
+    private float leadInRemaining;
     private float? finishedElapsed;
     private bool resultReported;
     private bool firstDeathShown;
@@ -172,25 +173,55 @@ public sealed class ScenarioSession
             {
                 zone.Run(world);
                 phase.Run(world);
-                Scenario.Run(world, run.SelectedAi);
+                Scenario.RunLeadIn(world);
             }
             catch (Exception e)
             {
-                DiagnosticLog.Warn($"[ScenarioSession.Start] zone/phase/scenario.Run threw -- scenario load aborted here: {e}");
+                DiagnosticLog.Warn($"[ScenarioSession.Start] zone/phase/scenario lead-in threw -- scenario load aborted here: {e}");
                 throw;
             }
             if (Plugin.Config.EnableMechanicResultMarks) markHelper = world.SpawnEnemy(MarkHelper);
         }
-        // Both host and peer: RunInstanceEvents carries no RNG/AI/damage-check dependency.
-        Scenario.RunInstanceEvents(world);
         instance.PlacePlayer();
         if (run.WatchedRole is null) Natives.UserActions.OnScenarioStart();
+        leadInRemaining = MathF.Max(0f, Scenario.LeadInSeconds);
+        var leadIn = leadInRemaining > 0f ? $", fight in {leadInRemaining:0.#} s" : "";
+        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}{leadIn}" });
+        if (leadInRemaining <= 0f) StartFight();
+    }
+
+    // Game holds the event clock while this is true.
+    public bool InLeadIn => leadInRemaining > 0f;
+
+    // Reached from the frame tick when a lead-in ends, so it rechecks the stay itself.
+    private void StartFight()
+    {
+        if (!instance.IsLoaded) return;
+        if (Mode != SessionMode.Peer)
+        {
+            try
+            {
+                Scenario.Run(world, run.SelectedAi);
+            }
+            catch (Exception e)
+            {
+                DiagnosticLog.Warn($"[ScenarioSession.Start] scenario.Run threw -- scenario load aborted here: {e}");
+                throw;
+            }
+        }
+        // Both host and peer: RunInstanceEvents carries no RNG/AI/damage-check dependency.
+        Scenario.RunInstanceEvents(world);
         StartMusic();
-        Plugin.ChatGui.Print(new XivChatEntry { Type = XivChatType.SystemMessage, Message = $"[FluffySim] Starting: {Scenario.FullName()}{(Mode == SessionMode.Local ? " (Solo)" : "")}" });
     }
 
     public void Tick(float deltaSeconds)
     {
+        if (InLeadIn)
+        {
+            leadInRemaining -= deltaSeconds;
+            if (!InLeadIn) StartFight();
+            return;
+        }
         if (Mode == SessionMode.Peer) return;
         elapsed += deltaSeconds;
         Scenario.Tick(deltaSeconds, elapsed);

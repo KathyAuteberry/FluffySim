@@ -17,13 +17,16 @@ using AnoMech.Core.Native.Interfaces;
 using static AnoMech.Scenarios.Umad.UmadConstants;
 using static DmuLimitCutState;
 
-// Dancing Mad P3 "Limit Cut". Scenario time 0 is 8.0s before Chaos starts casting Umbra Smash,
+// Dancing Mad P3 "Limit Cut". Fight time 0 is 8.0s before Chaos starts casting Umbra Smash,
 // the earliest start inside this mechanic (the second elements' Cyclones land 7.65s before).
+// The bosses already stand at their spot during the lead-in, so a human tank can walk in
+// before they start following their tanks.
 public sealed class DmuLimitCutScenario : IScenario
 {
     public string Name => "Limit Cut";
     public IPhase Phase => DmuZone.P3;
     public float BgmSecondsAtStart => 108.60f;
+    public float LeadInSeconds => IScenario.OpeningLeadInSeconds;
     public bool SupportsSolo => true;
     public bool SupportsMultiplayer => true;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DmuLimitCutAi()];
@@ -57,13 +60,18 @@ public sealed class DmuLimitCutScenario : IScenario
 
     public DmuLimitCutState? LastState { get; private set; }
 
-    public void Run(SimWorld worldParam, int? selectedAi)
+    public void RunLeadIn(SimWorld worldParam)
     {
         world = worldParam;
         party = world.Party;
         state = new DmuLimitCutState(world.Rng, party, settingsWindow.Overrides);
         LastState = state;
         vacuumWave = null;
+        SpawnActors();
+    }
+
+    public void Run(SimWorld worldParam, int? selectedAi)
+    {
         DiagnosticLog.Info(
             $"[DmuLimitCut] Roll: clones start {SpotName(state.StartSpot)} going {(state.Clockwise ? "clockwise" : "counter-clockwise")}, "
             + $"bosses held {SpotName(state.BossSpot)}, bait {state.BaitRole}, numbers "
@@ -73,7 +81,6 @@ public sealed class DmuLimitCutScenario : IScenario
         if (selectedAi is { } idx && idx < AiStrats.Count)
             ((IScenarioAi<DmuLimitCutState>)AiStrats[idx]).Run(state, world);
 
-        SpawnActors();
         ApplyStartingStatuses();
 
         world.Events.Add(1.0f, () =>

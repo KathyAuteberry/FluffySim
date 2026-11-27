@@ -19,6 +19,7 @@ public sealed class DsrSanctity2Scenario : IScenario
     public bool IsIncomplete => true;
     public bool EnablePhaseBgm => true;
     public IPhase Phase => DsrZone.P2;
+    public float LeadInSeconds => IScenario.OpeningLeadInSeconds;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DsrSanctity2Ai()];
     public DsrSanctity2StateOverrides Overrides { get; } = new();
     public object SettingsOverrides => Overrides;

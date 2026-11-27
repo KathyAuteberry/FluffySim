@@ -22,6 +22,7 @@ public sealed class DsrSanctity1Scenario : IScenario
     public string Name => "Sanctity of the Ward — Part 1: Sacred Severs (Elemental)";
     public string DisplayNameOverride => "P2 Sanctity of the Ward 1";
     public IPhase Phase => DsrZone.P2;
+    public float LeadInSeconds => IScenario.OpeningLeadInSeconds;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DsrSanctity1Ai()];
     public DsrSanctity1StateOverrides Overrides { get; } = new();
     public object SettingsOverrides => Overrides;

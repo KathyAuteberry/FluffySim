@@ -17,6 +17,7 @@ public sealed class DsrStrength2Scenario : IScenario
     public string Name => "Strength of the Ward — Part 2 (Elemental)";
     public string DisplayNameOverride => "P2 Strength of the Ward 2";
     public IPhase Phase => DsrZone.P2;
+    public float LeadInSeconds => IScenario.OpeningLeadInSeconds;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DsrStrength2Ai()];
     public DsrStrength2StateOverrides Overrides { get; } = new();
     public object SettingsOverrides => Overrides;

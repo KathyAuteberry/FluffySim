@@ -337,7 +337,7 @@ public sealed class Game : IDisposable
             return;
         }
         World.Latency.Sample(deltaSeconds, Player?.LocalPose ?? default);
-        Events.Tick(deltaSeconds * EventTimeScale);
+        if (run?.InLeadIn != true) Events.Tick(deltaSeconds * EventTimeScale);
         if (Paused) return;
         World.Tick(deltaSeconds * EventTimeScale);
         run?.Tick(deltaSeconds * EventTimeScale);

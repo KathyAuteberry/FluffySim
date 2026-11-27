@@ -70,7 +70,7 @@ public class PracticeDefensiveActionsTests
         DalamudServices.Install(nameof(Plugin.Game), game);
         var scenario = new DsrSanctity2Scenario();
         game.RunScenario(new LegacyRunScenarioParams(scenario,PartyRole.RegenHealer,0,0,0));
-        native.Frame(.01f,game.Tick);
+        native.Frame(scenario.LeadInSeconds + .01f,game.Tick);
         game.Paused = true;
         Assert.That(PracticeAntiKnockbackControls.Press(game.ActiveScenario,true,game.World.PracticeAntiKnockback), Is.False);
         game.Paused = false;

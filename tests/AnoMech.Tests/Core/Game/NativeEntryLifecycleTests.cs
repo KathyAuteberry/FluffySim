@@ -298,7 +298,7 @@ public class NativeEntryLifecycleTests
             game.EnterAndStart(Parameters(scenario, PartyRole.MeleeDpsA), SessionMode.Local);
             Frames(fake, game, 2);
             Assert.That(game.Events.Elapsed, Is.LessThan(.1));
-            Frames(fake, game, 60);
+            Frames(fake, game, 60 + (int)(scenario.LeadInSeconds * 60f));
             Assert.That(scenario.ActiveTowerVisuals, Has.Count.EqualTo(8));
             Assert.That(game.World.Party.AllMembers().Count(), Is.EqualTo(8));
             game.Reset();
