@@ -32,6 +32,7 @@ public sealed class DmuLimitCutAi : IScenarioAi<DmuLimitCutState>
         ai.Move(20.6f, ChargeSpots, arrivalTime: 30.2f);
         ai.Move(32.7f, ClearForThunder, arrivalTime: 37.5f);
         world.Events.Add(33.6f, FirstTankOntoExdeath);
+        world.Events.Add(37.9f, InvulnIfThePlanSaysSo);
         ai.Move(38.9f, SwapThunderTanks, arrivalTime: 41.2f);
         ScheduleThunderClearance(36.5f, 38.9f, 42.2f);
         ai.Move(47.0f, StackAtBosses);
@@ -53,6 +54,11 @@ public sealed class DmuLimitCutAi : IScenarioAi<DmuLimitCutState>
     {
         if (state.Objects.Exdeath is not { } exdeath) return;
         if (world.Party.Get(ThunderRoles.First) is { } first && first.IsAlive()) first.Follow(exdeath);
+    }
+
+    private void InvulnIfThePlanSaysSo()
+    {
+        if (DmuP3Actions.IsInvulnPlan(state.ThunderPlan)) BotActions.UseInvulnerability(world, ThunderRoles.First);
     }
 
     private IAiMove SwapThunderTanks()
@@ -138,7 +144,7 @@ public sealed class DmuLimitCutAi : IScenarioAi<DmuLimitCutState>
 
     private Vector2 StackSpot(int slot)
     {
-        var spread = OnCircle(Hold + MathF.PI / 2f, (slot % 4 - 1.5f) * 1.2f) + OnCircle(Hold, slot / 4 * 1.4f);
+        var spread = OnCircle(Hold + MathF.PI / 2f, (slot % 4 - 1.5f) * 0.3f) + OnCircle(Hold, slot / 4 * 0.4f);
         return Flat(OnCircle(Hold, 5.5f) + spread);
     }
 
@@ -167,7 +173,7 @@ public sealed class DmuLimitCutAi : IScenarioAi<DmuLimitCutState>
         var centre = OnCircle(away, 4.3f);
         var coords = new Vector2?[8];
         for (var slot = 0; slot < 8; slot++)
-            coords[slot] = Flat(centre + OnCircle(away + MathF.PI / 2f, slot % 3 - 1f) + OnCircle(away, slot / 3));
+            coords[slot] = Flat(centre + OnCircle(away + MathF.PI / 2f, (slot % 3 - 1f) * 0.4f) + OnCircle(away, slot / 3 * 0.4f));
         return AiMove.Create(coords).NaturalOrder();
     }
 

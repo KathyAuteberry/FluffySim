@@ -251,7 +251,7 @@ public sealed class DmuLimitCutScenario : IScenario
     private void ResolveThunder()
     {
         if (state.Objects.Exdeath is not { } exdeath) return;
-        thunderHelper?.Cast(UmadActions.ThunderIII, party.Find.Closest(exdeath.Position));
+        thunderHelper?.Cast(DmuP3Actions.ThunderIII(state.ThunderPlan), party.Find.Closest(exdeath.Position));
     }
 
     private void ResolveDecisiveBattle()
@@ -310,7 +310,7 @@ public sealed class DmuLimitCutScenario : IScenario
         if (vacuumWave is null) return;
         var centres = vacuumWave.Hits.Select(h => h.Who).Where(t => t.IsAlive()).ToList();
         for (var i = 0; i < centres.Count; i++)
-            cycloneHelpers[i % cycloneHelpers.Length]?.Cast(UmadActions.Cyclone, centres[i]);
+            cycloneHelpers[i % cycloneHelpers.Length]?.Cast(DmuP3Actions.LimitCutCyclone, centres[i]);
     }
 
     // A dead number's clone still charges someone; none of the 8 real retargets fit a rule

@@ -23,7 +23,6 @@ public sealed class FruPandorasBoxScenario : IScenario
     private SimEnemy? pandora;
     internal SimEnemy? SharedPandora { get; set; }
 
-    private static readonly ushort[] TankLimitBreakThree = [196, 863, 864, 1931];
     private static readonly EnemyAction Box = new(ActionId)
     {
         Effects = [Resolve(ctx =>
@@ -38,7 +37,7 @@ public sealed class FruPandorasBoxScenario : IScenario
     };
 
     internal static bool HasTankLimitBreakThree(SimCharacter member)
-        => System.Array.Exists(TankLimitBreakThree, member.HasStatus);
+        => TankLimitBreak.HasLevelThree(member);
 
     public void Run(SimWorld world, int? selectedAi)
     {

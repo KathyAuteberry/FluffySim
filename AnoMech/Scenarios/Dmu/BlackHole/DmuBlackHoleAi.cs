@@ -55,14 +55,16 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
         ai.Move(25f, StackCentre);
         world.Events.Add(26.2f, () => GrabNewTether(tetherIndex: 0, playerIndex: 4));
         ScheduleTetherRegrab(26.6f, 28.2f, tetherIndex: 0, playerIndex: 4);
-        world.Events.Add(28.2f, () => PullTether(playerIndex: 4));
-        world.Events.Add(32.4f, () => GrabNewTether(tetherIndex: 0, playerIndex: 4));
+        world.Events.Add(28.2f, () => PullTether(playerIndex: 4, clockwise: false));
+        world.Events.Add(32.35f, () => ReturnToMiddle(playerIndex: 4));
+        world.Events.Add(34.0f, () => GrabNewTether(tetherIndex: 0, playerIndex: 4, dueAt: 32.4f, waited: 0f));
         world.Events.Add(32.4f, () => GrabNewTether(tetherIndex: 1, playerIndex: 0));
         world.Events.Add(34.4f, () => PullTether(playerIndex: 4));
         world.Events.Add(34.4f, () => PullTether(playerIndex: 0));
         // Follow self-sustains, so no AiMove. Right after the 39.33 Nothingness: MT's pull spot can
         // be ~19y from Exdeath, too far to run before the 42.63 hit.
         world.Events.Add(39.4f, ResolveFirstThunder);
+        world.Events.Add(41.9f, () => InvulnIfThePlanSaysSo(state.ThunderSet1));
         ai.Move(43.19f, SwapFirstThunderTanks);
         // Standing invariant for the Set 1 danger window; the swap lands at 43.5f.
         {
@@ -87,6 +89,7 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
         ai.Move(73.1f, DodgeEdictAndLookUpon);
         ai.Move(80f, StackCentre);
         world.Events.Add(82f, ResolveSecondThunder);
+        world.Events.Add(83.2f, () => InvulnIfThePlanSaysSo(state.ThunderSet2));
         ai.Move(84.5f, SwapSecondThunderTanks);
         // Same as Set 1; the swap lands at 84.9f.
         {
@@ -195,6 +198,11 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
         if (world.Party.Get((int)first) is not { } firstMember || !firstMember.IsAlive()) return;
         (firstMember as ISimPartyMember)?.UseSprint(3.5f);
         firstMember.Follow(exdeath, speed: AiManager.SprintSpeed);
+    }
+
+    private void InvulnIfThePlanSaysSo(ThunderIIIAssignment plan)
+    {
+        if (DmuP3Actions.IsInvulnPlan(plan)) BotActions.UseInvulnerability(world, ThunderIIIPlanning.Roles(plan).First);
     }
 
     private void ResolveSecondThunder()
@@ -599,7 +607,7 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
     // arrival would otherwise no-op and strand the player.
     private const int PullTetherMaxRetries = 4;
 
-    private void PullTether(int playerIndex, int retriesLeft = PullTetherMaxRetries)
+    private void PullTether(int playerIndex, bool clockwise = true, int retriesLeft = PullTetherMaxRetries)
     {
         var seat = TetherSeat(playerIndex);
         var player = state.Roles.Get(seat);
@@ -611,13 +619,13 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
         {
             AnoMech.Core.DiagnosticLog.Warn($"[DmuBlackHoleAi] PullTether: {role} does not hold their assigned tether yet -- pull skipped (still mid-Intercept, grab never happened, or a different hole's random seed briefly gave them someone else's). Current pos ({player?.Position.X:F1},{player?.Position.Z:F1}). Retries left: {retriesLeft}.");
             if (retriesLeft > 0)
-                world.Events.Add(1f, () => PullTether(playerIndex, retriesLeft - 1));
+                world.Events.Add(1f, () => PullTether(playerIndex, clockwise, retriesLeft - 1));
             return;
         }
         var bhPos = new Vector2(blackHole.Position.X, blackHole.Position.Z);
         var heldPos = new Vector2(held.Position.X, held.Position.Z);
         // Pull spot, then nudged 1.5y farther from the black hole along the bh→player axis.
-        var rawSpot = CardinalClockwise(bhPos) + Vector2.Normalize(heldPos - bhPos) * 1.5f;
+        var rawSpot = PullSpot(bhPos, clockwise) + Vector2.Normalize(heldPos - bhPos) * 1.5f;
         // The raw spot can coincide with a passive hole's avoid radius (both ~14y out), where
         // ClampOutside and Steer fight and the bot stalls; push it clear up front.
         var spot = world.Obstacles.ClampOutside(rawSpot, margin: 2f);
@@ -650,11 +658,12 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
     // Nothingness's radius from there; 8y still tagged the stack.
     private const float TetherPullRadius = 14f;
 
-    private static Vector2 CardinalClockwise(Vector2 cardinal)
+    // Yan: the first tether is pulled counter-clockwise, every later set clockwise.
+    private static Vector2 PullSpot(Vector2 cardinal, bool clockwise)
     {
         var dir = Vector2.Normalize(cardinal);
         var c = MathF.Cos(MathF.PI / 3f);
-        var s = MathF.Sin(MathF.PI / 3f);
+        var s = MathF.Sin(MathF.PI / 3f) * (clockwise ? 1f : -1f);
         return new Vector2(dir.X * c - dir.Y * s, dir.X * s + dir.Y * c) * TetherPullRadius;
     }
 
@@ -673,12 +682,11 @@ public sealed class DmuBlackHoleAi : IScenarioAi<DmuBlackHoleState>
     // one DPS) stacks first; the other group takes the towers first, then they trade.
     private bool SupportsStackFirst() => !state.StackTargets[0].IsDps();
 
-    // Supports gather north of centre, DPS south, ready for the first spread.
+    // Yan: everyone drops the first spread in the middle.
     private IAiMove PrepositionForStomp() =>
-        AiMove.Create(new(0, -5), new (0, -5), new (0, -5), new (0, -5),
-                    new (0, 5), new(0, 5), new (0, 5), new (0, 5))
-              .NaturalOrder()
-              .ApplyPositions(state.KefkaPosition[4].Apply);
+        AiMove.Create(Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero,
+                    Vector2.Zero, Vector2.Zero, Vector2.Zero, Vector2.Zero)
+              .NaturalOrder();
 
     // First BlizzardIII spreads drop on the prepositioned spots; step out to the four
     // intercardinal corners two-per-corner (supports north, DPS south, west pair vs east).

@@ -266,8 +266,9 @@ public sealed class DmuBlackHoleScenario : IScenario
     private void RunThunder(int setNumber, float time, SimEnemy? exdeath, SimEnemy? helper)
     {
         world.Events.Add(time - 0.2f, () => exdeath?.Follow());
-        world.Events.Add(time, () => helper?.Cast(UmadActions.ThunderIII, party.Find.Closest(exdeath!.Position)));
-        world.Events.Add(time + 3f, () => helper?.Cast(UmadActions.ThunderIII, party.Find.Closest(exdeath!.Position)));
+        var thunder = DmuP3Actions.ThunderIII(setNumber == 1 ? state.ThunderSet1 : state.ThunderSet2);
+        world.Events.Add(time, () => helper?.Cast(thunder, party.Find.Closest(exdeath!.Position)));
+        world.Events.Add(time + 3f, () => helper?.Cast(thunder, party.Find.Closest(exdeath!.Position)));
         world.Events.Add(time + 3.5f, () => exdeath?.Follow(party.Get(state.ExdeathTank)));
     }
 
