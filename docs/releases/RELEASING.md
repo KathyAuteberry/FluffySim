@@ -80,8 +80,10 @@ No manual plogons version edit is needed: successful publication updates its man
 ## Recurring release pipeline
 
 Bump version props, update changelog, Debug-test, commit and publish the reviewed integrated
-master. Tag `vX.Y.Z.0`. The workflow verifies version, master ancestry and the required scenario registrations, runs plugin/relay
-and both safety backends, builds Release on its isolated runner and packages declared runtime
+master. Tag `vX.Y.Z.0`. The workflow verifies version, master ancestry and the required scenario registrations, requires
+the master "Build and test" run of the tagged commit to have passed (it waits while that run is in
+progress and fails if it was cancelled or failed; rerun it, then dispatch the workflow on the tag),
+runs relay and both safety backends, builds Release on its isolated runner and packages declared runtime
 dependencies plus selected public documentation. Preserve matching complete source at the
 tag and AGPL attribution; GitHub provides tagged source archives.
 

@@ -201,9 +201,11 @@ Diamond Dust remains hidden. Packet filtering must stay armed while
 client/server state differs; never bypass entry guards, move real positions outside a stay,
 or send fabricated simulation traffic to the server. Comments are not proof of behavior.
 
-Tag publication runs optimized Debug scenario tests in tests/AnoMech.Tests/bin/fast-Debug
-with obj/fast-tests-Debug intermediates per project. Keep these separate from ordinary Debug
-and optimized TRACE safety artifacts; optimizing ordinary safety input changes its IL classification.
+Master CI (pr-build.yml) runs the optimized Debug scenario suite split across three Linux jobs
+(`ANOMECH_TEST_SHARD=<index>/<count>`, see tests/AnoMech.Tests/Support/TestShard.cs); unset, the
+whole suite runs. Tag publication does not rerun it: it requires a passing master run of the same
+commit. Keep optimized test output separate from ordinary Debug and optimized TRACE safety
+artifacts; optimizing ordinary safety input changes its IL classification.
 
 Tests: tests/AnoMech.Tests, tests/AnoMech.Relay.Tests and tests/SafetyTests. Use Debug only;
 see tests/SafetyTests/README.md for ordinary/optimized Debug artifacts and both failure models.

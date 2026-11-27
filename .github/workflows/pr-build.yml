@@ -1,7 +1,9 @@
 name: Build and test
 
 on:
+  # Tags are left to the release workflow, which reuses the master run of the tagged commit.
   push:
+    branches: ['**']
   pull_request:
 
 # A newer commit on the same branch/PR supersedes the running build.
@@ -11,11 +13,21 @@ concurrency:
 
 jobs:
 
+  # The scenario suite runs serially inside one process (tests share static game state), so it is
+  # split across jobs instead; see tests/AnoMech.Tests/Support/TestShard.cs. Windows builds of the
+  # plugin are covered by the safety and release workflows.
   build:
-    runs-on: windows-2022
+    name: Build and test (shard ${{ matrix.shard }}/3)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
 
     env:
-      Solution_Name: AnoMech
+      DALAMUD_HOME: ${{ github.workspace }}/.dalamud
+      ANOMECH_TEST_SHARD: ${{ matrix.shard }}/3
 
     steps:
     - name: Checkout
@@ -28,12 +40,15 @@ jobs:
 
     - name: Download Dalamud
       run: |
-        Invoke-WebRequest -Uri https://goatcorp.github.io/dalamud-distrib/latest.zip -OutFile latest.zip
-        Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\dev"
+        curl -fsSL https://goatcorp.github.io/dalamud-distrib/latest.zip -o latest.zip
+        unzip -q -o latest.zip -d "$DALAMUD_HOME"
 
     - name: Build optimized Debug binaries for headless tests
       run: dotnet build --configuration Debug -p:Optimize=true
 
-    - name: Run tests
-      run: dotnet test --configuration Debug --no-build --logger GitHubActions
+    - name: Run scenario tests
+      run: dotnet test tests/AnoMech.Tests --configuration Debug --no-build --logger GitHubActions
 
+    - name: Run relay tests
+      if: matrix.shard == 1
+      run: dotnet test tests/AnoMech.Relay.Tests --configuration Debug --no-build --logger GitHubActions

@@ -15,6 +15,7 @@ jobs:
     timeout-minutes: 60
     permissions:
       contents: write
+      actions: read
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-dotnet@v5
@@ -44,11 +45,27 @@ jobs:
       - run: python -m unittest discover -s tools/tests -p test_package_release.py
       - run: python -m unittest discover -s tools/tests -p test_release_notes.py
       - run: dotnet build -c Debug
-      - name: Run optimized Debug scenario tests
-        run: >
-          dotnet test tests/AnoMech.Tests -c Debug -p:Optimize=true
-          -p:OutputPath="${{ github.workspace }}/tests/AnoMech.Tests/bin/fast-Debug/"
-          -p:IntermediateOutputPath=obj/fast-tests-Debug/
+      # The sharded master CI already ran the optimized Debug scenario suite on this exact commit;
+      # waits for it while it is still running, and refuses to publish without a pass.
+      - name: Require passing master scenario tests for this commit
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 90); do
+            list() { gh run list --repo "$GITHUB_REPOSITORY" --workflow pr-build.yml --commit "$GITHUB_SHA" --branch master --event push --json status,conclusion,url --jq "$1"; }
+            passed=$(list '[.[] | select(.conclusion == "success") | .url] | first // ""')
+            if [ -n "$passed" ]; then echo "Scenario tests passed: $passed"; exit 0; fi
+            if [ "$(list 'any(.[]; .status != "completed")')" != "true" ]; then
+              echo "::error::No passing master 'Build and test' run for $GITHUB_SHA. Rerun it, then dispatch this workflow on the tag."
+              list '.'
+              exit 1
+            fi
+            sleep 20
+          done
+          echo "::error::Timed out waiting for master 'Build and test' on $GITHUB_SHA."
+          exit 1
       - run: dotnet test tests/AnoMech.Relay.Tests -c Debug
       - name: Build optimized Debug safety artifact
         run: dotnet build AnoMech/AnoMech.csproj -c Debug -p:Optimize=true -p:DefineConstants=TRACE -p:OutputPath=${{ github.workspace }}/artifacts/safety/ -p:IntermediateOutputPath=obj/safety-Debug/
