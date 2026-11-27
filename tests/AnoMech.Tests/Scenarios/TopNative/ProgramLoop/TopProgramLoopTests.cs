@@ -34,7 +34,7 @@ public class TopProgramLoopTests
                 if (p.Crossed(blast + 0.3f))
                 {
                     var bearing = BearingDegrees(me.Position) + walkDegrees;
-                    me.MoveTo(Polar(bearing, 12f));
+                    me.SetPosition(Polar(bearing, 12f));
                 }
                 if (!p.Crossed(blast + 4f)) return;
                 playerKept = me.HasTetherInSlot0(TetherId.Blaster);
