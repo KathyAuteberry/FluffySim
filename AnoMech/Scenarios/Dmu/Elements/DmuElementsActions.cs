@@ -48,13 +48,13 @@ public static class DmuElementsActions
 
     public static readonly EnemyAction ThunderIIIBusterCast = new(ActionId.ThunderIIIBusterCast) { Cast = new() { AnimationLock = 2.1f } };
 
-    // Simplified: retail's Lightning Resistance Down makes the second hit need an invulnerability.
+    // ISSIS: the Exdeath tank invulns both hits.
     public static readonly EnemyAction ThunderIIIBuster = new(ActionId.ThunderIIIBuster)
     {
         Cast = new() { FaceTarget = false },
         Effects =
         [
-            OnTarget(Damage(TankBuster), ApplyStatus(StatusId.LightningResistanceDownII, VulnerabilitySeconds)),
+            OnTarget(Damage(DmuP3Actions.InvulnRequired), ApplyStatus(StatusId.LightningResistanceDownII, VulnerabilitySeconds)),
             OnOthers(Damage(Lethal)),
         ],
         Timing = new() { DamageDelay = 0.3f },

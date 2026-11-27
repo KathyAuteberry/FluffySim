@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using static AnoMech.Tests.NegativeRun;
 using System.Linq;
 using System.Numerics;
 using AnoMech.Core.Game.Party;
@@ -108,5 +110,38 @@ public class DmuElementsTests
         var at = new Vector2(target.Position.X, target.Position.Z);
         var spot = at + Vector2.Normalize(at - crystal) * distance;
         p.Member(MeleeDpsA)!.SetPosition(new Vector3(spot.X, 0f, spot.Y));
+    }
+
+    [Test]
+    public void ExdeathTankWithoutAnInvulnDiesToTheBuster()
+        => Negative<DmuElementsScenario>(MainTank)
+            .WithMitigationChecks()
+            .FreezeAt(60.0f)
+            .ShouldKill(DmuConstants.ActionId.ThunderIIIBuster, MainTank);
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public void BossesWaitMidUntilTheCrystalsAreReadable(int seed)
+    {
+        var mid = new List<float>();
+        var dragged = new List<float>();
+        var run = ScenarioRun.Execute(typeof(DmuElementsScenario), 0, seed, new()
+        {
+            StopAt = 40f,
+            WriteArtifactsOnFailure = false,
+            Probe = p =>
+            {
+                var bosses = p.World.Children.OfType<AnoMech.Core.SimObjects.SimEnemy>()
+                    .Where(e => e.IsActive && e.BNpcBaseId is DmuConstants.BNpcBaseId.ChaosP3 or DmuConstants.BNpcBaseId.Exdeath).ToList();
+                if (p.Crossed(34.0f)) mid.AddRange(bosses.Select(b => new Vector2(b.Position.X, b.Position.Z).Length()));
+                if (p.Crossed(39.5f)) dragged.AddRange(bosses.Select(b => new Vector2(b.Position.X, b.Position.Z).Length()));
+            },
+        });
+        Assert.Multiple(() =>
+        {
+            Assert.That(run.Passed, run.ToString);
+            Assert.That(mid, Has.Count.EqualTo(2).And.All.LessThan(3f));
+            Assert.That(dragged, Has.Count.EqualTo(2).And.All.GreaterThan(7f));
+        });
     }
 }

@@ -27,13 +27,14 @@ public sealed class DmuElementsAi : IScenarioAi<DmuElementsState>
         var ai = new AiManager(world);
         ai.Move(0.2f, SouthOfKefka);
         ai.Move(8.0f, HeroSidesBesideTheirBoss, arrivalTime: 11.8f);
-        ai.Move(13.0f, TanksPullTheirBossApart, arrivalTime: 16f);
-        ai.Move(32.5f, ChaosTankPullsChaosToTheEdgeBehindTheWindCrystal, arrivalTime: 36.5f);
-        ai.Move(32.5f, ExdeathTankPullsExdeathToTheEmptyCorner, arrivalTime: 37.5f);
-        ai.Move(32.5f, PartyToTlb3Spots, arrivalTime: 43f);
-        ai.Move(39.5f, ChaosTankBackToTheStack, arrivalTime: 42f);
+        ai.Move(13.0f, TanksHoldBothBossesMid, arrivalTime: 15f);
+        ai.Move(34.2f, ChaosTankPullsChaosToTheEdgeBehindTheWindCrystal);
+        ai.Move(34.2f, ExdeathTankPullsExdeathToTheEmptyCorner);
+        ai.Move(34.2f, PartyToTlb3Spots, arrivalTime: 43f);
+        ai.Move(40.0f, ChaosTankBackToTheStack, arrivalTime: 42.5f);
         ai.Move(44.3f, ExdeathTankBackToTheStack, arrivalTime: 48f);
         ai.Move(52.4f, ExdeathTankTakesTheBusterBeyondExdeath);
+        world.Events.Add(59.6f, () => BotActions.UseInvulnerability(world, ExdeathTank));
         ai.Move(63.6f, ExdeathTankBringsExdeathToChaos, arrivalTime: 66f);
         ai.Move(66.2f, ExdeathTankBackToTheStack, arrivalTime: 68f);
         ai.Move(69.0f, () => ImplosionSpots(firstWave: true), arrivalTime: 73.4f);
@@ -52,8 +53,8 @@ public sealed class DmuElementsAi : IScenarioAi<DmuElementsState>
         (ChaosTank, new(-4.5f, 1f)), (ShieldHealer, new(-3.5f, 2.5f)), (MeleeDpsA, new(-4.5f, 2.5f)), (MeleeDpsB, new(-3.5f, 3.5f)),
         (ExdeathTank, new(4.5f, 1f)), (RegenHealer, new(3.5f, 2.5f)), (PhysRangedDps, new(4.5f, 2.5f)), (CasterDps, new(3.5f, 3.5f)));
 
-    private IAiMove TanksPullTheirBossApart() => AiMove.ByRole(
-        (ChaosTank, new(-6f, -6f)), (ExdeathTank, new(6f, -6f)),
+    private IAiMove TanksHoldBothBossesMid() => AiMove.ByRole(
+        (ChaosTank, new(5.5f, -1.5f)), (ExdeathTank, new(-5.5f, -1.5f)),
         (RegenHealer, new(-0.5f, 4f)), (ShieldHealer, new(0.5f, 4f)), (MeleeDpsA, new(-0.5f, 5f)), (MeleeDpsB, new(0.5f, 5f)),
         (PhysRangedDps, new(-0.5f, 6f)), (CasterDps, new(0.5f, 6f)));
 

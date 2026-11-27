@@ -42,7 +42,13 @@ public sealed class DmuBlackHoleSettingsWindow
                 DrawLineNumber();
                 DrawAccretion();
             }
-            Overrides.MainTankOnChaos = DmuP3Tanks.Row("##bhtanks", Overrides.MainTankOnChaos);
+            var mainTankOnChaos = DmuP3Tanks.Row("##bhtanks", Overrides.MainTankOnChaos);
+            if (mainTankOnChaos != Overrides.MainTankOnChaos)
+            {
+                Overrides.ThunderSet1 = DmuP3Actions.SwapInvulnTank(Overrides.ThunderSet1);
+                Overrides.ThunderSet2 = DmuP3Actions.SwapInvulnTank(Overrides.ThunderSet2);
+                Overrides.MainTankOnChaos = mainTankOnChaos;
+            }
 #if DEBUG
             DrawFirstSlap();
             if (solo) DrawFirstSlapTarget();

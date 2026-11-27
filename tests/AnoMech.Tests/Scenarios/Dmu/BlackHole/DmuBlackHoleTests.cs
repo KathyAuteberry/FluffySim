@@ -1,3 +1,4 @@
+using static AnoMech.Tests.NegativeRun;
 using System.Collections.Generic;
 using System.Linq;
 using AnoMech.Core.Game.Party;
@@ -65,5 +66,57 @@ public class DmuBlackHoleTests
             WriteArtifactsOnFailure = false,
         });
         Assert.That(run.Passed, run.ToString);
+    }
+
+    [Test]
+    public void ChaosTankWithoutAnInvulnDiesToTheFirstThunder()
+        => Negative<DmuBlackHoleScenario>(OffTank)
+            .WithMitigationChecks()
+            .FreezeAt(42.4f)
+            .ShouldKill(UmadConstants.ActionId.ThunderIII_Resolve, OffTank);
+
+    [TestCase(1)]
+    [TestCase(2)]
+    [TestCase(3)]
+    public void AttackOnePullsTheFirstTetherCounterClockwise(int seed)
+    {
+        PartyRole? attackOne = null;
+        float? turn = null;
+        var run = ScenarioRun.Execute(typeof(DmuBlackHoleScenario), 0, seed, new()
+        {
+            StopAt = 32f,
+            WriteArtifactsOnFailure = false,
+            Probe = p =>
+            {
+                if (!p.Crossed(31.5f)) return;
+                attackOne = (p.World.SoftMarkers.Assigned.GetValueOrDefault(Sign.Attack1) as ISimPartyMember)?.Role;
+                if (p.World.Children.OfType<SimTether>().FirstOrDefault(t => t.IsActive && t.TetherId == UmadConstants.TetherId.GrabbyTether)
+                    is not { A: { } hole, B: ISimPartyMember holder } || holder.Role != attackOne) return;
+                var member = p.Member(holder.Role)!;
+                var delta = System.MathF.Atan2(member.Position.X, -member.Position.Z) - System.MathF.Atan2(hole.Position.X, -hole.Position.Z);
+                turn = System.MathF.IEEERemainder(delta, System.MathF.Tau) * 180f / System.MathF.PI;
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(turn, Is.Not.Null.And.InRange(-90f, -30f), $"Attack 1 ({attackOne}) should hold the first tether counter-clockwise of its hole");
+    }
+
+    [TestCase(1)]
+    [TestCase(2)]
+    public void StompAMoleStartsInTheMiddle(int seed)
+    {
+        var distances = new List<float>();
+        var run = ScenarioRun.Execute(typeof(DmuBlackHoleScenario), 0, seed, new()
+        {
+            StopAt = 147f,
+            WriteArtifactsOnFailure = false,
+            Probe = p =>
+            {
+                if (!p.Crossed(146.6f)) return;
+                distances.AddRange(PerRole.All.Select(r => new System.Numerics.Vector2(p.Member(r)!.Position.X, p.Member(r)!.Position.Z).Length()));
+            },
+        });
+        Assert.That(run.Passed, run.ToString);
+        Assert.That(distances, Has.Count.EqualTo(8).And.All.LessThan(2.5f));
     }
 }

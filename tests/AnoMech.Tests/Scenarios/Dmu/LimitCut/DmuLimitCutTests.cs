@@ -1,4 +1,9 @@
+using AnoMech.Core.Game.Party;
+using AnoMech.Scenarios;
 using AnoMech.Scenarios.Dmu.LimitCut;
+using AnoMech.Scenarios.Umad;
+using static AnoMech.Core.Game.Party.PartyRole;
+using static AnoMech.Tests.NegativeRun;
 
 namespace AnoMech.Tests;
 
@@ -17,4 +22,10 @@ public class DmuLimitCutTests
         });
         Assert.That(run.Passed, run.ToString);
     }
+
+    [Test]
+    public void CyclonesWithoutATankLimitBreakKillTheStack()
+        => Negative<DmuLimitCutScenario>(CasterDps)
+            .At(14.0f, p => p.World.Party.LimitBreak.Set(0f))
+            .ShouldKill(UmadConstants.ActionId.Cyclone, PerRole.All);
 }
