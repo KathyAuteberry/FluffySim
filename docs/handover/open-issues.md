@@ -228,14 +228,22 @@ presentation detail added since October still awaits an in-game check. The highe
     bursts 24.07 s, crystal shots 25.1 s, buster 28.3 s (hits 33.3 s and 36.3 s on the player closest to Exdeath),
     Latitudinal Implosion 41.2 s (cones 47.0 s and 49.0 s), second bursts 51.1 s, shots 52.1 s. The Decisive Battle
     split goes by distance to Chaos in the sim (Yan: closeness).
-    - UNVERIFIED: fire and water on the NW-SE diagonal (retail showed SW-NE three times), Longitudinal Implosion
-      (only Latitudinal seen), the knockback distances (10/20/40 y from the status text, 20 y base), the Cyclone's
+    - Retail 2026-11-28 (`Network_30305_20261127.log` pull 69, RaidTrace `20261127-152346`, the first pull to reach
+      Limit Cut) matched every Elements time above within 0.05 s, including the 1.7 s Cyclone delay, and showed fire
+      NW / water SE / wind SW and Longitudinal Implosion, so both diagonals and both Implosions are now seen.
+    - UNVERIFIED: the knockback distances (10/20/40 y from the status text, 20 y base), the Cyclone's
       delay (1.7 s; retail 1.0 to 3.5 s) and target rule (BossMod: one per cleared wind on the players nearest the
       wind crystal), Exdeath's buster simplified to two plain tankbusters.
     - Bot spots read off Yan's TLB3 figures (fire start, water NW, wind NE): tanks and healers stack 6 y toward the
       wind crystal, D1/D2 18 y out past it, D3/D4 flank the water crystal; Exdeath sits in the empty corner for Thunder
       III, Chaos at the wind crystal. Needs the owner's in-game look against the figures.
     - Not included: Umbra Smash, Ultima Blaster, Vacuum Wave with tank LB3, the final Cyclones.
+  - P3 Limit Cut (copied from upstream): retimed 2026-11-28 to the same pull, which wiped at Limit Cut 37 s. Limit Cut 0
+    is 80.45 s into Elements (Umbra Smash and Vacuum Wave both cast at 8.0 s). Clones fire every 2.012 s from 8.895 s,
+    charges every 0.223 s from 31.033 s, Chaos teleports to the Umbra impact at 14.53 s and holds until 17.08 s,
+    Cyclones 19.86 s, Aetherlinks 21.19/21.24 s, director 0x80000027 at 1.87/8.91/31.03 s, Kefka's trance refresh
+    6.78 s, autos up to 32.4 s from the pull. Upstream had these up to 0.27 s off. Later events (Thunder III busters,
+    Decisive Battle, 50.7 s Thunder III) are still upstream's: UNVERIFIED.
 - **TOP (native Elemental, P1–P4)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:

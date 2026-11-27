@@ -18,12 +18,12 @@ using static AnoMech.Scenarios.Umad.UmadConstants;
 using static DmuLimitCutState;
 
 // Dancing Mad P3 "Limit Cut". Scenario time 0 is 8.0s before Chaos starts casting Umbra Smash,
-// the earliest start inside this mechanic (the previous resolve is 9.2s before).
+// the earliest start inside this mechanic (the second elements' Cyclones land 7.65s before).
 public sealed class DmuLimitCutScenario : IScenario
 {
     public string Name => "Limit Cut";
     public IPhase Phase => DmuZone.P3;
-    public float BgmSecondsAtStart => 108.67f;
+    public float BgmSecondsAtStart => 108.60f;
     public bool SupportsSolo => true;
     public bool SupportsMultiplayer => true;
     public IReadOnlyList<IScenarioAi> AiStrats => [new DmuLimitCutAi()];
@@ -45,15 +45,15 @@ public sealed class DmuLimitCutScenario : IScenario
     private EnemyActionCast? vacuumWave;
 
     // Clone k is teleported to its spot, then fires its appearance ~0.1s later, ~2.0s apart.
-    private static readonly float[] PlaceCloneAt = [8.803f, 10.808f, 12.815f, 14.821f, 16.830f, 18.836f, 20.840f, 22.846f];
-    private static readonly float[] CloneAppearAt = [8.892f, 10.898f, 12.904f, 14.910f, 16.919f, 18.925f, 20.929f, 22.933f];
+    private static readonly float[] PlaceCloneAt = [8.806f, 10.818f, 12.830f, 14.842f, 16.854f, 18.866f, 20.878f, 22.890f];
+    private static readonly float[] CloneAppearAt = [8.895f, 10.907f, 12.919f, 14.931f, 16.943f, 18.955f, 20.967f, 22.979f];
     // Charge k: teleport to the charge spot facing its number, then the rect ~0.1s later.
-    private static readonly float[] PrepareChargeAt = [30.853f, 31.075f, 31.298f, 31.521f, 31.745f, 31.968f, 32.191f, 32.415f];
-    private static readonly float[] ChargeAt = [30.953f, 31.175f, 31.398f, 31.621f, 31.845f, 32.068f, 32.291f, 32.515f];
+    private static readonly float[] PrepareChargeAt = [30.933f, 31.156f, 31.380f, 31.602f, 31.825f, 32.049f, 32.272f, 32.496f];
+    private static readonly float[] ChargeAt = [31.033f, 31.256f, 31.480f, 31.702f, 31.925f, 32.149f, 32.372f, 32.596f];
     private const float NumbersAt = 18.83f;
     // Both bosses stop swinging for their own casts.
-    private static readonly float[] ChaosAutoAt = [3.904f, 6.928f, 18.066f, 21.095f, 26.162f, 29.189f, 32.214f, 37.285f, 40.311f, 43.335f, 49.381f, 52.407f];
-    private static readonly float[] ExdeathAutoAt = [4.259f, 7.284f, 20.379f, 26.473f, 29.501f, 32.525f, 41.603f, 47.647f, 50.671f];
+    private static readonly float[] ChaosAutoAt = [2.987f, 6.028f, 14.039f, 18.109f, 21.153f, 26.253f, 29.292f, 32.214f, 37.285f, 40.311f, 43.335f, 49.381f, 52.407f];
+    private static readonly float[] ExdeathAutoAt = [1.064f, 4.107f, 7.149f, 20.257f, 23.299f, 26.342f, 29.381f, 32.417f, 41.603f, 47.647f, 50.671f];
 
     public DmuLimitCutState? LastState { get; private set; }
 
@@ -87,7 +87,7 @@ public sealed class DmuLimitCutScenario : IScenario
             world.Events.Add(at, () => state.Objects.Exdeath?.Cast(UmadActions.ExdeathAutoAttack, party.Get(state.ExdeathTank)));
         // The real packet refreshes Kefka's trance aura in place; AddStatusParam adds a slot, so
         // drop the first or Kefka wears two auras at once.
-        world.Events.Add(6.915f, () =>
+        world.Events.Add(6.783f, () =>
         {
             state.Objects.Kefka?.ActorControl.Transform(BNpcStateId.KefkaLimitCut);
             state.Objects.Kefka?.RemoveStatus(StatusId.KefkaTrance);
@@ -106,16 +106,14 @@ public sealed class DmuLimitCutScenario : IScenario
             world.Events.Add(PlaceCloneAt[k], () => PlaceClone(clone));
             world.Events.Add(CloneAppearAt[k], () => CloneAppear(clone));
         }
-        world.Events.Add(14.799f, ChaosLands);
+        world.Events.Add(14.526f, ChaosLands);
+        world.Events.Add(17.075f, () => state.Objects.Chaos?.Follow(party.Get(state.ChaosTank)));
         world.Events.Add(17.56f, () => state.Objects.Exdeath?.Follow(party.Get(state.ExdeathTank)));
         world.Events.Add(NumbersAt, AttachNumbers);
-        world.Events.Add(19.967f, ResolveCyclones);
-        world.Events.Add(20.934f, () => windCrystal?.Despawn());
-        world.Events.Add(21.379f, () =>
-        {
-            state.Objects.Chaos?.Cast(ActionId.Aetherlink_Chaos, animationLock: 3.1f);
-            state.Objects.Exdeath?.Cast(ActionId.Aetherlink_Exdeath, animationLock: 3.1f);
-        });
+        world.Events.Add(19.856f, ResolveCyclones);
+        world.Events.Add(21.020f, () => windCrystal?.Despawn());
+        world.Events.Add(21.189f, () => state.Objects.Chaos?.Cast(ActionId.Aetherlink_Chaos, animationLock: 3.1f));
+        world.Events.Add(21.242f, () => state.Objects.Exdeath?.Cast(ActionId.Aetherlink_Exdeath, animationLock: 3.1f));
         for (var k = 0; k < 8; k++)
         {
             var clone = k;
@@ -155,9 +153,9 @@ public sealed class DmuLimitCutScenario : IScenario
     {
         Natives.TimelinePreload.Preload(CloneTimelines, "DmuLimitCut");
         instanceWorld.Party.LimitBreak.Set(3f);
-        instanceWorld.Events.Add(1.988f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x18U, 0x2U, 0x1BDBU, 0x4000EFB9U));
-        instanceWorld.Events.Add(8.981f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x2FU, 0x2U, 0x1BDBU, 0x4000EFB9U));
-        instanceWorld.Events.Add(31.059f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x19U, 0x2U, 0x1BDBU, 0x4000EFB9U));
+        instanceWorld.Events.Add(1.873f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x18U, 0x2U, 0x1BDBU, 0x4000EFB9U));
+        instanceWorld.Events.Add(8.905f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x2FU, 0x2U, 0x1BDBU, 0x4000EFB9U));
+        instanceWorld.Events.Add(31.033f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x19U, 0x2U, 0x1BDBU, 0x4000EFB9U));
         instanceWorld.Events.Add(52.629f, () => instanceWorld.Map.DirectorUpdate(0x80000027U, 0x1AU, 0x2U, 0x1BDBU, 0x4000EFB9U));
     }
 
@@ -233,7 +231,7 @@ public sealed class DmuLimitCutScenario : IScenario
     }
 
     // No Epic/Fated sides: stripped 44.3s before the Umbra cast, back with the Decisive Battle.
-    // The winds land 68s long at Bowels of Agony, 48.4s before scenario start.
+    // The winds land 68s long at Bowels of Agony, 48.49s before scenario start.
     private void ApplyStartingStatuses()
     {
         world.Events.Add(0.1f, () =>
@@ -242,7 +240,7 @@ public sealed class DmuLimitCutScenario : IScenario
             foreach (var role in Enum.GetValues<PartyRole>())
             {
                 if (party.Get(role) is not { } member) continue;
-                member.AddStatus(state.Winds[role] == Wind.Headwind ? StatusId.Headwind : StatusId.Tailwind, 19.6f);
+                member.AddStatus(state.Winds[role] == Wind.Headwind ? StatusId.Headwind : StatusId.Tailwind, 19.41f);
             }
         });
     }
@@ -277,7 +275,6 @@ public sealed class DmuLimitCutScenario : IScenario
     {
         if (state.Objects.Chaos is not { } chaos) return;
         chaos.SetPosition(new Placement(umbraImpact, chaos.Rotation));
-        chaos.Follow(party.Get(state.ChaosTank));
     }
 
     private void PlaceClone(int k)
