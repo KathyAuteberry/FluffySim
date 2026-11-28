@@ -6,6 +6,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- NUnit enforces the generated Windows annotation even though these tests use fakes. -->
     <GenerateSupportedOSPlatformAttribute Condition="$([MSBuild]::IsOSPlatform('Linux'))">false</GenerateSupportedOSPlatformAttribute>
+    <!-- Without that annotation every call into the Windows-only plugin raises CA1416. -->
+    <NoWarn Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(NoWarn);CA1416</NoWarn>
     <RunSettingsFilePath>$(MSBuildProjectDirectory)\test.runsettings</RunSettingsFilePath>
     <DalamudLibPath Condition="'$(DalamudLibPath)' == ''">$(AppData)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     <DalamudLibPath Condition="'$(DALAMUD_HOME)' != ''">$(DALAMUD_HOME)/</DalamudLibPath>
