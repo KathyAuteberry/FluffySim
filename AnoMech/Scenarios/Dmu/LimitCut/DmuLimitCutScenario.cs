@@ -256,7 +256,7 @@ public sealed class DmuLimitCutScenario : IScenario
     private void ResolveThunder()
     {
         if (state.Objects.Exdeath is not { } exdeath) return;
-        thunderHelper?.Cast(DmuP3Actions.ThunderIII(state.ThunderPlan), party.Find.Closest(exdeath.Position));
+        thunderHelper?.Cast(DmuP3Actions.LimitCutThunderIIIFor(state.ThunderPlan), party.Find.Closest(exdeath.Position));
     }
 
     private void ResolveDecisiveBattle()

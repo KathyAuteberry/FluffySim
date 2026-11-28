@@ -20,6 +20,17 @@ public static class DmuP3Actions
         DeathExplanation = "Thunder III without a tank invulnerability",
     };
 
+    // Limit Cut's set: one hit takes Rampart and two short mitigations; the second hit of the set
+    // on the same tank, through Lightning Resistance Down II, takes Rampart and a 40% cooldown.
+    public static readonly EnemyAction LimitCutThunderIII = UmadActions.ThunderIII with
+    {
+        Effects =
+        [
+            Damage(UmadActions.MagicVulns.VulnerableTo(UmadConstants.StatusId.LightningResistanceDownII, 0.52f), Severity.TankBuster.MinMit(0.40f)),
+            ApplyStatus(UmadConstants.StatusId.LightningResistanceDownII, 3.96f),
+        ],
+    };
+
     // Every Cyclone lands on the one stack at once, so only a tank LB3 carries the party through the repeats.
     public static readonly EnemyAction LimitCutCyclone = UmadActions.Cyclone with
     {
@@ -43,4 +54,6 @@ public static class DmuP3Actions
     };
 
     public static EnemyAction ThunderIII(ThunderIIIAssignment plan) => IsInvulnPlan(plan) ? InvulnedThunderIII : UmadActions.ThunderIII;
+
+    public static EnemyAction LimitCutThunderIIIFor(ThunderIIIAssignment plan) => IsInvulnPlan(plan) ? InvulnedThunderIII : LimitCutThunderIII;
 }

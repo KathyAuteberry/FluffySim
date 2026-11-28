@@ -244,6 +244,11 @@ presentation detail added since October still awaits an in-game check. The highe
     Cyclones 19.86 s, Aetherlinks 21.19/21.24 s, director 0x80000027 at 1.87/8.91/31.03 s, Kefka's trance refresh
     6.78 s, autos up to 32.4 s from the pull. Upstream had these up to 0.27 s off. Later events (Thunder III busters,
     Decisive Battle, 50.7 s Thunder III) are still upstream's: UNVERIFIED.
+  - P3 Limit Cut Thunder III mitigation: upstream asks 60% for a hit and an invuln for the second hit on the same
+    tank. Owner's criteria (2026-11-28) used instead: a hit passes on Rampart and two short mitigations (40%), the
+    second hit on the same tank, through Lightning Resistance Down II, on Rampart and a 40% cooldown (52%). Retail
+    (2026-11-26 and pull 69, both under Living Dead) agrees in shape: first hit 295-391k against 325k HP, second hit on
+    the same tank 1.0M. Black Hole's two sets keep upstream's 60%/invuln: UNVERIFIED.
 - **TOP (native Elemental, P1–P4)**: built 2026-11-18 from a friend's Elemental lockouts on 2026-11-17
   (ACT log, two RaidTraces, two replays in `~/Stažené/top`); evidence, simplifications and the in-game
   checklist are in `docs/encounters/top/elemental-p1-p3.md`. Owner's first in-game pass 2026-11-18:
